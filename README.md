@@ -2,11 +2,12 @@
 
 Final project for CSE 210.
 
-# Pipeline
+## Pipeline
 
-## CI Pipeline
+### CI Pipeline
 
-This project includes automated CI validation through GitHub Actions that runs on all pull requests and pushes:
+This project includes automated CI validation through GitHub Actions that
+runs on all pull requests and pushes:
 
 - **Linting**: JavaScript (ESLint), CSS (Stylelint), and HTML (HTMLHint) validation
 - **Testing**: Automated test execution
@@ -16,11 +17,11 @@ This project includes automated CI validation through GitHub Actions that runs o
 
 The pipeline ensures code quality and consistency across all contributions.
 
-## CD Pipeline
+### CD Pipeline
 
 This project will have CD once the deployment environment is confirmed.
 
-# Team Standards & Deployment Policies
+## Team Standards & Deployment Policies
 
 ## On-Call Rotation
 
@@ -77,7 +78,8 @@ Structured branching ensures clean code organization & deployment safety.
 
 ## Naming Conventions
 
-**Commit Message Guidelines:** Follow [Conventional Commits](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13) for structured commit messages.
+**Commit Message Guidelines:** Follow [Conventional Commits](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13)
+for structured commit messages.
 
 Consistent naming improves code readability and maintainability.
 
@@ -88,8 +90,8 @@ Consistent naming improves code readability and maintainability.
 | **Constants** | UPPER_SNAKE_CASE | `API_BASE_URL`, `MAX_RETRY_ATTEMPTS` |
 | **Classes** | PascalCase | `UserManager`, `DatabaseConnection` |
 | **Functions** | camelCase | `getUserData()`, `validateInput()` |
-| **Branches** | lowercase-with-hyphens | `feature/add-search-functionality` |
-| **Commits** | conventional commits | `<type>(<optional scope>): <description>` |
+| **Branches** | lowercase-with-hyphens | `feature/add-search` |
+| **Commits** | conventional commits | `<type>: <description>` |
 | **PRs** | conventional commits | `feat: Add user search functionality` |
 
 ### 1. Branch Creation
