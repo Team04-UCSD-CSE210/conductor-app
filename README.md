@@ -12,7 +12,7 @@ runs on all pull requests and pushes:
 - **Linting**: JavaScript (ESLint), CSS (Stylelint), and HTML (HTMLHint) validation
 - **Testing**: Automated test execution
 - **Documentation**: JSDoc generation
-- **Commit Title Validation**: Ensures commit message conventions using commitlint
+- **Commit Title Validation**: Ensures commit message conventions under [conventional Commits](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13)
 - **Slack Notifications**: Automated status updates to team channel
 
 The pipeline ensures code quality and consistency across all contributions.
