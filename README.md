@@ -12,7 +12,7 @@ runs on all pull requests and pushes:
 - **Linting**: JavaScript (ESLint), CSS (Stylelint), and HTML (HTMLHint) validation
 - **Testing**: Automated test execution
 - **Documentation**: JSDoc generation
-- **Commit Title Validation**: Ensures commit message conventions under [conventional Commits](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13)
+- **Commit Title Validation**: Ensures commit message conventions
 - **Slack Notifications**: Automated status updates to team channel
 
 The pipeline ensures code quality and consistency across all contributions.
@@ -66,6 +66,7 @@ All code changes must include comprehensive test coverage to maintain system rel
 Structured branching ensures clean code organization & deployment safety.
 
 - **`main`**: Production-ready code only - requires PR approval
+- **`spec/[description]`**: Documentation (`bugfix/login-timeout`)
 - **`feature/[description]`**: New features (`feature/user-login`)
 - **`bugfix/[description]`**: Bug fixes (`bugfix/login-timeout`)
 
@@ -102,8 +103,8 @@ git checkout -b feature/[description]
 
 ### 2. Development Process
 
-- Implement changes following coding standards
-- Write corresponding test cases (unit, integration, e2e as needed)
+- Implement changes following coding standards `npm run lint`
+- Write corresponding test cases
 - Run local tests: `npm test` or equivalent
 - Ensure code coverage meets minimum threshold
 
@@ -120,7 +121,7 @@ git checkout -b feature/[description]
 - Create PR with naming convention and detailed description
 - Link related GitHub issues
 - Add appropriate labels (feature, bugfix, etc.)
-- Request review from on-call team member
+- Request review from on-call team member(s)
 - Ensure CI/CD pipeline passes all checks
 
 ### 5. Code Review Process
@@ -138,11 +139,11 @@ git checkout -b feature/[description]
 
 ## Code Review Standards
 
-All pull requests require thorough review to maintain code quality.
+All pull requests require review.
 
 **Review Criteria:**
 
-- Code functionality and logic correctness
+- Code functionality and correctness
 - Adherence to naming conventions and standards
 - Test coverage and quality
 - Security considerations
@@ -153,7 +154,7 @@ All pull requests require thorough review to maintain code quality.
 
 Regular communication ensures team alignment and continuous improvement.
 
-### Standups (10:00 AM PST)
+### Standups (10:00 AM PST on Tuesdays & Thursdays via Slack Bot)
 
 - What you completed since last check-in
 - What you're working on today
@@ -172,13 +173,3 @@ Regular communication ensures team alignment and continuous improvement.
 - **Labels**: Use appropriate labels (bug, enhancement, documentation)
 - **Assignments**: Assign issues during sprint planning
 - **Updates**: Comment on progress and blockers
-
-## Deployment Policies
-
-### Production Deployments
-
-- Only from `main` branch
-- Automated via CI/CD pipeline
-- Requires successful test suite execution
-- Database migrations run automatically
-- Rollback capability within 5 minutes
