@@ -29,11 +29,10 @@ Each sprint requires one designated on-call engineer to ensure system reliabilit
 
 **Assignments:**
 
-- **Primary On-call:** [Insert name here]
+- **Primary On-call:** Per sub-team
 
 **Responsibilities:**
 
-- Document incidents actions
 - First responder for all pull requests and merge conflicts to `main` branch
 - Rotate assignments at the start of each sprint
 
