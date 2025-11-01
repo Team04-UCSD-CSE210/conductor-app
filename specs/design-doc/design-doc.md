@@ -28,17 +28,17 @@ The conductor application must...
   capabilities on role-based access and understanding levels
 
 - **[FR.3]** Integrate an attendance system that:
-  - Shows attendance via phone interface within 1 minute
-  - Allows updates for both lectures and arbitrary meetings
-  - Provides team-based overview with percentage tracking
-  - Displays attendance trends over time
+  - **[FR.3.1]** Shows attendance via phone interface within 1 minute
+  - **[FR.3.2]** Allows updates for both lectures and arbitrary meetings
+  - **[FR.3.3]** Provides team-based overview with percentage tracking
+  - **[FR.3.4]** Displays attendance trends over time
 
 - **[FR.4]** Displays a work journal and stand-up tool for users to:
-  - Document completed work and express sentiment
-  - Reach out to team leaders, TAs, or professors easily
-  - Integrate with GitHub repositories
-  - Support automated notifications via email or chat
-  - Reference: StatusHero for implementation patterns
+  - **[FR.4.1]** Document completed work and express sentiment
+  - **[FR.4.2]** Reach out to team leaders, TAs, or professors easily
+  - **[FR.4.3]** Integrate with GitHub repositories
+  - **[FR.4.4]** Support automated notifications via email or chat
+  - **[FR.4.5]** Reference: StatusHero for implementation patterns
 
 - **[FR.5]** Provide functionality to create and assign groups within
   classes
@@ -48,6 +48,7 @@ The conductor application must...
 
 - **[FR.7]** Provide structured system to capture observations for fair
   student and group evaluation
+  - **[FR.7.1]** Showcase interactions, pulses, alerts, activity, and reporting
 
 - **[FR.8]** Showcase insights and analytics to help large-scale software
   engineering classes run more smoothly
@@ -160,6 +161,6 @@ The conductor application must be...
 
 ## Implementation Planning Phase (Milestones)
 
-- Sprint 1 (Nov 3-16, 2024)
-- Sprint 2 (Nov 17-30, 2024)
-- Sprint 3 (Dec 1-7, 2024)
+- Sprint 1 (Nov 3-16, 2025)
+- Sprint 2 (Nov 17-30, 2025)
+- Sprint 3 (Dec 1-7, 2025)
