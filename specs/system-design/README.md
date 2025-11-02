@@ -83,7 +83,6 @@ authentication, notifications, and repository integration.
 | `integrations` | External service connections (GitHub, Google, AWS) and related tokens/meta. |
 | `reports` | Generated analytics and performance summaries (parameters, file link, timestamp). |
 
-
 ---
 
 ### 2.4 Authentication Service
