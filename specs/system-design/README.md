@@ -8,8 +8,7 @@ communication. The system integrates authentication, persistent data storage, no
 and repository synchronization to streamline academic coordination and engagement.
 
 The system follows a **client–server architecture** built on **Node.js** with a **PostgreSQL** backend.
-External services such as **Auth.js**, **Gmail/Slack APIs**, and **GitHub API** are used to provide
-authentication, notifications, and repository integration.
+External services such as **Auth.js**, **Gmail/Slack APIs**, and **GitHub API** are used to provide authentication, notifications, and repository integration.
 
 ![System Architecture Diagram](./system-diagram.jpg)
 *Figure 1. System architecture showing major components and data flow.*
@@ -61,27 +60,78 @@ authentication, notifications, and repository integration.
 
 - **Database:** PostgreSQL
 
-**Key Tables:**
+####  Core & Authentication Tables
 
-| Table | Description |
-|--------|--------------|
-| `users` | User profiles, email addresses|
-| `user_roles` | Multi-role assignment per user, optionally scoped to class or team. |
-| `classes` | Course metadata (title, term, section, instructor). |
-| `enrollments` | Class roster linking users to classes with enrollment status. |
-| `teams` | Project teams within classes, including mission and repo URL. |
-| `team_members` | Membership table linking users to teams with leader flag and availability. |
-| `attendance` | Attendance records for lectures or meetings (timestamp, user, status). |
-| `meetings` | Meetings metadata: start/end time, location, agenda, and notes. |
-| `meeting_attendance` | Participant-level attendance for each meeting. |
-| `standups` | Daily or weekly work journals with sentiment tracking and optional notifications. |
-| `evaluation_journals` | Structured observation logs by TAs or tutors (target user/team, notes, sentiment). |
-| `rubric_sections` | Rubric categories (Agile, Repository, CI/CD, Code, Product). |
-| `rubric_items` | Rubric criteria under each section with maximum score. |
-| `rubric_scores` | Individual rubric evaluations by TAs for teams or students. |
-| `notifications` | Automated reminders or announcements (user, channel, template, send status). |
-| `integrations` | External service connections (GitHub, Google, AWS) and related tokens/meta. |
-| `reports` | Generated analytics and performance summaries (parameters, file link, timestamp). |
+| **Table** | **Description** |
+|------------|----------------|
+| `users` | Stores global user accounts including email, display name, and status. |
+| `identities` | Links users to external identity providers (Google OAuth, campus SSO, etc.). |
+| `user_profiles` | Holds extended user information such as pronunciation, pronouns, and availability. |
+| `contact_methods` | Stores multiple contact channels for each user (Slack, phone, social links, etc.). |
+
+---
+
+#### RBAC / Authorization Tables
+
+| **Table** | **Description** |
+|------------|----------------|
+| `roles` | Defines configurable roles such as Instructor, TA, Tutor, or Student. |
+| `permissions` | Lists fine-grained actions or privileges available in the system. |
+| `role_permissions` | Maps roles to permissions, defining what each role can do. |
+| `user_role_assignments` | Assigns roles to users within a specific resource scope (e.g., course or group). |
+
+---
+
+#### Provisioning / Enrollment Tables
+
+| **Table** | **Description** |
+|------------|----------------|
+| `provisioning_codes` | Stores invitation or provisioning codes for controlled sign-up. |
+| `roster_uploads` | Tracks class roster imports and their sources. |
+| `roster_rows` | Contains individual roster entries and matching results to system users. |
+| `enrollments` | Represents a user’s enrollment status within a course offering. |
+
+---
+
+#### Audit / Logging / Alerting Tables
+
+| **Table** | **Description** |
+|------------|----------------|
+| `audit_events` | Logs authentication and sensitive data access events for security auditing. |
+| `alert_rules` | Defines rules to trigger alerts (e.g., excessive login failures). |
+| `alert_events` | Records actual alert instances triggered by audit rules. |
+
+---
+
+#### Class Directory & Group Tables
+
+| **Table** | **Description** |
+|------------|----------------|
+| `courses` | Contains basic information about a course (e.g., CSE210). |
+| `groups` | Represents project or discussion groups within a course offering. |
+| `group_memberships` | Links users to groups and defines their internal roles (leader/member). |
+| `group_links` | Stores external collaboration links (Slack, GitHub repo, etc.) for each group. |
+| `activity_entries` | Tracks individual user activity logs (punch-card style). |
+| `comm_refs` | Stores references to external communications (Slack messages, GitHub issues, etc.). |
+
+---
+
+#### Attendance System Tables
+
+| **Table** | **Description** |
+|------------|----------------|
+| `meetings` | Represents lectures, office hours, or meetings under a course offering. |
+| `meeting_tokens` | Stores temporary QR or short codes for quick mobile check-ins. |
+| `attendance_records` | Records user attendance status (present, late, absent) for each meeting. |
+
+---
+
+#### Work Journal / Stand-up Tables
+
+| **Table** | **Description** |
+|------------|----------------|
+| `work_journals` | Stores students’ daily/weekly work summaries, plans, and sentiment. |
+| `bot_events` | Captures automated bot events from external sources (Slack, Email, GitHub, etc.). |
 
 ---
 
