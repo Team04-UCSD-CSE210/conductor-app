@@ -28,6 +28,7 @@ authentication, notifications, and repository integration.
 - Submission of daily stand-ups or work journals.
 - Viewing attendance, classes, and analytics.
 - Receiving notifications and updates.
+- a11y & i18n
 
 ---
 
@@ -59,16 +60,29 @@ authentication, notifications, and repository integration.
 ### 2.3 Database Layer
 
 - **Database:** PostgreSQL
-- Stores relational data for users, classes, attendance, and stand-ups.
 
 **Key Tables:**
 
 | Table | Description |
 |--------|--------------|
-| `users` | User profiles, email addresses, and role metadata. |
-| `classes` | Course information, groups and section metadata. |
-| `attendance` | Attendance records with timestamps and user IDs. |
-| `standups` | Daily journal submissions and sentiment values. |
+| `users` | User profiles, email addresses|
+| `user_roles` | Multi-role assignment per user, optionally scoped to class or team. |
+| `classes` | Course metadata (title, term, section, instructor). |
+| `enrollments` | Class roster linking users to classes with enrollment status. |
+| `teams` | Project teams within classes, including mission and repo URL. |
+| `team_members` | Membership table linking users to teams with leader flag and availability. |
+| `attendance` | Attendance records for lectures or meetings (timestamp, user, status). |
+| `meetings` | Meetings metadata: start/end time, location, agenda, and notes. |
+| `meeting_attendance` | Participant-level attendance for each meeting. |
+| `standups` | Daily or weekly work journals with sentiment tracking and optional notifications. |
+| `evaluation_journals` | Structured observation logs by TAs or tutors (target user/team, notes, sentiment). |
+| `rubric_sections` | Rubric categories (Agile, Repository, CI/CD, Code, Product). |
+| `rubric_items` | Rubric criteria under each section with maximum score. |
+| `rubric_scores` | Individual rubric evaluations by TAs for teams or students. |
+| `notifications` | Automated reminders or announcements (user, channel, template, send status). |
+| `integrations` | External service connections (GitHub, Google, AWS) and related tokens/meta. |
+| `reports` | Generated analytics and performance summaries (parameters, file link, timestamp). |
+
 
 ---
 
