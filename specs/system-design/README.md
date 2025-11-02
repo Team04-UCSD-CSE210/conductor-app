@@ -8,7 +8,7 @@ communication. The system integrates authentication, persistent data storage, no
 and repository synchronization to streamline academic coordination and engagement.
 
 The system follows a **client–server architecture** built on **Node.js** with a **PostgreSQL** backend.
-External services such as **Auth.js**, **Gmail/Slack APIs**, and **GitHub API** are used 
+External services such as **Auth.js**, **Gmail/Slack APIs**, and **GitHub API** are used
 to provide authentication, notifications, and repository integration.
 
 ![System Architecture Diagram](./system-diagram.jpg)
@@ -61,7 +61,7 @@ to provide authentication, notifications, and repository integration.
 
 - **Database:** PostgreSQL
 
-####  Core & Authentication Tables
+#### Core & Authentication Tables
 
 | **Table** | **Description** |
 |------------|----------------|
