@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Conductor Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+  <!-- Nice, neutral system fonts with a touch of roundness -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: #12182b;
+      --panel-2: #161d33;
+      --text: #e7ecff;
+      --muted: #93a0c6;
+      --accent: #6ea8fe;
+      --accent-2: #8bd3ff;
+      --ok: #3ddc97;
+      --warn: #ffc861;
+      --err: #ff6b6b;
+      --border: rgba(255,255,255,0.06);
+      --shadow: 0 8px 28px rgba(0,0,0,0.35);
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box }
+    html,body{ height:100% }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 80% -10%, #213158 0%, transparent 60%),
+        radial-gradient(900px 500px at -10% 20%, #1a2a4a 0%, transparent 55%),
+        var(--bg);
+      line-height:1.45;
+    }
+
+    .container{
+      max-width: 940px;
+      margin: 48px auto;
+      padding: 0 20px;
+    }
+
+    .header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; margin-bottom:24px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:38px; height:38px; border-radius:10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: var(--shadow);
+    }
+    h1{ margin:0; font-size: clamp(20px, 2.4vw, 26px); font-weight:600; letter-spacing:.2px }
+
+    .status{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px; background:var(--panel-2); border:1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .dot{ width:10px; height:10px; border-radius:50%; background:var(--warn); box-shadow:0 0 12px rgba(255,255,255,.08) }
+    .status.ok .dot{ background:var(--ok) }
+    .status.err .dot{ background:var(--err) }
+    .muted{ color:var(--muted); font-size:13px }
+
+    .grid{
+      display:grid; grid-template-columns: 1fr; gap:18px; margin-top:18px;
+    }
+    @media (min-width: 840px){
+      .grid{ grid-template-columns: 1fr 1fr; }
+      .grid .card.span-2{ grid-column: span 2; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      backdrop-filter: blur(8px);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:18px;
+      box-shadow: var(--shadow);
+    }
+    .card h3{
+      margin:0 0 10px; font-size:16px; letter-spacing:.2px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+
+    button,.btn{
+      appearance:none; border:none; cursor:pointer;
+      padding:10px 14px; border-radius:12px;
+      color:#0b1020; background:linear-gradient(135deg, var(--accent), var(--accent-2));
+      font-weight:600; letter-spacing:.2px;
+      box-shadow: 0 6px 18px rgba(110,168,254,.28);
+      transition: transform .08s ease, filter .2s ease;
+    }
+    button:hover{ filter:brightness(1.05) }
+    button:active{ transform: translateY(1px) }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+    label{ font-size:13px; color:var(--muted) }
+    input, textarea{
+      width:100%;
+      background:#0f1527; color:var(--text);
+      border:1px solid var(--border); border-radius:12px;
+      padding:10px 12px; outline:none;
+    }
+    input:focus, textarea:focus{ border-color:#2c3f6e; box-shadow:0 0 0 3px rgba(142, 189, 255, .15) }
+    .stack{ display:flex; flex-direction:column; gap:8px }
+    .hint{ margin:6px 0 0; font-size:12px; color:var(--muted) }
+
+    pre{
+      margin:14px 0 0; background:#0c1326; color:#eaf1ff;
+      padding:12px; border-radius:12px; border:1px solid var(--border);
+      max-height:220px; overflow:auto; font-size:12.5px;
+    }
+
+    .badge{
+      display:inline-flex; gap:6px; align-items:center;
+      padding:6px 10px; border-radius:999px; font-size:12px;
+      background:#0f1527; border:1px solid var(--border); color:var(--muted);
+    }
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#0e1430; border:1px solid var(--border); padding:2px 6px; border-radius:6px; }
+
+    footer{ margin-top:26px; color:var(--muted); font-size:12.5px; text-align:center }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Conductor App — Local Demo</h1>
+          <div class="muted">HTMX calls → <span class="kbd">http://localhost:4000</span> (dev header <code>x-dev-user</code>)</div>
+        </div>
+      </div>
+      <div id="status" class="status">
+        <div class="dot"></div><span>Checking API…</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Current user -->
+      <section class="card">
+        <h3>Current User <span class="badge">GET /api/me</span></h3>
+        <div class="row">
+          <button
+            hx-get="http://localhost:4000/api/me"
+            hx-headers="{&quot;x-dev-user&quot;:&quot;student@ucsd.edu&quot;}"
+            hx-target="#me"
+            hx-swap="innerText"
+          >Load user</button>
+        </div>
+        <pre id="me">Click “Load user” to fetch.</pre>
+      </section>
+
+      <!-- Attendance -->
+      <section class="card">
+        <h3>Check In (Attendance) <span class="badge">POST /api/attendance/checkin</span></h3>
+        <form
+          class="stack"
+          hx-post="http://localhost:4000/api/attendance/checkin"
+          hx-headers="{&quot;x-dev-user&quot;:&quot;student@ucsd.edu&quot;}"
+          hx-target="#attOut"
+          hx-swap="innerText"
+        >
+          <label>Session ID</label>
+          <input name="sessionId" value="demo-session-1" />
+          <div class="row">
+            <button type="submit">Check in</button>
+            <span class="hint">Creates an <em>Attendance</em> row for the dev user.</span>
+          </div>
+        </form>
+        <pre id="attOut">Submit to see result.</pre>
+      </section>
+
+      <!-- Journal -->
+      <section class="card span-2">
+        <h3>Work Journal <span class="badge">POST /api/journal</span></h3>
+        <form
+          class="stack"
+          hx-post="http://localhost:4000/api/journal"
+          hx-headers="{&quot;x-dev-user&quot;:&quot;student@ucsd.edu&quot;}"
+          hx-target="#journalOut"
+          hx-swap="innerText"
+        >
+          <div class="row" style="gap:16px; flex-wrap:wrap">
+            <div style="flex:1 1 520px">
+              <label>Content</label>
+              <textarea name="content" rows="3" placeholder="What did you complete today?"></textarea>
+            </div>
+            <div style="width:160px">
+              <label>Mood (1–5)</label>
+              <input name="mood" type="number" min="1" max="5" placeholder="1-5"/>
+            </div>
+          </div>
+          <div class="row">
+            <button type="submit">Submit journal</button>
+            <span class="hint">Persists a <em>Journal</em> row with optional mood.</span>
+          </div>
+        </form>
+        <pre id="journalOut">Submit to see result.</pre>
+      </section>
+    </div>
+
+    <footer>
+      Tip: open <span class="kbd">npx prisma studio</span> to inspect tables (User / Attendance / Journal).
+    </footer>
+  </div>
+
+  <!-- Tiny bit of JS just to show API status nicely -->
+  <script>
+    (async () => {
+      const el = document.getElementById('status');
+      try {
+        const res = await fetch('http://localhost:4000/api/health');
+        if (res.ok) {
+          el.classList.add('ok');
+          el.querySelector('.dot').style.background = 'var(--ok)';
+          el.querySelector('span').textContent = 'API reachable';
+        } else {
+          throw new Error('not ok');
+        }
+      } catch {
+        el.classList.add('err');
+        el.querySelector('.dot').style.background = 'var(--err)';
+        el.querySelector('span').textContent = 'API unreachable';
+      }
+    })();
+  </script>
+</body>
+</html>
