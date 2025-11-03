@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-The **Conductor App** is a collaborative web and mobile platform designed to support students and
+The **Conductor App** is a collaborative web & mobile platform designed to support students and
 instructors through class management, attendance tracking, stand-up journaling, and automated
 communication. The system integrates authentication, persistent data storage, notification services,
 and repository synchronization to streamline academic coordination and engagement.
