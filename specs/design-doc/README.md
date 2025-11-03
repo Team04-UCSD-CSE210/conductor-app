@@ -88,8 +88,7 @@ The conductor application must be...
   nature of the project
   - **[NFR.8.1]** Integrate with UCSD OAuth for authentication
   - **[NFR.8.2]** Use database encryption for all stored data
-  - **[NFR.8.3]** Implement AWS IAM roles for access control
-  - **[NFR.8.4]** Ensure mobile-friendly security protocols
+  - **[NFR.8.3]** Ensure mobile-friendly security protocols
 - **[NFR.9]** Ensure data persistence and backup capabilities
 - **[NFR.10]** Comply with FERPA requirements for student data protection
 
@@ -110,7 +109,6 @@ The conductor application must be...
 
 - UCSD OAuth integration for secure login
 - Role-based access control (Instructor, TA, Tutor, Student Leader, Student)
-- AWS IAM integration for resource management
 
 ### User Management System
 
