@@ -54,7 +54,7 @@ All code changes must include comprehensive test coverage to maintain system rel
 ## Sprint Process
 
 **Duration:** 2-week sprints
-**Start Date:** November 3rd, 2024
+**Start Date:** November 3rd, 2025
 **Schedule:**
 
 - Sprint Planning: First Monday of each sprint
