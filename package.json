@@ -21,6 +21,8 @@
     "redis": "^5.9.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@eslint/css": "^0.14.1",
     "@eslint/js": "^9.39.1",
     "@eslint/json": "^0.14.0",
