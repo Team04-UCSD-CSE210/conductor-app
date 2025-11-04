@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "docs": "echo 'No documentation build required'",
     "start": "node server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "docs": "echo 'No documentation build required'"
   },
   "keywords": [],
   "author": "",
