@@ -199,16 +199,21 @@ psql "$DATABASE_URL" -f schema.sql
 Follow this procedure to prepare a local PostgreSQL instance:
 
 1. Confirm the `psql` client is available:
+
    ```bash
    psql --version
    ```
+
 2. Connect as a superuser (e.g., `postgres`) and run:
+
    ```sql
    CREATE USER conductor_app_user WITH PASSWORD 'YOUR_PASSWORD';
    CREATE DATABASE conductor_db OWNER conductor_app_user;
    GRANT ALL PRIVILEGES ON DATABASE conductor_db TO conductor_app_user;
    ```
+
 3. Disconnect from the session with `\q`.
+
 - Any blockers or dependencies
 
 ### Sprint Review & Retrospectives

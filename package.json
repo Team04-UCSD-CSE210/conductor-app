@@ -10,8 +10,8 @@
     "lint:html": "htmlhint '**/*.html'",
     "lint:md": "markdownlint '**/*.md'",
     "docs": "jsdoc -d docs .",
-    "test": "node --test --experimental-test-coverage --test-coverage-lines=0.8 --test-coverage-functions=0.8 --test-coverage-branches=0.8 --test-coverage-include=src/**/*.js"
-  },
+    "test": "node scripts/run-tests-with-coverage.js"
+},
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -33,4 +33,5 @@
     "stylelint": "^16.0.0",
     "stylelint-config-standard": "^36.0.0"
   }
+
 }
