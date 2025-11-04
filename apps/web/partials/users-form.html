@@ -1,0 +1,37 @@
+<form
+  class="border p-4 rounded bg-white"
+  hx-post="/api/v1/users"
+  hx-target="#users-form"
+  hx-swap="outerHTML"
+>
+  <div class="mb-2">
+    <label class="block text-sm font-medium">Name</label>
+    <input name="name" required class="border p-2 w-full rounded" />
+  </div>
+
+  <div class="mb-2">
+    <label class="block text-sm font-medium">Email</label>
+    <input type="email" name="email" required class="border p-2 w-full rounded" />
+  </div>
+
+  <div class="mb-2">
+    <label class="block text-sm font-medium">Role</label>
+    <select name="role" required class="border p-2 w-full rounded">
+      <option value="student">Student</option>
+      <option value="instructor">Instructor</option>
+      <option value="admin">Admin</option>
+    </select>
+  </div>
+
+  <div class="flex gap-2">
+    <button type="submit" class="bg-green-600 text-white px-4 py-1 rounded">Save</button>
+    <button
+      type="button"
+      class="bg-gray-400 text-white px-4 py-1 rounded"
+      hx-get="/partials/users-list.html"
+      hx-target="#main"
+    >
+      Cancel
+    </button>
+  </div>
+</form>

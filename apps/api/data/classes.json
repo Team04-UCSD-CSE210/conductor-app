@@ -1,0 +1,31 @@
+[
+  {
+    "code": "CSE_1762242048669_2yz8",
+    "title": "Unique",
+    "instructor": "",
+    "tags": []
+  },
+  {
+    "code": "NOHIT_1762242048607_jzhy",
+    "title": "Z_1762242048607_jzhy",
+    "instructor": "",
+    "tags": []
+  },
+  {
+    "code": "CSEFILT",
+    "title": "Filtering",
+    "instructor": "Dr. Smith",
+    "tags": [
+      "intro",
+      "2025"
+    ]
+  },
+  {
+    "code": "CSETAGS",
+    "title": "Updated",
+    "instructor": "",
+    "tags": [
+      "keep-me"
+    ]
+  }
+]

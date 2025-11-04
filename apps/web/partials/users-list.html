@@ -1,0 +1,38 @@
+<div class="max-w-2xl mx-auto">
+  <h2 class="text-lg font-bold mb-2">User Manager</h2>
+  <button
+    hx-get="/partials/users-form.html"
+    hx-target="#users-form"
+    class="bg-blue-600 text-white px-3 py-1 rounded mb-3"
+  >
+    + New User
+  </button>
+
+  <div id="users-form"></div>
+
+  <table class="w-full border border-gray-300 bg-white">
+    <thead>
+      <tr class="bg-gray-100">
+        <th class="border p-2">Name</th>
+        <th class="border p-2">Email</th>
+        <th class="border p-2">Role</th>
+        <th class="border p-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody
+      id="users-table-body"
+      hx-get="/api/v1/users"
+      hx-trigger="load"
+      hx-target="this"
+      hx-swap="innerHTML"
+    ></tbody>
+  </table>
+</div>
+
+<script>
+  document.addEventListener("htmx:afterRequest", (e) => {
+    if (e.detail.successful && e.detail.target.id === "users-form") {
+      htmx.trigger("#users-table-body", "load");
+    }
+  });
+</script>

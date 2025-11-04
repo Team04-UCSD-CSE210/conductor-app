@@ -1,0 +1,47 @@
+<form
+  class="border p-4 rounded bg-white"
+  hx-post="/api/v1/classes"
+  hx-target="#class-detail"
+  hx-swap="outerHTML"
+>
+  <h3 class="font-semibold mb-2">Add New Class</h3>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <label class="block text-sm font-medium">Code</label>
+      <input name="code" required class="border p-2 w-full rounded" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Title</label>
+      <input name="title" required class="border p-2 w-full rounded" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Instructor</label>
+      <input name="instructor" required class="border p-2 w-full rounded" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Schedule</label>
+      <input name="schedule" placeholder="Mon 10:00–12:00" class="border p-2 w-full rounded" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Capacity</label>
+      <input type="number" name="capacity" min="0" value="50" class="border p-2 w-full rounded" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Tags (comma separated)</label>
+      <input name="tags" placeholder="software,team" class="border p-2 w-full rounded" />
+    </div>
+  </div>
+
+  <div class="flex gap-2 mt-3">
+    <button type="submit" class="bg-green-600 text-white px-4 py-1 rounded">Save</button>
+    <button
+      type="button"
+      class="bg-gray-400 text-white px-4 py-1 rounded"
+      hx-get="/partials/classes-list.html"
+      hx-target="#main"
+    >
+      Cancel
+    </button>
+  </div>
+</form>
