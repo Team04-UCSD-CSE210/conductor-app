@@ -1,0 +1,8 @@
+[
+  { "email": "instructor@ucsd.edu", "password": "admin123", "role": "Instructor" },
+  { "email": "ta@ucsd.edu", "password": "ta123", "role": "Teaching Assistant" },
+  { "email": "tutor@ucsd.edu", "password": "tutor123", "role": "Tutor" },
+  { "email": "leader@ucsd.edu", "password": "leader123", "role": "Student Leader" },
+  { "email": "student@ucsd.edu", "password": "student123", "role": "Student Standard" }
+]
+
