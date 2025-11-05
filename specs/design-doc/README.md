@@ -159,6 +159,6 @@ The conductor application must be...
 
 ## Implementation Planning Phase (Milestones)
 
-- Sprint 1 (Nov 3-16, 2025)
-- Sprint 2 (Nov 17-30, 2025)
-- Sprint 3 (Dec 1-7, 2025)
+**First Sprint:** Tuesday, November 3rd - Friday, November 7th, 2025
+**Subsequent Sprints:** Friday to Friday
+**Project Deadline:** December 1st, 2025
