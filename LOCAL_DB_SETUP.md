@@ -99,7 +99,7 @@ Expected output should list demo users like:
 
 If you need to recreate the DB from scratch:
 
-### Using npm scripts (recommended)
+### Using npm scripts for reset (recommended)
 
 ```bash
 # Reset database (drop and recreate)
@@ -228,6 +228,7 @@ SELECT * FROM users;
 ### Connection Errors
 
 If you see "DATABASE_URL not defined":
+
 1. Check that `.env` file exists
 2. Verify `DATABASE_URL` is set correctly
 3. Ensure database is running (`docker compose ps db`)
@@ -235,6 +236,7 @@ If you see "DATABASE_URL not defined":
 ### Migration Errors
 
 If migrations fail:
+
 1. Check database connection: `npm run db:init`
 2. Verify PostgreSQL is running
 3. Check migration files exist in `migrations/` directory
@@ -243,6 +245,7 @@ If migrations fail:
 ### Schema Already Exists
 
 If you see "Schema already initialized":
+
 - Use `--force` to re-run: `npm run db:force`
 - Or reset completely: `npm run db:reset`
 
