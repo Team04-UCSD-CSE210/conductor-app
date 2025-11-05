@@ -1,33 +1,43 @@
 ---
 name: Bug Report
 about: Create a report to help us improve
-title: 'bug: '
+title: 'fix: '
 labels: bug
 assignees: ''
 ---
 
-## Bug Description
-A clear and concise description of what the bug is.
+## Description
+<!-- A clear description of what the bug is -->
+
+## User Stories
+• As a [user type]: I want [goal] so that [benefit]
+• As a [user type]: I expect [expected behavior] when [action]
 
 ## Steps to Reproduce
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+1. 
+2. 
+3. 
 
-## Expected Behavior
-A clear and concise description of what you expected to happen.
+## Acceptance Criteria
+- [ ] Bug is reproducible and identified
+- [ ] Root cause analysis completed
+- [ ] Fix implemented without breaking existing functionality
+- [ ] Regression tests added to prevent reoccurrence
 
-## Actual Behavior
-A clear and concise description of what actually happened.
-
-## Screenshots
-If applicable, add screenshots to help explain your problem.
+## Technical Requirements
+• Browser compatibility maintained
+• Performance impact minimized
+• Security considerations addressed
+• Error handling improved
 
 ## Environment
-- OS: [e.g. macOS, Windows, Linux]
-- Browser: [e.g. Chrome, Safari, Firefox]
-- Version: [e.g. 22]
+**Browser/Device:** <!-- Chrome 91, Safari on iPhone, etc. -->
+**Operating System:** <!-- Windows 10, macOS Big Sur, etc. -->
+**Console Errors:** <!-- Any error messages -->
 
-## Additional Context
-Add any other context about the problem here.
+## Definition of Done
+- [ ] Bug fix implemented and tested
+- [ ] Unit tests cover the fix
+- [ ] Manual testing completed
+- [ ] Code review approved
+- [ ] Documentation updated if needed

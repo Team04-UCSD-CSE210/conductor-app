@@ -1,13 +1,13 @@
 ---
-name: Feature Request
-about: Suggest an idea for this project
-title: 'feat: '
-labels: enhancement
+name: Task
+about: General task or work item for sprint planning
+title: 'task: '
+labels: task
 assignees: ''
 ---
 
 ## Description
-<!-- Describe the feature and its purpose -->
+<!-- Brief description of the task and its purpose -->
 
 ## User Stories
 • As a [user type]: I want [goal] so that [benefit]
@@ -26,12 +26,12 @@ assignees: ''
 ## Technical Requirements
 • Performance considerations
 • Security requirements
-• Browser/device compatibility
 • Integration requirements
+• Data handling specifications
 
 ## Definition of Done
-- [ ] Feature implemented and tested
-- [ ] Unit and integration tests passing
+- [ ] All tasks completed and tested
 - [ ] Code review approved
+- [ ] Unit tests passing
 - [ ] Documentation updated
-- [ ] User acceptance testing completed
+- [ ] Sprint requirements met
