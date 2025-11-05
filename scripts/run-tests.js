@@ -8,6 +8,6 @@ const testFiles = fs
   .map(f => `src/tests/${f}`);
 
 for (const file of testFiles) {
-  console.log(`\n🧪 Running ${file}...`);
+  console.log(`\n Running ${file}...`);
   execSync(`npx vitest run -c vitest.config.js ${file}`, { stdio: 'inherit' });
 }
