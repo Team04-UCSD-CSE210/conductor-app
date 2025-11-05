@@ -59,12 +59,12 @@ Follow this procedure to prepare a local PostgreSQL instance:
 
 1. Setup environment variables
 
-- Create `.env` file in the root folder 
+- Create `.env` file in the root folder
 - Copy the content of `env.sample` to `.env`
 - Change the values with yours
 
 2. Install the dependencies \
 `npm install`
 
-2. Run the server \
+3. Run the server \
 ``node server.js``
