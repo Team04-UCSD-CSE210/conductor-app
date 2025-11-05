@@ -17,3 +17,12 @@ export const pool = new pg.Pool({
 pool.on('connect', () => {
   if (process.env.DEBUG_DB) console.log('[db] connect event');
 });
+
+export async function assertDb() {
+  try {
+    await pool.query('SELECT 1');
+    if (process.env.DEBUG_DB) console.log('[db] connection verified');
+  } catch (err) {
+    throw new Error(`Database connection failed: ${err.message}`);
+  }
+}
