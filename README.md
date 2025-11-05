@@ -54,9 +54,7 @@ All code changes must include comprehensive test coverage to maintain system rel
 ## Sprint Process
 
 **Duration:** 1-week sprints
-**First Sprint:** Tuesday, November 3rd - Friday, November 7th, 2025
-**Subsequent Sprints:** Friday to Friday
-**Project Deadline:** December 1st, 2025
+**Start Date:** November 3rd, 2025
 **Schedule:**
 
 - Sprint Planning: First Saturday of each sprint
