@@ -16,8 +16,9 @@
 
 [What becomes easier or more difficult to do because of this change?]
 
-```
+---
+
 ## Naming Convention
+
 - Files: `adr-XXXX-title.md` (e.g., `adr-0001-database-selection.md`)
 - Sequential numbering starting from 0001
-```
