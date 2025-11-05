@@ -1,49 +1,27 @@
-# 🐘 Local Database Setup & Command Reference
+# 🐘 Local Database Setup Guide
 
-Complete guide for setting up, managing, and using the Conductor App database and development environment.
-
----
-
-## 🚀 Quick Start
-
-```bash
-# 1. Copy environment file
-cp env.example .env
-
-# 2. Start database
-docker compose up -d db
-
-# 3. Initialize database with seed data
-npm run db:seed
-
-# 4. Start the server
-npm start
-```
-
-The server will run on `http://localhost:3000` and the database on `localhost:5432`.
+To deploy and test the PostgreSQL database locally, follow these steps.
 
 ---
 
-## 📦 Database Setup
-
-### 1️⃣ Environment Configuration
+## 1️⃣ Copy the environment file
 
 Create a local `.env` from the example template:
 
 ```bash
-cp env.example .env
+cp .env.example .env
 ```
 
-Edit `.env` if needed:
+Then edit `.env` if needed:
 
 ```env
-DATABASE_URL=postgresql://app:app_pw@localhost:5432/conductor
+DATABASE_URL=postgresql://app:password@db:5432/conductor
 PORT=3000
 ```
 
-**Note**: The default password in docker-compose.yml is `app_pw`, not `password`.
+---
 
-### 2️⃣ Start Database Container
+## 2️⃣ Start the database container
 
 Use Docker Compose to start the PostgreSQL service:
 
@@ -51,56 +29,59 @@ Use Docker Compose to start the PostgreSQL service:
 docker compose up -d db
 ```
 
-This starts a local Postgres instance named **db** with the configured username and password.
+This will start a local Postgres instance named **db** with the configured username and password.
 
-### 3️⃣ Initialize Database
+---
 
-You have two options for initialization:
+## 3️⃣ Initialize the tables
 
-#### Option A: Automated (Recommended)
+You can initialize the database using npm scripts (recommended) or manually:
+
+### Using npm scripts (recommended)
 
 ```bash
 # Initialize schema only
 npm run db:init
 
-# Initialize with demo users
+# Initialize with demo data
 npm run db:seed
-
-# Reset database (drop and recreate)
-npm run db:reset
-
-# Reset with seed data
-npm run db:reset -- --seed
-
-# Force re-run migrations
-npm run db:force
 ```
 
-#### Option B: Manual (Using Docker)
+### Manual initialization
+
+Run the migration SQL script inside the container:
 
 ```bash
-# Run migration SQL script
 docker compose exec db psql -U app -d conductor -f /docker-entrypoint-initdb.d/01-create-users.sql
+```
 
-# Seed demo users
+This creates the `users` table and related triggers and indexes.
+
+---
+
+## 4️⃣ Seed demo users
+
+Once the schema is created, populate the database with demo data:
+
+```bash
+# Using npm script (recommended)
+npm run db:seed
+
+# Or manually
 docker compose exec db psql -U app -d conductor -f /docker-entrypoint-initdb.d/02-seed-demo-users.sql
 ```
 
-**Note**: Migrations run automatically when the container starts for the first time (via `/docker-entrypoint-initdb.d`).
+This will insert several demo users into the `users` table for testing the API and frontend.
 
-### 4️⃣ Verify Database
+---
+
+## 5️⃣ Verify the database
 
 Check that the `users` table exists and data is inserted:
 
 ```bash
-# List tables
 docker compose exec db psql -U app -d conductor -c "\dt"
-
-# View users
 docker compose exec db psql -U app -d conductor -c "SELECT * FROM users LIMIT 5;"
-
-# Count users
-docker compose exec db psql -U app -d conductor -c "SELECT COUNT(*) FROM users;"
 ```
 
 Expected output should list demo users like:
@@ -108,61 +89,125 @@ Expected output should list demo users like:
 ```text
  id | name     | email             | role  | status 
 ----+----------+-------------------+-------+---------
- 1  | Prof X   | prof@ucsd.edu    | admin | active
- 2  | Alice    | alice@ucsd.edu   | user  | active
+ 1  | Alice    | alice@example.com | user  | active
+ 2  | Bob      | bob@example.com   | admin | active
 ```
 
 ---
 
-## 📋 Database Commands Reference
+## 6️⃣ (Optional) Reset or rebuild the database
 
-### Database Container Management
+If you need to recreate the DB from scratch:
+
+### Using npm scripts (recommended)
 
 ```bash
-# Start PostgreSQL container
-docker compose up -d db
+# Reset database (drop and recreate)
+npm run db:reset
 
-# Stop database container
-docker compose down
+# Reset with seed data
+npm run db:reset -- --seed
 
-# View database status
-docker compose ps db
+# Force re-run migrations (if schema already exists)
+npm run db:force
+```
 
-# Restart database
-docker compose restart db
+### Manual reset
 
-# View logs
-docker compose logs db
-docker compose logs -f db  # Follow logs
-
-# Remove database volume (complete reset)
+```bash
 docker compose down -v
+docker compose up -d db
+docker compose exec db psql -U app -d conductor -f /docker-entrypoint-initdb.d/01-create-users.sql
+docker compose exec db psql -U app -d conductor -f /docker-entrypoint-initdb.d/02-seed-demo-users.sql
 ```
 
-### Database Initialization Commands
+---
+
+## 7️⃣ Run tests
+
+After confirming your DB works, run the backend test suite to verify integration.
+
+### Run all tests
 
 ```bash
-npm run db:init      # Initialize schema only
-npm run db:seed      # Initialize with demo users
-npm run db:reset     # Reset database (drop and recreate)
-npm run db:force     # Force re-run migrations
+npm run local:test
 ```
 
-### Database Queries
+### Or run specific files
 
 ```bash
-# Connect to database interactively
+npx vitest run src/tests/user-model.test.js
+npx vitest run src/tests/user-service.test.js
+```
+
+✅ The tests cover:
+
+- Table creation and inserts
+- Duplicate email protection
+- Listing with limit/offset
+- Update and delete behavior
+- Integration with DB connection pool
+
+---
+
+## ✅ Done
+
+Your local PostgreSQL database and backend tests are now fully configured.
+
+Backend will connect via:
+
+```env
+DATABASE_URL=postgresql://app:password@localhost:5432/conductor
+```
+
+---
+
+## 8️⃣ Database Commands Reference
+
+### Initialize Schema
+
+Creates all tables, indexes, triggers, and functions:
+
+```bash
+npm run db:init
+```
+
+### Initialize with Seed Data
+
+Creates schema and populates with demo users:
+
+```bash
+npm run db:seed
+```
+
+### Reset Database
+
+Drops all tables and recreates from scratch:
+
+```bash
+npm run db:reset
+npm run db:reset -- --seed  # With seed data
+```
+
+### Force Re-run Migrations
+
+Forces migration execution even if schema exists:
+
+```bash
+npm run db:force
+```
+
+### Connect to Database
+
+```bash
+# Using Docker
 docker compose exec db psql -U app -d conductor
 
-# Common queries
-docker compose exec db psql -U app -d conductor -c "SELECT COUNT(*) FROM users;"
-docker compose exec db psql -U app -d conductor -c "SELECT * FROM users;"
-docker compose exec db psql -U app -d conductor -c "\d users"      # Table structure
-docker compose exec db psql -U app -d conductor -c "\dt"          # List tables
-docker compose exec db psql -U app -d conductor -c "\di"          # List indexes
+# Using local PostgreSQL
+psql $DATABASE_URL
 ```
 
-### SQL Commands (Inside psql)
+### Verify Schema
 
 ```sql
 -- List all tables
@@ -176,166 +221,32 @@ docker compose exec db psql -U app -d conductor -c "\di"          # List indexes
 
 -- View all users
 SELECT * FROM users;
-
--- Count users by role
-SELECT role, COUNT(*) FROM users GROUP BY role;
-
--- Find user by email (case-insensitive)
-SELECT * FROM users WHERE email = 'user@example.com';
 ```
 
----
+## 9️⃣ Troubleshooting
 
-## 🧪 Testing
+### Connection Errors
 
-### Run Tests
+If you see "DATABASE_URL not defined":
+1. Check that `.env` file exists
+2. Verify `DATABASE_URL` is set correctly
+3. Ensure database is running (`docker compose ps db`)
 
-```bash
-# Run all tests
-npm run local:test
+### Migration Errors
 
-# Run specific test file
-npx vitest run src/tests/roster-service.test.js
-npx vitest run src/tests/user-service.test.js
-npx vitest run src/tests/user-model.test.js
+If migrations fail:
+1. Check database connection: `npm run db:init`
+2. Verify PostgreSQL is running
+3. Check migration files exist in `migrations/` directory
+4. Use `--force` flag to re-run: `npm run db:force`
 
-# Run tests in watch mode
-npx vitest watch src/tests/roster-service.test.js
-```
+### Schema Already Exists
 
-### Test Coverage
+If you see "Schema already initialized":
+- Use `--force` to re-run: `npm run db:force`
+- Or reset completely: `npm run db:reset`
 
-The tests cover:
-- Table creation and inserts
-- Duplicate email protection
-- Listing with limit/offset
-- Update and delete behavior
-- Integration with DB connection pool
-- Roster import/export functionality
-- CSV and JSON parsing
-- Error handling
-
-### Testing Workflow
-
-```bash
-# 1. Reset database before tests
-npm run db:reset
-
-# 2. Run tests
-npm run local:test
-
-# 3. Start server and test manually
-npm start
-```
-
----
-
-## 🔧 Development Commands
-
-### Server
-
-```bash
-# Start development server
-npm start
-
-# Server runs on http://localhost:3000
-```
-
-### Code Quality
-
-```bash
-# Run all linters
-npm run lint
-
-# Run specific linters
-npm run lint:js      # ESLint
-npm run lint:css      # Stylelint
-npm run lint:html     # HTMLHint
-npm run lint:md       # Markdownlint
-```
-
-### Performance Testing
-
-```bash
-# Database performance test
-npm run perf:db
-
-# API performance test
-npm run perf:api
-```
-
-### Examples
-
-```bash
-# Run user CRUD example
-node examples/user-crud-example.js
-
-# Run roster import/export example
-node examples/roster-import-export-example.js
-```
-
----
-
-## 🌐 API Endpoints
-
-Once the server is running, you can test these endpoints:
-
-### Health Check
-
-```bash
-curl http://localhost:3000/health
-```
-
-### User Management
-
-```bash
-# Create a user
-curl -X POST http://localhost:3000/users \
-  -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com","role":"user"}'
-
-# Get all users
-curl http://localhost:3000/users
-
-# Get user by ID
-curl http://localhost:3000/users/{id}
-
-# Update user
-curl -X PUT http://localhost:3000/users/{id} \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Jane Doe","role":"admin"}'
-
-# Delete user
-curl -X DELETE http://localhost:3000/users/{id}
-```
-
-### Roster Management
-
-```bash
-# Import roster from JSON
-curl -X POST http://localhost:3000/users/roster/import/json \
-  -H "Content-Type: application/json" \
-  -d '[{"name":"Alice","email":"alice@example.com","role":"user"}]'
-
-# Import roster from CSV (file upload)
-curl -X POST http://localhost:3000/users/roster/import/csv \
-  -F "file=@roster.csv"
-
-# Import roster from CSV (text)
-curl -X POST http://localhost:3000/users/roster/import/csv \
-  -H "Content-Type: application/json" \
-  -d '{"csv":"name,email,role\nAlice,alice@example.com,user"}'
-
-# Export roster as JSON
-curl http://localhost:3000/users/roster/export/json -o roster.json
-
-# Export roster as CSV
-curl http://localhost:3000/users/roster/export/csv -o roster.csv
-```
-
----
-
-## 🗄️ Database Schema
+## 🔟 Database Schema
 
 The database consists of:
 
@@ -345,180 +256,20 @@ The database consists of:
 - **Indexes**: email, created_at, role, status
 - **Triggers**: Automatic updated_at timestamp
 
-### Schema Details
+See [src/database/schema.md](./src/database/schema.md) for detailed schema documentation.
 
-See [src/database/schema.md](./src/database/schema.md) for detailed schema documentation including:
-- Table structures
-- Column definitions
-- Indexes and constraints
-- Usage examples
-- Performance considerations
+## 💡 Tips
 
----
+Confirm connectivity anytime:
 
-## 🔍 Debugging
-
-### Check Server Health
-
-```bash
-curl http://localhost:3000/health
-```
-
-### View Database Logs
-
-```bash
-docker compose logs db
-docker compose logs -f db  # Follow logs
-```
-
-### Check Environment Variables
-
-```bash
-cat .env
-```
-
-### Verify Database Connection
-
-```bash
-docker compose exec db psql -U app -d conductor -c "SELECT 1;"
-```
-
-### Check Port Usage
-
-```bash
-lsof -i :3000   # Server port
-lsof -i :5432   # Database port
-```
-
----
-
-## 🆘 Troubleshooting
-
-### Connection Errors
-
-If you see "DATABASE_URL not defined":
-1. Check that `.env` file exists: `ls -la .env`
-2. Verify `DATABASE_URL` is set correctly: `cat .env`
-3. Ensure database is running: `docker compose ps db`
-
-### Migration Errors
-
-If migrations fail:
-1. Check database connection: `npm run db:init`
-2. Verify PostgreSQL is running: `docker compose ps db`
-3. Check migration files exist: `ls migrations/`
-4. Use `--force` flag to re-run: `npm run db:force`
-
-### Schema Already Exists
-
-If you see "Schema already initialized":
-- Use `--force` to re-run: `npm run db:force`
-- Or reset completely: `npm run db:reset`
-
-### Reset Everything
-
-```bash
-# Complete reset
-docker compose down -v
-docker compose up -d db
-npm run db:seed
-```
-
-### Port Already in Use
-
-```bash
-# Check what's using the port
-lsof -i :3000
-lsof -i :5432
-
-# Kill process if needed (replace PID)
-kill -9 <PID>
-```
-
----
-
-## ⚡ Common Workflows
-
-### Initial Setup
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Copy environment file
-cp env.example .env
-
-# 3. Start database
-docker compose up -d db
-
-# 4. Initialize database
-npm run db:seed
-
-# 5. Start server
-npm start
-```
-
-### Development Workflow
-
-```bash
-# Terminal 1: Start database
-docker compose up -d db
-
-# Terminal 2: Start server
-npm start
-
-# Terminal 3: Run tests
-npm run local:test
-```
-
-### Testing Workflow
-
-```bash
-# 1. Reset database
-npm run db:reset
-
-# 2. Run tests
-npm run local:test
-
-# 3. Start server and test manually
-npm start
-```
-
-### Reset for Clean State
-
-```bash
-# Drop everything and start fresh
-npm run db:reset -- --seed
-```
-
----
-
-## 🧹 Cleanup
-
-```bash
-# Stop and remove containers
-docker compose down
-
-# Remove containers and volumes (complete cleanup)
-docker compose down -v
-
-# Remove node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
----
-
-## ✅ Done
-
-Your local PostgreSQL database and backend are now fully configured.
-
-Backend connects via:
-```env
-DATABASE_URL=postgresql://app:app_pw@localhost:5432/conductor
-```
-
-**Tip**: Confirm connectivity anytime:
 ```bash
 docker compose exec db psql -U app -d conductor -c "SELECT COUNT(*) FROM users;"
 ```
+
+## 🏭 Production Considerations
+
+1. **Backups**: Regularly backup production database
+2. **Migrations**: Test migrations in staging before production
+3. **Connection Pooling**: Configured in `src/db.js`
+4. **Indexes**: All critical columns are indexed for performance
+5. **Constraints**: Unique constraints enforce data integrity
