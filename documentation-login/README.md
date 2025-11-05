@@ -1,4 +1,5 @@
 # Sprint1 Login Doc
+
 ## Environment Variables
 
 Create a `.env` file at the project root before running `npm start`. Required keys:
