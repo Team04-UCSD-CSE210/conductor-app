@@ -67,4 +67,3 @@ Follow this procedure to prepare a local PostgreSQL instance:
 
 3. Run the server  
    ``node server.js``
-
