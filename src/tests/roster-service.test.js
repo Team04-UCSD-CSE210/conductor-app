@@ -49,19 +49,19 @@ describe('RosterService', () => {
     });
 
     it('should reject non-array input', async () => {
-      await expect(RosterService.importRosterFromJson({}))
-        .rejects.toThrow('Expected an array of user objects');
+      await expect(RosterService.importRosterFromJson({ invalid: 'not an array' }))
+        .rejects.toThrow('Invalid JSON structure');
 
       await expect(RosterService.importRosterFromJson('not an array'))
-        .rejects.toThrow('Expected an array of user objects');
+        .rejects.toThrow('Invalid JSON structure');
 
       await expect(RosterService.importRosterFromJson(null))
-        .rejects.toThrow('Expected an array of user objects');
+        .rejects.toThrow('Invalid JSON structure');
     });
 
     it('should reject empty array', async () => {
       await expect(RosterService.importRosterFromJson([]))
-        .rejects.toThrow('User array cannot be empty');
+        .rejects.toThrow('User data cannot be empty');
     });
 
     it('should handle duplicate emails with upsert behavior', async () => {
@@ -80,6 +80,76 @@ describe('RosterService', () => {
       const user = await UserModel.findByEmail('duplicate@example.com');
       expect(user.name).toBe('Updated Name');
       expect(user.role).toBe('admin');
+    });
+
+    it('should handle nested JSON structures', async () => {
+      const nestedData = {
+        users: [
+          { name: 'Nested User 1', email: 'nested1@example.com', role: 'user' },
+          { name: 'Nested User 2', email: 'nested2@example.com', role: 'admin' },
+        ],
+      };
+
+      const result = await RosterService.importRosterFromJson(nestedData);
+      expect(result.imported.length).toBe(2);
+      expect(result.failed.length).toBe(0);
+    });
+
+    it('should handle data property in nested JSON', async () => {
+      const nestedData = {
+        data: [
+          { name: 'Data User 1', email: 'data1@example.com' },
+          { name: 'Data User 2', email: 'data2@example.com' },
+        ],
+      };
+
+      const result = await RosterService.importRosterFromJson(nestedData);
+      expect(result.imported.length).toBe(2);
+    });
+
+    it('should handle roster property in nested JSON', async () => {
+      const nestedData = {
+        roster: [
+          { name: 'Roster User', email: 'roster@example.com' },
+        ],
+      };
+
+      const result = await RosterService.importRosterFromJson(nestedData);
+      expect(result.imported.length).toBe(1);
+    });
+
+    it('should handle single object (auto-wrap)', async () => {
+      const singleUser = {
+        name: 'Single User',
+        email: 'single@example.com',
+        role: 'user',
+      };
+
+      const result = await RosterService.importRosterFromJson(singleUser);
+      expect(result.imported.length).toBe(1);
+      expect(result.imported[0].email).toBe('single@example.com');
+    });
+
+    it('should reject invalid nested structures', async () => {
+      const invalidData = {
+        invalid: 'not an array',
+      };
+
+      await expect(RosterService.importRosterFromJson(invalidData))
+        .rejects.toThrow('Invalid JSON structure');
+    });
+
+    it('should return imported IDs for rollback', async () => {
+      const users = [
+        { name: 'Rollback User 1', email: 'rollback1@example.com' },
+        { name: 'Rollback User 2', email: 'rollback2@example.com' },
+      ];
+
+      const result = await RosterService.importRosterFromJson(users);
+      expect(result.importedIds).toBeDefined();
+      expect(result.importedIds.length).toBe(2);
+      expect(result.importedIds).toContain(result.imported[0].id);
+      expect(result.importedIds).toContain(result.imported[1].id);
     });
   });
 
@@ -368,6 +438,113 @@ Missing Name,invalid-email,user,active`;
       const exported = await RosterService.exportRosterToJson();
       expect(exported.length).toBe(50);
     });
+
+    it('should handle 1000+ records efficiently', async () => {
+      const startTime = Date.now();
+      const users = Array.from({ length: 1000 }, (_, i) => ({
+        name: `Performance User ${i}`,
+        email: `perf${i}@example.com`,
+        role: 'user',
+        status: 'active',
+      }));
+
+      const result = await RosterService.importRosterFromJson(users);
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      expect(result.imported.length).toBe(1000);
+      expect(result.failed.length).toBe(0);
+      expect(result.total).toBe(1000);
+      // Should complete 1000 records in reasonable time (under 30 seconds)
+      expect(duration).toBeLessThan(30000);
+
+      // Verify all users were imported (check that imported count matches)
+      expect(result.imported.length).toBe(1000);
+      // Verify each imported user exists
+      for (const importedUser of result.imported.slice(0, 10)) {
+        const user = await UserModel.findById(importedUser.id);
+        expect(user).toBeDefined();
+        expect(user.email).toBe(importedUser.email);
+      }
+    });
+
+    it('should track progress during large imports', async () => {
+      const progressUpdates = [];
+      const users = Array.from({ length: 100 }, (_, i) => ({
+        name: `Progress User ${i}`,
+        email: `progress${i}@example.com`,
+        role: 'user',
+        status: 'active',
+      }));
+
+      const progressCallback = (progress) => {
+        progressUpdates.push(progress);
+      };
+
+      await RosterService.importRosterFromJson(users, progressCallback);
+
+      // Should have received progress updates
+      expect(progressUpdates.length).toBeGreaterThan(0);
+      // Last update should show 100% completion
+      const lastUpdate = progressUpdates[progressUpdates.length - 1];
+      expect(lastUpdate.processed).toBe(100);
+      expect(lastUpdate.total).toBe(100);
+      expect(lastUpdate.imported).toBe(100);
+    });
+  });
+
+  describe('rollbackImport', () => {
+    it('should rollback imported users by ID', async () => {
+      // Import some users
+      const users = [
+        { name: 'Rollback Test 1', email: 'rollback1@example.com' },
+        { name: 'Rollback Test 2', email: 'rollback2@example.com' },
+        { name: 'Rollback Test 3', email: 'rollback3@example.com' },
+      ];
+
+      const importResult = await RosterService.importRosterFromJson(users);
+      const userIds = importResult.importedIds;
+
+      // Rollback the import
+      const rollbackResult = await RosterService.rollbackImport(userIds);
+
+      expect(rollbackResult.rolledBack.length).toBe(3);
+      expect(rollbackResult.failed.length).toBe(0);
+
+      // Verify users are deleted
+      for (const id of userIds) {
+        const user = await UserModel.findById(id);
+        expect(user).toBeNull();
+      }
+    });
+
+    it('should handle partial rollback failures', async () => {
+      const users = [
+        { name: 'Partial Rollback', email: 'partial@example.com' },
+      ];
+
+      const importResult = await RosterService.importRosterFromJson(users);
+      const userId = importResult.importedIds[0];
+
+      // Rollback twice (second should fail)
+      await RosterService.rollbackImport([userId]);
+      const rollbackResult = await RosterService.rollbackImport([userId]);
+
+      expect(rollbackResult.rolledBack.length).toBe(0);
+      expect(rollbackResult.failed.length).toBe(1);
+      expect(rollbackResult.failed[0].id).toBe(userId);
+    });
+
+    it('should handle invalid user IDs gracefully', async () => {
+      const rollbackResult = await RosterService.rollbackImport([
+        '00000000-0000-0000-0000-000000000000',
+        'invalid-id',
+      ]);
+
+      expect(rollbackResult.rolledBack.length).toBe(0);
+      expect(rollbackResult.failed.length).toBe(2);
+    });
   });
 });
+
 
