@@ -10,12 +10,15 @@
     "lint:html": "htmlhint '**/*.html'",
     "lint:md": "markdownlint '**/*.md'",
     "docs": "jsdoc -d docs .",
-    "test": "echo 'No tests specified'"
+    "test": "vitest",
+    "test:performance": "node scripts/performance-test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "sqlite3": "^5.1.6",
+    "validator": "^13.11.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.4.3",
@@ -25,6 +28,7 @@
     "jsdoc": "^4.0.2",
     "markdownlint-cli": "^0.45.0",
     "stylelint": "^16.0.0",
-    "stylelint-config-standard": "^36.0.0"
+    "stylelint-config-standard": "^36.0.0",
+    "vitest": "^1.0.0"
   }
 }
