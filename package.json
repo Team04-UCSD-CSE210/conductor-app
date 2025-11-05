@@ -10,12 +10,18 @@
     "lint:html": "htmlhint '**/*.html'",
     "lint:md": "markdownlint '**/*.md'",
     "docs": "jsdoc -d docs .",
-    "test": "echo 'No tests specified'"
-  },
+    "test": "node scripts/run-tests-with-coverage.js"
+},
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "express-session": "^1.17.3",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.4.3",
@@ -27,4 +33,5 @@
     "stylelint": "^16.0.0",
     "stylelint-config-standard": "^36.0.0"
   }
+
 }
