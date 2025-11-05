@@ -152,10 +152,12 @@ Req/s ~ 9-10k | Non-2xx: 0 | Errors: 0
 - **`connection refused`**: The DB container may be down. Run `docker compose ps` and
   `docker compose up -d db`.
 - **`uuid-ossp` / `citext` errors**: Re-run the SQL that enables extensions:
+
   ```bash
   docker compose exec db psql -U app -d conductor -c "CREATE EXTENSION IF NOT EXISTS "uuid-ossp";"
   docker compose exec db psql -U app -d conductor -c "CREATE EXTENSION IF NOT EXISTS citext;"
   ```
+  
 - **PowerShell escaping**: Prefer `curl.exe` (not `curl`) or use Postman/Insomnia.
 - **CORS (for frontend)**: Add `cors()` to the server if the UI runs on another origin.
 

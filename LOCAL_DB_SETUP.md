@@ -94,13 +94,13 @@ docker compose exec db psql -U app -d conductor -f /docker-entrypoint-initdb.d/0
 
 After confirming your DB works, run the backend test suite to verify integration.
 
-#### Run all tests
+### Run all tests
 
 ```bash
 npm run local:test
 ```
 
-#### Or run specific files
+### Or run specific files
 
 ```bash
 npx vitest run src/tests/user-model.test.js
@@ -129,7 +129,7 @@ DATABASE_URL=postgresql://app:password@localhost:5432/conductor
 
 ---
 
-**Tip**
+## Tip
 
 Confirm connectivity anytime:
 
