@@ -81,7 +81,7 @@ After confirming your DB works, run the backend test suite to verify integration
 
 #### Run all tests:
 ```bash
-npm test
+npm run local:test
 ```
 
 #### Or run specific files:

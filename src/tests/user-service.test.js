@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { pool } from '../db.js';
-import { UserModel } from '../models/user-model.js';
 import { UserService } from '../services/user-service.js';
 
 describe('UserService (business rules)', () => {
