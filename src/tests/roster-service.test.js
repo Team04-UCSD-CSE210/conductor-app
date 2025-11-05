@@ -455,7 +455,6 @@ Missing Name,invalid-email,user,active`;
       expect(result.imported.length).toBe(1000);
       expect(result.failed.length).toBe(0);
       expect(result.total).toBe(1000);
-      // Should complete 1000 records in reasonable time (under 30 seconds)
       expect(duration).toBeLessThan(30000);
 
       // Verify all users were imported (check that imported count matches)
