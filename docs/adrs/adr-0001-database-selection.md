@@ -10,11 +10,11 @@ Accepted
 
 ## Context
 
-During early development, the Conductor-App team needed to select a database system to store and 
+During early development, the Conductor-App team needed to select a database system to store and
 manage user, team, and attendance data. The two main candidates were **SQLite** and **PostgreSQL**.
 
-SQLite was initially considered for its simplicity and minimal setup requirements, making it 
-appealing for quick prototyping and local development. However, as the project evolved toward a 
+SQLite was initially considered for its simplicity and minimal setup requirements, making it
+appealing for quick prototyping and local development. However, as the project evolved toward a
 multi-user, production-scale web application, several requirements emerged:
 
 - Concurrent read/write operations from multiple users
@@ -52,5 +52,5 @@ PostgreSQL provides:
 - Requires active maintenance (backups, migrations, version upgrades)
 - Local environments must run a PostgreSQL container or service
 
-Overall, PostgreSQL offers a strong foundation for current needs and future scalability, making it 
+Overall, PostgreSQL offers a strong foundation for current needs and future scalability, making it
 the right choice for our database layer.
