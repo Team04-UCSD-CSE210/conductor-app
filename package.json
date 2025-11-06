@@ -3,23 +3,32 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"No tests yet\" && exit 0",
     "start": "node server.js",
-    "lint": "eslint .",
-    "docs": "echo 'No documentation build required'"
+    "test": "node scripts/run-tests-with-coverage.js",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:md",
+    "lint:js": "eslint .",
+    "lint:css": "stylelint '**/*.css' || echo 'No CSS files found'",
+    "lint:html": "htmlhint '**/*.html'",
+    "lint:md": "markdownlint '**/*.md'",
+    "docs": "jsdoc -d docs ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "connect-redis": "^9.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "redis": "^5.9.0"
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "redis": "^5.9.0",
+    "sequelize": "^6.37.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
