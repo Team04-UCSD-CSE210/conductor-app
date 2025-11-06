@@ -9,6 +9,11 @@ assignees: ''
 ## Description
 <!-- Describe the feature and its purpose -->
 
+## Priority/Impact
+**Priority:** <!-- High | Medium | Low -->
+**Impact:** <!-- Critical | High | Medium | Low -->
+**Justification:** <!-- Why this priority/impact level? -->
+
 ## User Stories
 • As a [user type]: I want [goal] so that [benefit]
 • As a [user type]: I need [functionality] to [achieve outcome]

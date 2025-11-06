@@ -18,6 +18,11 @@ assignees: ''
 2. 
 3. 
 
+## Expected vs Actual Behavior
+**Expected Behavior:** <!-- What should happen -->
+**Actual Behavior:** <!-- What actually happens -->
+**Screenshots/Videos:** <!-- If applicable -->
+
 ## Acceptance Criteria
 - [ ] Bug is reproducible and identified
 - [ ] Root cause analysis completed
