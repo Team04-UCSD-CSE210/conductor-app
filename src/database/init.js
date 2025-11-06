@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { pool } from '../db.js';
+import { pool, dbType } from '../db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,11 +31,20 @@ export class DatabaseInitializer {
    */
   static async executeSql(sql, description = 'SQL script') {
     try {
-      await pool.query(sql);
+      // Split SQL into individual statements for SQLite compatibility
+      const statements = sql.split(';').filter(stmt => stmt.trim());
+      
+      for (const statement of statements) {
+        if (statement.trim()) {
+          await pool.query(statement.trim());
+        }
+      }
       console.log(`✓ ${description} executed successfully`);
     } catch (error) {
       // Check if error is due to object already existing (idempotent operations)
-      if (error.code === '42P07' || error.code === '42710') {
+      if (error.code === '42P07' || error.code === '42710' || 
+          error.message?.includes('already exists') ||
+          error.message?.includes('duplicate column name')) {
         // Table or object already exists - this is OK for idempotent migrations
         console.log(`⚠ ${description} skipped (already exists)`);
         return;
@@ -49,16 +58,32 @@ export class DatabaseInitializer {
    * @param {boolean} includeSeeds - Whether to run seed data migrations
    */
   static async runMigrations(includeSeeds = false) {
-    console.log('[database] Running migrations...\n');
+    console.log(`[database] Running ${dbType} migrations...\n`);
 
-    // Run schema migrations
-    const schemaMigrations = [
-      { file: '01-create-users.sql', description: 'Create users table and schema' },
-    ];
+    // Run schema migrations based on database type
+    const schemaMigrations = [];
+    
+    if (dbType === 'postgresql') {
+      schemaMigrations.push(
+        { file: '01-create-users.sql', description: 'Create users table and schema' },
+        { file: '03-create-roles-permissions.sql', description: 'Create role-based access control system' }
+      );
+    } else {
+      schemaMigrations.push(
+        { file: '01-create-users-sqlite.sql', description: 'Create users table and schema (SQLite)' },
+        { file: '03-create-roles-permissions-sqlite.sql', description: 'Create role-based access control system (SQLite)' },
+        { file: '04-seed-role-permissions.sql', description: 'Seed role permissions' }
+      );
+    }
 
     for (const migration of schemaMigrations) {
-      const sql = this.readMigrationFile(migration.file);
-      await this.executeSql(sql, migration.description);
+      try {
+        const sql = this.readMigrationFile(migration.file);
+        await this.executeSql(sql, migration.description);
+      } catch (error) {
+        console.error(`Failed to run migration ${migration.file}:`, error.message);
+        throw error;
+      }
     }
 
     // Run seed migrations if requested
@@ -68,8 +93,12 @@ export class DatabaseInitializer {
       ];
 
       for (const migration of seedMigrations) {
-        const sql = this.readMigrationFile(migration.file);
-        await this.executeSql(sql, migration.description);
+        try {
+          const sql = this.readMigrationFile(migration.file);
+          await this.executeSql(sql, migration.description);
+        } catch (error) {
+          console.log(`⚠ ${migration.description} failed: ${error.message}`);
+        }
       }
     }
 
@@ -82,35 +111,48 @@ export class DatabaseInitializer {
    */
   static async verifySchema() {
     try {
-      // Check if users table exists
-      const result = await pool.query(`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_schema = 'public' 
-          AND table_name = 'users'
-        );
-      `);
+      if (dbType === 'postgresql') {
+        // Check if users table exists
+        const result = await pool.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = 'users'
+          );
+        `);
 
-      if (!result.rows[0].exists) {
-        console.log('[database] Users table not found');
-        return false;
-      }
+        if (!result.rows[0].exists) {
+          console.log('[database] Users table not found');
+          return false;
+        }
 
-      // Check if required columns exist
-      const columnsResult = await pool.query(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'users' 
-        AND table_schema = 'public';
-      `);
+        // Check if required columns exist
+        const columnsResult = await pool.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'users' 
+          AND table_schema = 'public';
+        `);
 
-      const requiredColumns = ['id', 'name', 'email', 'role', 'status', 'created_at', 'updated_at'];
-      const existingColumns = columnsResult.rows.map((row) => row.column_name);
+        const requiredColumns = ['id', 'name', 'email', 'created_at', 'updated_at'];
+        const existingColumns = columnsResult.rows.map((row) => row.column_name);
 
-      const missingColumns = requiredColumns.filter((col) => !existingColumns.includes(col));
-      if (missingColumns.length > 0) {
-        console.log(`[database] Missing columns: ${missingColumns.join(', ')}`);
-        return false;
+        const missingColumns = requiredColumns.filter((col) => !existingColumns.includes(col));
+        if (missingColumns.length > 0) {
+          console.log(`[database] Missing columns: ${missingColumns.join(', ')}`);
+          return false;
+        }
+      } else {
+        // SQLite verification
+        const result = await pool.query(`
+          SELECT name FROM sqlite_master 
+          WHERE type='table' AND name='users';
+        `);
+
+        if (result.rows.length === 0) {
+          console.log('[database] Users table not found');
+          return false;
+        }
       }
 
       console.log('[database] Schema verification passed');
@@ -130,7 +172,7 @@ export class DatabaseInitializer {
   static async initialize(options = {}) {
     const { seed = false, force = false } = options;
 
-    console.log('[database] Initializing database...\n');
+    console.log(`[database] Initializing ${dbType} database...\n`);
 
     try {
       // Verify connection
@@ -141,7 +183,16 @@ export class DatabaseInitializer {
       const schemaExists = await this.verifySchema();
 
       if (schemaExists && !force) {
-        console.log('[database] Schema already initialized. Use force=true to re-run migrations.\n');
+        console.log('[database] Schema already initialized. Use --force to re-run migrations.\n');
+        
+        // Still run role system migration if it doesn't exist
+        try {
+          await pool.query('SELECT 1 FROM courses LIMIT 1');
+          console.log('[database] Role system already initialized\n');
+        } catch (error) {
+          console.log('[database] Role system not found, initializing...\n');
+          await this.runRoleSystemMigration();
+        }
         return;
       }
 
@@ -162,6 +213,23 @@ export class DatabaseInitializer {
   }
 
   /**
+   * Run just the role system migration
+   */
+  static async runRoleSystemMigration() {
+    const migrationFile = dbType === 'postgresql' 
+      ? '03-create-roles-permissions.sql'
+      : '03-create-roles-permissions-sqlite.sql';
+    
+    try {
+      const sql = this.readMigrationFile(migrationFile);
+      await this.executeSql(sql, 'Create role-based access control system');
+    } catch (error) {
+      console.error('Failed to run role system migration:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Drops all tables (use with caution!)
    * Useful for testing or complete reset
    */
@@ -169,12 +237,27 @@ export class DatabaseInitializer {
     console.log('[database] Dropping all tables...\n');
 
     try {
-      await pool.query(`
-        DROP TABLE IF EXISTS users CASCADE;
-        DROP TYPE IF EXISTS user_role CASCADE;
-        DROP TYPE IF EXISTS user_status CASCADE;
-        DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
-      `);
+      if (dbType === 'postgresql') {
+        await pool.query(`
+          DROP TABLE IF EXISTS role_audit_log CASCADE;
+          DROP TABLE IF EXISTS user_course_roles CASCADE;
+          DROP TABLE IF EXISTS role_permissions CASCADE;
+          DROP TABLE IF EXISTS courses CASCADE;
+          DROP TABLE IF EXISTS users CASCADE;
+          DROP TYPE IF EXISTS app_role CASCADE;
+          DROP TYPE IF EXISTS permission_type CASCADE;
+          DROP TYPE IF EXISTS user_role CASCADE;
+          DROP TYPE IF EXISTS user_status CASCADE;
+          DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
+        `);
+      } else {
+        // SQLite
+        await pool.query('DROP TABLE IF EXISTS role_audit_log');
+        await pool.query('DROP TABLE IF EXISTS user_course_roles');
+        await pool.query('DROP TABLE IF EXISTS role_permissions');
+        await pool.query('DROP TABLE IF EXISTS courses');
+        await pool.query('DROP TABLE IF EXISTS users');
+      }
 
       console.log('[database] All tables dropped\n');
     } catch (error) {

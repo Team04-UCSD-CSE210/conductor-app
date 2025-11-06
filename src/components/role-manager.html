@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Management - Conductor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn:hover { opacity: 0.9; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-control { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background: #f8f9fa; font-weight: 600; }
+        .role-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .role-student { background: #e3f2fd; color: #1976d2; }
+        .role-team_leader { background: #f3e5f5; color: #7b1fa2; }
+        .role-tutor { background: #e8f5e8; color: #388e3c; }
+        .role-ta { background: #fff3e0; color: #f57c00; }
+        .role-professor { background: #ffebee; color: #d32f2f; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; margin: 50px auto; padding: 20px; border-radius: 8px; max-width: 500px; }
+        .close { float: right; font-size: 24px; cursor: pointer; }
+        .tabs { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { border-bottom-color: #007bff; color: #007bff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .loading { text-align: center; padding: 20px; color: #666; }
+        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Role Management</h1>
+            <p>Manage user roles and permissions across courses</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('course-roles')">Course Roles</div>
+            <div class="tab" onclick="switchTab('bulk-assign')">Bulk Assignment</div>
+            <div class="tab" onclick="switchTab('audit-log')">Audit Log</div>
+            <div class="tab" onclick="switchTab('permissions')">Permissions</div>
+        </div>
+
+        <!-- Course Roles Tab -->
+        <div id="course-roles" class="tab-content active">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Course Role Assignments</h3>
+                    <button class="btn btn-primary" onclick="openAssignModal()">Assign Role</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="courseSelect">Select Course:</label>
+                    <select id="courseSelect" class="form-control" onchange="loadCourseRoles()">
+                        <option value="">Loading courses...</option>
+                    </select>
+                </div>
+
+                <div id="courseRolesTable">
+                    <div class="loading">Select a course to view role assignments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Assignment Tab -->
+        <div id="bulk-assign" class="tab-content">
+            <div class="card">
+                <h3>Bulk Role Assignment</h3>
+                <p>Upload CSV or assign roles to multiple users at once</p>
+                
+                <div class="form-group">
+                    <label for="bulkCourseSelect">Course:</label>
+                    <select id="bulkCourseSelect" class="form-control">
+                        <option value="">Select course...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bulkRole">Role:</label>
+                    <select id="bulkRole" class="form-control">
+                        <option value="">Select role...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="userEmails">User Emails (one per line):</label>
+                    <textarea id="userEmails" class="form-control" rows="6" 
+                              placeholder="user1@example.com&#10;user2@example.com&#10;user3@example.com"></textarea>
+                </div>
+
+                <button class="btn btn-primary" onclick="bulkAssignRoles()">Assign Roles</button>
+            </div>
+        </div>
+
+        <!-- Audit Log Tab -->
+        <div id="audit-log" class="tab-content">
+            <div class="card">
+                <h3>Role Change Audit Log</h3>
+                <div id="auditLogTable">
+                    <div class="loading">Loading audit log...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Tab -->
+        <div id="permissions" class="tab-content">
+            <div class="card">
+                <h3>Role Permissions Matrix</h3>
+                <div id="permissionsMatrix">
+                    <div class="loading">Loading permissions...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Assignment Modal -->
+    <div id="assignModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAssignModal()">&times;</span>
+            <h3>Assign Role</h3>
+            
+            <div id="assignError" class="error" style="display: none;"></div>
+            
+            <div class="form-group">
+                <label for="assignUserEmail">User Email:</label>
+                <input type="email" id="assignUserEmail" class="form-control" placeholder="user@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="assignCourse">Course:</label>
+                <select id="assignCourse" class="form-control">
+                    <option value="">Select course...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="assignRole">Role:</label>
+                <select id="assignRole" class="form-control">
+                    <option value="">Select role...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="assignReason">Reason (optional):</label>
+                <input type="text" id="assignReason" class="form-control" placeholder="Assignment reason">
+            </div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeAssignModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="assignRole()">Assign Role</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="role-manager.js"></script>
+</body>
+</html>

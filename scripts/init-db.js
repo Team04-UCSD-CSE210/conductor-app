@@ -32,7 +32,10 @@ async function main() {
     console.error('❌ Database setup failed:', error.message);
     process.exit(1);
   } finally {
-    await pool.end();
+    // Close database connection
+    if (pool.end) {
+      await pool.end();
+    }
   }
 }
 
