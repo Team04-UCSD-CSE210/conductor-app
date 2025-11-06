@@ -17,6 +17,8 @@ Optional keys:
 | Key | Description |
 | --- | --- |
 | `ALLOWED_GOOGLE_DOMAIN` | Domain restriction for OAuth logins (defaults to `ucsd.edu`) |
+| `AUTH_LOG_RETENTION_DAYS` | Number of days to retain audit log rows before pruning (defaults to `90`) |
+| `REDIS_URL` | Redis connection string for session storage and rate limiting |
 | `ALLOWED_ORIGINS` | Comma-separated list of origins allowed by CORS |
 | `SESSION_SAME_SITE` | Explicit SameSite policy for the session cookie (`lax`, `strict`, or `none`) |
 | `SESSION_SECURE` | Set to `true` to force secure cookies even in non-production environments |
@@ -34,6 +36,51 @@ To initialize a local development database, run the migration script after creat
 ```bash
 psql "$DATABASE_URL" -f schema.sql
 ```
+
+## Redis Setup
+
+The login flow stores sessions in Redis. Install and run a local instance before starting the server:
+
+### Install
+
+- **macOS (Homebrew):** `brew install redis`
+- **Windows (WSL Ubuntu):**
+  1. Install [WSL](https://learn.microsoft.com/windows/wsl/install) with the Ubuntu distribution.
+  2. Inside the WSL terminal run `sudo apt update && sudo apt install redis-server`.
+- **Windows (Docker Desktop):** `docker run --name conductor-redis -p 6379:6379 redis`
+- **Linux (APT):** `sudo apt update && sudo apt install redis-server`
+
+### Run
+
+- Homebrew service: `brew services start redis`
+- Manual foreground: `redis-server /opt/homebrew/etc/redis.conf`
+- WSL/Linux service: `sudo service redis-server start`
+- Docker container: keep the container from the install step running
+
+### Verify
+
+```bash
+redis-cli ping
+```
+
+You should see `PONG`. When finished, stop Redis with `brew services stop redis`, `Ctrl+C`, or `docker stop conductor-redis`.
+
+### Login Rate Limiting
+
+Redis also backs the server-side login throttle. Configure guardrails in `.env`:
+
+- `LOGIN_FAILURE_THRESHOLD` — number of failed attempts allowed before blocking (default `5`)
+- `LOGIN_FAILURE_WINDOW_MINUTES` — rolling window for measuring failures (default `15`)
+- `ALLOWED_GOOGLE_DOMAIN` — permitted Google Workspace domain (`ucsd.edu` by default)
+
+When the threshold is exceeded, the app records a `LOGIN_RATE_LIMITED` audit entry and rejects new sign-in attempts until the window expires.
+
+### Auth Log Retention
+
+Authentication events accumulate in the `auth_logs` table. To keep it tidy:
+
+- `AUTH_LOG_RETENTION_DAYS` (default `90`) controls how long entries stay.
+- Run `npm run prune:auth-logs` locally or from a scheduled job—this script removes rows older than the retention window.
 
 ## Database Setup
 
