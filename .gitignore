@@ -4,4 +4,3 @@ AGENTS.md
 node_modules
 .env
 coverage/
-*.md
