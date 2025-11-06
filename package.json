@@ -11,8 +11,7 @@
     "lint:js": "eslint .",
     "lint:css": "stylelint '**/*.css' || echo 'No CSS files found'",
     "lint:html": "htmlhint '**/*.html'",
-    "lint:md": "markdownlint '**/*.md'",
-    "docs": "jsdoc -d docs ."
+    "lint:md": "markdownlint '**/*.md'"
   },
   "keywords": [],
   "author": "",
