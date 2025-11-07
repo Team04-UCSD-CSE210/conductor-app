@@ -3,4 +3,5 @@ AGENTS.md
 **/.DS_Store
 node_modules
 .env
+*/*.md
 coverage/
