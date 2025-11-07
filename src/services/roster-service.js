@@ -19,6 +19,32 @@ export class RosterService {
   static MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   /**
+   * Valid UCSD email domain patterns
+   * Supports standard @ucsd.edu format
+   */
+  static UCSD_EMAIL_DOMAINS = [
+    '@ucsd.edu',
+    '@mail.ucsd.edu', // Alternative UCSD email format
+  ];
+
+  /**
+   * Validates if email matches UCSD domain pattern
+   * @param {string} email - Email address to validate
+   * @returns {boolean} True if email matches UCSD domain
+   */
+  static isValidUCSDDomain(email) {
+    if (!email || typeof email !== 'string') {
+      return false;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    return RosterService.UCSD_EMAIL_DOMAINS.some(domain => 
+      normalizedEmail.endsWith(domain)
+    );
+  }
+
+  /**
    * Progress callback type for tracking import progress
    * @callback ProgressCallback
    * @param {Object} progress - Progress information
@@ -121,8 +147,30 @@ export class RosterService {
     if (!userData.name || userData.name.trim().length < 2) {
       throw new Error('Name must be at least 2 characters long');
     }
-    if (!userData.email || !userData.email.includes('@')) {
-      throw new Error('Valid email address is required');
+    
+    if (!userData.email || typeof userData.email !== 'string') {
+      throw new Error('Email address is required');
+    }
+
+    const normalizedEmail = userData.email.toLowerCase().trim();
+
+    // Basic email format check
+    if (!normalizedEmail.includes('@')) {
+      throw new Error('Invalid email format: missing @ symbol');
+    }
+
+    // Check if it's a UCSD email domain
+    if (!RosterService.isValidUCSDDomain(normalizedEmail)) {
+      throw new Error(
+        `Email must be a valid UCSD email address (ending with @ucsd.edu or @mail.ucsd.edu). ` +
+        `Received: ${userData.email}`
+      );
+    }
+
+    // Additional format validation
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      throw new Error(`Invalid email format: ${userData.email}`);
     }
   }
 
@@ -352,6 +400,52 @@ export class RosterService {
     }
 
     const csvRows = users.map((user) => ({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    }));
+
+    return stringify(csvRows, {
+      header: true,
+      columns: ['name', 'email', 'role', 'status', 'created_at', 'updated_at'],
+    });
+  }
+
+  /**
+   * Exports imported users list as CSV string
+   * Used to export users that were successfully imported in a batch operation
+   * @param {Array<Object>} importedUsers - Array of imported user objects with id, email, name
+   * @returns {Promise<string>} CSV formatted string with headers
+   */
+  static async exportImportedUsersToCsv(importedUsers) {
+    if (!Array.isArray(importedUsers) || importedUsers.length === 0) {
+      return 'name,email,role,status,created_at,updated_at\n';
+    }
+
+    // Fetch full user details from database using IDs
+    const userIds = importedUsers.map(u => u.id);
+    const fullUsers = [];
+
+    for (const userId of userIds) {
+      try {
+        const user = await UserModel.findById(userId);
+        if (user) {
+          fullUsers.push(user);
+        }
+      } catch (error) {
+        // Skip users that can't be found (shouldn't happen but handle gracefully)
+        // User not found - skip silently
+      }
+    }
+
+    if (fullUsers.length === 0) {
+      return 'name,email,role,status,created_at,updated_at\n';
+    }
+
+    const csvRows = fullUsers.map((user) => ({
       name: user.name,
       email: user.email,
       role: user.role,

@@ -70,6 +70,15 @@ router.post('/roster/import/json', rosterImportLimiter, async (req, res) => {
 
     const result = await RosterService.importRosterFromJson(req.body);
 
+    // Check if CSV export is requested via query parameter
+    if (req.query.export === 'csv' && result.imported.length > 0) {
+      const csv = await RosterService.exportImportedUsersToCsv(result.imported);
+      const timestamp = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=imported-users-${timestamp}.csv`);
+      return res.send(csv);
+    }
+
     const statusCode = result.failed.length === 0 ? 200 : 207; // 207 Multi-Status if partial success
     res.status(statusCode).json({
       message: `Roster import completed: ${result.imported.length} imported, ${result.failed.length} failed`,
@@ -79,6 +88,9 @@ router.post('/roster/import/json', rosterImportLimiter, async (req, res) => {
       imported: result.imported,
       failed: result.failed,
       rollback_ids: result.importedIds, // Provide IDs for potential rollback
+      export_csv_url: result.imported.length > 0 
+        ? `/users/roster/export/imported/csv` 
+        : null, // Provide endpoint to export CSV
     });
   } catch (error) {
     res.status(400).json({
@@ -129,6 +141,15 @@ router.post('/roster/import/csv', rosterImportLimiter, upload.single('file'), as
 
     const result = await RosterService.importRosterFromCsv(csvText);
 
+    // Check if CSV export is requested via query parameter
+    if (req.query.export === 'csv' && result.imported.length > 0) {
+      const csv = await RosterService.exportImportedUsersToCsv(result.imported);
+      const timestamp = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=imported-users-${timestamp}.csv`);
+      return res.send(csv);
+    }
+
     const statusCode = result.failed.length === 0 ? 200 : 207; // 207 Multi-Status if partial success
     res.status(statusCode).json({
       message: `Roster import completed: ${result.imported.length} imported, ${result.failed.length} failed`,
@@ -138,6 +159,9 @@ router.post('/roster/import/csv', rosterImportLimiter, upload.single('file'), as
       imported: result.imported,
       failed: result.failed,
       rollback_ids: result.importedIds, // Provide IDs for potential rollback
+      export_csv_url: result.imported.length > 0 
+        ? `/users/roster/export/imported/csv` 
+        : null, // Provide endpoint to export CSV
     });
   } catch (error) {
     res.status(400).json({
@@ -172,6 +196,32 @@ router.get('/roster/export/csv', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       error: 'Roster export failed',
+      message: error.message,
+    });
+  }
+});
+
+// Export imported users as CSV
+router.post('/roster/export/imported/csv', async (req, res) => {
+  try {
+    const { importedUsers } = req.body;
+
+    if (!Array.isArray(importedUsers) || importedUsers.length === 0) {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'importedUsers must be a non-empty array',
+      });
+    }
+
+    const csv = await RosterService.exportImportedUsersToCsv(importedUsers);
+
+    const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=imported-users-${timestamp}.csv`);
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({
+      error: 'Export failed',
       message: error.message,
     });
   }

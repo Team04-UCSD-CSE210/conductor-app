@@ -19,8 +19,8 @@ describe('RosterService', () => {
   describe('importRosterFromJson', () => {
     it('should import valid user array successfully', async () => {
       const users = [
-        { name: 'Alice Johnson', email: 'alice@example.com', role: 'user', status: 'active' },
-        { name: 'Bob Smith', email: 'bob@example.com', role: 'admin', status: 'active' },
+        { name: 'Alice Johnson', email: 'alice@ucsd.edu', role: 'user', status: 'active' },
+        { name: 'Bob Smith', email: 'bob@ucsd.edu', role: 'admin', status: 'active' },
       ];
 
       const result = await RosterService.importRosterFromJson(users);
@@ -29,15 +29,15 @@ describe('RosterService', () => {
       expect(result.failed).toHaveLength(0);
       expect(result.total).toBe(2);
       expect(result.imported[0]).toHaveProperty('id');
-      expect(result.imported[0]).toHaveProperty('email', 'alice@example.com');
+      expect(result.imported[0]).toHaveProperty('email', 'alice@ucsd.edu');
     });
 
     it('should handle partial failures gracefully', async () => {
       const users = [
-        { name: 'Valid User', email: 'valid@example.com', role: 'user' },
-        { name: 'A', email: 'invalid@example.com' }, // Name too short
-        { name: 'Valid User 2', email: 'valid2@example.com', role: 'user' },
-        { email: 'no-name@example.com' }, // Missing name
+        { name: 'Valid User', email: 'valid@ucsd.edu', role: 'user' },
+        { name: 'A', email: 'invalid@ucsd.edu' }, // Name too short
+        { name: 'Valid User 2', email: 'valid2@ucsd.edu', role: 'user' },
+        { email: 'no-name@ucsd.edu' }, // Missing name
       ];
 
       const result = await RosterService.importRosterFromJson(users);
@@ -66,8 +66,8 @@ describe('RosterService', () => {
 
     it('should handle duplicate emails with upsert behavior', async () => {
       const users = [
-        { name: 'Original Name', email: 'duplicate@example.com', role: 'user' },
-        { name: 'Updated Name', email: 'duplicate@example.com', role: 'admin' },
+        { name: 'Original Name', email: 'duplicate@ucsd.edu', role: 'user' },
+        { name: 'Updated Name', email: 'duplicate@ucsd.edu', role: 'admin' },
       ];
 
       const result = await RosterService.importRosterFromJson(users);
@@ -77,7 +77,7 @@ describe('RosterService', () => {
       expect(result.failed.length).toBe(0);
 
       // Verify the last import overwrote the first
-      const user = await UserModel.findByEmail('duplicate@example.com');
+      const user = await UserModel.findByEmail('duplicate@ucsd.edu');
       expect(user.name).toBe('Updated Name');
       expect(user.role).toBe('admin');
     });
@@ -85,8 +85,8 @@ describe('RosterService', () => {
     it('should handle nested JSON structures', async () => {
       const nestedData = {
         users: [
-          { name: 'Nested User 1', email: 'nested1@example.com', role: 'user' },
-          { name: 'Nested User 2', email: 'nested2@example.com', role: 'admin' },
+          { name: 'Nested User 1', email: 'nested1@ucsd.edu', role: 'user' },
+          { name: 'Nested User 2', email: 'nested2@ucsd.edu', role: 'admin' },
         ],
       };
 
@@ -98,8 +98,8 @@ describe('RosterService', () => {
     it('should handle data property in nested JSON', async () => {
       const nestedData = {
         data: [
-          { name: 'Data User 1', email: 'data1@example.com' },
-          { name: 'Data User 2', email: 'data2@example.com' },
+          { name: 'Data User 1', email: 'data1@ucsd.edu' },
+          { name: 'Data User 2', email: 'data2@ucsd.edu' },
         ],
       };
 
@@ -110,7 +110,7 @@ describe('RosterService', () => {
     it('should handle roster property in nested JSON', async () => {
       const nestedData = {
         roster: [
-          { name: 'Roster User', email: 'roster@example.com' },
+          { name: 'Roster User', email: 'roster@ucsd.edu' },
         ],
       };
 
@@ -121,13 +121,13 @@ describe('RosterService', () => {
     it('should handle single object (auto-wrap)', async () => {
       const singleUser = {
         name: 'Single User',
-        email: 'single@example.com',
+        email: 'single@ucsd.edu',
         role: 'user',
       };
 
       const result = await RosterService.importRosterFromJson(singleUser);
       expect(result.imported.length).toBe(1);
-      expect(result.imported[0].email).toBe('single@example.com');
+      expect(result.imported[0].email).toBe('single@ucsd.edu');
     });
 
     it('should reject invalid nested structures', async () => {
@@ -141,8 +141,8 @@ describe('RosterService', () => {
 
     it('should return imported IDs for rollback', async () => {
       const users = [
-        { name: 'Rollback User 1', email: 'rollback1@example.com' },
-        { name: 'Rollback User 2', email: 'rollback2@example.com' },
+        { name: 'Rollback User 1', email: 'rollback1@ucsd.edu' },
+        { name: 'Rollback User 2', email: 'rollback2@ucsd.edu' },
       ];
 
       const result = await RosterService.importRosterFromJson(users);
@@ -156,8 +156,8 @@ describe('RosterService', () => {
   describe('importRosterFromCsv', () => {
     it('should parse and import valid CSV data', async () => {
       const csv = `name,email,role,status
-Alice Johnson,alice@example.com,user,active
-Bob Smith,bob@example.com,admin,active`;
+Alice Johnson,alice@ucsd.edu,user,active
+Bob Smith,bob@ucsd.edu,admin,active`;
 
       const result = await RosterService.importRosterFromCsv(csv);
 
@@ -168,8 +168,8 @@ Bob Smith,bob@example.com,admin,active`;
 
     it('should handle case-insensitive column headers', async () => {
       const csv = `Name,Email,Role,Status
-Charlie Brown,charlie@example.com,user,active
-Diana Prince,diana@example.com,moderator,active`;
+Charlie Brown,charlie@ucsd.edu,user,active
+Diana Prince,diana@ucsd.edu,moderator,active`;
 
       const result = await RosterService.importRosterFromCsv(csv);
 
@@ -179,27 +179,27 @@ Diana Prince,diana@example.com,moderator,active`;
 
     it('should handle CSV with default values for optional fields', async () => {
       const csv = `name,email
-Eve Wilson,eve@example.com
-Frank Miller,frank@example.com`;
+Eve Wilson,eve@ucsd.edu
+Frank Miller,frank@ucsd.edu`;
 
       const result = await RosterService.importRosterFromCsv(csv);
 
       expect(result.imported).toHaveLength(2);
-      const user = await UserModel.findByEmail('eve@example.com');
+      const user = await UserModel.findByEmail('eve@ucsd.edu');
       expect(user.role).toBe('user'); // Default role
       expect(user.status).toBe('active'); // Default status
     });
 
     it('should handle CSV with extra whitespace', async () => {
       const csv = `name,email,role,status
-  Grace Lee  ,  grace@example.com  ,  user  ,  active  `;
+  Grace Lee  ,  grace@ucsd.edu  ,  user  ,  active  `;
 
       const result = await RosterService.importRosterFromCsv(csv);
 
       expect(result.imported).toHaveLength(1);
-      const user = await UserModel.findByEmail('grace@example.com');
+      const user = await UserModel.findByEmail('grace@ucsd.edu');
       expect(user.name).toBe('Grace Lee');
-      expect(user.email).toBe('grace@example.com');
+      expect(user.email).toBe('grace@ucsd.edu');
     });
 
     it('should reject invalid CSV input', async () => {
@@ -222,8 +222,8 @@ Frank Miller,frank@example.com`;
 
     it('should handle CSV with missing required fields', async () => {
       const csv = `name,email,role,status
-Valid User,valid@example.com,user,active
-,missing-email@example.com,user,active
+Valid User,valid@ucsd.edu,user,active
+,missing-email@ucsd.edu,user,active
 Missing Name,invalid-email,user,active`;
 
       const result = await RosterService.importRosterFromCsv(csv);
@@ -234,7 +234,7 @@ Missing Name,invalid-email,user,active`;
 
     it('should handle malformed CSV gracefully', async () => {
       const csv = `name,email,role,status
-"Unclosed quote,email@example.com,user,active`;
+"Unclosed quote,email@ucsd.edu,user,active`;
 
       // Should either parse successfully or fail gracefully
       const result = await RosterService.importRosterFromCsv(csv);
@@ -253,8 +253,8 @@ Missing Name,invalid-email,user,active`;
 
     it('should export all users as JSON array', async () => {
       // Create test users
-      await UserModel.create({ name: 'User One', email: 'user1@example.com', role: 'user' });
-      await UserModel.create({ name: 'User Two', email: 'user2@example.com', role: 'admin' });
+      await UserModel.create({ name: 'User One', email: 'user1@ucsd.edu', role: 'user' });
+      await UserModel.create({ name: 'User Two', email: 'user2@ucsd.edu', role: 'admin' });
 
       const result = await RosterService.exportRosterToJson();
 
@@ -272,7 +272,7 @@ Missing Name,invalid-email,user,active`;
     it('should export users in correct format', async () => {
       await UserModel.create({
         name: 'Test User',
-        email: 'test@example.com',
+        email: 'test@ucsd.edu',
         role: 'moderator',
         status: 'active',
       });
@@ -280,7 +280,7 @@ Missing Name,invalid-email,user,active`;
       const result = await RosterService.exportRosterToJson();
 
       expect(result[0].name).toBe('Test User');
-      expect(result[0].email).toBe('test@example.com');
+      expect(result[0].email).toBe('test@ucsd.edu');
       expect(result[0].role).toBe('moderator');
       expect(result[0].status).toBe('active');
     });
@@ -296,20 +296,20 @@ Missing Name,invalid-email,user,active`;
     });
 
     it('should export users as CSV with proper headers', async () => {
-      await UserModel.create({ name: 'CSV User', email: 'csv@example.com', role: 'user' });
+      await UserModel.create({ name: 'CSV User', email: 'csv@ucsd.edu', role: 'user' });
 
       const result = await RosterService.exportRosterToCsv();
 
       expect(result).toContain('name,email,role,status,created_at,updated_at');
       expect(result).toContain('CSV User');
-      expect(result).toContain('csv@example.com');
+      expect(result).toContain('csv@ucsd.edu');
       expect(result).toContain('user');
       expect(result).toContain('active');
     });
 
     it('should export multiple users correctly', async () => {
-      await UserModel.create({ name: 'User A', email: 'a@example.com', role: 'user' });
-      await UserModel.create({ name: 'User B', email: 'b@example.com', role: 'admin' });
+      await UserModel.create({ name: 'User A', email: 'a@ucsd.edu', role: 'user' });
+      await UserModel.create({ name: 'User B', email: 'b@ucsd.edu', role: 'admin' });
 
       const result = await RosterService.exportRosterToCsv();
 
@@ -317,45 +317,45 @@ Missing Name,invalid-email,user,active`;
       expect(lines.length).toBe(3); // Header + 2 data rows
       expect(result).toContain('User A');
       expect(result).toContain('User B');
-      expect(result).toContain('a@example.com');
-      expect(result).toContain('b@example.com');
+      expect(result).toContain('a@ucsd.edu');
+      expect(result).toContain('b@ucsd.edu');
     });
 
     it('should handle special characters in CSV export', async () => {
       await UserModel.create({
         name: 'User, With Comma',
-        email: 'comma@example.com',
+        email: 'comma@ucsd.edu',
         role: 'user',
       });
 
       const result = await RosterService.exportRosterToCsv();
 
       // CSV library should properly escape commas
-      expect(result).toContain('comma@example.com');
+      expect(result).toContain('comma@ucsd.edu');
     });
   });
 
   describe('normalizeCsvRecord', () => {
     it('should map CSV columns correctly', () => {
-      const record = { Name: 'Test', Email: 'test@example.com', Role: 'admin', Status: 'active' };
+      const record = { Name: 'Test', Email: 'test@ucsd.edu', Role: 'admin', Status: 'active' };
       const normalized = RosterService.normalizeCsvRecord(record);
 
       expect(normalized.name).toBe('Test');
-      expect(normalized.email).toBe('test@example.com');
+      expect(normalized.email).toBe('test@ucsd.edu');
       expect(normalized.role).toBe('admin');
       expect(normalized.status).toBe('active');
     });
 
     it('should handle lowercase column names', () => {
-      const record = { name: 'Test', email: 'test@example.com', role: 'user', status: 'active' };
+      const record = { name: 'Test', email: 'test@ucsd.edu', role: 'user', status: 'active' };
       const normalized = RosterService.normalizeCsvRecord(record);
 
       expect(normalized.name).toBe('Test');
-      expect(normalized.email).toBe('test@example.com');
+      expect(normalized.email).toBe('test@ucsd.edu');
     });
 
     it('should apply defaults for missing fields', () => {
-      const record = { name: 'Test', email: 'test@example.com' };
+      const record = { name: 'Test', email: 'test@ucsd.edu' };
       const normalized = RosterService.normalizeCsvRecord(record);
 
       expect(normalized.role).toBe('user');
@@ -363,28 +363,44 @@ Missing Name,invalid-email,user,active`;
     });
 
     it('should trim whitespace from values', () => {
-      const record = { name: '  Test User  ', email: '  test@example.com  ' };
+      const record = { name: '  Test User  ', email: '  test@ucsd.edu  ' };
       const normalized = RosterService.normalizeCsvRecord(record);
 
       expect(normalized.name).toBe('Test User');
-      expect(normalized.email).toBe('test@example.com');
+      expect(normalized.email).toBe('test@ucsd.edu');
     });
   });
 
   describe('validateUserData', () => {
-    it('should accept valid user data', () => {
-      const validData = { name: 'Valid Name', email: 'valid@example.com' };
+    it('should accept valid UCSD user data', () => {
+      const validData = { name: 'Valid Name', email: 'student@ucsd.edu' };
       expect(() => RosterService.validateUserData(validData)).not.toThrow();
     });
 
+    it('should accept valid UCSD email with @mail.ucsd.edu domain', () => {
+      const validData = { name: 'Valid Name', email: 'student@mail.ucsd.edu' };
+      expect(() => RosterService.validateUserData(validData)).not.toThrow();
+    });
+
+    it('should accept valid UCSD email with random username', () => {
+      const validData = { name: 'Valid Name', email: 'abcxyz@ucsd.edu' };
+      expect(() => RosterService.validateUserData(validData)).not.toThrow();
+    });
+
+    it('should reject non-UCSD email domain', () => {
+      const invalidData = { name: 'Valid Name', email: 'student@gmail.com' };
+      expect(() => RosterService.validateUserData(invalidData))
+        .toThrow('Email must be a valid UCSD email address');
+    });
+
     it('should reject name shorter than 2 characters', () => {
-      const invalidData = { name: 'A', email: 'test@example.com' };
+      const invalidData = { name: 'A', email: 'test@ucsd.edu' };
       expect(() => RosterService.validateUserData(invalidData))
         .toThrow('Name must be at least 2 characters long');
     });
 
     it('should reject missing name', () => {
-      const invalidData = { email: 'test@example.com' };
+      const invalidData = { email: 'test@ucsd.edu' };
       expect(() => RosterService.validateUserData(invalidData))
         .toThrow('Name must be at least 2 characters long');
     });
@@ -392,13 +408,80 @@ Missing Name,invalid-email,user,active`;
     it('should reject invalid email format', () => {
       const invalidData = { name: 'Valid Name', email: 'not-an-email' };
       expect(() => RosterService.validateUserData(invalidData))
-        .toThrow('Valid email address is required');
+        .toThrow('Invalid email format');
     });
 
     it('should reject missing email', () => {
       const invalidData = { name: 'Valid Name' };
       expect(() => RosterService.validateUserData(invalidData))
-        .toThrow('Valid email address is required');
+        .toThrow('Email address is required');
+    });
+
+    it('should handle case-insensitive email validation', () => {
+      const validData = { name: 'Valid Name', email: 'STUDENT@UCSD.EDU' };
+      expect(() => RosterService.validateUserData(validData)).not.toThrow();
+    });
+  });
+
+  describe('isValidUCSDDomain', () => {
+    it('should return true for @ucsd.edu emails', () => {
+      expect(RosterService.isValidUCSDDomain('student@ucsd.edu')).toBe(true);
+      expect(RosterService.isValidUCSDDomain('abcxyz@ucsd.edu')).toBe(true);
+    });
+
+    it('should return true for @mail.ucsd.edu emails', () => {
+      expect(RosterService.isValidUCSDDomain('student@mail.ucsd.edu')).toBe(true);
+    });
+
+    it('should return false for non-UCSD emails', () => {
+      expect(RosterService.isValidUCSDDomain('student@gmail.com')).toBe(false);
+      expect(RosterService.isValidUCSDDomain('student@ucsd.edu')).toBe(false);
+    });
+
+    it('should handle case-insensitive domain checking', () => {
+      expect(RosterService.isValidUCSDDomain('STUDENT@UCSD.EDU')).toBe(true);
+      expect(RosterService.isValidUCSDDomain('student@UCSD.EDU')).toBe(true);
+    });
+
+    it('should return false for invalid input', () => {
+      expect(RosterService.isValidUCSDDomain(null)).toBe(false);
+      expect(RosterService.isValidUCSDDomain('')).toBe(false);
+      expect(RosterService.isValidUCSDDomain(undefined)).toBe(false);
+    });
+  });
+
+  describe('exportImportedUsersToCsv', () => {
+    it('should export imported users as CSV', async () => {
+      // Import some users
+      const users = [
+        { name: 'Exported User 1', email: 'export1@ucsd.edu', role: 'user', status: 'active' },
+        { name: 'Exported User 2', email: 'export2@ucsd.edu', role: 'admin', status: 'active' },
+      ];
+
+      const importResult = await RosterService.importRosterFromJson(users);
+      const csv = await RosterService.exportImportedUsersToCsv(importResult.imported);
+
+      expect(csv).toContain('Exported User 1');
+      expect(csv).toContain('Exported User 2');
+      expect(csv).toContain('export1@ucsd.edu');
+      expect(csv).toContain('export2@ucsd.edu');
+      expect(csv).toContain('user');
+      expect(csv).toContain('admin');
+    });
+
+    it('should return empty CSV header for empty array', async () => {
+      const csv = await RosterService.exportImportedUsersToCsv([]);
+      expect(csv).toBe('name,email,role,status,created_at,updated_at\n');
+    });
+
+    it('should handle users not found gracefully', async () => {
+      const fakeUsers = [
+        { id: '00000000-0000-0000-0000-000000000000', email: 'fake@ucsd.edu', name: 'Fake User' },
+      ];
+
+      const csv = await RosterService.exportImportedUsersToCsv(fakeUsers);
+      // Should return empty CSV if no users found
+      expect(csv).toBe('name,email,role,status,created_at,updated_at\n');
     });
   });
 
@@ -406,27 +489,27 @@ Missing Name,invalid-email,user,active`;
     it('should maintain data integrity through import-export cycle', async () => {
       // Import via JSON
       const importData = [
-        { name: 'Round Trip User', email: 'roundtrip@example.com', role: 'moderator', status: 'active' },
+        { name: 'Round Trip User', email: 'roundtrip@ucsd.edu', role: 'moderator', status: 'active' },
       ];
       await RosterService.importRosterFromJson(importData);
 
       // Export via CSV
       const csv = await RosterService.exportRosterToCsv();
       expect(csv).toContain('Round Trip User');
-      expect(csv).toContain('roundtrip@example.com');
+      expect(csv).toContain('roundtrip@ucsd.edu');
       expect(csv).toContain('moderator');
 
       // Export via JSON
       const json = await RosterService.exportRosterToJson();
       expect(json).toHaveLength(1);
       expect(json[0].name).toBe('Round Trip User');
-      expect(json[0].email).toBe('roundtrip@example.com');
+      expect(json[0].email).toBe('roundtrip@ucsd.edu');
     });
 
     it('should handle large batch imports', async () => {
       const users = Array.from({ length: 50 }, (_, i) => ({
         name: `User ${i}`,
-        email: `user${i}@example.com`,
+        email: `user${i}@ucsd.edu`,
         role: 'user',
         status: 'active',
       }));
@@ -443,7 +526,7 @@ Missing Name,invalid-email,user,active`;
       const startTime = Date.now();
       const users = Array.from({ length: 1000 }, (_, i) => ({
         name: `Performance User ${i}`,
-        email: `perf${i}@example.com`,
+        email: `perf${i}@ucsd.edu`,
         role: 'user',
         status: 'active',
       }));
@@ -471,7 +554,7 @@ Missing Name,invalid-email,user,active`;
       const progressUpdates = [];
       const users = Array.from({ length: 100 }, (_, i) => ({
         name: `Progress User ${i}`,
-        email: `progress${i}@example.com`,
+        email: `progress${i}@ucsd.edu`,
         role: 'user',
         status: 'active',
       }));
@@ -496,9 +579,9 @@ Missing Name,invalid-email,user,active`;
     it('should rollback imported users by ID', async () => {
       // Import some users
       const users = [
-        { name: 'Rollback Test 1', email: 'rollback1@example.com' },
-        { name: 'Rollback Test 2', email: 'rollback2@example.com' },
-        { name: 'Rollback Test 3', email: 'rollback3@example.com' },
+        { name: 'Rollback Test 1', email: 'rollback1@ucsd.edu' },
+        { name: 'Rollback Test 2', email: 'rollback2@ucsd.edu' },
+        { name: 'Rollback Test 3', email: 'rollback3@ucsd.edu' },
       ];
 
       const importResult = await RosterService.importRosterFromJson(users);
@@ -519,7 +602,7 @@ Missing Name,invalid-email,user,active`;
 
     it('should handle partial rollback failures', async () => {
       const users = [
-        { name: 'Partial Rollback', email: 'partial@example.com' },
+        { name: 'Partial Rollback', email: 'partial@ucsd.edu' },
       ];
 
       const importResult = await RosterService.importRosterFromJson(users);
