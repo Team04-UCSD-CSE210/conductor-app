@@ -54,6 +54,7 @@ export class DatabaseInitializer {
     // Run schema migrations
     const schemaMigrations = [
       { file: '01-create-tables.sql', description: 'Create tables and schema' },
+      { file: '03-rbac-and-permissions.sql', description: 'Add RBAC permissions and functions' },
     ];
 
     for (const migration of schemaMigrations) {
