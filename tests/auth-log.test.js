@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Sequelize } from 'sequelize';
-import { defineAuthLogModel } from '../models/auth-log.js';
+import { defineAuthLogModel } from '../src/models/auth-log.js';
 
 const createModel = () => {
   const sequelize = new Sequelize('postgres://user:pass@localhost:5432/db', {

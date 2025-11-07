@@ -10,11 +10,12 @@ import dotenv from "dotenv";
 import { createClient } from "redis";
 import { RedisStore } from "connect-redis";
 // import { trackLoginAttempt, isBlocked } from "./js/middleware/loginAttemptTracker.js";
-import { createSequelize } from "./src/database.js";
+import { createSequelize } from "./src/config/db.js";
 import { defineAuthLogModel } from "./src/models/auth-log.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const VIEW_DIR = "src/views"
 
 dotenv.config();
 
@@ -184,7 +185,7 @@ const ensureAuthenticated = async (req, res, next) => {
     return res.status(401).json({ error: "unauthorized" });
   }
 
-  return res.redirect("/login.html");
+  return res.redirect("/login");
 };
 
 // -------------------- PASSPORT --------------------
@@ -293,15 +294,16 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/dashboard.html", ensureAuthenticated, (_req, res) => {
-  res.sendFile(path.join(__dirname, "dashboard.html"));
+app.get("/dashboard", ensureAuthenticated, (_req, res) => {
+  res.sendFile(buildFullViewPath("dashboard.html"));
 });
 
 // serve all your static files (HTML, CSS, JS, etc.)
 app.use(express.static(__dirname));
 // Serve blocked page
 app.get("/blocked", (req, res) => {
-  res.sendFile(path.join(__dirname, "blocked.html"));
+  res.sendFile(buildFullViewPath("blocked.html"));
+
 });
 
 
@@ -330,7 +332,7 @@ app.get("/auth/google/callback",
       userId: req.user?.id,
       metadata: { provider: "google" }
     });
-    res.redirect("/dashboard.html");
+    res.redirect("/dashboard");
   }
 );
 
@@ -342,8 +344,19 @@ app.get("/auth/failure", async (req, res) => {
     message: "Google OAuth failed or unauthorized user",
     metadata: { provider: "google" }
   });
-  res.redirect("/blocked.html");
+  res.redirect("/blocked");
 });
+
+
+function buildFullViewPath(viewFileName){
+  return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
+}
+
+app.get("/login", (req, res) =>{
+  res.sendFile(buildFullViewPath("login.html"))
+});
+
+
 
 
 app.get("/api/user", ensureAuthenticated, (req, res) => {
@@ -387,7 +400,7 @@ app.get("/logout", ensureAuthenticated, (req, res, next) => {
       userEmail: email,
       userId
     });
-    res.redirect("/login.html");
+    res.redirect("/login");
   });
 });
 
