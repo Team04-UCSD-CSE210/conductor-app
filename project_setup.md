@@ -1,5 +1,3 @@
-# Sprint1 Login Doc
-
 ## Environment Variables
 
 Create a `.env` file at the project root before running `npm start`. Required keys:
@@ -102,7 +100,8 @@ Follow this procedure to prepare a local PostgreSQL instance:
 
 3. Disconnect from the session with `\q`.
 
-### Steps to run the login
+
+### Steps to run the application
 
 1. Setup environment variables  
    - Create `.env` file in the root folder  
