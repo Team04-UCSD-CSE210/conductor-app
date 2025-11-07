@@ -16,7 +16,7 @@ describe('UserService (business rules)', () => {
   });
 
   it('creates a user and prevents duplicate email', async () => {
-    const data = { name: 'John', email: 'john@ex.com', role: 'user' };
+    const data = { name: 'John', email: 'john@ex.com', role: 'student' };
     const u1 = await UserService.createUser(data);
     expect(u1.id).toBeDefined();
 
@@ -34,21 +34,21 @@ describe('UserService (business rules)', () => {
   });
 
   it('updateUser enforces unique email across users', async () => {
-    const a = await UserService.createUser({ name: 'Al', email: 'a@ex.com', role: 'user' });
-    const b = await UserService.createUser({ name: 'Bo', email: 'b@ex.com', role: 'user' });
+    const a = await UserService.createUser({ name: 'Al', email: 'a@ex.com', role: 'student' });
+    const b = await UserService.createUser({ name: 'Bo', email: 'b@ex.com', role: 'student' });
 
     // try to change B's email to A's email -> should error
     await expect(UserService.updateUser(b.id, { email: 'a@ex.com' }))
       .rejects.toThrow(/already in use/i);
 
     // valid update keeps same email
-    const ok = await UserService.updateUser(a.id, { name: 'A Prime', role: 'moderator' });
+    const ok = await UserService.updateUser(a.id, { name: 'A Prime', role: 'instructor' });
     expect(ok.name).toBe('A Prime');
-    expect(ok.role).toBe('moderator');
+    expect(ok.role).toBe('instructor');
   });
 
   it('deleteUser returns true or throws not found', async () => {
-    const u = await UserService.createUser({ name: 'Del', email: 'del@ex.com', role: 'user' });
+    const u = await UserService.createUser({ name: 'Del', email: 'del@ex.com', role: 'student' });
     await expect(UserService.deleteUser(u.id)).resolves.toBe(true);
 
     await expect(UserService.deleteUser(u.id)).rejects.toThrow(/not found/i);
@@ -56,7 +56,7 @@ describe('UserService (business rules)', () => {
 
   it('getUsers returns users + pagination meta', async () => {
     for (let i = 1; i <= 7; i++) {
-      await UserService.createUser({ name: `U${i}`, email: `u${i}@ex.com`, role: 'user' });
+      await UserService.createUser({ name: `U${i}`, email: `u${i}@ex.com`, role: 'student' });
     }
     const { users, total, page, totalPages } = await UserService.getUsers({ limit: 3, offset: 3 });
     expect(users.length).toBe(3);     // page 2

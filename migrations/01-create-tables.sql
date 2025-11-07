@@ -1,4 +1,3 @@
-
 -- Conductor App Schema (PostgreSQL)
 -- Requires: uuid-ossp (for uuid_generate_v4) and citext
 

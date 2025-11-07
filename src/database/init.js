@@ -53,7 +53,7 @@ export class DatabaseInitializer {
 
     // Run schema migrations
     const schemaMigrations = [
-      { file: '01-create-users.sql', description: 'Create users table and schema' },
+      { file: '01-create-tables.sql', description: 'Create tables and schema' },
     ];
 
     for (const migration of schemaMigrations) {
@@ -104,7 +104,7 @@ export class DatabaseInitializer {
         AND table_schema = 'public';
       `);
 
-      const requiredColumns = ['id', 'name', 'email', 'role', 'status', 'created_at', 'updated_at'];
+      const requiredColumns = ['id', 'email', 'ucsd_pid', 'role', 'created_at', 'updated_at'];
       const existingColumns = columnsResult.rows.map((row) => row.column_name);
 
       const missingColumns = requiredColumns.filter((col) => !existingColumns.includes(col));

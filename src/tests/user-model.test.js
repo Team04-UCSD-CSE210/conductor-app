@@ -8,6 +8,7 @@ describe('UserModel (Postgres)', () => {
   });
 
   beforeEach(async () => {
+    // UUID PK, so RESTART IDENTITY is effectively harmless; CASCADE clears FKs if any.
     await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
   });
 
@@ -16,47 +17,81 @@ describe('UserModel (Postgres)', () => {
   });
 
   it('validates inputs', async () => {
-    await expect(UserModel.create({ name: 'A', email: 'bad' }))
-      .rejects.toThrow(/Name too short.*Invalid email/i);
+    // invalid email
+    await expect(UserModel.create({ email: 'bad-email' }))
+      .rejects.toThrow(/Invalid email/i);
 
-    await expect(UserModel.create({ name: 'Ok Name', email: 'ok@ex.com', role: 'nope' }))
+    // invalid role
+    await expect(UserModel.create({ email: 'ok@example.edu', role: 'nope' }))
       .rejects.toThrow(/Invalid role/i);
-
-    await expect(UserModel.create({ name: 'Ok Name', email: 'ok@ex.com', status: 'zzz' }))
-      .rejects.toThrow(/Invalid status/i);
   });
 
   it('creates and reads a user (email normalized)', async () => {
-    const u = await UserModel.create({ name: 'Jane', email: 'JANE@EX.com', role: 'admin' });
-    expect(u.id).toBeDefined();
-    expect(u.email).toBe('jane@ex.com');          // lowercased by model
+    const u = await UserModel.create({
+      email: 'JANE@EXAMPLE.edu',
+      name: 'Jane',
+      role: 'admin',
+    });
+
+    expect(u.id).toBeDefined();                  // UUID
+    expect(u.email).toBe('jane@example.edu');    // lowercased by model
     expect(u.role).toBe('admin');
+
     const fetched = await UserModel.findById(u.id);
+    expect(fetched).not.toBeNull();
     expect(fetched?.name).toBe('Jane');
+    expect(fetched?.role).toBe('admin');
   });
 
   it('upserts on duplicate email (ON CONFLICT DO UPDATE)', async () => {
-    await UserModel.create({ name: 'John', email: 'john@ex.com', role: 'user' });
-    const updated = await UserModel.create({ name: 'John Smith', email: 'john@ex.com', role: 'moderator' });
-    expect(updated.name).toBe('John Smith');
-    expect(updated.role).toBe('moderator');
+    await UserModel.create({
+      email: 'instructor@example.edu',
+      name: 'First Name',
+      role: 'instructor',
+    });
 
-    const again = await UserModel.findByEmail('john@ex.com');
-    expect(again?.name).toBe('John Smith');
+    const updated = await UserModel.create({
+      email: 'instructor@example.edu',
+      name: 'Updated Name',
+      role: 'admin', // change role too
+    });
+
+    expect(updated.name).toBe('Updated Name');
+    expect(updated.role).toBe('admin');
+
+    const again = await UserModel.findByEmail('instructor@example.edu');
+    expect(again?.name).toBe('Updated Name');
+    expect(again?.role).toBe('admin');
   });
 
   it('updates fields and bumps updated_at', async () => {
-    const u = await UserModel.create({ name: 'Alice', email: 'alice@ex.com', role: 'user' });
-    const before = u.updated_at;
-    const after = await UserModel.update(u.id, { name: 'Alice Johnson', email: 'alice@ex.com', role: 'moderator' });
-    expect(after.name).toBe('Alice Johnson');
-    expect(new Date(after.updated_at).getTime()).toBeGreaterThan(new Date(before).getTime());
+    const u = await UserModel.create({
+      email: 'person@example.edu',
+      name: 'Original',
+      role: 'student',
+    });
+
+    const before = new Date(u.updated_at).getTime();
+
+    const after = await UserModel.update(u.id, {
+      name: 'New Name',
+      role: 'instructor',
+    });
+
+    expect(after.name).toBe('New Name');
+    expect(after.role).toBe('instructor');
+    expect(new Date(after.updated_at).getTime()).toBeGreaterThan(before);
   });
 
   it('lists with limit/offset and counts', async () => {
     for (let i = 1; i <= 5; i++) {
-      await UserModel.create({ name: `U${i}`, email: `u${i}@ex.com`, role: 'user' });
+      await UserModel.create({
+        email: `user${i}@example.edu`,
+        name: `User ${i}`,
+        role: 'student',
+      });
     }
+
     const page1 = await UserModel.findAll(3, 0);
     const page2 = await UserModel.findAll(3, 3);
     const total = await UserModel.count();
@@ -67,9 +102,15 @@ describe('UserModel (Postgres)', () => {
   });
 
   it('deletes and returns boolean', async () => {
-    const u = await UserModel.create({ name: 'Del', email: 'del@ex.com', role: 'user' });
+    const u = await UserModel.create({
+      email: 'delete-me@example.edu',
+      name: 'To Delete',
+      role: 'student',
+    });
+
     const ok = await UserModel.delete(u.id);
     expect(ok).toBe(true);
+
     const missing = await UserModel.findById(u.id);
     expect(missing).toBeNull();
   });
