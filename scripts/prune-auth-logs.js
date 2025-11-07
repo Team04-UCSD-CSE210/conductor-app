@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import dotenv from "dotenv";
 import { Op } from "sequelize";
-import { createSequelize } from "../src/config/database.js";
+import { createSequelize } from "../src/config/db.js";
 import { defineAuthLogModel } from "../src/models/auth-log.js";
 
 dotenv.config();
