@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSequelize } from '../database.js';
+import { createSequelize } from '../src/database.js';
 
 const closeConnection = async (sequelize) => {
   if (sequelize) {
