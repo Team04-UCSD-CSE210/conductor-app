@@ -10,7 +10,7 @@ import dotenv from "dotenv";
 import { createClient } from "redis";
 import { RedisStore } from "connect-redis";
 // import { trackLoginAttempt, isBlocked } from "./js/middleware/loginAttemptTracker.js";
-import { createSequelize } from "./src/database.js";
+import { createSequelize } from "./src/config/db.js";
 import { defineAuthLogModel } from "./src/models/auth-log.js";
 
 const __filename = fileURLToPath(import.meta.url);
