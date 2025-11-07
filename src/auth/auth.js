@@ -1,4 +1,4 @@
-import { logEvent } from "./logger.js";
+import { logEvent } from "../utils/logger.js";
 import { showToast, showSpinner, hideSpinner } from "./ui.js";
 
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
