@@ -252,7 +252,6 @@ Migrations are stored in `migrations/` directory:
 
 - `01-create-users.sql` - Creates users table, enums, indexes, and triggers
 - `02-seed-demo-users.sql` - Inserts demo users for testing
-- `03-rbac-and-permissions` - Creates RBAC & Permissions Layer
 
 ### Migration Process
 
@@ -367,8 +366,6 @@ npm run local:test
 npx vitest run src/tests/user-model.test.js
 npx vitest run src/tests/user-service.test.js
 npx vitest run src/tests/roster-service.test.js
-npx vitest run src/tests/permissions.test.ts
-npx vitest run src/tests/rbac.integration.test.ts
 
 # Run tests in watch mode
 npx vitest watch
@@ -659,5 +656,5 @@ For issues or questions:
 
 ---
 
-**Last Updated:** 2025-11-07.
-**Maintained by:** Kan
+**Last Updated:** 2025-11-06.
+**Maintained by:** Bhavik
