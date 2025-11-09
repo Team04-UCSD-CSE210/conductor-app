@@ -8,9 +8,11 @@
 ## ✅ **IMPLEMENTED TEST SUITES**
 
 ### 1. **User Model Tests** (`src/tests/user-model.test.js`)
+
 **Status:** ✅ Updated & Enhanced
 
-#### Test Cases:
+#### Test Cases
+
 - ✅ Input validation (email, role, status, auth_source)
 - ✅ User creation with email normalization
 - ✅ User creation with auth_source and status
@@ -29,9 +31,11 @@
 ---
 
 ### 2. **User Service Tests** (`src/tests/user-service.test.js`)
+
 **Status:** ✅ Updated & Enhanced
 
-#### Test Cases:
+#### Test Cases
+
 - ✅ User creation with duplicate email prevention
 - ✅ **NEW:** User creation with auth_source and audit logging
 - ✅ Get user by ID (excludes soft-deleted)
@@ -50,9 +54,11 @@
 ---
 
 ### 3. **Audit Service Tests** (`src/tests/audit-service.test.js`)
+
 **Status:** ✅ NEW - Fully Implemented
 
-#### Test Cases:
+#### Test Cases
+
 - ✅ Log user creation activity
 - ✅ Log user update activity
 - ✅ Log user deletion activity
@@ -67,9 +73,11 @@
 ---
 
 ### 4. **Permission Service Tests** (`src/tests/permission-service.test.js`)
+
 **Status:** ✅ NEW - Fully Implemented
 
-#### Test Cases:
+#### Test Cases
+
 - ✅ Get global role permissions
 - ✅ Check permission for admin user
 - ✅ Check permission for instructor user
@@ -84,9 +92,11 @@
 ---
 
 ### 5. **Course Staff Tests** (`src/tests/course-staff.test.js`)
+
 **Status:** ✅ NEW - Fully Implemented
 
-#### Test Cases:
+#### Test Cases
+
 - ✅ Assign staff to course offering
 - ✅ Get all staff for an offering
 - ✅ Get user staff assignments
@@ -100,9 +110,11 @@
 ---
 
 ### 6. **Roster Service Tests** (`src/tests/roster-service.test.js`)
+
 **Status:** ✅ Already Exists (No Changes Needed)
 
-#### Test Cases:
+#### Test Cases
+
 - ✅ CSV import/export
 - ✅ JSON import/export
 - ✅ Validation tests
@@ -157,7 +169,9 @@
 ## ❌ **MISSING TEST COVERAGE**
 
 ### 1. **Permission Middleware Tests**
+
 **Status:** ❌ Not Implemented
+
 - No tests for `requirePermission()` middleware
 - No tests for `requireRole()` middleware
 - No tests for route protection
@@ -167,7 +181,9 @@
 ---
 
 ### 2. **Integration Tests**
+
 **Status:** ❌ Not Implemented
+
 - No end-to-end user management tests
 - No API endpoint tests
 - No full workflow tests
@@ -177,7 +193,9 @@
 ---
 
 ### 3. **Security Tests**
+
 **Status:** ❌ Not Implemented
+
 - No penetration tests
 - No FERPA compliance tests
 - No data encryption tests
@@ -201,19 +219,22 @@
 
 ## ✅ **Audit Document Requirements Status**
 
-### From AUDIT_original.md Section 6:
+### From AUDIT_original.md Section 6
 
 #### ✅ **IMPLEMENTED TESTS** (Updated)
+
 1. ✅ User Model Tests - Enhanced with new features
 2. ✅ User Service Tests - Enhanced with audit logging and soft delete
 3. ✅ Roster Service Tests - Already complete
 
 #### ✅ **NEWLY IMPLEMENTED TESTS**
+
 1. ✅ **Audit Service Tests** - Complete coverage
 2. ✅ **Permission Service Tests** - Complete coverage
 3. ✅ **Course Staff Tests** - Complete coverage
 
 #### ❌ **STILL MISSING TESTS**
+
 1. ❌ Permission Middleware Tests - Requires auth system
 2. ❌ Integration Tests - Requires auth system
 3. ❌ Security Tests - Requires specialized testing
@@ -225,6 +246,7 @@
 ### Current Status: **~85% Coverage**
 
 **Covered:**
+
 - ✅ All CRUD operations
 - ✅ All new features (soft delete, auth_source, audit logging)
 - ✅ Permission system logic
@@ -232,6 +254,7 @@
 - ✅ Bulk import/export
 
 **Remaining:**
+
 - ⚠️ Middleware tests (blocked by auth system)
 - ⚠️ Integration tests (blocked by auth system)
 - ⚠️ Security tests (requires specialized approach)
@@ -241,6 +264,7 @@
 ## 🚀 **Next Steps**
 
 1. **Run Tests:** Execute all test suites to verify functionality
+
    ```bash
    npm run local:test
    ```
