@@ -23,9 +23,9 @@ The audit covers four main feature areas:
 
 ## 1. User Management System (Foundation)
 
-### Requirements Summary
+### Requirements Summary (Feature 1)
 
-#### User Stories
+#### User Stories (Feature 1)
 
 - ✅ **As a Professor:** Manage all course members and assign roles
 - ✅ **As a Professor:** Bulk import student rosters
@@ -33,7 +33,7 @@ The audit covers four main feature areas:
 - ✅ **As a Team Lead:** View team & update profile information
 - ✅ **As a Team Member:** Update profile information
 
-#### Acceptance Criteria
+#### Acceptance Criteria (Feature 1)
 
 | Requirement | Status | Implementation Details |
 |------------|--------|------------------------|
@@ -43,7 +43,7 @@ The audit covers four main feature areas:
 | Bulk user import/export functionality | ✅ **COMPLETE** | CSV and JSON import/export with validation |
 | UCSD Extension student support integration | ⚠️ **PARTIAL** | Auth_source field exists (ucsd/extension) ✅<br>**Missing:** No UCSD Extension API integration |
 
-#### Technical Requirements
+#### Technical Requirements (Feature 1)
 
 | Requirement | Status | Implementation Details |
 |------------|--------|------------------------|
@@ -52,7 +52,7 @@ The audit covers four main feature areas:
 | Secure user data handling and privacy compliance | ⚠️ **PARTIAL** | Input validation ✅<br>Soft delete ✅<br>Audit logging ✅<br>**Missing:** Data encryption at rest, FERPA compliance measures |
 | Integration with Google OAuth user information | ❌ **MISSING** | No Google OAuth implementation found<br>No authentication middleware<br>No session management |
 
-#### Definition of Done
+#### Definition of Done (Feature 1)
 
 | Requirement | Status | Notes |
 |------------|--------|-------|
@@ -68,15 +68,15 @@ The audit covers four main feature areas:
 
 ## 2. Bulk Import/Export Functionality
 
-### Requirements Summary
+### Requirements Summary (Feature 2)
 
-#### User Stories
+#### User Stories (Feature 2)
 
 - ✅ **As a Professor:** Bulk import student rosters
 - ✅ **As an Administrator:** Export user data for backup and reporting
 - ⚠️ **As a Course Coordinator:** Integrate with UCSD Extension student data
 
-#### Tasks
+#### Tasks (Feature 2)
 
 | Task | Status | Implementation |
 |------|--------|----------------|
@@ -89,7 +89,7 @@ The audit covers four main feature areas:
 | Build progress indicators for large file operations | ⚠️ **PARTIAL** | Progress callback exists in code ✅<br>**Missing:** No API endpoint/UI for progress tracking |
 | Add data mapping and transformation utilities | ✅ **COMPLETE** | CSV column mapping, nested JSON flattening |
 
-#### Acceptance Criteria
+#### Acceptance Criteria (Feature 2)
 
 | Requirement | Status | Implementation |
 |------------|--------|----------------|
@@ -102,7 +102,7 @@ The audit covers four main feature areas:
 | Error reporting shows specific validation failures | ✅ **COMPLETE** | Detailed error messages per record |
 | Progress tracking for long-running operations | ⚠️ **PARTIAL** | Callback exists, no endpoint/UI |
 
-#### Technical Requirements
+#### Technical Requirements (Feature 2)
 
 | Requirement | Status | Implementation |
 |------------|--------|----------------|
@@ -112,7 +112,7 @@ The audit covers four main feature areas:
 | Secure file handling and temporary storage | ⚠️ **PARTIAL** | Memory storage ✅, temporary file cleanup missing |
 | Rate limiting for API integrations | ✅ **COMPLETE** | Rate limiter middleware (10 imports/15min) |
 
-#### Definition of Done
+#### Definition of Done (Feature 2)
 
 | Requirement | Status | Notes |
 |------------|--------|-------|
@@ -127,14 +127,14 @@ The audit covers four main feature areas:
 
 ## 3. User Database Schema and CRUD Operations
 
-### Requirements Summary
+### Requirements Summary (Feature 3)
 
-#### User Stories
+#### User Stories (Feature 3)
 
 - ✅ **As a Developer:** Robust user schema for secure authentication data storage
 - ✅ **As a System:** CRUD operations to manage user lifecycle
 
-#### Tasks
+#### Tasks (Feature 3)
 
 | Task | Status | Implementation |
 |------|--------|----------------|
@@ -145,7 +145,7 @@ The audit covers four main feature areas:
 | Add data validation and constraints | ✅ **COMPLETE** | Email, role, status, auth_source validation |
 | Implement soft delete functionality | ✅ **COMPLETE** | `deleted_at` field, restore functionality |
 
-#### Acceptance Criteria
+#### Acceptance Criteria (Feature 3)
 
 | Requirement | Status | Implementation |
 |------------|--------|----------------|
@@ -156,7 +156,7 @@ The audit covers four main feature areas:
 | Proper error handling for database operations | ✅ **COMPLETE** | Error handling implemented |
 | Audit logging for data changes | ✅ **COMPLETE** | `AuditService` logs all CRUD operations |
 
-#### Technical Requirements
+#### Technical Requirements (Feature 3)
 
 | Requirement | Status | Implementation |
 |------------|--------|----------------|
@@ -166,7 +166,7 @@ The audit covers four main feature areas:
 | Encrypted sensitive data at rest | ❌ **MISSING** | No encryption implementation |
 | Optimized queries for user lookup | ✅ **COMPLETE** | Indexes on email, user_id, role, auth_source |
 
-#### Definition of Done
+#### Definition of Done (Feature 3)
 
 | Requirement | Status | Notes |
 |------------|--------|-------|
@@ -180,9 +180,9 @@ The audit covers four main feature areas:
 
 ## 4. Role-Based Access Control (RBAC)
 
-### Requirements Summary
+### Requirements Summary (Feature 4)
 
-#### User Stories
+#### User Stories (Feature 4)
 
 - ✅ **As a Professor:** Assign TA and Tutor roles
 - ✅ **As a Professor:** Override student roles to make them Team Leaders
@@ -194,7 +194,7 @@ The audit covers four main feature areas:
 - ✅ **As a System:** Validate permissions on every action
 - ✅ **As an Admin:** Audit role changes
 
-#### Tasks
+#### Tasks (Feature 4)
 
 | Task | Status | Implementation |
 |------|--------|----------------|
@@ -205,7 +205,7 @@ The audit covers four main feature areas:
 | Build role management UI components | ❌ **MISSING** | Backend only, no UI components |
 | Add bulk role assignment functionality | ✅ **COMPLETE** | Bulk course staff assignment |
 
-#### Acceptance Criteria
+#### Acceptance Criteria (Feature 4)
 
 | Requirement | Status | Implementation |
 |------------|--------|----------------|
@@ -216,7 +216,7 @@ The audit covers four main feature areas:
 | Bulk operations for TA/student assignment | ✅ **COMPLETE** | Bulk course staff assignment endpoint |
 | Role inheritance and override system functional | ✅ **COMPLETE** | Three-tier permission checking |
 
-#### Technical Requirements
+#### Technical Requirements (Feature 4)
 
 | Requirement | Status | Implementation |
 |------------|--------|----------------|
@@ -226,7 +226,7 @@ The audit covers four main feature areas:
 | Support for future role expansion | ✅ **COMPLETE** | Database-driven permissions table |
 | Integration with authentication system | ❌ **BLOCKED** | Authentication system not implemented |
 
-#### Definition of Done
+#### Definition of Done (Feature 4)
 
 | Requirement | Status | Notes |
 |------------|--------|-------|
@@ -244,7 +244,7 @@ The audit covers four main feature areas:
 
 ### 5.1 Role System Architecture
 
-#### ✅ **IMPLEMENTED**
+#### ✅ **IMPLEMENTED** (Role System)
 
 1. **Three-Tier Role System**
    - ✅ Global roles: `admin`, `instructor` (Professor), `student`
@@ -278,7 +278,7 @@ The audit covers four main feature areas:
 
 ### 5.2 User Profile Management
 
-#### ✅ **IMPLEMENTED**
+#### ✅ **IMPLEMENTED** (Profile Management)
 
 1. **Profile Fields**
    - ✅ Basic: `name`, `email`, `user_id`, `preferred_name`
@@ -303,7 +303,7 @@ The audit covers four main feature areas:
 
 ### 5.3 Bulk Import/Export
 
-#### ✅ **IMPLEMENTED**
+#### ✅ **IMPLEMENTED** (Bulk Import/Export)
 
 1. **Import Functionality**
    - ✅ CSV import: `POST /users/roster/import/csv`
@@ -332,7 +332,7 @@ The audit covers four main feature areas:
    - ❌ No WebSocket/SSE for real-time updates
    - ❌ No progress storage/retrieval
 
-#### ❌ **MISSING**
+#### ❌ **MISSING** (Bulk Import/Export)
 
 1. **UCSD Extension API Integration**
    - ❌ No automatic student data pulling
@@ -343,7 +343,7 @@ The audit covers four main feature areas:
 
 ### 5.4 Authentication and Security
 
-#### ✅ **IMPLEMENTED**
+#### ✅ **IMPLEMENTED** (Authentication)
 
 1. **Database Schema**
    - ✅ `password_hash` field for password storage
@@ -375,7 +375,7 @@ The audit covers four main feature areas:
 
 ### 5.5 Audit Logging
 
-#### ✅ **IMPLEMENTED**
+#### ✅ **IMPLEMENTED** (Audit Logging)
 
 1. **Activity Logging**
    - ✅ `activity_logs` table
@@ -392,7 +392,7 @@ The audit covers four main feature areas:
 
 ### 5.6 Course Staff Management
 
-#### ✅ **IMPLEMENTED**
+#### ✅ **IMPLEMENTED** (Course Staff)
 
 1. **Staff Assignment**
    - ✅ `course_staff` table

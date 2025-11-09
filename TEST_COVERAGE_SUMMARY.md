@@ -11,7 +11,7 @@
 
 **Status:** ✅ Updated & Enhanced
 
-#### Test Cases
+#### Test Cases (User Model)
 
 - ✅ Input validation (email, role, status, auth_source)
 - ✅ User creation with email normalization
@@ -34,7 +34,7 @@
 
 **Status:** ✅ Updated & Enhanced
 
-#### Test Cases
+#### Test Cases (User Service)
 
 - ✅ User creation with duplicate email prevention
 - ✅ **NEW:** User creation with auth_source and audit logging
@@ -57,7 +57,7 @@
 
 **Status:** ✅ NEW - Fully Implemented
 
-#### Test Cases
+#### Test Cases (Audit Service)
 
 - ✅ Log user creation activity
 - ✅ Log user update activity
@@ -76,7 +76,7 @@
 
 **Status:** ✅ NEW - Fully Implemented
 
-#### Test Cases
+#### Test Cases (Permission Service)
 
 - ✅ Get global role permissions
 - ✅ Check permission for admin user
@@ -95,7 +95,7 @@
 
 **Status:** ✅ NEW - Fully Implemented
 
-#### Test Cases
+#### Test Cases (Course Staff)
 
 - ✅ Assign staff to course offering
 - ✅ Get all staff for an offering
@@ -113,7 +113,7 @@
 
 **Status:** ✅ Already Exists (No Changes Needed)
 
-#### Test Cases
+#### Test Cases (Roster Service)
 
 - ✅ CSV import/export
 - ✅ JSON import/export
@@ -296,4 +296,3 @@
 **Document Generated:** After implementation  
 **Last Updated:** Test creation date  
 **Status:** Ready for test execution
-
