@@ -12,6 +12,8 @@ import { RedisStore } from "connect-redis";
 // import { trackLoginAttempt, isBlocked } from "./js/middleware/loginAttemptTracker.js";
 import { createSequelize } from "./src/config/db.js";
 import { defineAuthLogModel } from "./src/models/auth-log.js";
+import bodyParser from "body-parser";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +28,7 @@ const sslOptions = {
 };
 
 const app = express();
+app.use(express.static(path.join(__dirname, "src/views")));
 
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -63,6 +66,26 @@ if (!DATABASE_URL) {
 
 const sequelize = createSequelize({ databaseUrl: DATABASE_URL, sslMode: PG_SSL_MODE });
 const AuthLog = defineAuthLogModel(sequelize);
+
+// ---------- Define User Model ----------
+import { DataTypes } from "sequelize";
+
+const User = sequelize.define("User", {
+  email: { type: DataTypes.STRING, unique: true, allowNull: false },
+  name: { type: DataTypes.STRING },
+  user_type: {
+    type: DataTypes.ENUM("Admin", "Professor", "TA", "Student", "Unregistered"),
+    defaultValue: "Unregistered"
+  },
+  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+}, {
+  tableName: "users",
+  timestamps: false
+});
+
+// Ensure table exists on startup
+await sequelize.sync({ alter: true });
+
 
 const redisClient = createClient({ url: REDIS_URL });
 redisClient.on("error", (error) => {
@@ -280,10 +303,10 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,
+      secure: false,
       httpOnly: true,
-      sameSite: "strict",
-      maxAge: 30 * 60 * 1000,
+      sameSite: "lax",
+      maxAge: 30 * 60 * 1000, // Cookie Time
     },
   })
 );
@@ -324,6 +347,33 @@ app.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/auth/failure" }),
   async (req, res) => {
     const email = req.user?.emails?.[0]?.value || "unknown";
+
+    // Adding Middleware for USER redirection
+
+    // Check if user exists in DB
+  const [user, created] = await User.findOrCreate({
+    where: { email },
+    defaults: {
+      name: req.user.displayName,
+      user_type: "Unregistered"
+    }
+  });
+
+  // Redirect based on user type
+  switch (user.user_type) {
+    case "Admin":
+      return res.redirect("/admin-dashboard.html");
+    case "Professor":
+      return res.redirect("/faculty-dashboard.html");
+    case "TA":
+      return res.redirect("/ta-dashboard.html");
+    case "Student":
+      return res.redirect("/student-dashboard.html");
+    default:
+      return res.redirect("/register.html");
+  }
+
+
     console.log("✅ Login success for:", email);
     await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
       req,
@@ -412,11 +462,23 @@ app.use((req, res, next) => {
   next();
 });
 
+// ADD A Simple POST to register login
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.post("/register/submit", ensureAuthenticated, async (req, res) => {
+  const email = req.user?.emails?.[0]?.value;
+  const newRole = req.body.role;
+  if (!email || !newRole) return res.status(400).send("Invalid request");
+
+  await User.update({ user_type: newRole }, { where: { email } });
+  res.send(`<h2>✅ Role updated to ${newRole}. Please <a href="/auth/google">relogin</a>.</h2>`);
+});
 
 // --- START HTTPS SERVER ---
 const startServer = async () => {
   try {
     await sequelize.authenticate();
+    await sequelize.sync({ alter: true }); // create users table if missing
     console.log("✅ Database connection established");
   } catch (error) {
     console.error("Failed to connect to the database", error);
