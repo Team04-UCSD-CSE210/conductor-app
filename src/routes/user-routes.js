@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { UserModel } from '../models/user-model.js';
 import { UserService } from '../services/user-service.js';
 import { RosterService } from '../services/roster-service.js';
 import { rosterImportLimiter } from '../middleware/rate-limiter.js';

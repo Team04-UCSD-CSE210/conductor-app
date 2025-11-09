@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { pool } from '../db.js';
 import { CourseStaffService } from '../services/course-staff-service.js';
-import { CourseStaffModel } from '../models/course-staff-model.js';
 import { UserModel } from '../models/user-model.js';
 
 describe('CourseStaffService', () => {

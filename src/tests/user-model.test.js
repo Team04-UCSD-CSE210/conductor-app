@@ -203,7 +203,7 @@ describe('UserModel (Postgres)', () => {
   });
 
   it('finds user by user_id', async () => {
-    const u = await UserModel.create({
+    await UserModel.create({
       email: 'userid@example.edu',
       name: 'User ID Test',
       role: 'student',

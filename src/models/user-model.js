@@ -448,7 +448,7 @@ export class UserModel {
    * Soft delete user (sets deleted_at timestamp)
    */
   static async delete(id) {
-    const { rows, rowCount } = await pool.query(
+    const { rowCount } = await pool.query(
       `UPDATE users 
        SET deleted_at = NOW(), updated_at = NOW()
        WHERE id = $1::uuid AND deleted_at IS NULL
@@ -462,7 +462,7 @@ export class UserModel {
    * Restore soft-deleted user (clears deleted_at)
    */
   static async restore(id) {
-    const { rows, rowCount } = await pool.query(
+    const { rowCount } = await pool.query(
       `UPDATE users 
        SET deleted_at = NULL, updated_at = NOW()
        WHERE id = $1::uuid AND deleted_at IS NOT NULL
