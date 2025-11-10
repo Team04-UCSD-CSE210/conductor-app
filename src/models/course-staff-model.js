@@ -1,7 +1,7 @@
 import { pool } from '../db.js';
 
 /**
- * CourseStaff Model - Handles course staff assignments (TA, Tutor, Grader)
+ * CourseStaff Model - Handles course staff assignments (TA, Tutor)
  * Manages the relationship between users and course offerings for staff roles
  */
 export class CourseStaffModel {
@@ -10,7 +10,7 @@ export class CourseStaffModel {
    */
   static validate(data) {
     const errors = [];
-    const validRoles = ['ta', 'tutor', 'grader'];
+    const validRoles = ['ta', 'tutor'];
     
     if (!data.offering_id) {
       errors.push('offering_id is required');
@@ -102,7 +102,7 @@ export class CourseStaffModel {
    * Update course staff role
    */
   static async update(id, staffRole) {
-    const validRoles = ['ta', 'tutor', 'grader'];
+    const validRoles = ['ta', 'tutor'];
     if (!validRoles.includes(staffRole)) {
       throw new Error(`Invalid staff_role. Must be one of: ${validRoles.join(', ')}`);
     }

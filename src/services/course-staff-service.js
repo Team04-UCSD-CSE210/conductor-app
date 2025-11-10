@@ -3,14 +3,14 @@ import { AuditService } from './audit-service.js';
 
 /**
  * CourseStaff Service - Business logic for course staff management
- * Handles TA, Tutor, and Grader assignments for course offerings
+ * Handles TA and Tutor assignments for course offerings
  */
 export class CourseStaffService {
   /**
    * Assign staff to a course offering
    * @param {string} offeringId - Course offering ID
    * @param {string} userId - User ID to assign as staff
-   * @param {string} staffRole - Role: 'ta', 'tutor', or 'grader'
+   * @param {string} staffRole - Role: 'ta' or 'tutor'
    * @param {string} assignedBy - User ID who is making the assignment (for audit)
    */
   static async assignStaff(offeringId, userId, staffRole, assignedBy) {

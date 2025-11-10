@@ -23,7 +23,7 @@ export class PermissionService {
 
   /**
    * Get all permissions for an enrollment role (course role)
-   * @param {string} enrollmentRole - Course role: 'ta', 'tutor', 'grader', 'student'
+   * @param {string} enrollmentRole - Course role: 'ta', 'tutor', 'student'
    */
   static async getCourseRolePermissions(enrollmentRole) {
     const query = `

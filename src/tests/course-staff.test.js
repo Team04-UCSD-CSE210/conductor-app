@@ -113,11 +113,11 @@ describe('CourseStaffService', () => {
 
     const updated = await CourseStaffService.updateStaffRole(
       staff.id,
-      'grader',
+      'tutor',
       instructorId
     );
 
-    expect(updated.staff_role).toBe('grader');
+    expect(updated.staff_role).toBe('tutor');
 
     // Check audit log for role change
     const { rows } = await pool.query(

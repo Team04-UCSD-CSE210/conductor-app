@@ -19,14 +19,14 @@ END $$;
 -- Add staff_role enum for course_staff table
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'staff_role_enum') THEN
-        CREATE TYPE staff_role_enum AS ENUM ('ta', 'tutor', 'grader');
+        CREATE TYPE staff_role_enum AS ENUM ('ta', 'tutor');
     END IF;
 END $$;
 
 -- Add enrollment_role enum (update if needed)
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enrollment_role_enum') THEN
-        CREATE TYPE enrollment_role_enum AS ENUM ('student', 'ta', 'tutor', 'grader');
+        CREATE TYPE enrollment_role_enum AS ENUM ('student', 'ta', 'tutor');
     END IF;
 END $$;
 

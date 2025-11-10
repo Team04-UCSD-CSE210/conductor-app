@@ -37,7 +37,7 @@ The audit covers four main feature areas:
 
 | Requirement | Status | Implementation Details |
 |------------|--------|------------------------|
-| Configurable role system (Professor, TA, Tutor, Team Leader, Student) | ⚠️ **PARTIAL** | **Global roles:** admin, instructor (Professor), student ✅<br>**Course roles:** TA, Tutor, Grader ✅ (via course_staff/enrollments)<br>**Team roles:** Leader, Member ✅ (via team_members)<br>**Issue:** Roles are hardcoded in code, not fully database-driven |
+| Configurable role system (Professor, TA, Tutor, Team Leader, Student) | ⚠️ **PARTIAL** | **Global roles:** admin, instructor (Professor), student ✅<br>**Course roles:** TA, Tutor ✅ (via course_staff/enrollments)<br>**Team roles:** Leader, Member ✅ (via team_members)<br>**Issue:** Roles are hardcoded in code, not fully database-driven |
 | User profile management and data storage | ✅ **COMPLETE** | Full CRUD operations with 20+ profile fields |
 | Role-based permission assignment and validation | ✅ **COMPLETE** | Permission system with three-tier architecture (global, course, team) |
 | Bulk user import/export functionality | ✅ **COMPLETE** | CSV and JSON import/export with validation |
@@ -209,7 +209,7 @@ The audit covers four main feature areas:
 
 | Requirement | Status | Implementation |
 |------------|--------|----------------|
-| Five user roles defined with clear permissions | ⚠️ **PARTIAL** | **Global:** admin, instructor, student ✅<br>**Course:** TA, Tutor, Grader ✅<br>**Team:** Leader, Member ✅<br>**Note:** Professor = Instructor (same role) |
+| Five user roles defined with clear permissions | ⚠️ **PARTIAL** | **Global:** admin, instructor, student ✅<br>**Course:** TA, Tutor ✅<br>**Team:** Leader, Member ✅<br>**Note:** Professor = Instructor (same role) |
 | Role assignment works at system and course level | ✅ **COMPLETE** | Global roles + course staff + enrollments |
 | Permission middleware blocks unauthorized access | ⚠️ **PARTIAL** | Middleware exists ✅<br>**Missing:** Not integrated with routes (requires auth) |
 | Role changes logged for audit trail | ✅ **COMPLETE** | `AuditService.logRoleChange()` |
@@ -248,7 +248,7 @@ The audit covers four main feature areas:
 
 1. **Three-Tier Role System**
    - ✅ Global roles: `admin`, `instructor` (Professor), `student`
-   - ✅ Course roles: `ta`, `tutor`, `grader` (via `course_staff` and `enrollments`)
+   - ✅ Course roles: `ta`, `tutor` (via `course_staff` and `enrollments`)
    - ✅ Team roles: `leader`, `member` (via `team_members`)
 
 2. **Permission System**
