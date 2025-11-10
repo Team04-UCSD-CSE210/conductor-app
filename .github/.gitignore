@@ -2,5 +2,5 @@ AGENTS.md
 .DS_Store
 **/.DS_Store
 node_modules
-certs/
+
 .env
