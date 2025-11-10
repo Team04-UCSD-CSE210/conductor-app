@@ -1,0 +1,26 @@
+/* Minimal reset */
+*, *::before, *::after{
+  box-sizing:border-box;
+}
+
+html, body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  font-family:system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background:#f6f7fb;
+  color:#0f172a;
+}
+
+
+/* Media defaults */
+img, svg{
+  display:block;
+  max-width:100%;
+}
+
+button, input{
+  font:inherit;
+}

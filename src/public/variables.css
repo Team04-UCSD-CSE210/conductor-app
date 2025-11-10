@@ -1,0 +1,15 @@
+:root{
+  --bg: #f6f7fb;
+  --panel: #fff;
+  --border: #e6e8ef;
+  --muted: #6b7280;
+  --text: #0f172a;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 8px 24px rgb(16 24 40 / 6%);
+  --chip-high: #fce2e2;
+  --chip-med:  #fdecc7;
+  --chip-low:  #e6f2fe;
+  --chip-text: #111827;
+  --progress: #0b1220; /* near-black like screenshot bars */
+}
