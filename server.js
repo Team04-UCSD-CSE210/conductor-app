@@ -15,6 +15,7 @@ import { defineAuthLogModel } from "./src/models/auth-log.js";
 import bodyParser from "body-parser";
 
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const VIEW_DIR = "src/views"
@@ -69,7 +70,6 @@ const AuthLog = defineAuthLogModel(sequelize);
 
 // ---------- Define User Model ----------
 import { DataTypes } from "sequelize";
-
 const User = sequelize.define("User", {
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
   name: { type: DataTypes.STRING },
@@ -83,7 +83,13 @@ const User = sequelize.define("User", {
   timestamps: false
 });
 
-// Ensure table exists on startup
+// ---- Whitelist and AccessRequest Models ----
+import { defineWhitelistModel } from "./src/models/whitelist.js";
+import { defineAccessRequestModel } from "./src/models/access-request.js";
+const Whitelist = defineWhitelistModel(sequelize);
+const AccessRequest = defineAccessRequestModel(sequelize);
+
+// Ensure tables exist on startup
 await sequelize.sync({ alter: true });
 
 
@@ -242,11 +248,12 @@ passport.use(new GoogleStrategy({
   }
 
   try {
+    // --- Step 1: UCSD domain always allowed ---
     if (domain === ALLOWED_DOMAIN) {
       await clearLoginAttempts(identifier);
       await logAuthEvent("LOGIN_SUCCESS", {
         req,
-        message: "Google OAuth login succeeded",
+        message: "Google OAuth login succeeded (UCSD domain)",
         userEmail: email,
         userId,
         metadata: { provider: "google" }
@@ -254,10 +261,37 @@ passport.use(new GoogleStrategy({
       return done(null, profile);
     }
 
+    // --- Step 2: Non-UCSD (gmail etc.) → check whitelist ---
+    if (email) {
+      const whitelistEntry = await Whitelist.findOne({ where: { email } });
+      if (whitelistEntry) {
+        await clearLoginAttempts(identifier);
+        await logAuthEvent("LOGIN_SUCCESS_WHITELIST", {
+          req,
+          message: "Whitelisted non-UCSD user allowed login",
+          userEmail: email,
+          userId,
+          metadata: { provider: "google" }
+        });
+
+        // ✅ Treat whitelisted users as 'Unregistered'
+        await User.findOrCreate({
+          where: { email },
+          defaults: {
+            name: profile.displayName,
+            user_type: "Unregistered"
+          }
+        });
+
+        return done(null, profile);
+      }
+    }
+
+    // --- Step 3: All others → block and log ---
     const attempts = await recordFailedLoginAttempt(identifier);
     await logAuthEvent("LOGIN_REJECTED_DOMAIN", {
       req,
-      message: `Attempted login from disallowed domain ${domain || "unknown"}`,
+      message: `Attempted login from unauthorized domain: ${domain || "unknown"}`,
       userEmail: email,
       userId,
       metadata: {
@@ -268,7 +302,7 @@ passport.use(new GoogleStrategy({
         windowMinutes: LOGIN_FAILURE_WINDOW_MINUTES
       }
     });
-    return done(null, false, { message: "Non-UCSD account" });
+    return done(null, false, { message: "Non-UCSD or unapproved account" });
   } catch (error) {
     console.error("Error during Google OAuth verification", error);
     const attempts = await recordFailedLoginAttempt(identifier);
@@ -323,10 +357,26 @@ app.get("/dashboard", ensureAuthenticated, (_req, res) => {
 
 // serve all your static files (HTML, CSS, JS, etc.)
 app.use(express.static(__dirname));
-// Serve blocked page
+
+// Serve blocked page with injected email (before static middleware)
+app.get("/blocked.html", (req, res) => {
+  const email = req.session.blockedEmail || "";
+  delete req.session.blockedEmail; // Clear after use
+
+  const filePath = path.join(__dirname, "src/views/blocked.html");
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) return res.status(500).send("Error loading page");
+    const modified = data.replace(
+      "</body>",
+      `<script>window.prefilledEmail=${JSON.stringify(email)};</script></body>`
+    );
+    res.send(modified);
+  });
+});
+
+// Serve /blocked for legacy routes
 app.get("/blocked", (req, res) => {
   res.sendFile(buildFullViewPath("blocked.html"));
-
 });
 
 
@@ -337,13 +387,20 @@ app.get("/blocked", (req, res) => {
 app.get("/auth/error", (req, res) => {
   console.warn("⚠️ OAuth error detected:", req.query);
 
+  const attemptedEmail =
+    req.query.email ||
+    req.query.login_hint ||
+    req.query.user_email ||
+    "unknown";
+
   logAuthEvent("LOGIN_ERROR_REDIRECT", {
     req,
     message: "OAuth error redirect triggered",
     metadata: { query: req.query }
   });
 
-  // Redirect user to blocked page
+  // Redirect user to blocked page with their email if available
+  req.session.blockedEmail = attemptedEmail;
   res.redirect("/blocked.html");
 });
 
@@ -351,11 +408,18 @@ app.get("/auth/error", (req, res) => {
 app.get("/auth/google", (req, res, next) => {
   req.logout(() => {});       // clear any cached user
   req.session?.destroy(() => {});  // destroy session
+
+  const loginHint = req.query.email || req.query.login_hint || ""; // capture hint if provided
+
   passport.authenticate("google", {
     scope: ["profile", "email"],
-    prompt: "select_account",  // only show chooser, not full SSO logout
+    prompt: "select_account",
+    accessType: "offline",
+    includeGrantedScopes: true,
+    loginHint, // ✅ helps Google return user email on redirect
     failureRedirect: "/auth/error"
   })(req, res, next);
+  console.log("🔄 Starting Google OAuth login flow with hint:", loginHint);
 });
 
 
@@ -417,7 +481,21 @@ app.get("/auth/failure", async (req, res) => {
     message: "Google OAuth failed or unauthorized user",
     metadata: { provider: "google" }
   });
-  res.redirect("/blocked");
+
+  const email =
+    req.user?.emails?.[0]?.value ||
+    req.query.email ||
+    req.query.login_hint ||
+    req.query.user_email ||
+    req.query.openid_email ||
+    req.query.id_token_hint ||
+    req.query.authuser ||
+    "unknown";
+
+  console.log("🚫 Failed login email captured:", email);
+
+  req.session.blockedEmail = email;
+  res.redirect("/blocked.html");
 });
 
 
@@ -520,6 +598,7 @@ app.use((req, res, next) => {
 
 // ADD A Simple POST to register login
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.post("/register/submit", ensureAuthenticated, async (req, res) => {
   const email = req.user?.emails?.[0]?.value;
@@ -547,3 +626,80 @@ const startServer = async () => {
 };
 
 startServer();
+
+
+// --- Access Request Submission ---
+app.post("/request-access", async (req, res) => {
+  const { email, reason } = req.body;
+  if (!email) return res.status(400).send("Missing email");
+
+  // Check if already approved (whitelisted)
+  const whitelisted = await Whitelist.findOne({ where: { email } });
+  if (whitelisted) {
+    return res.status(200).send(`<h3>✅ ${email} is already approved for access.</h3>`);
+  }
+
+  // Check if an access request already exists
+  const existingRequest = await AccessRequest.findOne({ where: { email } });
+  if (existingRequest) {
+    // ✅ Update the existing entry instead of skipping
+    await existingRequest.update({ reason, requested_at: new Date() });
+
+    await logAuthEvent("ACCESS_REQUEST_UPDATED", {
+      req,
+      message: `Access request for ${email} was updated.`,
+      userEmail: email,
+      metadata: { reason }
+    });
+
+    return res.status(200).send(`<h3>🔄 Your previous request for ${email} has been updated successfully.</h3>`);
+  }
+
+  // ✅ Create a new request if it doesn’t exist
+  await AccessRequest.create({ email, reason });
+  await logAuthEvent("ACCESS_REQUEST_SUBMITTED", {
+    req,
+    message: `Access request submitted by ${email}`,
+    userEmail: email,
+    metadata: { reason }
+  });
+
+  res.status(200).send(`<h3>✅ Your access request for ${email} has been submitted.</h3>`);
+});
+
+// --- Simple Admin Approval Page and Approve Route ---
+app.get("/admin/whitelist", async (req, res) => {
+  const requests = await AccessRequest.findAll();
+  const whitelist = await Whitelist.findAll();
+  res.send(`
+    <h2>Pending Access Requests</h2>
+    <ul>
+      ${requests.map(r => `
+        <li>${r.email} — ${r.reason || ""} 
+          <a href="/admin/approve?email=${encodeURIComponent(r.email)}">Approve</a>
+        </li>
+      `).join("")}
+    </ul>
+    <h2>Approved Users</h2>
+    <ul>
+      ${whitelist.map(w => `<li>${w.email}</li>`).join("")}
+    </ul>
+  `);
+});
+
+app.get("/admin/approve", async (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).send("Missing email");
+
+  // Use findOrCreate to avoid duplicate whitelist entries
+  const [entry, created] = await Whitelist.findOrCreate({
+    where: { email },
+    defaults: { approved_by: "Admin" }
+  });
+  if (!created) {
+    console.log(`ℹ️ ${email} already exists in whitelist.`);
+  }
+
+  await AccessRequest.destroy({ where: { email } });
+  res.redirect("/admin/whitelist");
+});

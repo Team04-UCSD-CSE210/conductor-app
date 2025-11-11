@@ -14,7 +14,6 @@
     "lint:md": "markdownlint '**/*.md'",
     "docs": "echo 'No documentation build required'",
     "prune:auth-logs": "node scripts/prune-auth-logs.js"
-
   },
   "keywords": [],
   "author": "",
