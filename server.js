@@ -332,21 +332,43 @@ app.get("/blocked", (req, res) => {
 
 
 // -------------------- ROUTES --------------------
-app.get("/auth/google", (req, res, next) => {
-  console.log("🔄 Redirecting to Google with callback:", CALLBACK_URL);
-  logAuthEvent("LOGIN_REDIRECT", {
+
+// Handle Google OAuth errors (e.g., org_internal)
+app.get("/auth/error", (req, res) => {
+  console.warn("⚠️ OAuth error detected:", req.query);
+
+  logAuthEvent("LOGIN_ERROR_REDIRECT", {
     req,
-    message: "Redirecting user to Google OAuth",
-    metadata: { provider: "google", callbackURL: CALLBACK_URL }
+    message: "OAuth error redirect triggered",
+    metadata: { query: req.query }
   });
-  passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+
+  // Redirect user to blocked page
+  res.redirect("/blocked.html");
 });
+
+// Always force account chooser on each login attempt
+app.get("/auth/google", (req, res, next) => {
+  req.logout(() => {});       // clear any cached user
+  req.session?.destroy(() => {});  // destroy session
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    prompt: "select_account",  // only show chooser, not full SSO logout
+    failureRedirect: "/auth/error"
+  })(req, res, next);
+});
+
 
 
 app.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/auth/failure" }),
   async (req, res) => {
     const email = req.user?.emails?.[0]?.value || "unknown";
+
+     // ✅ DEBUG LOGS
+    console.log("🔐 New login detected:");
+    console.log("   Session ID:", req.sessionID);
+    console.log("   Logged-in user:", email);
 
     // Adding Middleware for USER redirection
 
@@ -358,6 +380,7 @@ app.get("/auth/google/callback",
       user_type: "Unregistered"
     }
   });
+
 
   // Redirect based on user type
   switch (user.user_type) {
@@ -402,9 +425,19 @@ function buildFullViewPath(viewFileName){
   return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
 }
 
-app.get("/login", (req, res) =>{
-  res.sendFile(buildFullViewPath("login.html"))
+// Reset any leftover session before showing login page
+app.get("/login", (req, res) => {
+  // Clear Passport user and Redis session if any
+  try {
+    if (req.logout) req.logout(() => {});
+    if (req.session) req.session.destroy(() => {});
+  } catch (err) {
+    console.error("⚠️ Error while resetting session on /login:", err);
+  }
+
+  res.sendFile(buildFullViewPath("login.html"));
 });
+
 
 
 
@@ -423,15 +456,20 @@ app.get("/api/user", ensureAuthenticated, (req, res) => {
   });
 });
 
+
 app.get("/logout", ensureAuthenticated, (req, res, next) => {
   const email = req.user?.emails?.[0]?.value || "unknown";
   const userId = req.user?.id || null;
+
+  console.log("🚪 Logging out session:", req.sessionID);
+
   logAuthEvent("LOGOUT_INITIATED", {
     req,
     message: "User requested logout",
     userEmail: email,
     userId
   });
+
   req.logout((error) => {
     if (error) {
       logAuthEvent("LOGOUT_ERROR", {
@@ -444,15 +482,33 @@ app.get("/logout", ensureAuthenticated, (req, res, next) => {
       return next(error);
     }
 
-    logAuthEvent("LOGOUT_SUCCESS", {
-      req,
-      message: "User logged out successfully",
-      userEmail: email,
-      userId
+    req.session.destroy(() => {
+      logAuthEvent("LOGOUT_SUCCESS", {
+        req,
+        message: "User logged out successfully",
+        userEmail: email,
+        userId
+      });
+
+      // ✅ Just go back to login page
+      res.redirect("/login");
     });
-    res.redirect("/login");
   });
 });
+
+// Route for switching UCSD accounts: logs out the user, destroys session, and redirects to IdP logout.
+app.get("/switch-account", (req, res) => {
+  req.logout(() => {});
+  if (req.session) {
+    req.session.destroy(() => {
+      res.redirect("https://idp.ucsd.edu/idp/profile/Logout?return=https://localhost:8443/login");
+    });
+  } else {
+    res.redirect("https://idp.ucsd.edu/idp/profile/Logout?return=https://localhost:8443/login");
+  }
+});
+
+
 
 // HTTP --> HTTPS
 app.use((req, res, next) => {
