@@ -7,201 +7,258 @@
     <link rel="stylesheet" href="../public/reset.css" />
     <link rel="stylesheet" href="../public/variables.css" />
     <link rel="stylesheet" href="../public/dashboard.css" />
-
   </head>
   <body>
-    <div class="app">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="sidebar-role">
+    <section class="app">
+            <aside class="sidebar">
+        <p class="sidebar-role">
           Logged in as<br /><strong>Student</strong>
-        </div>
-        <nav class="sidebar-nav">
-          <a class="nav-item" href="#">Class Directory</a>
-          <a class="nav-item" href="#">Attendance</a>
-          <a class="nav-item" href="#">Work Journal</a>
-          <a class="nav-item" href="#">Evaluations</a>
-          <a class="nav-item" href="#">Documentation</a>
-          <a class="nav-item" href="#">Participation</a>
-          <a class="nav-item" href="#">Meetings</a>
+        </p>
+        <hr class="sidebar-sep" />
+        <nav aria-label="Primary">
+          <ul class="sidebar-nav">
+            <li>
+              <a class="nav-item" href="#">
+                <!-- people/roster -->
+                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="9" cy="8" r="3" />
+                  <path d="M4 18c0-3 2.5-5 5-5" />
+                  <circle cx="17" cy="10" r="2" />
+                  <path d="M14 18c0-2 1.7-3.5 3-3.5" />
+                </svg>
+                <span>Class Directory</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item" href="#">
+                <!-- calendar -->
+                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="16" rx="2" />
+                  <path d="M8 3v4M16 3v4M3 10h18" />
+                </svg>
+                <span>Attendance</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item" href="#">
+                <!-- journal/book -->
+                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z" />
+                  <path d="M8 4v13" />
+                </svg>
+                <span>Work Journal</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item" href="#">
+                <!-- clipboard -->
+                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="5" y="4" width="14" height="16" rx="2" />
+                  <rect x="9" y="2" width="6" height="4" rx="1" />
+                </svg>
+                <span>Evaluations</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item" href="#">
+                <!-- document -->
+                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+                  <path d="M14 3v6h6" />
+                </svg>
+                <span>Documentation</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item" href="#">
+                <!-- users -->
+                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="9" cy="9" r="3" />
+                  <circle cx="17" cy="9" r="2.5" />
+                  <path d="M3.5 19c0-3.3 3.2-5 5.5-5s5.5 1.7 5.5 5" />
+                  <path d="M14.5 19c0-1.8 1.6-3.2 3.5-3.2" />
+                </svg>
+                <span>Participation</span>
+              </a>
+            </li>
+            <li>
+              <a class="nav-item" href="#">
+                <!-- chat bubble -->
+                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 5h14v10H9l-4 4V5z" />
+                </svg>
+                <span>Meetings</span>
+              </a>
+            </li>
+          </ul>
         </nav>
       </aside>
 
-      <!-- Main -->
-      <main class="main">
+
+      <main class="main" role="main">
         <header class="header">
           <h1>Student Dashboard</h1>
           <p>Track your progress and stay organized</p>
         </header>
 
-        <!-- Top stat cards -->
-        <section class="stats">
+        <!-- Stats -->
+        <section class="stats" aria-label="Quick stats">
           <article class="card stat-card">
-            <div class="stat-head">
+            <header class="stat-head">
               <span>Attendance Rate</span>
-              <span class="icon icon--calendar"></span>
-            </div>
-            <div class="stat-value">96%</div>
+              <span class="icon icon-calendar" aria-hidden="true"></span>
+            </header>
+            <strong class="stat-value" aria-label="Attendance rate 96 percent">96%</strong>
           </article>
 
           <article class="card stat-card">
-            <div class="stat-head">
+            <header class="stat-head">
               <span>Tasks Completed</span>
-              <span class="icon icon--menu"></span>
-            </div>
-            <div class="stat-value">24/28</div>
+              <span class="icon icon-menu" aria-hidden="true"></span>
+            </header>
+            <strong class="stat-value" aria-label="Tasks completed 24 of 28">24/28</strong>
           </article>
 
           <article class="card stat-card">
-            <div class="stat-head">
+            <header class="stat-head">
               <span>Team Members</span>
-              <span class="icon icon--users"></span>
-            </div>
-            <div class="stat-value">5</div>
+              <span class="icon icon-users" aria-hidden="true"></span>
+            </header>
+            <strong class="stat-value">5</strong>
           </article>
 
           <article class="card stat-card">
-            <div class="stat-head">
+            <header class="stat-head">
               <span>Journal Entries</span>
-              <span class="icon icon--doc"></span>
-            </div>
-            <div class="stat-value">42</div>
+              <span class="icon icon-doc" aria-hidden="true"></span>
+            </header>
+            <strong class="stat-value">42</strong>
           </article>
         </section>
 
-        <!-- Tasks + Events -->
-        <section class="grid">
-          <!-- Tasks -->
+        <!-- Tasks & Events -->
+        <section class="grid" aria-label="Tasks and events">
           <article class="card">
             <h2>My Tasks</h2>
             <p class="muted">Your current assignments</p>
-
-            <div class="list">
-              <div class="list-row">
-                <div class="row-main">
-                  <div class="row-title">Complete user authentication module</div>
-                  <div class="row-sub">
+            <ul class="list" aria-label="Task list">
+              <li class="list-row">
+                <section class="row-main">
+                  <p class="row-title">Complete user authentication module</p>
+                  <p class="row-sub">
                     <span>Due: Today</span>
-                    <span class="chip chip--status">In Progress</span>
-                  </div>
-                </div>
-                <span class="chip chip--high">high</span>
-              </div>
+                    <span class="chip chip-status">In Progress</span>
+                  </p>
+                </section>
+                <span class="chip chip-high" aria-label="priority high">high</span>
+              </li>
 
-              <div class="list-row">
-                <div class="row-main">
-                  <div class="row-title">Write unit tests for API endpoints</div>
-                  <div class="row-sub">
+              <li class="list-row">
+                <section class="row-main">
+                  <p class="row-title">Write unit tests for API endpoints</p>
+                  <p class="row-sub">
                     <span>Due: Tomorrow</span>
-                    <span class="chip chip--status">To Do</span>
-                  </div>
-                </div>
-                <span class="chip chip--high">high</span>
-              </div>
+                    <span class="chip chip-status">To Do</span>
+                  </p>
+                </section>
+                <span class="chip chip-high" aria-label="priority high">high</span>
+              </li>
 
-              <div class="list-row">
-                <div class="row-main">
-                  <div class="row-title">Review teammate's pull request</div>
-                  <div class="row-sub">
+              <li class="list-row">
+                <section class="row-main">
+                  <p class="row-title">Review teammate's pull request</p>
+                  <p class="row-sub">
                     <span>Due: Nov 7</span>
-                    <span class="chip chip--status">To Do</span>
-                  </div>
-                </div>
-                <span class="chip chip--medium">medium</span>
-              </div>
+                    <span class="chip chip-status">To Do</span>
+                  </p>
+                </section>
+                <span class="chip chip-medium" aria-label="priority medium">medium</span>
+              </li>
 
-              <div class="list-row">
-                <div class="row-main">
-                  <div class="row-title">Update project documentation</div>
-                  <div class="row-sub">
+              <li class="list-row">
+                <section class="row-main">
+                  <p class="row-title">Update project documentation</p>
+                  <p class="row-sub">
                     <span>Due: Nov 8</span>
-                    <span class="chip chip--status">To Do</span>
-                  </div>
-                </div>
-                <span class="chip chip--low">low</span>
-              </div>
-            </div>
+                    <span class="chip chip-status">To Do</span>
+                  </p>
+                </section>
+                <span class="chip chip-low" aria-label="priority low">low</span>
+              </li>
+            </ul>
           </article>
 
-          <!-- Events -->
           <article class="card">
             <h2>Upcoming Events</h2>
             <p class="muted">Your schedule</p>
+            <ul class="list" aria-label="Upcoming events">
+              <li class="list-row">
+                <section class="row-main">
+                  <p class="row-title">Team Stand-up Meeting</p>
+                  <p class="row-sub">Today, 10:00 AM</p>
+                </section>
+                <span class="icon icon-calendar soft" aria-hidden="true"></span>
+              </li>
 
-            <div class="list">
-              <div class="list-row">
-                <div class="row-main">
-                  <div class="row-title">Team Stand-up Meeting</div>
-                  <div class="row-sub">Today, 10:00 AM</div>
-                </div>
-                <span class="icon icon--calendar soft"></span>
-              </div>
+              <li class="list-row">
+                <section class="row-main">
+                  <p class="row-title">Lab Session</p>
+                  <p class="row-sub">Today, 2:00 PM</p>
+                </section>
+                <span class="icon icon-calendar soft" aria-hidden="true"></span>
+              </li>
 
-              <div class="list-row">
-                <div class="row-main">
-                  <div class="row-title">Lab Session</div>
-                  <div class="row-sub">Today, 2:00 PM</div>
-                </div>
-                <span class="icon icon--calendar soft"></span>
-              </div>
+              <li class="list-row">
+                <section class="row-main">
+                  <p class="row-title">TA Check-in</p>
+                  <p class="row-sub">Tomorrow, 3:00 PM</p>
+                </section>
+                <span class="icon icon-calendar soft" aria-hidden="true"></span>
+              </li>
 
-              <div class="list-row">
-                <div class="row-main">
-                  <div class="row-title">TA Check-in</div>
-                  <div class="row-sub">Tomorrow, 3:00 PM</div>
-                </div>
-                <span class="icon icon--calendar soft"></span>
-              </div>
-
-              <div class="list-row">
-                <div class="row-main">
-                  <div class="row-title">Sprint Review</div>
-                  <div class="row-sub">Nov 8, 11:00 AM</div>
-                </div>
-                <span class="icon icon--calendar soft"></span>
-              </div>
-            </div>
+              <li class="list-row">
+                <section class="row-main">
+                  <p class="row-title">Sprint Review</p>
+                  <p class="row-sub">Nov 8, 11:00 AM</p>
+                </section>
+                <span class="icon icon-calendar soft" aria-hidden="true"></span>
+              </li>
+            </ul>
           </article>
         </section>
 
         <!-- Progress -->
         <article class="card">
-            <h2>Course Progress</h2>
-            <p class="muted">Your overall performance</p>
+          <h2>Course Progress</h2>
+          <p class="muted">Your overall performance</p>
 
-            <div class="stack">
-              <div class="progress-row">
-                <div class="progress-label">
-                  <span>Participation Score</span>
-                  <span>88/100</span>
-                </div>
-                <div class="progress">
-                  <div class="progress-bar w-88p"></div>
-                </div>
-              </div>
+          <section class="stack" aria-label="Progress bars">
+            <section class="progress-row">
+              <p class="progress-label">
+                <span>Participation Score</span>
+                <span>88/100</span>
+              </p>
+              <progress class="progress" value="88" max="100" aria-label="Participation score 88 of 100"></progress>
+            </section>
 
-              <div class="progress-row">
-                <div class="progress-label">
-                  <span>Assignment Completion</span>
-                  <span>24/28 (86%)</span>
-                </div>
-                <div class="progress">
-                  <div class="progress-bar w-86p"></div>
-                </div>
-              </div>
+            <section class="progress-row">
+              <p class="progress-label">
+                <span>Assignment Completion</span>
+                <span>24/28 (86%)</span>
+              </p>
+              <progress class="progress" value="86" max="100" aria-label="Assignment completion 86 percent"></progress>
+            </section>
 
-              <div class="progress-row">
-                <div class="progress-label">
-                  <span>Team Contribution</span>
-                  <span>92/100</span>
-                </div>
-                <div class="progress">
-                  <div class="progress-bar w-92p"></div>
-                </div>
-              </div>
-            </div>
+            <section class="progress-row">
+              <p class="progress-label">
+                <span>Team Contribution</span>
+                <span>92/100</span>
+              </p>
+              <progress class="progress" value="92" max="100" aria-label="Team contribution 92 of 100"></progress>
+            </section>
+          </section>
         </article>
       </main>
-    </div>
+    </section>
   </body>
 </html>

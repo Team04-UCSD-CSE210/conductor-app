@@ -39,13 +39,28 @@
   color:var(--text);
 }
 
+/* list (no bullets) + spacing */
 .sidebar-nav{
+  list-style:none;
+  padding:0;
+  margin:0;
   display:grid;
   gap:8px;
 }
 
+/* divider under “Logged in as …” */
+.sidebar-sep{
+  border:0;
+  border-top:1px solid var(--border);
+  margin:12px 0 16px;
+}
+
+/* icon + label row */
 .nav-item{
-  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
   border-radius:10px;
   text-decoration:none;
   color:var(--text);
@@ -55,6 +70,23 @@
 .nav-item:hover{
   background:#fafafa;
   border-color:var(--border);
+}
+
+/* sidebar SVG icons */
+.nav-svg{
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
+  color:#6b7280; /* subtle gray like the screenshot */
+}
+
+/* ensure shapes are outlined, not filled */
+.nav-svg *{
+  fill:none;
+  stroke:currentcolor;
+  stroke-width:1.5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
 
 /* Main */
@@ -106,7 +138,7 @@
   font-weight:600;
 }
 
-/* Little icon placeholders */
+/* Icons */
 .icon{
   width:28px;
   height:28px;
@@ -187,7 +219,7 @@
   margin-bottom:16px;
 }
 
-/* Section headings */
+/* Text helpers */
 h2{
   font-size:16px;
   margin:0 0 6px;
@@ -204,10 +236,13 @@ h2{
   gap:10px;
 }
 
-/* Rows (tasks/events) */
+/* Lists */
 .list{
   display:grid;
   gap:10px;
+  list-style:none;
+  padding:0;
+  margin:0;
 }
 
 .list-row{
@@ -221,14 +256,20 @@ h2{
   background:#fff;
 }
 
+/* Row content */
+.row-main{
+  display:block;
+}
+
 .row-title{
   font-weight:500;
+  margin:0;
 }
 
 .row-sub{
   font-size:12px;
   color:var(--muted);
-  margin-top:4px;
+  margin:4px 0 0;
   display:flex;
   gap:8px;
 }
@@ -272,28 +313,33 @@ h2{
   align-items:center;
   font-size:12px;
   color:var(--muted);
+  margin:0;
 }
 
-.progress{
+progress.progress{
+  width:100%;
   height:12px;
+  appearance:none; 
   background:#f2f2f6;
   border:1px solid var(--border);
   border-radius:999px;
   overflow:hidden;
 }
 
-.progress-bar{
-  height:100%;
-  background:var(--progress);
-  width:0;
+progress.progress::-webkit-progress-bar{
+  background:transparent;
 }
 
-/* Static widths */
-.w-88p{ width:88%; }
-.w-86p{ width:86%; }
-.w-92p{ width:92%; }
+progress.progress::-webkit-progress-value{
+  background:var(--progress);
+  border-radius:999px;
+}
 
-/* Responsive (stylelint expects context notation) */
+progress.progress::-moz-progress-bar{
+  background:var(--progress);
+}
+
+/* Responsive (context notation) */
 @media (width <= 1100px){
   .stats{
     grid-template-columns:repeat(2, 1fr);

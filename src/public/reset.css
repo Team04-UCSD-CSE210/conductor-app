@@ -14,13 +14,12 @@ body{
   color:#0f172a;
 }
 
-
 /* Media defaults */
 img, svg{
   display:block;
   max-width:100%;
 }
 
-button, input{
+button, input, select, textarea{
   font:inherit;
 }
