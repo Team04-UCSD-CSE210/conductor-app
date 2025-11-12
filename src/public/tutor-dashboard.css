@@ -1,0 +1,281 @@
+:root{
+  --bg:#f6f7fb;
+  --panel:#fff;
+  --border:#e6e8ef;
+  --muted:#6b7280;
+  --text:#0f172a;
+  --radius-lg:16px;
+  --radius-md:12px;
+  --shadow:0 1px 2px rgb(16 24 40 / 6%), 0 8px 24px rgb(16 24 40 / 6%);
+  --chip-high:#fce2e2;
+  --chip-text:#111827;
+}
+
+/* Layout */
+.app{
+  display:grid;
+  grid-template-columns:240px 1fr;
+  min-height:100vh;
+  background:var(--bg);
+}
+
+/* Sidebar */
+.sidebar{
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  padding:16px;
+}
+
+.sidebar-role{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:16px;
+}
+
+.sidebar-role strong{
+  color:var(--text);
+}
+
+.sidebar-nav{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:grid;
+  gap:8px;
+}
+
+.sidebar-sep{
+  border:0;
+  border-top:1px solid var(--border);
+  margin:12px 0 16px;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:10px;
+  text-decoration:none;
+  color:var(--text);
+  border:1px solid transparent;
+}
+
+.nav-item:hover{
+  background:#fafafa;
+  border-color:var(--border);
+}
+
+/* (optional) icon rules if you use inline SVGs */
+.nav-svg{
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
+  color:#6b7280;
+}
+
+.nav-svg *{
+  fill:none;
+  stroke:currentcolor;
+  stroke-width:1.5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+/* Main */
+.main{
+  padding:24px 24px 48px;
+}
+
+.header h1{
+  font-size:22px;
+  margin:0 0 4px;
+}
+
+.header p{
+  color:var(--muted);
+  margin:0 0 16px;
+}
+
+/* Card */
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow);
+  padding:16px;
+}
+
+/* Stats row */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:16px;
+  margin-bottom:16px;
+}
+
+.stat-card{
+  padding:16px;
+}
+
+.stat-head{
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:8px;
+}
+
+.stat-value{
+  font-weight:600;
+}
+
+/* Queue + Recently Closed grid */
+.grid{
+  display:grid;
+  grid-template-columns:7fr 5fr;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+/* Queue */
+.queue-list{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:grid;
+  gap:10px;
+}
+
+.queue-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  background:#fff;
+}
+
+.queue-main{
+  display:block;
+}
+
+.queue-name{
+  margin:0;
+  font-weight:600;
+}
+
+.queue-issue{
+  margin:4px 0 0;
+  color:var(--muted);
+}
+
+.queue-meta{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* Buttons */
+.btn-help{
+  background:#0f172a;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:6px 12px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.btn-help:hover{
+  opacity:0.85;
+}
+
+.actions-list{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.btn-primary{
+  background:#0f172a;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:8px 14px;
+  cursor:pointer;
+}
+
+.btn-outline{
+  background:none;
+  color:#0f172a;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 14px;
+  cursor:pointer;
+}
+
+.btn-outline:hover{
+  background:#fafafa;
+}
+
+/* Chips */
+.chip{
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:999px;
+  font-size:12px;
+  color:var(--chip-text);
+  border:1px solid #e5e7eb;
+  background:#fafafa;
+}
+
+.chip-high{
+  background:var(--chip-high);
+}
+
+/* Recently closed */
+.closed-list{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:grid;
+  gap:10px;
+}
+
+.closed-row{
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  background:#fff;
+}
+
+.closed-name{
+  margin:0;
+  font-weight:600;
+}
+
+.closed-issue{
+  margin:4px 0 0;
+  color:var(--muted);
+}
+
+.closed-meta{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* Responsive */
+@media (width <= 1100px){
+  .stats{
+    grid-template-columns:repeat(2, 1fr);
+  }
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+}

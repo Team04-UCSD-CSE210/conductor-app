@@ -1,11 +1,158 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tutor Dashboard</title>
+    <link rel="stylesheet" href="./styles/reset.css" />
+    <link rel="stylesheet" href="./styles/variables.css" />
+    <link rel="stylesheet" href="./styles/tutor-dashboard.css" />
+  </head>
+
+  <body>
+    <section class="app">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <p class="sidebar-role">Logged in as<br /><strong>Tutor</strong></p>
+        <hr class="sidebar-sep" />
+        <nav aria-label="Primary">
+          <ul class="sidebar-nav">
+            <li><a class="nav-item" href="#">Class Directory</a></li>
+            <li><a class="nav-item" href="#">Attendance</a></li>
+            <li><a class="nav-item" href="#">Work Journal</a></li>
+            <li><a class="nav-item" href="#">Evaluations</a></li>
+            <li><a class="nav-item" href="#">Documentation</a></li>
+            <li><a class="nav-item" href="#">Participation</a></li>
+            <li><a class="nav-item" href="#">Meetings</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <header class="header">
+          <h1>Tutor Dashboard</h1>
+          <p>Lab assistance queue and student support</p>
+        </header>
+
+        <!-- Stats -->
+        <section class="stats">
+          <article class="card stat-card">
+            <header class="stat-head"><span>Queue Position</span></header>
+            <strong class="stat-value">3</strong>
+          </article>
+
+          <article class="card stat-card">
+            <header class="stat-head"><span>Students Helped Today</span></header>
+            <strong class="stat-value">12</strong>
+          </article>
+
+          <article class="card stat-card">
+            <header class="stat-head"><span>Avg Wait Time</span></header>
+            <strong class="stat-value">8 min</strong>
+          </article>
+
+          <article class="card stat-card">
+            <header class="stat-head"><span>Active Requests</span></header>
+            <strong class="stat-value">5</strong>
+          </article>
+        </section>
+
+        <!-- Active Help Queue + Recently Closed -->
+        <section class="grid">
+          <article class="card">
+            <h2>Active Help Queue</h2>
+            <p class="muted">Students waiting for assistance</p>
+            <ul class="queue-list">
+              <li class="queue-row">
+                <section class="queue-main">
+                  <p class="queue-name">Alex Thompson</p>
+                  <p class="queue-issue">Git merge conflict</p>
+                  <p class="queue-meta">Waiting: 3 min</p>
+                </section>
+                <button class="btn-help">Help</button>
+              </li>
+
+              <li class="queue-row">
+                <section class="queue-main">
+                  <p class="queue-name">Jordan Lee</p>
+                  <p class="queue-issue">Database connection error</p>
+                  <p class="queue-meta">Waiting: 7 min</p>
+                </section>
+                <button class="btn-help">Help</button>
+              </li>
+
+              <li class="queue-row">
+                <section class="queue-main">
+                  <p class="queue-name">Sam Martinez <span class="chip chip-high">High Priority</span></p>
+                  <p class="queue-issue">React component rendering issue</p>
+                  <p class="queue-meta">Waiting: 12 min</p>
+                </section>
+                <button class="btn-help">Help</button>
+              </li>
+
+              <li class="queue-row">
+                <section class="queue-main">
+                  <p class="queue-name">Casey Wong <span class="chip chip-high">High Priority</span></p>
+                  <p class="queue-issue">API endpoint not responding</p>
+                  <p class="queue-meta">Waiting: 15 min</p>
+                </section>
+                <button class="btn-help">Help</button>
+              </li>
+
+              <li class="queue-row">
+                <section class="queue-main">
+                  <p class="queue-name">Riley Anderson</p>
+                  <p class="queue-issue">CSS layout problem</p>
+                  <p class="queue-meta">Waiting: 18 min</p>
+                </section>
+                <button class="btn-help">Help</button>
+              </li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h2>Recently Closed</h2>
+            <p class="muted">Your recent assistance sessions</p>
+            <ul class="closed-list">
+              <li class="closed-row">
+                <section class="closed-main">
+                  <p class="closed-name">Morgan Davis</p>
+                  <p class="closed-issue">TypeScript type error</p>
+                  <p class="closed-meta">Duration: 5 min</p>
+                </section>
+              </li>
+
+              <li class="closed-row">
+                <section class="closed-main">
+                  <p class="closed-name">Taylor Brown</p>
+                  <p class="closed-issue">npm install failing</p>
+                  <p class="closed-meta">Duration: 8 min</p>
+                </section>
+              </li>
+
+              <li class="closed-row">
+                <section class="closed-main">
+                  <p class="closed-name">Jamie Wilson</p>
+                  <p class="closed-issue">Jest test configuration</p>
+                  <p class="closed-meta">Duration: 12 min</p>
+                </section>
+              </li>
+            </ul>
+          </article>
+        </section>
+
+        <!-- Quick Actions -->
+        <article class="card">
+          <h2>Quick Actions</h2>
+          <ul class="actions-list">
+            <li><button class="btn-primary">Take Next Student</button></li>
+            <li><button class="btn-outline">View Queue History</button></li>
+            <li><button class="btn-outline">Set Break Status</button></li>
+            <li><button class="btn-outline">View FAQ</button></li>
+          </ul>
+        </article>
+      </main>
+    </section>
+  </body>
 </html>
