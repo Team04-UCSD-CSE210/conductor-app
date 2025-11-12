@@ -230,6 +230,8 @@ passport.use(new GoogleStrategy({
   const identifier = getLoginIdentifier(email, req);
   const { blocked, attempts: recentAttempts } = await getLoginAttemptStatus(identifier);
 
+
+  console.log(`🔐 Login attempt for email: ${email}. Blocked: ${blocked}. Recent attempts: ${recentAttempts}`);
   if (blocked) {
     await logAuthEvent("LOGIN_RATE_LIMITED", {
       req,
@@ -250,6 +252,7 @@ passport.use(new GoogleStrategy({
   try {
     // --- Step 1: UCSD domain always allowed ---
     if (domain === ALLOWED_DOMAIN) {
+      console.log(`🔐 UCSD domain login successful email: ${email}`);
       await clearLoginAttempts(identifier);
       await logAuthEvent("LOGIN_SUCCESS", {
         req,
@@ -262,9 +265,12 @@ passport.use(new GoogleStrategy({
     }
 
     // --- Step 2: Non-UCSD (gmail etc.) → check whitelist ---
+    console.log(`🔐 Non-UCSD domain login successful email: ${email}`);
     if (email) {
+      console.log(`[TRACE] Checking whitelist for email: ${email}`);
       const whitelistEntry = await Whitelist.findOne({ where: { email } });
       if (whitelistEntry) {
+        console.log(`[TRACE] Whitelist entry found for email: ${email}`);
         await clearLoginAttempts(identifier);
         await logAuthEvent("LOGIN_SUCCESS_WHITELIST", {
           req,
@@ -275,6 +281,7 @@ passport.use(new GoogleStrategy({
         });
 
         // ✅ Treat whitelisted users as 'Unregistered'
+        console.log(`[TRACE] Creating or finding 'Unregistered' user for email: ${email}`);
         await User.findOrCreate({
           where: { email },
           defaults: {
@@ -283,7 +290,10 @@ passport.use(new GoogleStrategy({
           }
         });
 
+        console.log(`[TRACE] Login successful for whitelisted user: ${email}`);
         return done(null, profile);
+      } else {
+        console.log(`[TRACE] No whitelist entry for email: ${email}`);
       }
     }
 
@@ -302,6 +312,10 @@ passport.use(new GoogleStrategy({
         windowMinutes: LOGIN_FAILURE_WINDOW_MINUTES
       }
     });
+    // Store email in session before redirect so /auth/failure can access it
+    if (req.session && email) {
+      req.session.userEmail = email;
+    }
     return done(null, false, { message: "Non-UCSD or unapproved account" });
   } catch (error) {
     console.error("Error during Google OAuth verification", error);
@@ -320,6 +334,10 @@ passport.use(new GoogleStrategy({
         windowMinutes: LOGIN_FAILURE_WINDOW_MINUTES
       }
     });
+    // Store email in session before redirect so /auth/failure can access it
+    if (req.session && email) {
+      req.session.userEmail = email;
+    }
     return done(error);
   }
 }));
@@ -391,8 +409,10 @@ app.get("/auth/error", (req, res) => {
     req.query.email ||
     req.query.login_hint ||
     req.query.user_email ||
+    req.session?.userEmail ||
     "unknown";
 
+  console.log(`🔐 Attempted email: ${attemptedEmail}`);
   logAuthEvent("LOGIN_ERROR_REDIRECT", {
     req,
     message: "OAuth error redirect triggered",
@@ -483,6 +503,7 @@ app.get("/auth/failure", async (req, res) => {
   });
 
   const email =
+    req.session?.userEmail ||
     req.user?.emails?.[0]?.value ||
     req.query.email ||
     req.query.login_hint ||
@@ -490,9 +511,15 @@ app.get("/auth/failure", async (req, res) => {
     req.query.openid_email ||
     req.query.id_token_hint ||
     req.query.authuser ||
+    req.email ||
     "unknown";
 
   console.log("🚫 Failed login email captured:", email);
+
+  // Clear the session email after reading it
+  if (req.session) {
+    delete req.session.userEmail;
+  }
 
   req.session.blockedEmail = email;
   res.redirect("/blocked.html");
