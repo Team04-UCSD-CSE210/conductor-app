@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Team Leader Dashboard</title>
+    <link rel="stylesheet" href="../public/reset.css" />
+    <link rel="stylesheet" href="../public/variables.css" />
+    <link rel="stylesheet" href="../public/team-lead-dashboard.css" />
+  </head>
+  <body>
+    <section class="app">
+      <!-- Reuse the same sidebar you already have (icons + no bullets) -->
+      <aside class="sidebar">
+        <p class="sidebar-role">Logged in as<br /><strong>Team Leader</strong></p>
+        <hr class="sidebar-sep" />
+        <nav aria-label="Primary">
+          <ul class="sidebar-nav">
+            <li><a class="nav-item" href="#"><svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M4 18c0-3 2.5-5 5-5"/><circle cx="17" cy="10" r="2"/><path d="M14 18c0-2 1.7-3.5 3-3.5"/></svg><span>Class Directory</span></a></li>
+            <li><a class="nav-item" href="#"><svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>Attendance</span></a></li>
+            <li><a class="nav-item" href="#"><svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M8 4v13"/></svg><span>Work Journal</span></a></li>
+            <li><a class="nav-item" href="#"><svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/></svg><span>Evaluations</span></a></li>
+            <li><a class="nav-item" href="#"><svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v6h6"/></svg><span>Documentation</span></a></li>
+            <li><a class="nav-item" href="#"><svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 19c0-3.3 3.2-5 5.5-5s5.5 1.7 5.5 5"/><path d="M14.5 19c0-1.8 1.6-3.2 3.5-3.2"/></svg><span>Participation</span></a></li>
+            <li><a class="nav-item" href="#"><svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H9l-4 4V5z"/></svg><span>Meetings</span></a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="main" role="main">
+        <header class="header">
+          <h1>Team Leader Dashboard</h1>
+          <p>Coordinate your team and track project progress</p>
+        </header>
+
+        <!-- Stats -->
+        <section class="stats" aria-label="Quick stats">
+          <article class="card stat-card">
+            <header class="stat-head"><span>Team Members</span><span class="icon icon-users" aria-hidden="true"></span></header>
+            <strong class="stat-value">5</strong>
+          </article>
+          <article class="card stat-card">
+            <header class="stat-head"><span>Sprint Progress</span><span class="icon icon-menu" aria-hidden="true"></span></header>
+            <strong class="stat-value">67%</strong>
+          </article>
+          <article class="card stat-card">
+            <header class="stat-head"><span>Open Tasks</span><span class="icon icon-menu" aria-hidden="true"></span></header>
+            <strong class="stat-value">8</strong>
+          </article>
+          <article class="card stat-card">
+            <header class="stat-head"><span>Next Meeting</span><span class="icon icon-calendar" aria-hidden="true"></span></header>
+            <strong class="stat-value">Tomorrow</strong>
+          </article>
+        </section>
+
+        <!-- Members + Standups -->
+        <section class="grid" aria-label="Team and stand-ups">
+          <article class="card">
+            <h2>Team Members</h2>
+            <p class="muted">Progress and status of your team</p>
+            <ul class="member-list">
+              <li class="member-row">
+                <span class="avatar" aria-hidden="true">AJ</span>
+                <section class="member-main">
+                  <p class="member-name">Alex Johnson</p>
+                  <p class="member-role">Developer</p>
+                  <p class="member-meta">Tasks: 8/10</p>
+                  <progress class="progress" value="80" max="100" aria-label="Alex Johnson progress 80 percent"></progress>
+                </section>
+                <span class="chip chip-status">On Track</span>
+              </li>
+
+              <li class="member-row">
+                <span class="avatar" aria-hidden="true">MG</span>
+                <section class="member-main">
+                  <p class="member-name">Maria Garcia</p>
+                  <p class="member-role">Developer</p>
+                  <p class="member-meta">Tasks: 12/12</p>
+                  <progress class="progress" value="100" max="100" aria-label="Maria Garcia progress 100 percent"></progress>
+                </section>
+                <span class="chip chip-status">On Track</span>
+              </li>
+
+              <li class="member-row">
+                <span class="avatar" aria-hidden="true">CL</span>
+                <section class="member-main">
+                  <p class="member-name">Chris Lee</p>
+                  <p class="member-role">Developer</p>
+                  <p class="member-meta">Tasks: 5/10</p>
+                  <progress class="progress" value="50" max="100" aria-label="Chris Lee progress 50 percent"></progress>
+                </section>
+                <span class="chip chip-high">Behind</span>
+              </li>
+
+              <li class="member-row">
+                <span class="avatar" aria-hidden="true">SP</span>
+                <section class="member-main">
+                  <p class="member-name">Sam Patel</p>
+                  <p class="member-role">Developer</p>
+                  <p class="member-meta">Tasks: 7/9</p>
+                  <progress class="progress" value="78" max="100" aria-label="Sam Patel progress 78 percent"></progress>
+                </section>
+                <span class="chip chip-status">On Track</span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h2>Recent Stand-ups</h2>
+            <p class="muted">Latest updates from team members</p>
+            <ul class="standup-list">
+              <li class="standup-row">
+                <section class="standup-main">
+                  <p class="standup-name">Maria Garcia</p>
+                  <p class="standup-update">Completed authentication module, starting on API integration</p>
+                  <p class="standup-meta"><strong>Blockers:</strong> None</p>
+                </section>
+                <time class="standup-time" datetime="PT2H">2 hours ago</time>
+              </li>
+              <li class="standup-row">
+                <section class="standup-main">
+                  <p class="standup-name">Alex Johnson</p>
+                  <p class="standup-update">Fixed bugs in user dashboard, working on responsive design</p>
+                  <p class="standup-meta"><strong>Blockers:</strong> Need design approval</p>
+                </section>
+                <time class="standup-time" datetime="PT3H">3 hours ago</time>
+              </li>
+              <li class="standup-row">
+                <section class="standup-main">
+                  <p class="standup-name">Sam Patel</p>
+                  <p class="standup-update">Database schema finalized, implementing data models</p>
+                  <p class="standup-meta"><strong>Blockers:</strong> None</p>
+                </section>
+                <time class="standup-time" datetime="PT5H">5 hours ago</time>
+              </li>
+            </ul>
+          </article>
+        </section>
+
+        <!-- Upcoming tasks -->
+        <article class="card">
+          <h2>Upcoming Tasks</h2>
+          <p class="muted">Action items for the team</p>
+          <ul class="list">
+            <li class="list-row">
+              <section class="row-main">
+                <p class="row-title">Submit sprint retrospective</p>
+                <p class="row-sub">Assigned to: Team Leader</p>
+              </section>
+              <span class="chip chip-high">high</span>
+            </li>
+            <li class="list-row">
+              <section class="row-main">
+                <p class="row-title">Code review for PR #42</p>
+                <p class="row-sub">Assigned to: Team Leader</p>
+            </section>
+              <span class="chip chip-high">high</span>
+            </li>
+          </ul>
+        </article>
+      </main>
+    </section>
+  </body>
+</html>
