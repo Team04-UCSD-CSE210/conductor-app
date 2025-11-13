@@ -38,9 +38,9 @@
 
     <div class="frame" role="region" aria-label="Dashboard content">
       <div class="content">
-        <!-- Quick Stats Row -->
-        <section class="content-row" aria-label="Quick statistics">
-
+        
+        <!-- Top Cards Container -->
+        <div class="top-cards-wrapper">
           <article class="card card-course-info" aria-label="Course information card">
             <strong class="course-code">CSE 210</strong>
             <p class="course-title">Software Engineering</p>
@@ -117,20 +117,19 @@
             </div>
           </article>
 
-        </section>
-
-        <!-- Recent Updates -->
-        <section class="card wide" aria-label="Recent activity">
-          <h3>Recent Updates</h3>
-          <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-700);">
-            <li>Sprint 2 deliverables graded</li>
-            <li>New TA assigned to Lab 3</li>
-            <li>Reminder sent for project proposals</li>
-          </ul>
-        </section>
+          <!-- Recent Updates -->
+          <section class="card wide" aria-label="Recent activity">
+            <h3>Recent Updates</h3>
+            <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-700);">
+              <li>Sprint 2 deliverables graded</li>
+              <li>New TA assigned to Lab 3</li>
+              <li>Reminder sent for project proposals</li>
+            </ul>
+          </section>
+        </div>
 
         <!-- Reports Section -->
-        <section class="card wide" aria-label="Reports and analytics">
+        <section class="card wide reports-analytics" aria-label="Reports and analytics">
           <h3>Reports & Analytics</h3>
           <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
             <button class="btn btn-outline" aria-label="Add new report">+ Add Report</button>

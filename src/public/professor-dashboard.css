@@ -101,18 +101,26 @@ body.dashboard-page {
 }
 
 .content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   overflow: hidden;
   height: 100%;
   width: 100%;
-  align-items: stretch;
+}
+
+.top-cards-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  flex: 0 0 auto;
 }
 
 .content-row {
-  display: contents;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  flex: 0 0 auto;
 }
 
 .card {
@@ -123,8 +131,9 @@ body.dashboard-page {
   box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
   min-height: 0;
   overflow: hidden;
-  height: 100%;
   min-width: 0;
+  flex: 1 1 250px;
+  max-width: none;
 }
 
 .card h3 {
@@ -141,18 +150,19 @@ body.dashboard-page {
   font-size: 0.8rem;
 }
 
-.card.wide:last-of-type {
-  display: flex;
-  flex-direction: column;
-  grid-column: 1 / -1;
-  grid-row: 2;
-  height: 100%;
-}
-
 /* Recent Updates: fit content height, don't stretch */
 .card.wide[aria-label="Recent activity"] {
   align-self: start;
   height: 30vh;
+  flex: 1 1 250px;
+}
+
+.card.reports-analytics {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
 }
 
 .report-box {
