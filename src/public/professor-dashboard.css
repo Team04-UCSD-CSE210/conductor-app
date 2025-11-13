@@ -104,9 +104,10 @@ body.dashboard-page {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  overflow: hidden;
+  overflow-y: auto;
   height: 100%;
   width: 100%;
+  padding-bottom: 1rem;
 }
 
 .top-cards-wrapper {
@@ -160,9 +161,9 @@ body.dashboard-page {
 .card.reports-analytics {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
   width: 100%;
-  min-height: 0;
+  min-height: 400px;
+  flex: 1 1 auto;
 }
 
 .report-box {
@@ -171,7 +172,8 @@ body.dashboard-page {
   border: 1px solid var(--gray-200);
   border-radius: 0.5rem;
   margin-top: 0.4rem;
-  min-height: 0;
+  min-height: 200px;
+  box-sizing: border-box;
 }
 
 /* BUTTON STYLES (specific overrides for dashboard) */
