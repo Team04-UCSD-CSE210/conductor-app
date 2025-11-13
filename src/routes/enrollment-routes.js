@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { EnrollmentService } from '../services/enrollment-service.js';
+import { requirePermission, requireAnyPermission } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
@@ -8,7 +9,7 @@ const router = Router();
  * POST /enrollments
  * Body: { offering_id, user_id, course_role, status, ... }
  */
-router.post('/', async (req, res) => {
+router.post('/', requireRole('admin', 'instructor'), async (req, res) => {
   try {
     // TODO: Get createdBy from auth middleware when authentication is implemented
     const createdBy = req.body.created_by || null;
@@ -179,7 +180,7 @@ router.put('/:id', async (req, res) => {
  * PUT /enrollments/offering/:offeringId/user/:userId/role
  * Body: { course_role: 'ta' | 'tutor' | 'student' }
  */
-router.put('/offering/:offeringId/user/:userId/role', async (req, res) => {
+router.put('/offering/:offeringId/user/:userId/role', requireRole('admin', 'instructor'), async (req, res) => {
   try {
     // TODO: Get updatedBy from auth middleware when authentication is implemented
     const updatedBy = req.body.updated_by || null;
@@ -222,7 +223,7 @@ router.post('/offering/:offeringId/user/:userId/drop', async (req, res) => {
  * Delete enrollment (hard delete)
  * DELETE /enrollments/:id
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireRole('admin', 'instructor'), async (req, res) => {
   try {
     // TODO: Get deletedBy from auth middleware when authentication is implemented
     const deletedBy = req.body.deleted_by || null;
@@ -237,7 +238,7 @@ router.delete('/:id', async (req, res) => {
  * Get enrollment statistics for an offering
  * GET /enrollments/offering/:offeringId/stats
  */
-router.get('/offering/:offeringId/stats', async (req, res) => {
+router.get('/offering/:offeringId/stats', requireAnyPermission(['roster.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const stats = await EnrollmentService.getEnrollmentStats(req.params.offeringId);
     res.json(stats);

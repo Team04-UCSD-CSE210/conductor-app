@@ -3,6 +3,7 @@ import multer from 'multer';
 import { UserService } from '../services/user-service.js';
 import { RosterService } from '../services/roster-service.js';
 import { rosterImportLimiter } from '../middleware/rate-limiter.js';
+import { requirePermission, requireRole } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
@@ -25,7 +26,7 @@ const upload = multer({
  * POST /users
  * Body: { email, name, role, auth_source, ... }
  */
-router.post('/', async (req, res) => {
+router.post('/', requireRole('admin', 'instructor'), async (req, res) => {
   try {
     // TODO: Get createdBy from auth middleware when authentication is implemented
     const createdBy = req.body.created_by || null;
@@ -153,7 +154,7 @@ router.get('/institution/:type', async (req, res) => {
 });
 
 // Roster Management Routes
-router.post('/roster/import/json', rosterImportLimiter, async (req, res) => {
+router.post('/roster/import/json', requireRole('admin', 'instructor'), rosterImportLimiter, async (req, res) => {
   try {
     // Validate file size if content is large
     const contentSize = JSON.stringify(req.body).length;
@@ -196,7 +197,7 @@ router.post('/roster/import/json', rosterImportLimiter, async (req, res) => {
   }
 });
 
-router.post('/roster/import/csv', rosterImportLimiter, upload.single('file'), async (req, res) => {
+router.post('/roster/import/csv', requireRole('admin', 'instructor'), rosterImportLimiter, upload.single('file'), async (req, res) => {
   try {
     let csvText;
 

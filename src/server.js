@@ -2,6 +2,7 @@ import express from 'express';
 import { assertDb } from './db.js';
 import userRoutes from './routes/user-routes.js';
 import enrollmentRoutes from './routes/enrollment-routes.js';
+import { skipAuthForPublic } from './middleware/auth-middleware.js';
 
 async function main() {
   console.log('[server] booting…');
@@ -12,6 +13,9 @@ async function main() {
   // 2) Express app
   const app = express();
   app.use(express.json());
+
+  // 3) Authentication middleware (with public path exceptions)
+  app.use(skipAuthForPublic);
 
   // Health check endpoint
   app.get('/health', (_req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
