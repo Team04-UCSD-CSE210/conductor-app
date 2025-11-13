@@ -2,16 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Faculty Dashboard</title>
-  <style>
-    body { font-family: sans-serif; background: #f5f5dc; padding: 2rem; }
-    h1 { color: #6b4226; }
-  </style>
+
+  <link rel="stylesheet" href="../public/global.css">
+  <link rel="stylesheet" href="../public/faculty-dashboard.css">
 </head>
-<body>
-  <h1>Welcome, Professor!</h1>
-  <p>Here you can view course analytics, attendance, and assignments.</p>
-  <a href="/logout">Logout</a>
+
+<body class="dashboard-page">
+
+  <!-- Sidebar Navigation -->
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/settings">Settings</a>
+      <a href="/attendance">Attendance</a>
+      <a href="/class-directory">Class Directory</a>
+    </nav>
+    <div style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container" id="main">
+    <h2 class="page-title">Dashboard</h2>
+
+    <div class="frame" role="region" aria-label="Dashboard content">
+      <div class="content">
+        <!-- Quick Stats Row -->
+        <section class="content-row" aria-label="Quick statistics">
+
+          <article class="card card-course-info" aria-label="Course information card">
+            <strong class="course-code">CSE 210</strong>
+            <p class="course-title">Software Engineering</p>
+            <p class="course-term">Fall 2025</p>
+            <dl class="course-schedule">
+              <dt>Lectures</dt>
+              <dd>Mon/Wed 10:00–11:20 am</dd>
+              <dt>Office Hours</dt>
+              <dd>Tue 2–4 pm</dd>
+            </dl>
+          </article>
+
+          <article class="card card-scrollable" aria-label="Teams card">
+            <h3>Teams</h3>
+            <div class="teams-list">
+              <a href="/teams/1" class="team-item" aria-label="Team 1">
+                <span class="team-name">Team 1</span>
+                <span class="team-count">8 members</span>
+              </a>
+              <a href="/teams/2" class="team-item" aria-label="Team 2">
+                <span class="team-name">Team 2</span>
+                <span class="team-count">8 members</span>
+              </a>
+              <a href="/teams/3" class="team-item" aria-label="Team 3">
+                <span class="team-name">Team 3</span>
+                <span class="team-count">7 members</span>
+              </a>
+              <a href="/teams/4" class="team-item" aria-label="Team 4">
+                <span class="team-name">Team 4</span>
+                <span class="team-count">8 members</span>
+              </a>
+              <a href="/teams/5" class="team-item" aria-label="Team 5">
+                <span class="team-name">Team 5</span>
+                <span class="team-count">8 members</span>
+              </a>
+              <a href="/teams/6" class="team-item" aria-label="Team 6">
+                <span class="team-name">Team 6</span>
+                <span class="team-count">7 members</span>
+              </a>
+              <a href="/teams/7" class="team-item" aria-label="Team 7">
+                <span class="team-name">Team 7</span>
+                <span class="team-count">8 members</span>
+              </a>
+              <a href="/teams/8" class="team-item" aria-label="Team 8">
+                <span class="team-name">Team 8</span>
+                <span class="team-count">8 members</span>
+              </a>
+              <a href="/teams/9" class="team-item" aria-label="Team 9">
+                <span class="team-name">Team 9</span>
+                <span class="team-count">7 members</span>
+              </a>
+              <a href="/teams/10" class="team-item" aria-label="Team 10">
+                <span class="team-name">Team 10</span>
+                <span class="team-count">8 members</span>
+              </a>
+            </div>
+          </article>
+
+        </section>
+
+        <!-- Recent Updates -->
+        <section class="card wide" aria-label="Recent activity">
+          <h3>Recent Updates</h3>
+          <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-700);">
+            <li>Sprint 2 deliverables graded</li>
+            <li>New TA assigned to Lab 3</li>
+            <li>Reminder sent for project proposals</li>
+          </ul>
+        </section>
+
+        <!-- Reports Section -->
+        <section class="card wide" aria-label="Reports and analytics">
+          <h3>Reports & Analytics</h3>
+          <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <button class="btn btn-outline" aria-label="Add new report">+ Add Report</button>
+            <a class="btn btn-primary" href="/analytics">View Analytics</a>
+          </div>
+          <div class="report-box" role="region" aria-label="Report preview area"></div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
 </body>
 </html>
-
