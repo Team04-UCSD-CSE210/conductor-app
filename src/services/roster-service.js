@@ -166,13 +166,8 @@ export class RosterService {
       throw new Error('Invalid email format: missing @ symbol');
     }
 
-    // Check if it's a UCSD email domain
-    if (!RosterService.isValidUCSDDomain(normalizedEmail)) {
-      throw new Error(
-        `Email must be a valid UCSD email address (ending with @ucsd.edu or @mail.ucsd.edu). ` +
-        `Received: ${userData.email}`
-      );
-    }
+    // Note: We support both UCSD (@ucsd.edu) and Extension (gmail, etc.) students
+    // No strict domain validation needed - institution_type is auto-detected
 
     // Additional format validation
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;

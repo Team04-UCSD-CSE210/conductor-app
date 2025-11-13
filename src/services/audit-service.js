@@ -118,23 +118,6 @@ export class AuditService {
     });
   }
 
-  /**
-   * Log course staff assignment (deprecated - course_staff table removed)
-   * Staff roles now managed via enrollments.course_role
-   */
-  static async logCourseStaffAssign(userId, offeringId, staffUserId, staffRole) {
-    // Note: course_staff table removed, staff roles now in enrollments
-    return this.logActivity({
-      userId,
-      offeringId,
-      action: 'course.staff.assigned',
-      metadata: {
-        staff_user_id: staffUserId,
-        staff_role: staffRole,
-        note: 'Staff roles now managed via enrollments.course_role',
-      },
-    });
-  }
 
   /**
    * Get activity logs for a user

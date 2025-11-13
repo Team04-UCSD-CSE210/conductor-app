@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const user = await UserService.getUserById(req.params.id);
-    res.json(user);
+  res.json(user);
   } catch (err) {
     res.status(404).json({ error: err.message });
   }

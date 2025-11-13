@@ -125,7 +125,7 @@ export class DatabaseInitializer {
         AND table_schema = 'public';
       `);
 
-      const requiredColumns = ['id', 'email', 'ucsd_pid', 'role', 'created_at', 'updated_at'];
+      const requiredColumns = ['id', 'email', 'name', 'primary_role', 'status', 'created_at', 'updated_at'];
       const existingColumns = columnsResult.rows.map((row) => row.column_name);
 
       const missingColumns = requiredColumns.filter((col) => !existingColumns.includes(col));

@@ -382,7 +382,7 @@ UPDATE team SET status = 'active' WHERE name = 'Test Team 2';
 \echo '✓ Valid team statuses accepted'
 
 \echo '7.3) Add team members'
-INSERT INTO team_members (team_id, user_id, role, joined_at)
+        INSERT INTO team_members (team_id, user_id, role, joined_at)
 VALUES (
     (SELECT id FROM team WHERE name = 'Test Team 2'),
     (SELECT id FROM users WHERE email = 'student1@test.ucsd.edu'),
@@ -577,7 +577,7 @@ WHERE co.code = 'CSE210TEST'
 ORDER BY a.date, u.email;
 
 \echo '--- Activity Logs ---'
-SELECT 
+SELECT
     u.email,
     al.action_type,
     al.metadata,

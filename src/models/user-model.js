@@ -88,7 +88,10 @@ export class UserModel {
     if (errors.length) throw new Error(errors.join(', '));
 
     // Auto-determine institution_type from email if not provided
-    const institutionType = data.institution_type ?? this.determineInstitutionType(data.email);
+    // Since it will never be empty, ensure it's always a valid string (never null)
+    const rawInstitutionType = data.institution_type ?? this.determineInstitutionType(data.email);
+    // Convert null to empty string so PostgreSQL can infer parameter type, then handle empty in SQL
+    const institutionType = rawInstitutionType ?? '';
 
     const query = `
       INSERT INTO users (
@@ -120,9 +123,12 @@ export class UserModel {
         $7,
         $8,
         $9,
-        COALESCE($10, 'student'),
-        COALESCE($11, 'active'),
-        $12,
+        CAST(COALESCE($10::text, 'student') AS user_role_enum),
+        CAST(COALESCE($11::text, 'active') AS user_status_enum),
+        CASE 
+          WHEN $12::text IS NULL OR $12::text = '' THEN NULL::institution_type_enum
+          ELSE CAST($12::text AS institution_type_enum)
+        END,
         $13,
         $14,
         $15,
@@ -138,9 +144,9 @@ export class UserModel {
         academic_year   = COALESCE(EXCLUDED.academic_year,   users.academic_year),
         department      = COALESCE(EXCLUDED.department,      users.department),
         class_level     = COALESCE(EXCLUDED.class_level,    users.class_level),
-        primary_role    = COALESCE(EXCLUDED.primary_role,    users.primary_role),
-        status          = COALESCE(EXCLUDED.status,          users.status),
-        institution_type = COALESCE(EXCLUDED.institution_type, users.institution_type),
+        primary_role    = COALESCE(EXCLUDED.primary_role::text,    users.primary_role::text)::user_role_enum,
+        status          = COALESCE(EXCLUDED.status::text,          users.status::text)::user_status_enum,
+        institution_type = COALESCE(EXCLUDED.institution_type::text, users.institution_type::text)::institution_type_enum,
         profile_url     = COALESCE(EXCLUDED.profile_url,     users.profile_url),
         image_url       = COALESCE(EXCLUDED.image_url,       users.image_url),
         phone_number    = COALESCE(EXCLUDED.phone_number,    users.phone_number),
@@ -171,7 +177,7 @@ export class UserModel {
         updated_by,
         deleted_at;
     `;
-    
+
     const { rows } = await pool.query(query, [
       data.email,
       data.ucsd_pid ?? null,
@@ -184,7 +190,7 @@ export class UserModel {
       data.class_level ?? null,
       data.primary_role ?? 'student',
       data.status ?? 'active',
-      institutionType,
+      institutionType, // Will be empty string if null, handled in SQL CASE statement
       data.profile_url ?? null,
       data.image_url ?? null,
       data.phone_number ?? null,
@@ -344,73 +350,104 @@ export class UserModel {
     const errors = this.validate(merged);
     if (errors.length) throw new Error(errors.join(', '));
 
+    // Build SET clause dynamically to avoid NULL type inference issues
+    const setClauses = [];
+    const params = [];
+    let paramIndex = 1;
+
+    // Always update these fields
+    setClauses.push(`email = LOWER($${paramIndex++})::citext`);
+    params.push(merged.email);
+    
+    setClauses.push(`ucsd_pid = $${paramIndex++}`);
+    params.push(merged.ucsd_pid ?? null);
+    
+    setClauses.push(`name = $${paramIndex++}`);
+    params.push(merged.name ?? null);
+    
+    setClauses.push(`preferred_name = $${paramIndex++}`);
+    params.push(merged.preferred_name ?? null);
+    
+    setClauses.push(`major = $${paramIndex++}`);
+    params.push(merged.major ?? null);
+    
+    setClauses.push(`degree_program = $${paramIndex++}`);
+    params.push(merged.degree_program ?? null);
+    
+    setClauses.push(`academic_year = $${paramIndex++}`);
+    params.push(merged.academic_year ?? null);
+    
+    setClauses.push(`department = $${paramIndex++}`);
+    params.push(merged.department ?? null);
+    
+    setClauses.push(`class_level = $${paramIndex++}`);
+    params.push(merged.class_level ?? null);
+    
+    // Handle ENUM fields - only update if provided
+    if (merged.primary_role !== undefined && merged.primary_role !== null) {
+      setClauses.push(`primary_role = $${paramIndex++}::text::user_role_enum`);
+      params.push(merged.primary_role);
+    }
+    
+    if (merged.status !== undefined && merged.status !== null) {
+      setClauses.push(`status = $${paramIndex++}::text::user_status_enum`);
+      params.push(merged.status);
+    }
+    
+    if (merged.institution_type !== undefined && merged.institution_type !== null) {
+      setClauses.push(`institution_type = $${paramIndex++}::text::institution_type_enum`);
+      params.push(merged.institution_type);
+    }
+    
+    setClauses.push(`profile_url = $${paramIndex++}`);
+    params.push(merged.profile_url ?? null);
+    
+    setClauses.push(`image_url = $${paramIndex++}`);
+    params.push(merged.image_url ?? null);
+    
+    setClauses.push(`phone_number = $${paramIndex++}`);
+    params.push(merged.phone_number ?? null);
+    
+    setClauses.push(`github_username = $${paramIndex++}`);
+    params.push(merged.github_username ?? null);
+    
+    setClauses.push(`linkedin_url = $${paramIndex++}`);
+    params.push(merged.linkedin_url ?? null);
+    
+    setClauses.push(`updated_at = NOW()`);
+    
+    params.push(id); // For WHERE clause
+    
     const query = `
       UPDATE users
-      SET
-        email           = LOWER($1)::citext,
-        ucsd_pid        = $2,
-        name            = $3,
-        preferred_name  = $4,
-        major           = $5,
-        degree_program  = $6,
-        academic_year   = $7,
-        department      = $8,
-        class_level     = $9,
-        primary_role    = $10,
-        status          = $11,
-        institution_type = $12,
-        profile_url     = $13,
-        image_url       = $14,
-        phone_number    = $15,
-        github_username = $16,
-        linkedin_url    = $17,
-        updated_at      = NOW()
-      WHERE id = $18::uuid
+      SET ${setClauses.join(', ')}
+      WHERE id = $${paramIndex}::uuid
       RETURNING
         id,
-        email,
-        ucsd_pid,
-        name,
-        preferred_name,
-        major,
-        degree_program,
-        academic_year,
-        department,
+      email,
+      ucsd_pid,
+      name,
+      preferred_name,
+      major,
+      degree_program,
+      academic_year,
+      department,
         class_level,
         primary_role,
         status,
         institution_type,
         profile_url,
-        image_url,
+      image_url,
         phone_number,
-        github_username,
-        linkedin_url,
+      github_username,
+      linkedin_url,
         created_at,
         updated_at,
         updated_by,
         deleted_at
       `;
 
-    const { rows, rowCount } = await pool.query(query, [
-      merged.email,
-      merged.ucsd_pid ?? null,
-      merged.name ?? null,
-      merged.preferred_name ?? null,
-      merged.major ?? null,
-      merged.degree_program ?? null,
-      merged.academic_year ?? null,
-      merged.department ?? null,
-      merged.class_level ?? null,
-      merged.primary_role ?? 'student',
-      merged.status ?? 'active',
-      merged.institution_type ?? null,
-      merged.profile_url ?? null,
-      merged.image_url ?? null,
-      merged.phone_number ?? null,
-      merged.github_username ?? null,
-      merged.linkedin_url ?? null,
-      id,
-    ]);
+    const { rows, rowCount } = await pool.query(query, params);
 
     if (rowCount === 0) throw new Error('User not found');
     return rows[0];

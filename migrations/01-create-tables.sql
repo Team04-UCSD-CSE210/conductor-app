@@ -35,7 +35,7 @@ CREATE TYPE activity_action_type_enum AS ENUM (
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = NOW();
+  NEW.updated_at = NOW();
     -- Preserve created_by and created_at
     IF TG_OP = 'UPDATE' THEN
         IF TG_TABLE_NAME != 'users' THEN
@@ -43,7 +43,7 @@ BEGIN
         END IF;
         NEW.created_at = OLD.created_at;
     END IF;
-    RETURN NEW;
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 

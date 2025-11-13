@@ -169,4 +169,15 @@ export class UserService {
     const users = await UserModel.findByRole(role, limit, offset);
     return users;
   }
+
+  /**
+   * Get users by institution_type
+   */
+  static async getUsersByInstitutionType(institutionType, options = {}) {
+    const limit = Math.max(1, Math.min(Number(options.limit ?? 50), 100));
+    const offset = Math.max(0, Number(options.offset ?? 0));
+
+    const users = await UserModel.findByInstitutionType(institutionType, limit, offset);
+    return users;
+  }
 }

@@ -13,7 +13,7 @@ describe('UserModel (Postgres)', () => {
   });
 
   afterAll(async () => {
-    await pool.end();
+    // Don't close pool - other tests may need it
   });
 
   it('validates inputs', async () => {
