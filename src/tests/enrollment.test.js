@@ -12,6 +12,35 @@ describe('EnrollmentModel (Postgres)', () => {
   beforeAll(async () => {
     await pool.query('SELECT 1'); // connection sanity
     
+    // Create test users first (need instructor for course offering)
+    const instructor = await pool.query(`
+      INSERT INTO users (email, name, primary_role, status, institution_type)
+      VALUES ('instructor@test.ucsd.edu', 'Test Instructor', 'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
+      RETURNING id
+    `);
+    const instructorId = instructor.rows[0].id;
+    
+    const user1 = await pool.query(`
+      INSERT INTO users (email, name, primary_role, status, institution_type)
+      VALUES ('test1@ucsd.edu', 'Test User 1', 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
+      RETURNING id
+    `);
+    testUserId1 = user1.rows[0].id;
+    
+    const user2 = await pool.query(`
+      INSERT INTO users (email, name, primary_role, status, institution_type)
+      VALUES ('test2@ucsd.edu', 'Test User 2', 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
+      RETURNING id
+    `);
+    testUserId2 = user2.rows[0].id;
+    
+    const user3 = await pool.query(`
+      INSERT INTO users (email, name, primary_role, status, institution_type)
+      VALUES ('test3@ucsd.edu', 'Test User 3', 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
+      RETURNING id
+    `);
+    testUserId3 = user3.rows[0].id;
+    
     // Create test course offering
     const offeringResult = await pool.query(`
       INSERT INTO course_offerings (
@@ -19,33 +48,11 @@ describe('EnrollmentModel (Postgres)', () => {
         instructor_id, start_date, end_date, status
       )
       VALUES ('CSE210', 'Software Engineering', 'CSE', 'Fall', 2024, 4,
-              (SELECT id FROM users LIMIT 1),
-              '2024-09-01', '2024-12-15', 'open')
+              $1::uuid,
+              '2024-09-01', '2024-12-15', 'open'::course_offering_status_enum)
       RETURNING id
-    `);
+    `, [instructorId]);
     testOfferingId = offeringResult.rows[0].id;
-    
-    // Create test users
-    const user1 = await pool.query(`
-      INSERT INTO users (email, name, primary_role, status)
-      VALUES ('test1@ucsd.edu', 'Test User 1', 'student', 'active')
-      RETURNING id
-    `);
-    testUserId1 = user1.rows[0].id;
-    
-    const user2 = await pool.query(`
-      INSERT INTO users (email, name, primary_role, status)
-      VALUES ('test2@ucsd.edu', 'Test User 2', 'student', 'active')
-      RETURNING id
-    `);
-    testUserId2 = user2.rows[0].id;
-    
-    const user3 = await pool.query(`
-      INSERT INTO users (email, name, primary_role, status)
-      VALUES ('test3@ucsd.edu', 'Test User 3', 'student', 'active')
-      RETURNING id
-    `);
-    testUserId3 = user3.rows[0].id;
   });
 
   beforeEach(async () => {
@@ -215,8 +222,8 @@ describe('EnrollmentService', () => {
     
     // Create test course offering
     const instructor = await pool.query(`
-      INSERT INTO users (email, name, primary_role, status)
-      VALUES ('instructor@ucsd.edu', 'Test Instructor', 'instructor', 'active')
+      INSERT INTO users (email, name, primary_role, status, institution_type)
+      VALUES ('instructor@ucsd.edu', 'Test Instructor', 'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
       RETURNING id
     `);
     
@@ -226,29 +233,29 @@ describe('EnrollmentService', () => {
         instructor_id, start_date, end_date, status
       )
       VALUES ('CSE210', 'Software Engineering', 'CSE', 'Fall', 2024, 4,
-              $1, '2024-09-01', '2024-12-15', 'open')
+              $1::uuid, '2024-09-01', '2024-12-15', 'open'::course_offering_status_enum)
       RETURNING id
     `, [instructor.rows[0].id]);
     testOfferingId = offeringResult.rows[0].id;
     
     // Create test users
     const user1 = await pool.query(`
-      INSERT INTO users (email, name, primary_role, status)
-      VALUES ('test1@ucsd.edu', 'Test User 1', 'student', 'active')
+      INSERT INTO users (email, name, primary_role, status, institution_type)
+      VALUES ('test1@ucsd.edu', 'Test User 1', 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
       RETURNING id
     `);
     testUserId1 = user1.rows[0].id;
     
     const user2 = await pool.query(`
-      INSERT INTO users (email, name, primary_role, status)
-      VALUES ('test2@ucsd.edu', 'Test User 2', 'student', 'active')
+      INSERT INTO users (email, name, primary_role, status, institution_type)
+      VALUES ('test2@ucsd.edu', 'Test User 2', 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
       RETURNING id
     `);
     testUserId2 = user2.rows[0].id;
     
     const user3 = await pool.query(`
-      INSERT INTO users (email, name, primary_role, status)
-      VALUES ('test3@ucsd.edu', 'Test User 3', 'student', 'active')
+      INSERT INTO users (email, name, primary_role, status, institution_type)
+      VALUES ('test3@ucsd.edu', 'Test User 3', 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
       RETURNING id
     `);
     testUserId3 = user3.rows[0].id;
@@ -349,7 +356,7 @@ describe('EnrollmentService', () => {
   });
 
   it('updates course role', async () => {
-    const enrollment = await EnrollmentService.createEnrollment({
+    await EnrollmentService.createEnrollment({
       offering_id: testOfferingId,
       user_id: testUserId1,
       course_role: 'student',

@@ -5,7 +5,6 @@ node_modules
 .env
 */*.md
 coverage/
-AUDIT.md
 LOCAL_DB_SETUP.md
 SERVER_SETUP.md
 demo/

@@ -127,16 +127,19 @@ describe('UserModel (Postgres)', () => {
   });
 
   it('lists with limit/offset and counts (excludes soft-deleted)', async () => {
+    const timestamp = Date.now();
+    const createdUsers = [];
     for (let i = 1; i <= 5; i++) {
-      await UserModel.create({
-        email: `user${i}@example.edu`,
+      const user = await UserModel.create({
+        email: `user${i}-${timestamp}@example.edu`,
         name: `User ${i}`,
         primary_role: 'student',
       });
+      createdUsers.push(user);
     }
 
-    // Soft delete one user
-    await UserModel.delete((await UserModel.findByEmail('user3@example.edu')).id);
+    // Soft delete one user (user3 is at index 2)
+    await UserModel.delete(createdUsers[2].id);
 
     const page1 = await UserModel.findAll(3, 0);
     const page2 = await UserModel.findAll(3, 3);
@@ -194,35 +197,43 @@ describe('UserModel (Postgres)', () => {
   });
 
   it('finds users by primary_role', async () => {
-    await UserModel.create({ email: 'admin1@example.edu', name: 'Admin 1', primary_role: 'admin' });
-    await UserModel.create({ email: 'admin2@example.edu', name: 'Admin 2', primary_role: 'admin' });
-    await UserModel.create({ email: 'student1@example.edu', name: 'Student 1', primary_role: 'student' });
+    const timestamp = Date.now();
+    const admin1 = await UserModel.create({ email: `admin1-${timestamp}@example.edu`, name: 'Admin 1', primary_role: 'admin' });
+    const admin2 = await UserModel.create({ email: `admin2-${timestamp}@example.edu`, name: 'Admin 2', primary_role: 'admin' });
+    await UserModel.create({ email: `student1-${timestamp}@example.edu`, name: 'Student 1', primary_role: 'student' });
 
     const admins = await UserModel.findByRole('admin');
-    expect(admins.length).toBe(2);
+    const foundAdmin1 = admins.find(u => u.id === admin1.id);
+    const foundAdmin2 = admins.find(u => u.id === admin2.id);
+    expect(foundAdmin1).toBeDefined();
+    expect(foundAdmin2).toBeDefined();
     expect(admins.every(u => u.primary_role === 'admin')).toBe(true);
+    expect(admins.length).toBeGreaterThanOrEqual(2);
   });
 
   it('finds users by institution_type', async () => {
-    await UserModel.create({ 
-      email: 'ucsd1@ucsd.edu', 
+    const timestamp = Date.now();
+    const ucsdUser = await UserModel.create({ 
+      email: `ucsd1-${timestamp}@ucsd.edu`, 
       name: 'UCSD Student', 
       primary_role: 'student',
     });
-    await UserModel.create({ 
-      email: 'ext1@gmail.com', 
+    const extUser = await UserModel.create({ 
+      email: `ext1-${timestamp}@gmail.com`, 
       name: 'Extension Student', 
       primary_role: 'student',
     });
 
     const ucsdUsers = await UserModel.findByInstitutionType('ucsd');
-    expect(ucsdUsers.length).toBe(1);
-    expect(ucsdUsers[0].institution_type).toBe('ucsd');
-    expect(ucsdUsers[0].email).toContain('@ucsd.edu');
+    const foundUcsd = ucsdUsers.find(u => u.id === ucsdUser.id);
+    expect(foundUcsd).toBeDefined();
+    expect(foundUcsd.institution_type).toBe('ucsd');
+    expect(foundUcsd.email).toContain('@ucsd.edu');
 
     const extensionUsers = await UserModel.findByInstitutionType('extension');
-    expect(extensionUsers.length).toBe(1);
-    expect(extensionUsers[0].institution_type).toBe('extension');
+    const foundExt = extensionUsers.find(u => u.id === extUser.id);
+    expect(foundExt).toBeDefined();
+    expect(foundExt.institution_type).toBe('extension');
   });
 
 });

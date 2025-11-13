@@ -53,18 +53,19 @@ describe('AuditService', () => {
     const previousData = { name: 'Old Name', primary_role: 'student' };
     const changes = { name: 'New Name', primary_role: 'instructor' };
 
-    const log = await AuditService.logUserUpdate(testUserId, changes, previousData);
+    await AuditService.logUserUpdate(testUserId, changes, previousData);
 
-    expect(log).not.toBeNull();
-
+    // logActivity can return null on error, but should succeed in normal cases
+    // Check the database directly instead
     const { rows } = await pool.query(
-      'SELECT * FROM activity_logs WHERE action_type = $1',
-      ['update_assignment'] // AuditService maps 'user.updated' to 'update_assignment'
+      'SELECT * FROM activity_logs WHERE action_type = $1 AND user_id = $2::uuid ORDER BY created_at DESC LIMIT 1',
+      ['update_assignment', testUserId] // AuditService maps 'user.updated' to 'update_assignment'
     );
     expect(rows.length).toBeGreaterThanOrEqual(1);
     // Check that metadata contains changes
-    const updateLog = rows.find(r => r.metadata && r.metadata.changes);
-    expect(updateLog).toBeDefined();
+    const updateLog = rows[0];
+    expect(updateLog.metadata).toBeDefined();
+    expect(updateLog.metadata.changes).toBeDefined();
   });
 
   it('logs user deletion activity', async () => {

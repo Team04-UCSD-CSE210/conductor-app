@@ -29,7 +29,7 @@ export class AuditService {
       
       const query = `
         INSERT INTO activity_logs (user_id, offering_id, action_type, metadata)
-        VALUES ($1::uuid, $2::uuid, $3, $4::jsonb)
+        VALUES ($1::uuid, $2::uuid, $3::activity_action_type_enum, $4::jsonb)
         RETURNING id, created_at
       `;
       
