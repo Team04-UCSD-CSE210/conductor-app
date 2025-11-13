@@ -18,6 +18,24 @@
   gap: 1.25rem;
 }
 
+.interaction-form fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.interaction-form legend.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 .interaction-row {
   display: flex;
   gap: 1rem;
@@ -118,7 +136,7 @@ body.dashboard-page {
 /* SIDEBAR NAVIGATION */
 .sidebar {
   width: 180px;
-  background: white;
+  background: var(--teal-50, #f0fdfa);
   border-right: 2px solid var(--gray-200, #e5e7eb);
   padding: 1.5rem 1rem;
   display: flex;
@@ -257,6 +275,20 @@ body.dashboard-page {
   align-self: start;
   height: 30vh;
   flex: 1 1 250px;
+}
+
+/* Recent Updates color theme only (no sticky-note effects) */
+.card.wide.recent-updates {
+  background: #fffbe6; /* light note-like background */
+  border-color: #faefb8;
+}
+
+.card.wide.recent-updates h3 {
+  color: #6b5e00;
+}
+
+.card.wide.recent-updates ul {
+  color: var(--gray-800, #1f2937);
 }
 
 .card.reports-analytics {
@@ -398,6 +430,8 @@ body.dashboard-page {
   line-height: 1;
 }
 
+/* Stats use uniform teal color per .stat-value base rule */
+
 .stat-label {
   font-size: 0.75rem;
   font-weight: 500;
@@ -529,6 +563,16 @@ body.dashboard-page {
   .main-container {
     margin-left: 0;
     width: 100%;
+  }
+
+  /* Shift the page title to the right so it doesn't sit underneath the fixed hamburger button */
+  .page-title {
+    margin-left: 3rem; /* 1rem (left offset) + 2.5rem (button width) + 0.25rem spacing */
+  }
+
+  /* Hide Recent Updates on small screens */
+  .recent-updates {
+    display: none;
   }
 
   body.dashboard-page.menu-open {

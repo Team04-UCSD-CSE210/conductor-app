@@ -20,6 +20,9 @@
 
   <!-- Sidebar Navigation -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <a href="/" class="sidebar-logo" aria-label="Home">
+      <img src="../assets/temp-logo.png" alt="Conductor logo">
+    </a>
     <h1 class="sidebar-title">Conductor</h1>
     <nav aria-label="Dashboard navigation">
       <a href="/courses">Courses</a>
@@ -27,20 +30,20 @@
       <a href="/attendance">Attendance</a>
       <a href="/class-directory">Class Directory</a>
     </nav>
-    <div style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
-    </div>
+    </footer>
   </header>
 
   <!-- Main Content -->
   <main class="main-container" id="main">
     <h2 class="page-title">Dashboard</h2>
 
-    <div class="frame" role="region" aria-label="Dashboard content">
-      <div class="content">
+    <section class="frame" role="region" aria-label="Dashboard content">
+      <section class="content">
         
         <!-- Top Cards Container -->
-        <div class="top-cards-wrapper">
+        <section class="top-cards-wrapper">
           <article class="card card-course-info" aria-label="Course information card">
             <strong class="course-code">CSE 210</strong>
             <p class="course-title">Software Engineering</p>
@@ -51,29 +54,29 @@
               <dt>Office Hours</dt>
               <dd>Tue 2–4 pm</dd>
             </dl>
-            <div class="course-stats">
-              <div class="stat-item">
+            <figure class="course-stats">
+              <figcaption class="stat-item">
                 <span class="stat-value">78</span>
                 <span class="stat-label">Students</span>
-              </div>
-              <div class="stat-item">
+              </figcaption>
+              <figcaption class="stat-item">
                 <span class="stat-value">10</span>
                 <span class="stat-label">Teams</span>
-              </div>
-              <div class="stat-item">
+              </figcaption>
+              <figcaption class="stat-item">
                 <span class="stat-value">3</span>
                 <span class="stat-label">TAs</span>
-              </div>
-              <div class="stat-item">
+              </figcaption>
+              <figcaption class="stat-item">
                 <span class="stat-value">5</span>
                 <span class="stat-label">Tutors</span>
-              </div>
-            </div>
+              </figcaption>
+            </figure>
           </article>
 
           <article class="card card-scrollable" aria-label="Teams card">
             <h3>Teams</h3>
-            <div class="teams-list">
+            <nav class="teams-list">
               <a href="/teams/1" class="team-item" aria-label="Team 1">
                 <span class="team-name">Team 1</span>
                 <span class="team-count">8 members</span>
@@ -114,11 +117,11 @@
                 <span class="team-name">Team 10</span>
                 <span class="team-count">8 members</span>
               </a>
-            </div>
+            </nav>
           </article>
 
           <!-- Recent Updates -->
-          <section class="card wide" aria-label="Recent activity">
+          <section class="card wide recent-updates" aria-label="Recent activity">
             <h3>Recent Updates</h3>
             <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-700);">
               <li>Sprint 2 deliverables graded</li>
@@ -126,15 +129,16 @@
               <li>Reminder sent for project proposals</li>
             </ul>
           </section>
-        </div>
+        </section>
 
         <!-- Reports Section -->
         <section class="card wide reports-analytics" aria-label="Report interaction">
           <h3>Report Interaction</h3>
-          <div class="report-box" role="region" aria-label="Report interaction form">
+          <aside class="report-box" role="region" aria-label="Report interaction form">
             <form class="interaction-form">
-              <div class="interaction-row">
-                <div class="interaction-col">
+              <fieldset class="interaction-row">
+                <legend class="sr-only">Team and Student Selection</legend>
+                <section class="interaction-col">
                   <label for="team-select" class="interaction-label">Team</label>
                   <select id="team-select" name="team" class="interaction-select is-placeholder">
                     <option value="">Select team</option>
@@ -143,8 +147,8 @@
                     <option value="team3">Team 3</option>
                     <!-- Add more teams as needed -->
                   </select>
-                </div>
-                <div class="interaction-col">
+                </section>
+                <section class="interaction-col">
                   <label for="student-select" class="interaction-label">Student</label>
                   <select id="student-select" name="student" class="interaction-select is-placeholder">
                     <option value="">Select student</option>
@@ -153,97 +157,26 @@
                     <option value="student3">Student 3</option>
                     <!-- Add more students as needed -->
                   </select>
-                </div>
+                </section>
                 <button type="button" class="btn btn-positive interaction-btn" id="positive-btn" aria-label="Positive Interaction">😊</button>
                 <button type="button" class="btn btn-negative interaction-btn" id="negative-btn" aria-label="Negative Interaction">😞</button>
-              </div>
-              <div class="interaction-details">
-                <label for="interaction-notes" class="interaction-label">Interaction Details</label>
+              </fieldset>
+              <fieldset class="interaction-details">
+                <legend class="interaction-label">Interaction Details</legend>
                 <textarea id="interaction-notes" name="notes" rows="4" class="interaction-textarea" placeholder="Report details of your interaction with a specific team or student here"></textarea>
-              </div>
-              <div class="interaction-submit-row">
+              </fieldset>
+              <footer class="interaction-submit-row">
                 <button type="submit" class="btn btn-primary">Submit Report</button>
-              </div>
+              </footer>
             </form>
-            <script>
-              const posBtn = document.getElementById('positive-btn');
-              const negBtn = document.getElementById('negative-btn');
-              let selected = null;
-              function updateSelected() {
-                posBtn.classList.toggle('selected', selected === 'positive');
-                negBtn.classList.toggle('selected', selected === 'negative');
-              }
-              posBtn.addEventListener('click', function() {
-                selected = 'positive';
-                updateSelected();
-              });
-              negBtn.addEventListener('click', function() {
-                selected = 'negative';
-                updateSelected();
-              });
-
-              // Disable submit when the notes field is empty
-              const notesField = document.getElementById('interaction-notes');
-              const submitBtn = document.querySelector('.interaction-submit-row .btn.btn-primary');
-              function updateSubmitState() {
-                const hasText = notesField && notesField.value.trim().length > 0;
-                if (submitBtn) submitBtn.disabled = !hasText;
-              }
-              if (notesField) {
-                notesField.addEventListener('input', updateSubmitState);
-                // Initialize on load
-                updateSubmitState();
-              }
-
-              // Lighter placeholder styling for selects when value is empty
-              const teamSelect = document.getElementById('team-select');
-              const studentSelect = document.getElementById('student-select');
-              function updatePlaceholderState(sel) {
-                if (!sel) return;
-                const isEmpty = sel.value === '';
-                sel.classList.toggle('is-placeholder', isEmpty);
-              }
-              if (teamSelect) {
-                teamSelect.addEventListener('change', () => updatePlaceholderState(teamSelect));
-                updatePlaceholderState(teamSelect);
-              }
-              if (studentSelect) {
-                studentSelect.addEventListener('change', () => updatePlaceholderState(studentSelect));
-                updatePlaceholderState(studentSelect);
-              }
-            </script>
-          </div>
+          </aside>
         </section>
 
-      </div>
-    </div>
+      </section>
+    </section>
   </main>
 
-  <script>
-    // Hamburger menu toggle
-    const hamburger = document.querySelector('.hamburger-menu');
-    const sidebar = document.querySelector('.sidebar');
-    const body = document.body;
-
-    hamburger.addEventListener('click', () => {
-      const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', !isOpen);
-      sidebar.classList.toggle('open');
-      body.classList.toggle('menu-open');
-    });
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 768 && 
-          sidebar.classList.contains('open') && 
-          !sidebar.contains(e.target) && 
-          !hamburger.contains(e.target)) {
-        hamburger.setAttribute('aria-expanded', 'false');
-        sidebar.classList.remove('open');
-        body.classList.remove('menu-open');
-      }
-    });
-  </script>
+  <script src="../public/professor-dashboard.js" defer></script>
 
 </body>
 </html>
