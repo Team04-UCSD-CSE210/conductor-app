@@ -11,6 +11,13 @@
 
 <body class="dashboard-page">
 
+  <!-- Hamburger Menu Button (mobile only) -->
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
   <!-- Sidebar Navigation -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <h1 class="sidebar-title">Conductor</h1>
@@ -135,6 +142,32 @@
       </div>
     </div>
   </main>
+
+  <script>
+    // Hamburger menu toggle
+    const hamburger = document.querySelector('.hamburger-menu');
+    const sidebar = document.querySelector('.sidebar');
+    const body = document.body;
+
+    hamburger.addEventListener('click', () => {
+      const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
+      hamburger.setAttribute('aria-expanded', !isOpen);
+      sidebar.classList.toggle('open');
+      body.classList.toggle('menu-open');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('open') && 
+          !sidebar.contains(e.target) && 
+          !hamburger.contains(e.target)) {
+        hamburger.setAttribute('aria-expanded', 'false');
+        sidebar.classList.remove('open');
+        body.classList.remove('menu-open');
+      }
+    });
+  </script>
 
 </body>
 </html>
