@@ -1,6 +1,5 @@
 import js from "@eslint/js";
 import globals from "globals";
-// import pluginReact from "eslint-plugin-react";   // ❌ temporarily disable
 import json from "@eslint/json";
 import markdown from "@eslint/markdown";
 import css from "@eslint/css";
@@ -9,8 +8,8 @@ import { defineConfig } from "eslint/config";
 export default defineConfig([
   {
     ignores: [
-      "**/*.md",          // skip markdown
-      "package-lock.json" // ✅ ignore lockfile
+      "**/*.md",
+      "package-lock.json"
     ],
   },
 
@@ -21,7 +20,7 @@ export default defineConfig([
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...globals.node, // ✅ enables process, require, etc.
+        ...globals.node,
       },
     },
     rules: {
@@ -29,8 +28,6 @@ export default defineConfig([
       "no-undef": "error",
     },
   },
-
-  // pluginReact.configs.flat.recommended,   // ❌ comment out React rules
 
   {
     files: ["**/*.json"],

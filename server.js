@@ -12,8 +12,9 @@ import { RedisStore } from "connect-redis";
 // import { trackLoginAttempt, isBlocked } from "./js/middleware/loginAttemptTracker.js";
 import { createSequelize } from "./src/config/db.js";
 import { defineAuthLogModel } from "./src/models/auth-log.js";
+import crypto from "crypto";
+import { defineCourseModels, initCourseAssociations } from "./src/models/course-models.js";
 import bodyParser from "body-parser";
-
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +30,10 @@ const sslOptions = {
 };
 
 const app = express();
+// Serve static frontend assets
 app.use(express.static(path.join(__dirname, "src/views")));
+app.use(express.static(path.join(__dirname, "src/public")));
+app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
 
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -46,7 +50,7 @@ const parsePositiveInt = (value, fallback) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-const LOGIN_FAILURE_THRESHOLD = parsePositiveInt(process.env.LOGIN_FAILURE_THRESHOLD, 5);
+const LOGIN_FAILURE_THRESHOLD = parsePositiveInt(process.env.LOGIN_FAILURE_THRESHOLD, 3);
 const LOGIN_FAILURE_WINDOW_MINUTES = parsePositiveInt(process.env.LOGIN_FAILURE_WINDOW_MINUTES, 15);
 const LOGIN_FAILURE_WINDOW_MS = LOGIN_FAILURE_WINDOW_MINUTES * 60 * 1000;
 
@@ -67,9 +71,11 @@ if (!DATABASE_URL) {
 
 const sequelize = createSequelize({ databaseUrl: DATABASE_URL, sslMode: PG_SSL_MODE });
 const AuthLog = defineAuthLogModel(sequelize);
+const { Course, CourseUser, Invite } = defineCourseModels(sequelize);
 
 // ---------- Define User Model ----------
 import { DataTypes } from "sequelize";
+
 const User = sequelize.define("User", {
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
   name: { type: DataTypes.STRING },
@@ -89,6 +95,8 @@ import { defineAccessRequestModel } from "./src/models/access-request.js";
 const Whitelist = defineWhitelistModel(sequelize);
 const AccessRequest = defineAccessRequestModel(sequelize);
 
+// Initialize associations using explicit FKs before sync
+initCourseAssociations(sequelize, { User, Course, CourseUser, Invite });
 // Ensure tables exist on startup
 await sequelize.sync({ alter: true });
 
@@ -578,6 +586,23 @@ app.get("/api/user", ensureAuthenticated, (req, res) => {
   });
 });
 
+// Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
+app.get('/api/login-attempts', async (req, res) => {
+  const email = req.user?.emails?.[0]?.value || null;
+  const identifier = getLoginIdentifier(email, req);
+  const status = await getLoginAttemptStatus(identifier);
+  const threshold = LOGIN_FAILURE_THRESHOLD;
+  const windowMinutes = LOGIN_FAILURE_WINDOW_MINUTES;
+  const remaining = Math.max(0, threshold - status.attempts);
+  res.json({
+    identifier: identifier || 'unknown',
+    attempts: status.attempts,
+    remaining,
+    threshold,
+    windowMinutes,
+    blocked: status.blocked
+  });
+});
 
 app.get("/logout", ensureAuthenticated, (req, res, next) => {
   const email = req.user?.emails?.[0]?.value || "unknown";
@@ -756,3 +781,119 @@ app.get("/admin/approve", async (req, res) => {
   await AccessRequest.destroy({ where: { email } });
   res.redirect("/admin/whitelist");
 });
+// -------------------- INVITE & ENROLLMENT --------------------
+const INVITE_TTL_HOURS = parsePositiveInt(process.env.INVITE_TTL_HOURS, 72);
+const signToken = (payload) => {
+  const secret = process.env.INVITE_SECRET || SESSION_SECRET;
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', secret).update(data).digest('base64url');
+  return `${data}.${sig}`;
+};
+const verifyToken = (token) => {
+  const secret = process.env.INVITE_SECRET || SESSION_SECRET;
+  const [data, sig] = token.split('.');
+  const expected = crypto.createHmac('sha256', secret).update(data).digest('base64url');
+  if (sig !== expected) return null;
+  try { return JSON.parse(Buffer.from(data, 'base64url').toString('utf8')); } catch { return null; }
+};
+
+const requireInstructorOfCourse = async (req, res, next) => {
+  const email = req.user?.emails?.[0]?.value;
+  const courseId = Number.parseInt(req.params.courseId, 10);
+  const cu = await CourseUser.findOne({ where: { course_id: courseId }, include: [{ model: User, where: { email } }, { model: Course }] });
+  if (!cu || (cu.role !== 'Professor' && cu.role !== 'TA' && cu.role !== 'Tutor')) {
+    await logAuthEvent('COURSE_FORBIDDEN', { req, message: 'Not course staff', metadata: { courseId } });
+    return res.status(403).json({ error: 'forbidden' });
+  }
+  next();
+};
+
+// Create invites
+app.post('/api/courses/:courseId/invites', ensureAuthenticated, requireInstructorOfCourse, express.json(), async (req, res) => {
+  const { type, emails = [], role = 'Student' } = req.body; // type: 'ucsd'|'extension'|'staff'
+  const courseId = Number.parseInt(req.params.courseId, 10);
+  const creator = req.user?.emails?.[0]?.value;
+  const expiresAt = new Date(Date.now() + INVITE_TTL_HOURS * 3600 * 1000);
+
+  if (type === 'ucsd') {
+    // Open UCSD link, not bound to email
+    const payload = { courseId, kind: 'ucsd', role: 'Student', exp: expiresAt.getTime() };
+    const token = signToken(payload);
+    const invite = await Invite.create({ course_id: courseId, email: null, role: 'Student', token, expires_at: expiresAt, created_by: creator, kind: 'ucsd', verified: true });
+    return res.json({ link: `/enroll/${invite.token}` });
+  }
+
+  // Email-bound invites (extension or staff)
+  if (!Array.isArray(emails) || emails.length === 0) {
+    return res.status(400).json({ error: 'emails required' });
+  }
+
+  const results = [];
+  for (const email of emails) {
+    const payload = { courseId, kind: type === 'staff' ? 'staff' : 'extension', email, role: type === 'staff' ? role : 'Student', exp: expiresAt.getTime() };
+    const token = signToken(payload);
+    const invite = await Invite.create({ course_id: courseId, email, role: payload.role, token, expires_at: expiresAt, created_by: creator, kind: payload.kind });
+    // TODO: send email with `${BASE_URL}/enroll/${token}`
+    results.push({ email, link: `/enroll/${invite.token}` });
+  }
+  res.json({ invites: results });
+});
+
+// Enroll via token
+app.get('/enroll/:token', async (req, res) => {
+  const { token } = req.params;
+  const decoded = verifyToken(token);
+  if (!decoded || !decoded.exp || decoded.exp < Date.now()) {
+    await logAuthEvent('INVITE_INVALID', { req, message: 'Invalid or expired token' });
+    return res.status(400).send('Invalid invite');
+  }
+
+  const invite = await Invite.findOne({ where: { token } });
+  if (!invite) return res.status(400).send('Invalid invite');
+
+  // Require auth; if not logged in, bounce to google with return
+  if (!(req.isAuthenticated && req.isAuthenticated())) {
+    req.session.nextAfterLogin = `/enroll/${token}`;
+    return res.redirect(`/auth/google?next=${encodeURIComponent(`/enroll/${token}`)}`);
+  }
+
+  const email = req.user?.emails?.[0]?.value;
+
+  if (decoded.kind === 'ucsd') {
+    if (!email?.endsWith('@ucsd.edu')) {
+      await logAuthEvent('ENROLL_REJECTED_DOMAIN', { req, message: 'Non-UCSD attempted UCSD link' });
+      return res.status(403).send('UCSD account required');
+    }
+  } else {
+    // extension/staff invites must match email
+    if (decoded.email?.toLowerCase() !== email?.toLowerCase()) {
+      await logAuthEvent('INVITE_EMAIL_MISMATCH', { req, message: 'Invite email mismatch', userEmail: email });
+      return res.status(403).send('Invite not issued to this email');
+    }
+  }
+
+  // Enroll
+  const { courseId } = decoded;
+  const [userRecord] = await User.findOrCreate({ where: { email }, defaults: { name: req.user.displayName || null, user_type: 'Student' } });
+  await CourseUser.findOrCreate({ where: { course_id: courseId, user_id: userRecord.id }, defaults: { course_id: courseId, user_id: userRecord.id, role: decoded.role || 'Student' } });
+  await Invite.update({ verified: true, accepted_at: new Date() }, { where: { id: invite.id } });
+  await logAuthEvent('ENROLL_SUCCESS', { req, message: 'Enrollment success', userEmail: email, metadata: { courseId, kind: decoded.kind } });
+
+  // Redirect by role to dashboard
+  const role = decoded.role || 'Student';
+  if (role === 'TA' || role === 'Tutor') return res.redirect('/ta-dashboard');
+  if (role === 'Professor') return res.redirect('/faculty-dashboard');
+  return res.redirect('/student-dashboard');
+});
+
+// My courses endpoint
+app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
+  const email = req.user?.emails?.[0]?.value;
+  const userRecord = await User.findOne({ where: { email } });
+  if (!userRecord) return res.json({ courses: [] });
+  const memberships = await CourseUser.findAll({ where: { user_id: userRecord.id }, include: [Course] });
+  const courses = memberships.map(m => ({ id: m.Course.id, code: m.Course.code, title: m.Course.title, role: m.role }));
+  res.json({ courses });
+});
+
+startServer();

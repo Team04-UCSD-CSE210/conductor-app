@@ -5,3 +5,5 @@ node_modules
 AGENTS.md
 .idea
 .env
+certs/
+.env
