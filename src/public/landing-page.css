@@ -21,13 +21,13 @@
 }
 
 .blob-1 {
-  background: var(--yellow-200);
+  background: var(--yellow-200, #fef08a);
   top: 5rem;
   right: 2.5rem;
 }
 
 .blob-2 {
-  background: var(--emerald-200);
+  background: var(--emerald-200, #a7f3d0);
   bottom: 5rem;
   left: 2.5rem;
   animation-delay: 2s;
@@ -68,14 +68,14 @@
 .hero-title {
   font-size: 1.75rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--gray-900, #111827);
   line-height: 1.4;
   margin-bottom: 1.5rem;
 }
 
 .hero-description {
   font-size: 1rem;
-  color: var(--gray-600);
+  color: var(--gray-600, #4b5563);
   line-height: 1.75;
   margin-bottom: 1.25rem;
 }
@@ -87,7 +87,7 @@
 .hero-image-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, var(--emerald-200), var(--teal-500));
+  background: linear-gradient(135deg, var(--emerald-200, #a7f3d0), var(--teal-500, #14b8a6));
   border-radius: 1.5rem;
   transform: rotate(3deg);
 }
