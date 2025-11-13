@@ -114,7 +114,7 @@ router.post('/:id/restore', async (req, res) => {
 });
 
 /**
- * Get users by role
+ * Get users by primary_role
  * GET /users/role/:role?limit=50&offset=0
  */
 router.get('/role/:role', async (req, res) => {
@@ -132,17 +132,20 @@ router.get('/role/:role', async (req, res) => {
 });
 
 /**
- * Get users by auth_source
- * GET /users/auth-source/:authSource?limit=50&offset=0
+ * Get users by institution_type (ucsd or extension)
+ * GET /users/institution/:type?limit=50&offset=0
  */
-router.get('/auth-source/:authSource', async (req, res) => {
+router.get('/institution/:type', async (req, res) => {
   try {
-    const { authSource } = req.params;
+    const { type } = req.params;
+    if (!['ucsd', 'extension'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid institution type. Must be "ucsd" or "extension"' });
+    }
     const options = {
       limit: Number(req.query.limit ?? 50),
       offset: Number(req.query.offset ?? 0),
     };
-    const users = await UserService.getUsersByAuthSource(authSource, options);
+    const users = await UserService.getUsersByInstitutionType(type, options);
     res.json(users);
   } catch (err) {
     res.status(400).json({ error: err.message });

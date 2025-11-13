@@ -3,14 +3,29 @@ import { pool } from '../db.js';
 
 // Global roles for system/dashboard access
 const ROLES = ['admin', 'instructor', 'student'];
-const STATUSES = ['active', 'suspended', 'inactive'];
-const AUTH_SOURCES = ['ucsd', 'extension'];
+const STATUSES = ['active', 'busy', 'inactive'];
+const INSTITUTION_TYPES = ['ucsd', 'extension'];
 
 /**
- * User Model - Handles user data operations with soft delete support
- * Supports new schema fields: auth_source, status, password_hash, deleted_at, etc.
+ * User Model - Handles user data operations
+ * Matches new schema: primary_role, status, phone_number, institution_type, etc.
  */
 export class UserModel {
+  /**
+   * Determine institution type from email
+   * UCSD: email ends with @ucsd.edu
+   * Extension: gmail or other non-ucsd.edu emails
+   */
+  static determineInstitutionType(email) {
+    if (!email) return null;
+    const emailLower = String(email).toLowerCase().trim();
+    if (emailLower.endsWith('@ucsd.edu')) {
+      return 'ucsd';
+    }
+    // Extension students typically use gmail or other non-ucsd.edu emails
+    return 'extension';
+  }
+
   /**
    * Validate user data before create/update
    */
@@ -22,9 +37,14 @@ export class UserModel {
       errors.push('Invalid email');
     }
     
-    // Role validation
-    if (data.role && !ROLES.includes(data.role)) {
-      errors.push(`Invalid role. Must be one of: ${ROLES.join(', ')}`);
+    // Name validation (required in new schema)
+    if (data.name !== undefined && (!data.name || data.name.trim().length === 0)) {
+      errors.push('Name is required');
+    }
+    
+    // Primary role validation
+    if (data.primary_role && !ROLES.includes(data.primary_role)) {
+      errors.push(`Invalid primary_role. Must be one of: ${ROLES.join(', ')}`);
     }
     
     // Status validation
@@ -32,9 +52,11 @@ export class UserModel {
       errors.push(`Invalid status. Must be one of: ${STATUSES.join(', ')}`);
     }
     
-    // Auth source validation
-    if (data.auth_source && !AUTH_SOURCES.includes(data.auth_source)) {
-      errors.push(`Invalid auth_source. Must be one of: ${AUTH_SOURCES.join(', ')}`);
+    // Institution type validation
+    if (data.institution_type !== undefined && data.institution_type !== null) {
+      if (!INSTITUTION_TYPES.includes(data.institution_type)) {
+        errors.push(`Invalid institution_type. Must be one of: ${INSTITUTION_TYPES.join(', ')}`);
+      }
     }
     
     // Academic year validation
@@ -48,53 +70,45 @@ export class UserModel {
     if (data.linkedin_url && !validator.isURL(String(data.linkedin_url))) {
       errors.push('Invalid linkedin_url');
     }
-    if (data.photo_url && !validator.isURL(String(data.photo_url))) {
-      errors.push('Invalid photo_url');
-    }
     if (data.image_url && !validator.isURL(String(data.image_url))) {
       errors.push('Invalid image_url');
     }
     if (data.profile_url && !validator.isURL(String(data.profile_url))) {
       errors.push('Invalid profile_url');
     }
-    if (data.phone_url && !validator.isURL(String(data.phone_url))) {
-      errors.push('Invalid phone_url');
-    }
-    if (data.openai_url && !validator.isURL(String(data.openai_url))) {
-      errors.push('Invalid openai_url');
-    }
     
     return errors;
   }
 
   /**
-   * Create a new user (with soft delete support)
+   * Create a new user
    */
   static async create(data) {
     const errors = this.validate(data);
     if (errors.length) throw new Error(errors.join(', '));
 
+    // Auto-determine institution_type from email if not provided
+    const institutionType = data.institution_type ?? this.determineInstitutionType(data.email);
+
     const query = `
       INSERT INTO users (
         email,
-        password_hash,
-        user_id,
+        ucsd_pid,
         name,
         preferred_name,
         major,
-        bio,
+        degree_program,
         academic_year,
         department,
         class_level,
-        role,
+        primary_role,
         status,
-        auth_source,
+        institution_type,
         profile_url,
         image_url,
-        phone_url,
+        phone_number,
         github_username,
-        linkedin_url,
-        openai_url
+        linkedin_url
       )
       VALUES (
         LOWER($1)::citext,
@@ -106,120 +120,113 @@ export class UserModel {
         $7,
         $8,
         $9,
-        $10,
-        COALESCE($11, 'student')::user_role_enum,
-        COALESCE($12, 'active')::user_status_enum,
-        $13::auth_source_enum,
+        COALESCE($10, 'student'),
+        COALESCE($11, 'active'),
+        $12,
+        $13,
         $14,
         $15,
         $16,
-        $17,
-        $18,
-        $19
+        $17
       )
       ON CONFLICT (email) DO UPDATE
       SET
         name            = COALESCE(EXCLUDED.name,            users.name),
         preferred_name  = COALESCE(EXCLUDED.preferred_name,  users.preferred_name),
         major           = COALESCE(EXCLUDED.major,           users.major),
-        bio             = COALESCE(EXCLUDED.bio,             users.bio),
+        degree_program  = COALESCE(EXCLUDED.degree_program,  users.degree_program),
         academic_year   = COALESCE(EXCLUDED.academic_year,   users.academic_year),
         department      = COALESCE(EXCLUDED.department,      users.department),
-        class_level     = COALESCE(EXCLUDED.class_level,     users.class_level),
-        role            = COALESCE(EXCLUDED.role,            users.role),
+        class_level     = COALESCE(EXCLUDED.class_level,    users.class_level),
+        primary_role    = COALESCE(EXCLUDED.primary_role,    users.primary_role),
         status          = COALESCE(EXCLUDED.status,          users.status),
-        auth_source     = COALESCE(EXCLUDED.auth_source,     users.auth_source),
+        institution_type = COALESCE(EXCLUDED.institution_type, users.institution_type),
         profile_url     = COALESCE(EXCLUDED.profile_url,     users.profile_url),
         image_url       = COALESCE(EXCLUDED.image_url,       users.image_url),
-        phone_url       = COALESCE(EXCLUDED.phone_url,       users.phone_url),
+        phone_number    = COALESCE(EXCLUDED.phone_number,    users.phone_number),
         github_username = COALESCE(EXCLUDED.github_username, users.github_username),
         linkedin_url    = COALESCE(EXCLUDED.linkedin_url,    users.linkedin_url),
-        openai_url      = COALESCE(EXCLUDED.openai_url,      users.openai_url),
-        deleted_at      = NULL,
         updated_at      = NOW()
       RETURNING
         id,
         email,
-        password_hash,
-        user_id,
+        ucsd_pid,
         name,
         preferred_name,
         major,
-        bio,
+        degree_program,
         academic_year,
         department,
         class_level,
-        role,
+        primary_role,
         status,
-        auth_source,
+        institution_type,
         profile_url,
         image_url,
-        phone_url,
+        phone_number,
         github_username,
         linkedin_url,
-        openai_url,
-        deleted_at,
         created_at,
-        updated_at;
+        updated_at,
+        updated_by,
+        deleted_at;
     `;
     
     const { rows } = await pool.query(query, [
       data.email,
-      data.password_hash ?? null,
-      data.user_id ?? null,
+      data.ucsd_pid ?? null,
       data.name ?? null,
       data.preferred_name ?? null,
       data.major ?? null,
-      data.bio ?? null,
+      data.degree_program ?? null,
       data.academic_year ?? null,
       data.department ?? null,
       data.class_level ?? null,
-      data.role ?? null,
-      data.status ?? null,
-      data.auth_source ?? null,
+      data.primary_role ?? 'student',
+      data.status ?? 'active',
+      institutionType,
       data.profile_url ?? null,
       data.image_url ?? null,
-      data.phone_url ?? null,
+      data.phone_number ?? null,
       data.github_username ?? null,
       data.linkedin_url ?? null,
-      data.openai_url ?? null,
     ]);
     
     return rows[0];
   }
 
   /**
-   * Find user by ID (excludes soft-deleted users)
+   * Find user by ID
+   * @param {string} id - User ID
+   * @param {boolean} includeDeleted - Include soft-deleted users
    */
   static async findById(id, includeDeleted = false) {
     const deletedClause = includeDeleted ? '' : 'AND deleted_at IS NULL';
-    
     const { rows } = await pool.query(
       `
       SELECT
         id,
         email,
-        password_hash,
-        user_id,
+        ucsd_pid,
         name,
         preferred_name,
         major,
-        bio,
+        degree_program,
         academic_year,
         department,
         class_level,
-        role,
+        primary_role,
         status,
-        auth_source,
+        institution_type,
         profile_url,
         image_url,
-        phone_url,
+        phone_number,
         github_username,
         linkedin_url,
-        openai_url,
-        deleted_at,
         created_at,
-        updated_at
+        updated_at,
+        updated_by,
+        deleted_at
       FROM users
       WHERE id = $1::uuid ${deletedClause}
       `,
@@ -229,37 +236,37 @@ export class UserModel {
   }
 
   /**
-   * Find user by email (excludes soft-deleted users)
+   * Find user by email
+   * @param {string} email - User email
+   * @param {boolean} includeDeleted - Include soft-deleted users
    */
   static async findByEmail(email, includeDeleted = false) {
     const deletedClause = includeDeleted ? '' : 'AND deleted_at IS NULL';
-    
     const { rows } = await pool.query(
       `
       SELECT
         id,
         email,
-        password_hash,
-        user_id,
+        ucsd_pid,
         name,
         preferred_name,
         major,
-        bio,
+        degree_program,
         academic_year,
         department,
         class_level,
-        role,
+        primary_role,
         status,
-        auth_source,
+        institution_type,
         profile_url,
         image_url,
-        phone_url,
+        phone_number,
         github_username,
         linkedin_url,
-        openai_url,
-        deleted_at,
         created_at,
-        updated_at
+        updated_at,
+        updated_by,
+        deleted_at
       FROM users
       WHERE email = $1::citext ${deletedClause}
       `,
@@ -269,47 +276,10 @@ export class UserModel {
   }
 
   /**
-   * Find user by user_id (excludes soft-deleted users)
-   */
-  static async findByUserId(userId, includeDeleted = false) {
-    const deletedClause = includeDeleted ? '' : 'AND deleted_at IS NULL';
-    
-    const { rows } = await pool.query(
-      `
-      SELECT
-        id,
-        email,
-        password_hash,
-        user_id,
-        name,
-        preferred_name,
-        major,
-        bio,
-        academic_year,
-        department,
-        class_level,
-        role,
-        status,
-        auth_source,
-        profile_url,
-        image_url,
-        phone_url,
-        github_username,
-        linkedin_url,
-        openai_url,
-        deleted_at,
-        created_at,
-        updated_at
-      FROM users
-      WHERE user_id = $1 ${deletedClause}
-      `,
-      [userId]
-    );
-    return rows[0] ?? null;
-  }
-
-  /**
-   * Find all users with pagination (excludes soft-deleted by default)
+   * Find all users with pagination
+   * @param {number} limit - Number of users to return
+   * @param {number} offset - Number of users to skip
+   * @param {boolean} includeDeleted - Include soft-deleted users
    */
   static async findAll(limit = 50, offset = 0, includeDeleted = false) {
     const lim = Math.max(1, Math.min(parseInt(limit, 10) || 50, 100));
@@ -321,27 +291,26 @@ export class UserModel {
       SELECT
         id,
         email,
-        password_hash,
-        user_id,
+        ucsd_pid,
         name,
         preferred_name,
         major,
-        bio,
+        degree_program,
         academic_year,
         department,
         class_level,
-        role,
+        primary_role,
         status,
-        auth_source,
+        institution_type,
         profile_url,
         image_url,
-        phone_url,
+        phone_number,
         github_username,
         linkedin_url,
-        openai_url,
-        deleted_at,
         created_at,
-        updated_at
+        updated_at,
+        updated_by,
+        deleted_at
       FROM users
       ${deletedClause}
       ORDER BY created_at ASC, email ASC
@@ -353,16 +322,24 @@ export class UserModel {
   }
 
   /**
-   * Update user (preserves deleted_at if user is soft-deleted)
+   * Update user
    */
   static async update(id, data) {
-    const current = await this.findById(id, true); // Include deleted to check existence
+    const current = await this.findById(id);
     if (!current) throw new Error('User not found');
 
     const merged = {
       ...current,
       ...data,
     };
+
+    // Auto-update institution_type if email changed
+    if (data.email && data.email !== current.email) {
+      merged.institution_type = this.determineInstitutionType(data.email);
+    } else if (data.institution_type === undefined && !current.institution_type && current.email) {
+      // Auto-determine if not set
+      merged.institution_type = this.determineInstitutionType(current.email);
+    }
 
     const errors = this.validate(merged);
     if (errors.length) throw new Error(errors.join(', '));
@@ -371,72 +348,67 @@ export class UserModel {
       UPDATE users
       SET
         email           = LOWER($1)::citext,
-        password_hash   = COALESCE($2, users.password_hash),
-        user_id         = COALESCE($3, users.user_id),
-        name            = $4,
-        preferred_name  = $5,
-        major           = $6,
-        bio             = $7,
-        academic_year   = $8,
-        department      = $9,
-        class_level     = $10,
-        role            = $11::user_role_enum,
-        status          = $12::user_status_enum,
-        auth_source     = $13::auth_source_enum,
-        profile_url     = $14,
-        image_url       = $15,
-        phone_url       = $16,
-        github_username = $17,
-        linkedin_url    = $18,
-        openai_url      = $19,
+        ucsd_pid        = $2,
+        name            = $3,
+        preferred_name  = $4,
+        major           = $5,
+        degree_program  = $6,
+        academic_year   = $7,
+        department      = $8,
+        class_level     = $9,
+        primary_role    = $10,
+        status          = $11,
+        institution_type = $12,
+        profile_url     = $13,
+        image_url       = $14,
+        phone_number    = $15,
+        github_username = $16,
+        linkedin_url    = $17,
         updated_at      = NOW()
-      WHERE id = $20::uuid
+      WHERE id = $18::uuid
       RETURNING
         id,
         email,
-        password_hash,
-        user_id,
+        ucsd_pid,
         name,
         preferred_name,
         major,
-        bio,
+        degree_program,
         academic_year,
         department,
         class_level,
-        role,
+        primary_role,
         status,
-        auth_source,
+        institution_type,
         profile_url,
         image_url,
-        phone_url,
+        phone_number,
         github_username,
         linkedin_url,
-        openai_url,
-        deleted_at,
         created_at,
-        updated_at
+        updated_at,
+        updated_by,
+        deleted_at
       `;
 
     const { rows, rowCount } = await pool.query(query, [
       merged.email,
-      merged.password_hash ?? null,
-      merged.user_id ?? null,
+      merged.ucsd_pid ?? null,
       merged.name ?? null,
       merged.preferred_name ?? null,
       merged.major ?? null,
-      merged.bio ?? null,
+      merged.degree_program ?? null,
       merged.academic_year ?? null,
       merged.department ?? null,
       merged.class_level ?? null,
-      merged.role,
+      merged.primary_role ?? 'student',
       merged.status ?? 'active',
-      merged.auth_source ?? null,
+      merged.institution_type ?? null,
       merged.profile_url ?? null,
       merged.image_url ?? null,
-      merged.phone_url ?? null,
+      merged.phone_number ?? null,
       merged.github_username ?? null,
       merged.linkedin_url ?? null,
-      merged.openai_url ?? null,
       id,
     ]);
 
@@ -445,58 +417,7 @@ export class UserModel {
   }
 
   /**
-   * Soft delete user (sets deleted_at timestamp)
-   */
-  static async delete(id) {
-    const { rowCount } = await pool.query(
-      `UPDATE users 
-       SET deleted_at = NOW(), updated_at = NOW()
-       WHERE id = $1::uuid AND deleted_at IS NULL
-       RETURNING id, deleted_at`,
-      [id]
-    );
-    return rowCount > 0;
-  }
-
-  /**
-   * Restore soft-deleted user (clears deleted_at)
-   */
-  static async restore(id) {
-    const { rowCount } = await pool.query(
-      `UPDATE users 
-       SET deleted_at = NULL, updated_at = NOW()
-       WHERE id = $1::uuid AND deleted_at IS NOT NULL
-       RETURNING id, deleted_at`,
-      [id]
-    );
-    return rowCount > 0;
-  }
-
-  /**
-   * Hard delete user (permanent removal - use with caution)
-   */
-  static async hardDelete(id) {
-    const { rowCount } = await pool.query(
-      'DELETE FROM users WHERE id = $1::uuid',
-      [id]
-    );
-    return rowCount > 0;
-  }
-
-  /**
-   * Count users (excludes soft-deleted by default)
-   */
-  static async count(includeDeleted = false) {
-    const deletedClause = includeDeleted ? '' : 'WHERE deleted_at IS NULL';
-    
-    const { rows } = await pool.query(
-      `SELECT COUNT(*)::int AS c FROM users ${deletedClause}`
-    );
-    return rows[0].c;
-  }
-
-  /**
-   * Find users by role
+   * Find users by primary_role
    */
   static async findByRole(role, limit = 50, offset = 0) {
     const lim = Math.max(1, Math.min(parseInt(limit, 10) || 50, 100));
@@ -507,27 +428,28 @@ export class UserModel {
       SELECT
         id,
         email,
-        user_id,
+        ucsd_pid,
         name,
         preferred_name,
         major,
-        bio,
+        degree_program,
         academic_year,
         department,
         class_level,
-        role,
+        primary_role,
         status,
-        auth_source,
+        institution_type,
         profile_url,
         image_url,
-        phone_url,
+        phone_number,
         github_username,
         linkedin_url,
-        openai_url,
         created_at,
-        updated_at
+        updated_at,
+        updated_by,
+        deleted_at
       FROM users
-      WHERE role = $1::user_role_enum AND deleted_at IS NULL
+      WHERE primary_role = $1 AND deleted_at IS NULL
       ORDER BY name ASC
       LIMIT $2 OFFSET $3
       `,
@@ -537,9 +459,9 @@ export class UserModel {
   }
 
   /**
-   * Find users by auth_source
+   * Find users by institution_type
    */
-  static async findByAuthSource(authSource, limit = 50, offset = 0) {
+  static async findByInstitutionType(institutionType, limit = 50, offset = 0) {
     const lim = Math.max(1, Math.min(parseInt(limit, 10) || 50, 100));
     const off = Math.max(0, parseInt(offset, 10) || 0);
 
@@ -548,22 +470,66 @@ export class UserModel {
       SELECT
         id,
         email,
-        user_id,
+        ucsd_pid,
         name,
         preferred_name,
         major,
-        role,
+        degree_program,
+        academic_year,
+        department,
+        class_level,
+        primary_role,
         status,
-        auth_source,
+        institution_type,
+        profile_url,
+        image_url,
+        phone_number,
+        github_username,
+        linkedin_url,
         created_at,
-        updated_at
+        updated_at,
+        updated_by,
+        deleted_at
       FROM users
-      WHERE auth_source = $1::auth_source_enum AND deleted_at IS NULL
+      WHERE institution_type = $1 AND deleted_at IS NULL
       ORDER BY name ASC
       LIMIT $2 OFFSET $3
       `,
-      [authSource, lim, off]
+      [institutionType, lim, off]
     );
     return rows;
+  }
+
+  /**
+   * Soft delete user (sets deleted_at)
+   */
+  static async delete(id) {
+    const { rowCount } = await pool.query(
+      'UPDATE users SET deleted_at = NOW() WHERE id = $1::uuid AND deleted_at IS NULL',
+      [id]
+    );
+    return rowCount > 0;
+  }
+
+  /**
+   * Restore soft-deleted user
+   */
+  static async restore(id) {
+    const { rowCount } = await pool.query(
+      'UPDATE users SET deleted_at = NULL WHERE id = $1::uuid AND deleted_at IS NOT NULL',
+      [id]
+    );
+    return rowCount > 0;
+  }
+
+  /**
+   * Count users (excluding soft-deleted by default)
+   */
+  static async count(includeDeleted = false) {
+    const deletedClause = includeDeleted ? '' : 'WHERE deleted_at IS NULL';
+    const { rows } = await pool.query(
+      `SELECT COUNT(*)::int AS c FROM users ${deletedClause}`
+    );
+    return rows[0].c;
   }
 }

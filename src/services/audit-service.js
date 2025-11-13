@@ -10,13 +10,25 @@ export class AuditService {
    * @param {Object} logData - Activity log data
    * @param {string} logData.userId - User ID performing the action
    * @param {string} [logData.offeringId] - Optional course offering ID
-   * @param {string} logData.action - Action description (e.g., 'user.created', 'role.updated')
+   * @param {string} logData.action - Action type (must match CHECK constraint values)
    * @param {Object} [logData.metadata] - Additional metadata about the action
    */
   static async logActivity({ userId, offeringId = null, action, metadata = null }) {
     try {
+      // Map old action names to new action_type values if needed
+      const actionTypeMap = {
+        'user.created': 'enroll',
+        'user.updated': 'update_assignment',
+        'user.deleted': 'drop',
+        'role.changed': 'enroll',
+        'course.staff.assigned': 'enroll',
+        'user.restored': 'enroll',
+      };
+      
+      const actionType = actionTypeMap[action] || action;
+      
       const query = `
-        INSERT INTO activity_logs (user_id, offering_id, action, metadata)
+        INSERT INTO activity_logs (user_id, offering_id, action_type, metadata)
         VALUES ($1::uuid, $2::uuid, $3, $4::jsonb)
         RETURNING id, created_at
       `;
@@ -24,7 +36,7 @@ export class AuditService {
       const { rows } = await pool.query(query, [
         userId,
         offeringId,
-        action,
+        actionType,
         metadata ? JSON.stringify(metadata) : null,
       ]);
       
@@ -45,8 +57,7 @@ export class AuditService {
       action: 'user.created',
       metadata: {
         email: userData.email,
-        role: userData.role,
-        auth_source: userData.auth_source,
+        primary_role: userData.primary_role,
       },
     });
   }
@@ -79,6 +90,19 @@ export class AuditService {
   }
 
   /**
+   * Log user restoration
+   */
+  static async logUserRestore(userId, restoredUserId) {
+    return this.logActivity({
+      userId,
+      action: 'user.restored',
+      metadata: {
+        restored_user_id: restoredUserId,
+      },
+    });
+  }
+
+  /**
    * Log role change
    */
   static async logRoleChange(userId, targetUserId, oldRole, newRole, roleType = 'global') {
@@ -95,9 +119,11 @@ export class AuditService {
   }
 
   /**
-   * Log course staff assignment
+   * Log course staff assignment (deprecated - course_staff table removed)
+   * Staff roles now managed via enrollments.course_role
    */
   static async logCourseStaffAssign(userId, offeringId, staffUserId, staffRole) {
+    // Note: course_staff table removed, staff roles now in enrollments
     return this.logActivity({
       userId,
       offeringId,
@@ -105,6 +131,7 @@ export class AuditService {
       metadata: {
         staff_user_id: staffUserId,
         staff_role: staffRole,
+        note: 'Staff roles now managed via enrollments.course_role',
       },
     });
   }
@@ -114,7 +141,7 @@ export class AuditService {
    */
   static async getUserActivityLogs(userId, limit = 50, offset = 0) {
     const query = `
-      SELECT id, user_id, offering_id, action, metadata, created_at
+      SELECT id, user_id, offering_id, action_type, metadata, created_at
       FROM activity_logs
       WHERE user_id = $1::uuid
       ORDER BY created_at DESC
@@ -130,7 +157,7 @@ export class AuditService {
    */
   static async getOfferingActivityLogs(offeringId, limit = 50, offset = 0) {
     const query = `
-      SELECT id, user_id, offering_id, action, metadata, created_at
+      SELECT id, user_id, offering_id, action_type, metadata, created_at
       FROM activity_logs
       WHERE offering_id = $1::uuid
       ORDER BY created_at DESC

@@ -45,32 +45,53 @@ export class DatabaseInitializer {
   }
 
   /**
+   * Discovers all numbered migration files in the migrations directory
+   * @returns {Array<{file: string, number: number}>} Sorted array of migration files
+   */
+  static discoverMigrations() {
+    const migrationsPath = path.join(__dirname, '../../migrations');
+    const files = fs.readdirSync(migrationsPath);
+    
+    // Filter for numbered SQL files (e.g., 01-*.sql, 02-*.sql)
+    const migrations = files
+      .filter(file => /^\d{2,}-.+\.sql$/.test(file))
+      .map(file => {
+        const match = file.match(/^(\d+)-(.+)\.sql$/);
+        return {
+          file,
+          number: parseInt(match[1], 10),
+          description: match[2].replace(/-/g, ' '),
+        };
+      })
+      .sort((a, b) => a.number - b.number); // Sort by number
+    
+    return migrations;
+  }
+
+  /**
    * Runs all migration files in order
-   * @param {boolean} includeSeeds - Whether to run seed data migrations
+   * Automatically discovers numbered migrations (01-*.sql, 02-*.sql, etc.)
+   * @param {boolean} includeSeeds - Whether to run seed data migrations (files with "seed" in name)
    */
   static async runMigrations(includeSeeds = false) {
     console.log('[database] Running migrations...\n');
 
-    // Run schema migrations
-    const schemaMigrations = [
-      { file: '01-create-tables.sql', description: 'Create tables and schema' },
-    ];
+    const allMigrations = this.discoverMigrations();
+    
+    // Filter migrations: seeds are skipped unless includeSeeds is true
+    const migrationsToRun = allMigrations.filter(migration => {
+      const isSeed = migration.file.toLowerCase().includes('seed');
+      return includeSeeds || !isSeed;
+    });
 
-    for (const migration of schemaMigrations) {
-      const sql = this.readMigrationFile(migration.file);
-      await this.executeSql(sql, migration.description);
+    if (migrationsToRun.length === 0) {
+      console.log('[database] No migrations found\n');
+      return;
     }
 
-    // Run seed migrations if requested
-    if (includeSeeds) {
-      const seedMigrations = [
-        { file: '02-seed-demo-users.sql', description: 'Seed demo users' },
-      ];
-
-      for (const migration of seedMigrations) {
-        const sql = this.readMigrationFile(migration.file);
-        await this.executeSql(sql, migration.description);
-      }
+    for (const migration of migrationsToRun) {
+      const sql = this.readMigrationFile(migration.file);
+      await this.executeSql(sql, migration.description);
     }
 
     console.log('\n[database] Migrations completed\n');

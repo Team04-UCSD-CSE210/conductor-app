@@ -1,7 +1,6 @@
 import express from 'express';
 import { assertDb } from './db.js';
 import userRoutes from './routes/user-routes.js';
-import courseStaffRoutes from './routes/course-staff-routes.js';
 
 async function main() {
   console.log('[server] booting…');
@@ -18,7 +17,6 @@ async function main() {
   
   // API routes
   app.use('/users', userRoutes);
-  app.use('/courses', courseStaffRoutes);
 
   const port = Number(process.env.PORT || 3000);
   app.listen(port, () => {
