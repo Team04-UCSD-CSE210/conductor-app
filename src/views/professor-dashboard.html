@@ -129,13 +129,90 @@
         </div>
 
         <!-- Reports Section -->
-        <section class="card wide reports-analytics" aria-label="Reports and analytics">
-          <h3>Reports & Analytics</h3>
-          <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
-            <button class="btn btn-outline" aria-label="Add new report">+ Add Report</button>
-            <a class="btn btn-primary" href="/analytics">View Analytics</a>
+        <section class="card wide reports-analytics" aria-label="Report interaction">
+          <h3>Report Interaction</h3>
+          <div class="report-box" role="region" aria-label="Report interaction form">
+            <form class="interaction-form">
+              <div class="interaction-row">
+                <div class="interaction-col">
+                  <label for="team-select" class="interaction-label">Team</label>
+                  <select id="team-select" name="team" class="interaction-select is-placeholder">
+                    <option value="">Select team</option>
+                    <option value="team1">Team 1</option>
+                    <option value="team2">Team 2</option>
+                    <option value="team3">Team 3</option>
+                    <!-- Add more teams as needed -->
+                  </select>
+                </div>
+                <div class="interaction-col">
+                  <label for="student-select" class="interaction-label">Student</label>
+                  <select id="student-select" name="student" class="interaction-select is-placeholder">
+                    <option value="">Select student</option>
+                    <option value="student1">Student 1</option>
+                    <option value="student2">Student 2</option>
+                    <option value="student3">Student 3</option>
+                    <!-- Add more students as needed -->
+                  </select>
+                </div>
+                <button type="button" class="btn btn-positive interaction-btn" id="positive-btn" aria-label="Positive Interaction">😊</button>
+                <button type="button" class="btn btn-negative interaction-btn" id="negative-btn" aria-label="Negative Interaction">😞</button>
+              </div>
+              <div class="interaction-details">
+                <label for="interaction-notes" class="interaction-label">Interaction Details</label>
+                <textarea id="interaction-notes" name="notes" rows="4" class="interaction-textarea" placeholder="Report details of your interaction with a specific team or student here"></textarea>
+              </div>
+              <div class="interaction-submit-row">
+                <button type="submit" class="btn btn-primary">Submit Report</button>
+              </div>
+            </form>
+            <script>
+              const posBtn = document.getElementById('positive-btn');
+              const negBtn = document.getElementById('negative-btn');
+              let selected = null;
+              function updateSelected() {
+                posBtn.classList.toggle('selected', selected === 'positive');
+                negBtn.classList.toggle('selected', selected === 'negative');
+              }
+              posBtn.addEventListener('click', function() {
+                selected = 'positive';
+                updateSelected();
+              });
+              negBtn.addEventListener('click', function() {
+                selected = 'negative';
+                updateSelected();
+              });
+
+              // Disable submit when the notes field is empty
+              const notesField = document.getElementById('interaction-notes');
+              const submitBtn = document.querySelector('.interaction-submit-row .btn.btn-primary');
+              function updateSubmitState() {
+                const hasText = notesField && notesField.value.trim().length > 0;
+                if (submitBtn) submitBtn.disabled = !hasText;
+              }
+              if (notesField) {
+                notesField.addEventListener('input', updateSubmitState);
+                // Initialize on load
+                updateSubmitState();
+              }
+
+              // Lighter placeholder styling for selects when value is empty
+              const teamSelect = document.getElementById('team-select');
+              const studentSelect = document.getElementById('student-select');
+              function updatePlaceholderState(sel) {
+                if (!sel) return;
+                const isEmpty = sel.value === '';
+                sel.classList.toggle('is-placeholder', isEmpty);
+              }
+              if (teamSelect) {
+                teamSelect.addEventListener('change', () => updatePlaceholderState(teamSelect));
+                updatePlaceholderState(teamSelect);
+              }
+              if (studentSelect) {
+                studentSelect.addEventListener('change', () => updatePlaceholderState(studentSelect));
+                updatePlaceholderState(studentSelect);
+              }
+            </script>
           </div>
-          <div class="report-box" role="region" aria-label="Report preview area"></div>
         </section>
 
       </div>
