@@ -231,6 +231,23 @@ passport.use(new GoogleStrategy({
   const { blocked, attempts: recentAttempts } = await getLoginAttemptStatus(identifier);
 
 
+  // --- Whitelist bypass for rate limits ---
+  if (email) {
+    const whitelistEntry = await Whitelist.findOne({ where: { email } });
+    if (whitelistEntry) {
+      console.log(`[TRACE] Whitelisted user bypassing rate-limit: ${email}`);
+      await clearLoginAttempts(identifier);
+      await logAuthEvent("LOGIN_SUCCESS_WHITELIST_BYPASS", {
+        req,
+        message: "Whitelisted user bypassed rate-limit",
+        userEmail: email,
+        userId,
+        metadata: { provider: "google" }
+      });
+      return done(null, profile);
+    }
+  }
+
   console.log(`🔐 Login attempt for email: ${email}. Blocked: ${blocked}. Recent attempts: ${recentAttempts}`);
   if (blocked) {
     await logAuthEvent("LOGIN_RATE_LIMITED", {
@@ -726,6 +743,15 @@ app.get("/admin/approve", async (req, res) => {
   if (!created) {
     console.log(`ℹ️ ${email} already exists in whitelist.`);
   }
+
+  // Ensure matching user exists in users table
+  await User.findOrCreate({
+    where: { email },
+    defaults: {
+      name: email.split("@")[0],
+      user_type: "Unregistered"
+    }
+  });
 
   await AccessRequest.destroy({ where: { email } });
   res.redirect("/admin/whitelist");
