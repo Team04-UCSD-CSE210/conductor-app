@@ -6,6 +6,30 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "citext";
 
 -- =====================================================
+-- ENUM TYPES
+-- =====================================================
+CREATE TYPE user_role_enum AS ENUM ('admin', 'instructor', 'student');
+CREATE TYPE user_status_enum AS ENUM ('active', 'busy', 'inactive');
+CREATE TYPE institution_type_enum AS ENUM ('ucsd', 'extension');
+CREATE TYPE course_role_enum AS ENUM ('student', 'ta', 'tutor');
+CREATE TYPE enrollment_status_enum AS ENUM ('enrolled', 'waitlisted', 'dropped', 'completed');
+CREATE TYPE course_offering_status_enum AS ENUM ('open', 'closed', 'completed');
+CREATE TYPE assignment_type_enum AS ENUM ('project', 'hw', 'exam', 'checkpoint');
+CREATE TYPE assignment_assigned_to_enum AS ENUM ('team', 'individual');
+CREATE TYPE team_status_enum AS ENUM ('forming', 'active', 'inactive');
+CREATE TYPE team_member_role_enum AS ENUM ('leader', 'member');
+CREATE TYPE submission_status_enum AS ENUM ('draft', 'submitted', 'graded');
+CREATE TYPE attendance_status_enum AS ENUM ('present', 'absent', 'late', 'excused');
+CREATE TYPE activity_action_type_enum AS ENUM (
+    'login', 'logout',
+    'submit_assignment', 'update_submission',
+    'join_team', 'leave_team',
+    'grade_submission',
+    'create_assignment', 'update_assignment',
+    'enroll', 'drop'
+);
+
+-- =====================================================
 -- TRIGGER FUNCTION FOR UPDATED_AT
 -- =====================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -38,9 +62,9 @@ CREATE TABLE IF NOT EXISTS users (
     academic_year INTEGER,
     department TEXT,
     class_level TEXT,
-    primary_role TEXT NOT NULL CHECK (primary_role IN ('admin', 'instructor', 'student')),
-    status TEXT NOT NULL CHECK (status IN ('active', 'busy', 'inactive')),
-    institution_type TEXT CHECK (institution_type IN ('ucsd', 'extension')),
+    primary_role user_role_enum NOT NULL,
+    status user_status_enum NOT NULL,
+    institution_type institution_type_enum,
     profile_url TEXT,
     image_url TEXT,
     phone_number TEXT,
@@ -76,7 +100,7 @@ CREATE TABLE IF NOT EXISTS course_offerings (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     enrollment_cap INTEGER,
-    status TEXT CHECK (status IN ('open', 'closed', 'completed')),
+    status course_offering_status_enum,
     location TEXT,
     class_timings JSONB,
     syllabus_url TEXT,
@@ -105,8 +129,8 @@ CREATE TABLE IF NOT EXISTS enrollments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    course_role TEXT NOT NULL CHECK (course_role IN ('student', 'ta', 'tutor')),
-    status TEXT NOT NULL CHECK (status IN ('enrolled', 'waitlisted', 'dropped', 'completed')),
+    course_role course_role_enum NOT NULL,
+    status enrollment_status_enum NOT NULL,
     enrolled_at DATE,
     dropped_at DATE,
     final_grade TEXT,
@@ -135,12 +159,12 @@ CREATE TABLE IF NOT EXISTS assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('project', 'hw', 'exam', 'checkpoint')),
+    type assignment_type_enum NOT NULL,
     due_date TIMESTAMPTZ NOT NULL,
     late_policy JSONB,
     max_points DECIMAL,
     rubric JSONB,
-    assigned_to TEXT CHECK (assigned_to IN ('team', 'individual')),
+    assigned_to assignment_assigned_to_enum,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_by UUID REFERENCES users(id),
@@ -165,7 +189,7 @@ CREATE TABLE IF NOT EXISTS team (
     name TEXT NOT NULL,
     team_number INTEGER,
     leader_id UUID REFERENCES users(id),
-    status TEXT CHECK (status IN ('forming', 'active', 'inactive')),
+    status team_status_enum,
     formed_at DATE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -189,7 +213,7 @@ CREATE TABLE IF NOT EXISTS team_members (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     team_id UUID NOT NULL REFERENCES team(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role TEXT CHECK (role IN ('leader', 'member')),
+    role team_member_role_enum,
     joined_at DATE,
     left_at DATE,
     added_by UUID REFERENCES users(id),
@@ -213,7 +237,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     team_id UUID REFERENCES team(id) ON DELETE CASCADE,
     submitted_at TIMESTAMPTZ,
-    status TEXT NOT NULL CHECK (status IN ('draft', 'submitted', 'graded')),
+    status submission_status_enum NOT NULL,
     score DECIMAL,
     feedback TEXT,
     files JSONB,
@@ -247,14 +271,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     offering_id UUID REFERENCES course_offerings(id) ON DELETE CASCADE,
-    action_type TEXT NOT NULL CHECK (action_type IN (
-        'login', 'logout',
-        'submit_assignment', 'update_submission',
-        'join_team', 'leave_team',
-        'grade_submission',
-        'create_assignment', 'update_assignment',
-        'enroll', 'drop'
-    )),
+    action_type activity_action_type_enum NOT NULL,
     metadata JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -275,7 +292,7 @@ CREATE TABLE IF NOT EXISTS attendance (
     offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     date DATE NOT NULL,
-    status TEXT NOT NULL CHECK (status IN ('present', 'absent', 'late', 'excused')),
+    status attendance_status_enum NOT NULL,
     marked_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
