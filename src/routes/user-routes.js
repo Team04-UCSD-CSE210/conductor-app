@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { UserModel } from '../models/user-model.js';
+import { UserService } from '../services/user-service.js';
 import { RosterService } from '../services/roster-service.js';
 import { rosterImportLimiter } from '../middleware/rate-limiter.js';
 
@@ -20,40 +20,136 @@ const upload = multer({
   },
 });
 
+/**
+ * Create a new user
+ * POST /users
+ * Body: { email, name, role, auth_source, ... }
+ */
 router.post('/', async (req, res) => {
   try {
-    const newUser = await UserModel.create(req.body);
+    // TODO: Get createdBy from auth middleware when authentication is implemented
+    const createdBy = req.body.created_by || null;
+    const newUser = await UserService.createUser(req.body, createdBy);
     res.status(201).json(newUser);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
+/**
+ * Get all users with pagination
+ * GET /users?limit=50&offset=0&includeDeleted=false
+ */
 router.get('/', async (req, res) => {
-  const limit = Number(req.query.limit ?? 50);
-  const offset = Number(req.query.offset ?? 0);
-  const users = await UserModel.findAll(limit, offset);
-  res.json(users);
+  try {
+    const options = {
+      limit: Number(req.query.limit ?? 50),
+      offset: Number(req.query.offset ?? 0),
+      includeDeleted: req.query.includeDeleted === 'true',
+    };
+    const result = await UserService.getUsers(options);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
+/**
+ * Get user by ID
+ * GET /users/:id
+ */
 router.get('/:id', async (req, res) => {
-  const user = await UserModel.findById(req.params.id);
-  if (!user) return res.status(404).json({ error: 'User not found' });
+  try {
+    const user = await UserService.getUserById(req.params.id);
   res.json(user);
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
 });
 
+/**
+ * Update user
+ * PUT /users/:id
+ * Body: { name, email, role, status, auth_source, ... }
+ */
 router.put('/:id', async (req, res) => {
   try {
-    const updatedUser = await UserModel.update(req.params.id, req.body);
+    // TODO: Get updatedBy from auth middleware when authentication is implemented
+    const updatedBy = req.body.updated_by || req.params.id; // Default to self-update
+    const updatedUser = await UserService.updateUser(req.params.id, req.body, updatedBy);
     res.json(updatedUser);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
+/**
+ * Soft delete user
+ * DELETE /users/:id
+ */
 router.delete('/:id', async (req, res) => {
-  const deleted = await UserModel.delete(req.params.id);
-  res.json({ deleted });
+  try {
+    // TODO: Get deletedBy from auth middleware when authentication is implemented
+    const deletedBy = req.body.deleted_by || req.params.id; // Default to self-delete
+    await UserService.deleteUser(req.params.id, deletedBy);
+    res.json({ deleted: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Restore soft-deleted user
+ * POST /users/:id/restore
+ */
+router.post('/:id/restore', async (req, res) => {
+  try {
+    // TODO: Get restoredBy from auth middleware when authentication is implemented
+    const restoredBy = req.body.restored_by || req.params.id;
+    await UserService.restoreUser(req.params.id, restoredBy);
+    res.json({ restored: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Get users by primary_role
+ * GET /users/role/:role?limit=50&offset=0
+ */
+router.get('/role/:role', async (req, res) => {
+  try {
+    const { role } = req.params;
+    const options = {
+      limit: Number(req.query.limit ?? 50),
+      offset: Number(req.query.offset ?? 0),
+    };
+    const users = await UserService.getUsersByRole(role, options);
+    res.json(users);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Get users by institution_type (ucsd or extension)
+ * GET /users/institution/:type?limit=50&offset=0
+ */
+router.get('/institution/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+    if (!['ucsd', 'extension'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid institution type. Must be "ucsd" or "extension"' });
+    }
+    const options = {
+      limit: Number(req.query.limit ?? 50),
+      offset: Number(req.query.offset ?? 0),
+    };
+    const users = await UserService.getUsersByInstitutionType(type, options);
+    res.json(users);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Roster Management Routes

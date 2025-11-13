@@ -61,8 +61,9 @@ export class RosterService {
   static CSV_COLUMN_MAPPINGS = {
     name: ['name', 'Name', 'full_name', 'Full Name', 'student_name'],
     email: ['email', 'Email', 'e_mail', 'E-Mail', 'student_email'],
-    role: ['role', 'Role', 'user_role', 'User Role'],
+    primary_role: ['primary_role', 'role', 'Role', 'user_role', 'User Role'],
     status: ['status', 'Status', 'user_status', 'User Status'],
+    institution_type: ['institution_type', 'institution', 'Institution', 'student_type', 'Student Type'],
   };
 
   /**
@@ -90,11 +91,17 @@ export class RosterService {
       return null;
     };
 
+    const email = findColumnValue(RosterService.CSV_COLUMN_MAPPINGS.email) || '';
+    // Auto-determine institution_type from email if not provided
+    const institutionType = findColumnValue(RosterService.CSV_COLUMN_MAPPINGS.institution_type) || 
+      (email ? (email.toLowerCase().endsWith('@ucsd.edu') ? 'ucsd' : 'extension') : null);
+
     return {
       name: findColumnValue(RosterService.CSV_COLUMN_MAPPINGS.name) || '',
-      email: findColumnValue(RosterService.CSV_COLUMN_MAPPINGS.email) || '',
-      role: findColumnValue(RosterService.CSV_COLUMN_MAPPINGS.role) || 'user',
+      email,
+      primary_role: findColumnValue(RosterService.CSV_COLUMN_MAPPINGS.primary_role) || 'student',
       status: findColumnValue(RosterService.CSV_COLUMN_MAPPINGS.status) || 'active',
+      institution_type: institutionType,
     };
   }
 
@@ -159,13 +166,8 @@ export class RosterService {
       throw new Error('Invalid email format: missing @ symbol');
     }
 
-    // Check if it's a UCSD email domain
-    if (!RosterService.isValidUCSDDomain(normalizedEmail)) {
-      throw new Error(
-        `Email must be a valid UCSD email address (ending with @ucsd.edu or @mail.ucsd.edu). ` +
-        `Received: ${userData.email}`
-      );
-    }
+    // Note: We support both UCSD (@ucsd.edu) and Extension (gmail, etc.) students
+    // No strict domain validation needed - institution_type is auto-detected
 
     // Additional format validation
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -396,21 +398,22 @@ export class RosterService {
     const users = await RosterService.retrieveAllUsers();
 
     if (users.length === 0) {
-      return 'name,email,role,status,created_at,updated_at\n';
+      return 'name,email,primary_role,status,institution_type,created_at,updated_at\n';
     }
 
     const csvRows = users.map((user) => ({
       name: user.name,
       email: user.email,
-      role: user.role,
+      primary_role: user.primary_role,
       status: user.status,
+      institution_type: user.institution_type,
       created_at: user.created_at,
       updated_at: user.updated_at,
     }));
 
     return stringify(csvRows, {
       header: true,
-      columns: ['name', 'email', 'role', 'status', 'created_at', 'updated_at'],
+      columns: ['name', 'email', 'primary_role', 'status', 'institution_type', 'created_at', 'updated_at'],
     });
   }
 
@@ -422,7 +425,7 @@ export class RosterService {
    */
   static async exportImportedUsersToCsv(importedUsers) {
     if (!Array.isArray(importedUsers) || importedUsers.length === 0) {
-      return 'name,email,role,status,created_at,updated_at\n';
+      return 'name,email,primary_role,status,institution_type,created_at,updated_at\n';
     }
 
     // Fetch full user details from database using IDs
@@ -442,21 +445,22 @@ export class RosterService {
     }
 
     if (fullUsers.length === 0) {
-      return 'name,email,role,status,created_at,updated_at\n';
+      return 'name,email,primary_role,status,institution_type,created_at,updated_at\n';
     }
 
     const csvRows = fullUsers.map((user) => ({
       name: user.name,
       email: user.email,
-      role: user.role,
+      primary_role: user.primary_role,
       status: user.status,
+      institution_type: user.institution_type,
       created_at: user.created_at,
       updated_at: user.updated_at,
     }));
 
     return stringify(csvRows, {
       header: true,
-      columns: ['name', 'email', 'role', 'status', 'created_at', 'updated_at'],
+      columns: ['name', 'email', 'primary_role', 'status', 'institution_type', 'created_at', 'updated_at'],
     });
   }
 }

@@ -1,76 +1,91 @@
 -- 02-seed-demo-users.sql
 -- Populate demo users for development/testing
--- Run AFTER the users table and user_role_enum type are created.
+-- Run AFTER the users table and ENUM types are created.
 
 INSERT INTO users (
     email,
     ucsd_pid,
     name,
     preferred_name,
-    pronouns,
     major,
     degree_program,
     academic_year,
     department,
-    access_level,
-    role,
-    title,
-    office,
-    photo_url,
+    class_level,
+    primary_role,
+    status,
+    institution_type,
+    profile_url,
     image_url,
+    phone_number,
     github_username,
-    linkedin_url,
-    bio
+    linkedin_url
 ) VALUES
--- === Admin user ===
-('admin@example.edu', 'A00000001', 'System Admin', 'Admin', 'they/them',
- NULL, NULL, NULL, 'IT Services', 10, 'admin', 'System Administrator', 'HQ 101',
- NULL, NULL, NULL, NULL, 'Manages overall platform configuration'),
+-- === Admin user (UCSD) ===
+('admin@ucsd.edu', 'A00000001', 'System Admin', 'Admin',
+ NULL, NULL, NULL, 'IT Services', NULL,
+ 'admin'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ NULL, NULL, NULL, 'sysadmin', 'https://linkedin.com/in/sysadmin'),
 
--- === Instructors ===
-('instructor1@example.edu', 'A00001234', 'Dr. Alice Smith', 'Alice', 'she/her',
- NULL, NULL, NULL, 'Computer Science & Engineering', 8, 'instructor',
- 'Professor', 'ENG 2254', NULL, NULL, 'alicesmith', 'https://linkedin.com/in/alicesmith',
- 'Teaches distributed systems and software architecture'),
+-- === Instructors (UCSD) ===
+('instructor1@ucsd.edu', 'A00001234', 'Dr. Alice Smith', 'Alice',
+ NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
+ 'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ NULL, NULL, '+1-858-555-0101', 'alicesmith', 'https://linkedin.com/in/alicesmith'),
 
-('instructor2@example.edu', 'A00004567', 'Dr. Bob Lee', 'Bob', 'he/him',
- NULL, NULL, NULL, 'Electrical & Computer Engineering', 7, 'instructor',
- 'Associate Professor', 'ENG 132', NULL, NULL, 'boblee',
- 'https://linkedin.com/in/boblee', 'Researcher in embedded systems and AI hardware'),
+('instructor2@ucsd.edu', 'A00004567', 'Dr. Bob Lee', 'Bob',
+ NULL, NULL, NULL, 'Electrical & Computer Engineering', NULL,
+ 'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ NULL, NULL, '+1-858-555-0102', 'boblee', 'https://linkedin.com/in/boblee'),
 
--- === Students ===
-('student1@example.edu', 'A00009999', 'Charlie Green', 'Charlie', 'he/him',
- 'Computer Science', 'MS', 2025, 'Computer Science & Engineering', 1, 'student',
- NULL, NULL, NULL, NULL, 'charliegreen', 'https://linkedin.com/in/charliegreen',
- 'Graduate student interested in distributed systems and machine learning'),
+-- === UCSD Students ===
+('student1@ucsd.edu', 'A00009999', 'Charlie Green', 'Charlie',
+ 'Computer Science', 'MS', 2025, 'Computer Science & Engineering', 'Graduate',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ NULL, NULL, '+1-858-555-0201', 'charliegreen', 'https://linkedin.com/in/charliegreen'),
 
-('student2@example.edu', 'A00007890', 'Dana Lopez', 'Dana', 'she/her',
- 'Data Science', 'BS', 2026, 'Data Science', 1, 'student',
- NULL, NULL, NULL, NULL, 'danalopez', NULL,
- 'Undergraduate student working on data visualization projects'),
+('student2@ucsd.edu', 'A00007890', 'Dana Lopez', 'Dana',
+ 'Data Science', 'BS', 2026, 'Data Science', 'Undergraduate',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ NULL, NULL, '+1-858-555-0202', 'danalopez', 'https://linkedin.com/in/danalopez'),
 
-('student3@example.edu', 'A00005678', 'Evan Jones', 'Evan', 'he/him',
- 'Computer Engineering', 'BS', 2025, 'ECE', 1, 'student',
- NULL, NULL, NULL, NULL, 'evanjones', 'https://linkedin.com/in/evanjones',
- 'Enjoys full-stack development and embedded systems')
+('student3@ucsd.edu', 'A00005678', 'Evan Jones', 'Evan',
+ 'Computer Engineering', 'BS', 2025, 'ECE', 'Undergraduate',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ NULL, NULL, '+1-858-555-0203', 'evanjones', 'https://linkedin.com/in/evanjones'),
+
+-- === Extension Students (non-UCSD emails) ===
+('student.extension1@gmail.com', NULL, 'Frank Miller', 'Frank',
+ 'Software Engineering', NULL, 2025, 'Extension', 'Professional',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
+ NULL, NULL, '+1-619-555-0301', 'frankmiller', 'https://linkedin.com/in/frankmiller'),
+
+('student.extension2@gmail.com', NULL, 'Grace Chen', 'Grace',
+ 'Computer Science', NULL, 2026, 'Extension', 'Professional',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
+ NULL, NULL, '+1-619-555-0302', 'gracechen', 'https://linkedin.com/in/gracechen'),
+
+('student.extension3@yahoo.com', NULL, 'Henry Wilson', 'Henry',
+ 'Data Analytics', NULL, 2025, 'Extension', 'Professional',
+ 'student'::user_role_enum, 'busy'::user_status_enum, 'extension'::institution_type_enum,
+ NULL, NULL, '+1-619-555-0303', 'henrywilson', NULL)
 ON CONFLICT (email) DO UPDATE
 SET
     name            = EXCLUDED.name,
     preferred_name  = EXCLUDED.preferred_name,
-    pronouns        = EXCLUDED.pronouns,
     major           = EXCLUDED.major,
     degree_program  = EXCLUDED.degree_program,
     academic_year   = EXCLUDED.academic_year,
     department      = EXCLUDED.department,
-    access_level    = EXCLUDED.access_level,
-    role            = EXCLUDED.role,
-    title           = EXCLUDED.title,
-    office          = EXCLUDED.office,
-    photo_url       = EXCLUDED.photo_url,
+    class_level     = EXCLUDED.class_level,
+    primary_role    = EXCLUDED.primary_role,
+    status          = EXCLUDED.status,
+    institution_type = EXCLUDED.institution_type,
+    profile_url     = EXCLUDED.profile_url,
     image_url       = EXCLUDED.image_url,
+    phone_number    = EXCLUDED.phone_number,
     github_username = EXCLUDED.github_username,
     linkedin_url    = EXCLUDED.linkedin_url,
-    bio             = EXCLUDED.bio,
     updated_at      = NOW();
 
 -- Optional: confirm number of users
