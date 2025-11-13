@@ -398,6 +398,12 @@ app.get("/dashboard", ensureAuthenticated, (_req, res) => {
   res.sendFile(buildFullViewPath("dashboard.html"));
 });
 
+// Role-based dashboards
+app.get("/student-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("student-dashboard.html")));
+app.get("/ta-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("ta-dashboard.html")));
+app.get("/faculty-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("professor-dashboard.html")));
+app.get("/admin-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("admin-dashboard.html")));
+
 // serve all your static files (HTML, CSS, JS, etc.)
 app.use(express.static(__dirname));
 
@@ -505,6 +511,22 @@ app.get("/auth/google/callback",
       return res.redirect("/register.html");
   }
 
+      const role = req.user?.role || "Student";
+      switch (role) {
+        case "Professor":
+          return res.redirect("/professor-dashboard");
+        case "TA":
+        case "Tutor":
+          return res.redirect("/ta-dashboard");
+        case "Admin":
+          return res.redirect("/admin-dashboard");
+        case "Student":
+        default:
+          return res.redirect("/student-dashboard");
+      }
+    });
+  })(req, res, next);
+});
 
     console.log("✅ Login success for:", email);
     await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
@@ -882,7 +904,7 @@ app.get('/enroll/:token', async (req, res) => {
   // Redirect by role to dashboard
   const role = decoded.role || 'Student';
   if (role === 'TA' || role === 'Tutor') return res.redirect('/ta-dashboard');
-  if (role === 'Professor') return res.redirect('/faculty-dashboard');
+  if (role === 'Professor') return res.redirect('/professor-dashboard');
   return res.redirect('/student-dashboard');
 });
 
