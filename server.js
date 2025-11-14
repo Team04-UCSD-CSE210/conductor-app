@@ -19,7 +19,7 @@ import bodyParser from "body-parser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const VIEW_DIR = "src/views"
+const VIEW_DIR = process.env.VERCEL ? "public" : "src/views"
 
 dotenv.config();
 
@@ -46,9 +46,15 @@ try {
 
 const app = express();
 // Serve static frontend assets
-app.use(express.static(path.join(__dirname, "src/views")));
-app.use(express.static(path.join(__dirname, "src/public")));
-app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
+if (process.env.VERCEL) {
+  // In production, serve from public directory
+  app.use(express.static(path.join(__dirname, "public")));
+} else {
+  // In development, serve from src directories
+  app.use(express.static(path.join(__dirname, "src/views")));
+  app.use(express.static(path.join(__dirname, "src/public")));
+  app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
+}
 
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -419,9 +425,6 @@ app.get("/ta-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFu
 app.get("/faculty-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("professor-dashboard.html")));
 app.get("/admin-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("admin-dashboard.html")));
 
-// serve all your static files (HTML, CSS, JS, etc.)
-app.use(express.static(__dirname));
-
 // Serve blocked page with injected email (before static middleware)
 app.get("/blocked.html", (req, res) => {
   const email = req.session.blockedEmail || "";
@@ -546,49 +549,14 @@ app.get(
     }
   });
 
-
-  // Redirect based on user type
-  switch (user.user_type) {
-    case "Admin":
-      return res.redirect("/admin-dashboard.html");
-    case "Professor":
-      return res.redirect("/faculty-dashboard.html");
-    case "TA":
-      return res.redirect("/ta-dashboard.html");
-    case "Student":
-      return res.redirect("/student-dashboard.html");
-    default:
-      return res.redirect("/register.html");
-  }
-
-      const role = req.user?.role || "Student";
-      switch (role) {
-        case "Professor":
-          return res.redirect("/professor-dashboard");
-        case "TA":
-        case "Tutor":
-          return res.redirect("/ta-dashboard");
-        case "Admin":
-          return res.redirect("/admin-dashboard");
-        case "Student":
-        default:
-          return res.redirect("/student-dashboard");
-      }
-    });
-  })(req, res, next);
+// --- AUTH FAILURE ROUTE ---
+app.get("/auth/failure", (req, res) => {
+  res.send(`
+    <h1>Authentication Failed</h1>
+    <p>There was an error during authentication. Please try again.</p>
+    <a href="/login">Back to Login</a>
+  `);
 });
-
-    console.log("✅ Login success for:", email);
-    await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
-      req,
-      message: "OAuth callback completed successfully",
-      userEmail: email,
-      userId: req.user?.id,
-      metadata: { provider: "google" }
-    });
-    res.redirect("/dashboard");
-  }
-);
 
 // Failed login route
 app.get("/auth/failure", async (req, res) => {
@@ -626,6 +594,11 @@ app.get("/auth/failure", async (req, res) => {
 function buildFullViewPath(viewFileName){
   return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
 }
+
+// Root route - redirect to login
+app.get("/", (req, res) => {
+  res.redirect("/login");
+});
 
 // Reset any leftover session before showing login page
 app.get("/login", (req, res) => {
@@ -774,9 +747,6 @@ const startServer = async () => {
     });
   }
 };
-
-startServer();
-
 
 // --- Access Request Submission ---
 app.post("/request-access", async (req, res) => {
@@ -977,4 +947,10 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   res.json({ courses });
 });
 
-startServer();
+// Start server if not running on Vercel
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+// Export app for Vercel
+export default app;
