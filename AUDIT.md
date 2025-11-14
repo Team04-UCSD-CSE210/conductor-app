@@ -852,3 +852,61 @@ The User Management System is **~85% complete** with all core features fully fun
 3. `.env` - Environment variables (not tracked in git)
 
 **Total: 31 files** (excluding node_modules, .git, and generated files)
+
+---
+
+## 16. Database Connection Setup
+
+### Prerequisites
+
+- PostgreSQL client installed locally (`psql` command available)
+- Your public IPv4 address whitelisted by the database administrator
+
+### Connection Steps
+
+1. **Get Your IPv4 Address**
+   - Search "what is my IPv4 address" in Google, or
+   - Run `curl ifconfig.me` in your terminal
+
+2. **Request Database Access**
+   - Contact the database administrator (Haiyi Xing)
+   - Provide your IPv4 address for whitelisting
+
+3. **Connect to Database**
+   - Open PowerShell or Command Prompt
+   - Run the following command:
+
+   ```bash
+   psql -h 34.176.45.209 -p 5432 -U postgres -d conductor
+   ```
+
+   - **Credentials:**
+     - Username: `postgres`
+     - Password: `Cse210group4!`
+
+4. **Verify Connection**
+   - Once connected, run `\dt` to list all tables
+   - You should see the following tables:
+     - `users`
+     - `course_offerings`
+     - `enrollments`
+     - `assignments`
+     - `submissions`
+     - `team`
+     - `team_members`
+     - `attendance`
+     - `activity_logs`
+
+### Alternative: Local Environment Variables
+
+For application use, set the following environment variable:
+
+```bash
+DATABASE_URL=postgresql://postgres:Cse210group4!@34.176.45.209:5432/conductor
+```
+
+### Troubleshooting
+
+- **Connection timeout:** Ensure your IPv4 address is whitelisted
+- **Authentication failed:** Verify username and password are correct
+- **Command not found:** Install PostgreSQL client tools
