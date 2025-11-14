@@ -546,50 +546,6 @@ app.get(
     }
   });
 
-
-  // Redirect based on user type
-  switch (user.user_type) {
-    case "Admin":
-      return res.redirect("/admin-dashboard.html");
-    case "Professor":
-      return res.redirect("/faculty-dashboard.html");
-    case "TA":
-      return res.redirect("/ta-dashboard.html");
-    case "Student":
-      return res.redirect("/student-dashboard.html");
-    default:
-      return res.redirect("/register.html");
-  }
-
-      const role = req.user?.role || "Student";
-      switch (role) {
-        case "Professor":
-          return res.redirect("/professor-dashboard");
-        case "TA":
-        case "Tutor":
-          return res.redirect("/ta-dashboard");
-        case "Admin":
-          return res.redirect("/admin-dashboard");
-        case "Student":
-        default:
-          return res.redirect("/student-dashboard");
-      }
-    });
-  })(req, res, next);
-});
-
-    console.log("✅ Login success for:", email);
-    await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
-      req,
-      message: "OAuth callback completed successfully",
-      userEmail: email,
-      userId: req.user?.id,
-      metadata: { provider: "google" }
-    });
-    res.redirect("/dashboard");
-  }
-);
-
 // Failed login route
 app.get("/auth/failure", async (req, res) => {
   console.warn("⚠️ Google OAuth failed or unauthorized user.");
@@ -842,7 +798,7 @@ app.get("/admin/approve", async (req, res) => {
   if (!email) return res.status(400).send("Missing email");
 
   // Use findOrCreate to avoid duplicate whitelist entries
-  const [entry, created] = await Whitelist.findOrCreate({
+  const [, created] = await Whitelist.findOrCreate({
     where: { email },
     defaults: { approved_by: "Admin" }
   });
@@ -976,5 +932,3 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   const courses = memberships.map(m => ({ id: m.Course.id, code: m.Course.code, title: m.Course.title, role: m.role }));
   res.json({ courses });
 });
-
-startServer();
