@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "buildCommand": "npm install",
+  "env": {
+    "GOOGLE_CLIENT_ID": "@google_client_id",
+    "GOOGLE_CLIENT_SECRET": "@google_client_secret",
+    "SESSION_SECRET": "@session_secret",
+    "DATABASE_URL": "@database_url",
+    "REDIS_URL": "@redis_url",
+    "GOOGLE_CALLBACK_URL": "@google_callback_url",
+    "ALLOWED_GOOGLE_DOMAIN": "ucsd.edu",
+    "LOGIN_FAILURE_THRESHOLD": "3",
+    "LOGIN_FAILURE_WINDOW_MINUTES": "15",
+    "INVITE_TTL_HOURS": "72",
+    "PGSSLMODE": "require"
+  },
+  "functions": {
+    "server.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ]
+}
