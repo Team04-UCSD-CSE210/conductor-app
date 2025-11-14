@@ -1,5 +1,3 @@
-// Set environment for Vercel
-process.env.VERCEL = 'true';
+import app from '../server.js';
 
-// Import and export the Express app
-export { default } from '../server.js';
+export default app;

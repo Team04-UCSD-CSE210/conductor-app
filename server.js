@@ -592,6 +592,11 @@ function buildFullViewPath(viewFileName){
   return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
 }
 
+// Root route - redirect to login
+app.get("/", (req, res) => {
+  res.redirect("/login");
+});
+
 // Reset any leftover session before showing login page
 app.get("/login", (req, res) => {
   // Clear Passport user and Redis session if any
