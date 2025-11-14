@@ -48,9 +48,11 @@ const app = express();
 // Serve static frontend assets
 if (process.env.VERCEL) {
   // In production, serve from public directory
+  console.log('📁 Serving static files from public directory');
   app.use(express.static(path.join(__dirname, "public")));
 } else {
   // In development, serve from src directories
+  console.log('📁 Serving static files from src directories');
   app.use(express.static(path.join(__dirname, "src/views")));
   app.use(express.static(path.join(__dirname, "src/public")));
   app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
