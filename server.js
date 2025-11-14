@@ -113,17 +113,72 @@ const AccessRequest = defineAccessRequestModel(sequelize);
 // Initialize associations using explicit FKs before sync
 initCourseAssociations(sequelize, { User, Course, CourseUser, Invite });
 // Ensure tables exist on startup
-await sequelize.sync({ alter: true });
+// await sequelize.sync({ alter: true });
 
 
-const redisClient = createClient({ url: REDIS_URL });
-redisClient.on("error", (error) => {
-  console.error("Redis client error", error);
-});
-redisClient.connect().catch((error) => {
-  console.error("Failed to connect to Redis", error);
-});
+// const redisClient = createClient({ url: REDIS_URL });
+// redisClient.on("error", (error) => {
+//   console.error("Redis client error", error);
+// });
+// redisClient.connect().catch((error) => {
+//   console.error("Failed to connect to Redis", error);
+// });
 
+// const extractIpAddress = (req) => {
+//   const forwarded = req?.headers?.["x-forwarded-for"];
+//   if (forwarded) {
+//     return forwarded.split(",")[0].trim();
+//   }
+//   return req?.socket?.remoteAddress || null;
+// };
+// local dev
+
+// --- Redis client (switched off in local dev) ---
+let redisClient;
+
+if (!REDIS_URL || process.env.NODE_ENV === "development") {
+  // In local development, or when REDIS_URL is not set,
+  // we disable real Redis and use a simple in-memory fallback.
+  console.warn(
+    "⚠️ DEV MODE: Redis is disabled (no REDIS_URL or NODE_ENV=development). " +
+      "Using in-memory store for rate limiting."
+  );
+
+  const memoryStore = new Map();
+
+  // Minimal async API to mimic the Redis methods used in the codebase.
+  redisClient = {
+    async incr(key) {
+      const current = Number(memoryStore.get(key) || 0) + 1;
+      memoryStore.set(key, current);
+      return current;
+    },
+    async expire(key, seconds) {
+      // Simple TTL implementation for dev: schedule a delete.
+      setTimeout(() => {
+        memoryStore.delete(key);
+      }, seconds * 1000);
+      return true;
+    },
+    async get(key) {
+      const value = memoryStore.get(key);
+      return value !== undefined ? String(value) : null;
+    },
+  };
+} else {
+  // Production / real environment: connect to actual Redis instance.
+  redisClient = createClient({ url: REDIS_URL });
+
+  redisClient.on("error", (error) => {
+    console.error("Redis client error", error);
+  });
+
+  redisClient.connect().catch((error) => {
+    console.error("Failed to connect to Redis", error);
+  });
+}
+
+// Helper to extract client IP address for rate limiting.
 const extractIpAddress = (req) => {
   const forwarded = req?.headers?.["x-forwarded-for"];
   if (forwarded) {
@@ -131,6 +186,8 @@ const extractIpAddress = (req) => {
   }
   return req?.socket?.remoteAddress || null;
 };
+
+
 
 const logAuthEvent = async (eventType, { req, message, userEmail, userId, metadata } = {}) => {
   if (!AuthLog) return;
@@ -239,6 +296,30 @@ const ensureAuthenticated = async (req, res, next) => {
 
   return res.redirect("/login");
 };
+
+// local
+// Dev-only auth wrapper.
+// In development, we bypass real authentication and inject a fake user.
+// In production, we still use the real ensureAuthenticated middleware.
+const devSafeAuth = (req, res, next) => {
+  const isDev = process.env.NODE_ENV !== "production";
+
+  if (isDev) {
+    if (!req.user) {
+      req.user = {
+        id: "dev-user-1",
+        emails: [{ value: "dev-student@ucsd.edu" }],
+        role: "Student",
+      };
+    }
+    return next();
+  }
+
+  // Production / staging: keep real auth behavior
+  return ensureAuthenticated(req, res, next);
+};
+
+
 
 // -------------------- PASSPORT --------------------
 passport.use(new GoogleStrategy({
@@ -497,7 +578,7 @@ app.get(
     const email = req.user?.emails?.[0]?.value || "unknown";
 
     try {
-      // DEBUG LOGS
+      // Debug logs
       console.log("🔐 New login detected:");
       console.log("   Session ID:", req.sessionID);
       console.log("   Logged-in user:", email);
@@ -511,13 +592,13 @@ app.get(
         },
       });
 
-      // Log successful callback
       console.log("✅ Login success for:", email);
+
       await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
         req,
         message: "OAuth callback completed successfully",
         userEmail: email,
-        userId: req.user?.id,
+        userId: user.id,
         metadata: { provider: "google" },
       });
 
@@ -528,6 +609,7 @@ app.get(
         case "Professor":
           return res.redirect("/faculty-dashboard");
         case "TA":
+        case "Tutor":
           return res.redirect("/ta-dashboard");
         case "Student":
           return res.redirect("/student-dashboard");
@@ -544,51 +626,9 @@ app.get(
       });
       return res.redirect("/auth/failure");
     }
-  });
-
-
-  // Redirect based on user type
-  switch (user.user_type) {
-    case "Admin":
-      return res.redirect("/admin-dashboard.html");
-    case "Professor":
-      return res.redirect("/faculty-dashboard.html");
-    case "TA":
-      return res.redirect("/ta-dashboard.html");
-    case "Student":
-      return res.redirect("/student-dashboard.html");
-    default:
-      return res.redirect("/register.html");
-  }
-
-      const role = req.user?.role || "Student";
-      switch (role) {
-        case "Professor":
-          return res.redirect("/professor-dashboard");
-        case "TA":
-        case "Tutor":
-          return res.redirect("/ta-dashboard");
-        case "Admin":
-          return res.redirect("/admin-dashboard");
-        case "Student":
-        default:
-          return res.redirect("/student-dashboard");
-      }
-    });
-  })(req, res, next);
-});
-
-    console.log("✅ Login success for:", email);
-    await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
-      req,
-      message: "OAuth callback completed successfully",
-      userEmail: email,
-      userId: req.user?.id,
-      metadata: { provider: "google" }
-    });
-    res.redirect("/dashboard");
   }
 );
+
 
 // Failed login route
 app.get("/auth/failure", async (req, res) => {
@@ -753,29 +793,29 @@ app.post("/register/submit", ensureAuthenticated, async (req, res) => {
 });
 
 // --- START HTTPS SERVER ---
-const startServer = async () => {
-  try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true }); // create users table if missing
-    console.log("✅ Database connection established");
-  } catch (error) {
-    console.error("Failed to connect to the database", error);
-    process.exit(1);
-  }
+// const startServer = async () => {
+//   try {
+//     await sequelize.authenticate();
+//     await sequelize.sync({ alter: true }); // create users table if missing
+//     console.log("✅ Database connection established");
+//   } catch (error) {
+//     console.error("Failed to connect to the database", error);
+//     process.exit(1);
+//   }
 
-  if (HTTPS_AVAILABLE && sslOptions) {
-    https.createServer(sslOptions, app).listen(8443, () => {
-      console.log("✅ HTTPS server running at https://localhost:8443");
-    });
-  } else {
-    const PORT = process.env.PORT || 8080;
-    app.listen(PORT, () => {
-      console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
-    });
-  }
-};
+//   if (HTTPS_AVAILABLE && sslOptions) {
+//     https.createServer(sslOptions, app).listen(8443, () => {
+//       console.log("✅ HTTPS server running at https://localhost:8443");
+//     });
+//   } else {
+//     const PORT = process.env.PORT || 8080;
+//     app.listen(PORT, () => {
+//       console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
+//     });
+//   }
+// };
 
-startServer();
+
 
 
 // --- Access Request Submission ---
@@ -967,14 +1007,380 @@ app.get('/enroll/:token', async (req, res) => {
   return res.redirect('/student-dashboard');
 });
 
-// My courses endpoint
+
+
+// -------------------- CLASS DIRECTORY: USER CARDS APIs --------------------
+
+// Helper: get logged-in user row (can be reused later if needed)
+const getCurrentUserRecord = async (req) => {
+  const email = req.user?.emails?.[0]?.value;
+  if (!email) return null;
+  return await User.findOne({ where: { email } });
+};
+
+// GET /api/class/:courseId/professor
+// Returns the list of professors for a given course (based on course_users.role = 'Professor')
+app.get("/api/class/:courseId/professor", devSafeAuth, async (req, res) => {
+  const courseId = Number.parseInt(req.params.courseId, 10);
+  if (!Number.isFinite(courseId)) {
+    return res.status(400).json({ error: "invalid_course_id" });
+  }
+
+  try {
+    const memberships = await CourseUser.findAll({
+      where: { course_id: courseId, role: "Professor" },
+      include: [User],
+    });
+
+    const professors = memberships.map((m) => ({
+      userId: m.User.id,
+      name: m.User.name,
+      preferredName: m.User.name || null, // Currently we only have "name" on User
+      pronouns: null,                      // TODO: add real field when schema is extended
+      photo: null,                         // TODO: add avatar field in User
+      email: m.User.email,
+      phone: null,
+      links: {
+        linkedin: null,
+        github: null,
+        office_hours: null,
+        class_chat: null,
+      },
+      availability: [],                    // TODO: join availability table in the future
+    }));
+
+    return res.json({
+      offeringId: courseId,
+      professors,
+    });
+  } catch (err) {
+    console.error("Error in GET /api/class/:courseId/professor", err);
+
+    // Development-only fallback: return mock data if DB is not reachable.
+    if (process.env.NODE_ENV === "development") {
+      return res.json({
+        offeringId: courseId,
+        professors: [
+          {
+            userId: "mock-prof-1",
+            name: "John Smith",
+            preferredName: "John",
+            pronouns: "he/him",
+            photo: null,
+            email: "jsmith@ucsd.edu",
+            phone: null,
+            links: {
+              linkedin: "https://www.linkedin.com/in/john-smith",
+              github: "https://github.com/john-smith",
+              office_hours: null,
+              class_chat: null,
+            },
+            availability: [],
+          },
+        ],
+      });
+    }
+
+    return res.status(500).json({ error: "internal_error" });
+  }
+});
+
+// GET /api/class/:courseId/tas
+// Returns all TAs for a given course (course_users.role = 'TA')
+app.get("/api/class/:courseId/tas", devSafeAuth, async (req, res) => {
+  const courseId = Number.parseInt(req.params.courseId, 10);
+  if (!Number.isFinite(courseId)) {
+    return res.status(400).json({ error: "invalid_course_id" });
+  }
+
+  try {
+    const memberships = await CourseUser.findAll({
+      where: { course_id: courseId, role: "TA" },
+      include: [User],
+    });
+
+    const tas = memberships.map((m) => ({
+      userId: m.User.id,
+      name: m.User.name,
+      preferredName: m.User.name || null,
+      pronouns: null,
+      photo: null,
+      email: m.User.email,
+      section: null, // TODO: when you add a section column to CourseUser, populate it here
+      role: "TA",
+      links: {
+        linkedin: null,
+        github: null,
+        class_chat: null,
+      },
+      availability: [],
+      activity: null,
+    }));
+
+    return res.json({
+      offeringId: courseId,
+      tas,
+    });
+  } catch (err) {
+    console.error("Error in GET /api/class/:courseId/tas", err);
+
+    if (process.env.NODE_ENV === "development") {
+      return res.json({
+        offeringId: courseId,
+        tas: [
+          {
+            userId: "mock-ta-1",
+            name: "Alice Chen",
+            preferredName: "Alice",
+            pronouns: "she/her",
+            photo: null,
+            email: "alice@ucsd.edu",
+            section: "A01",
+            role: "TA",
+            links: {
+              linkedin: "https://www.linkedin.com/in/alice-chen",
+              github: "https://github.com/alice-chen",
+              class_chat: null,
+            },
+            availability: [],
+            activity: null,
+          },
+        ],
+      });
+    }
+
+    return res.status(500).json({ error: "internal_error" });
+  }
+});
+
+// GET /api/class/ta/:taId
+// Returns a single TA profile by user id (does not validate which course they belong to)
+app.get("/api/class/ta/:taId", devSafeAuth, async (req, res) => {
+  const taId = Number.parseInt(req.params.taId, 10);
+  if (!Number.isFinite(taId)) {
+    return res.status(400).json({ error: "invalid_user_id" });
+  }
+
+  try {
+    const user = await User.findByPk(taId);
+    if (!user) {
+      return res.status(404).json({ error: "ta_not_found" });
+    }
+
+    const taInfo = {
+      userId: user.id,
+      name: user.name,
+      preferredName: user.name || null,
+      pronouns: null,
+      photo: null,
+      email: user.email,
+      section: null, // TODO: can be populated via CourseUser if needed
+      role: "TA",    // This is just the card role label
+      links: {
+        linkedin: null,
+        github: null,
+        class_chat: null,
+      },
+      availability: [],
+      activity: null,
+    };
+
+    return res.json(taInfo);
+  } catch (err) {
+    console.error("Error in GET /api/class/ta/:taId", err);
+
+    if (process.env.NODE_ENV === "development") {
+      return res.json({
+        userId: taId,
+        name: "Alice Chen",
+        preferredName: "Alice",
+        pronouns: "she/her",
+        photo: null,
+        email: "alice@ucsd.edu",
+        section: "A01",
+        role: "TA",
+        links: {
+          linkedin: "https://www.linkedin.com/in/alice-chen",
+          github: "https://github.com/alice-chen",
+          class_chat: null,
+        },
+        availability: [],
+        activity: null,
+      });
+    }
+
+    return res.status(500).json({ error: "internal_error" });
+  }
+});
+
+// GET /api/class/:courseId/students
+// Returns students in a given course, with basic pagination and optional search
+app.get("/api/class/:courseId/students", devSafeAuth, async (req, res) => {
+  const courseId = Number.parseInt(req.params.courseId, 10);
+  if (!Number.isFinite(courseId)) {
+    return res.status(400).json({ error: "invalid_course_id" });
+  }
+
+  const { section, search, group, page = 1, limit = 20 } = req.query;
+  const pageNum = Number.parseInt(page, 10) || 1;
+  const limitNum = Number.parseInt(limit, 10) || 20;
+  const offset = (pageNum - 1) * limitNum;
+
+  try {
+    const whereMembership = {
+      course_id: courseId,
+      role: "Student",
+    };
+
+    // Currently CourseUser does not have section/group columns.
+    // Once you extend the schema you can add filters here, e.g.:
+    // if (section) whereMembership.section = section;
+    // if (group) whereMembership.group = group;
+
+    const { rows, count } = await CourseUser.findAndCountAll({
+      where: whereMembership,
+      include: [User],
+      offset,
+      limit: limitNum,
+    });
+
+    // In-memory filter for search across name and email
+    const filtered = rows.filter((m) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      const name = (m.User.name || "").toLowerCase();
+      const email = (m.User.email || "").toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
+
+    const students = filtered.map((m) => ({
+      userId: m.User.id,
+      name: m.User.name,
+      preferredName: m.User.name || null,
+      pronouns: null,
+      photo: null,
+      email: m.User.email,
+      section: null, // TODO: populate from CourseUser in the future
+      role: "STUDENT",
+      links: {
+        github: null,
+        linkedin: null,
+      },
+      attendance: {
+        lectures: 0, // TODO: integrate real attendance data here
+        meetings: 0,
+        officeHours: 0,
+      },
+      activity: {
+        punchCard: [],
+      },
+    }));
+
+    return res.json({
+      offeringId: courseId,
+      students,
+      page: pageNum,
+      limit: limitNum,
+      total: count,
+    });
+  } catch (err) {
+    console.error("Error in GET /api/class/:courseId/students", err);
+
+    if (process.env.NODE_ENV === "development") {
+      return res.json({
+        offeringId: courseId,
+        students: [
+          {
+            userId: "mock-student-1",
+            name: "Andy Cheng",
+            preferredName: "Andy",
+            pronouns: "he/him",
+            photo: null,
+            email: "andy@ucsd.edu",
+            section: "A02",
+            role: "STUDENT",
+            links: {
+              github: "https://github.com/andy-cheng",
+              linkedin: "https://www.linkedin.com/in/andy-cheng",
+            },
+            attendance: {
+              lectures: 12,
+              meetings: 4,
+              officeHours: 1,
+            },
+            activity: {
+              punchCard: [],
+            },
+          },
+        ],
+        page: pageNum,
+        limit: limitNum,
+        total: 1,
+      });
+    }
+
+    return res.status(500).json({ error: "internal_error" });
+  }
+});
+
+// // My courses endpoint
+// app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
+//   const email = req.user?.emails?.[0]?.value;
+//   const userRecord = await User.findOne({ where: { email } });
+//   if (!userRecord) return res.json({ courses: [] });
+//   const memberships = await CourseUser.findAll({ where: { user_id: userRecord.id }, include: [Course] });
+//   const courses = memberships.map(m => ({ id: m.Course.id, code: m.Course.code, title: m.Course.title, role: m.role }));
+//   res.json({ courses });
+// });
+
+// startServer();
+// --- My courses endpoint (define route first) ---
 app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   const email = req.user?.emails?.[0]?.value;
   const userRecord = await User.findOne({ where: { email } });
-  if (!userRecord) return res.json({ courses: [] });
-  const memberships = await CourseUser.findAll({ where: { user_id: userRecord.id }, include: [Course] });
-  const courses = memberships.map(m => ({ id: m.Course.id, code: m.Course.code, title: m.Course.title, role: m.role }));
+
+  if (!userRecord) {
+    return res.json({ courses: [] });
+  }
+
+  const memberships = await CourseUser.findAll({
+    where: { user_id: userRecord.id },
+    include: [Course],
+  });
+
+  const courses = memberships.map((m) => ({
+    id: m.Course.id,
+    code: m.Course.code,
+    title: m.Course.title,
+    role: m.role,
+  }));
+
   res.json({ courses });
 });
 
-startServer();
+// --- Start Server (LOCAL DEV: skip DB connection) ---
+const startServer = async () => {
+  console.log("NODE_ENV =", process.env.NODE_ENV);
+
+  console.warn(
+    "⚠️ Skipping sequelize.authenticate() / sequelize.sync() in LOCAL DEV. " +
+      "Any route that touches the database may still throw runtime errors."
+  );
+
+  if (HTTPS_AVAILABLE && sslOptions) {
+    https.createServer(sslOptions, app).listen(8443, () => {
+      console.log("✅ HTTPS server running at https://localhost:8443");
+    });
+  } else {
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => {
+      console.log(
+        `⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`
+      );
+    });
+  }
+};
+
+startServer().catch((err) => {
+  console.error("Unexpected error in startServer:", err);
+});
