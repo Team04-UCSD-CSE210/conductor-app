@@ -7,10 +7,9 @@
   "scripts": {
     "start": "node server.js",
     "build": "node scripts/build.js",
-    "vercel-build": "npm run build",
     "test": "node scripts/run-tests-with-coverage.js",
     "lint": "npm run lint:js || echo 'Skipping CSS/HTML/MD lint'",
-    "lint:js": "eslint .",
+    "lint:js": "npx eslint . --config config/eslint.config.js",
     "lint:css": "stylelint '**/*.css' || echo 'No CSS files found'",
     "lint:html": "htmlhint '**/*.html' || echo 'No HTML files found'",
     "lint:md": "markdownlint '**/*.md'",
