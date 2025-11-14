@@ -304,3 +304,29 @@ export function requireRole(...roles) {
     }
   };
 }
+
+// Convenience helpers to attach auth + RBAC in routes
+
+/**
+ * Protect a route with a single permission.
+ * Usage: ...protect("roster.view", "course")
+ */
+export function protect(permissionCode, scope = "global") {
+  return [authenticate, requirePermission(permissionCode, scope)];
+}
+
+/**
+ * Protect a route with "any of" multiple permissions.
+ * Usage: ...protectAny(["roster.view", "course.manage"], "course")
+ */
+export function protectAny(permissionCodes, scope = "global") {
+  return [authenticate, requireAnyPermission(permissionCodes, scope)];
+}
+
+/**
+ * Protect a route by global role(s) only.
+ * Usage: ...protectRole("admin", "instructor")
+ */
+export function protectRole(...roles) {
+  return [authenticate, requireRole(...roles)];
+}

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { EnrollmentService } from '../services/enrollment-service.js';
-import { requireRole, requireAnyPermission } from '../middleware/permission-middleware.js';
+import { protectAny, protectRole } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
@@ -9,7 +9,7 @@ const router = Router();
  * POST /enrollments
  * Body: { offering_id, user_id, course_role, status, ... }
  */
-router.post('/', requireRole('admin', 'instructor'), async (req, res) => {
+router.post('/', ...protectRole('admin', 'instructor'), async (req, res) => {
   try {
     // TODO: Get createdBy from auth middleware when authentication is implemented
     const createdBy = req.body.created_by || null;
@@ -81,10 +81,7 @@ router.get('/user/:userId', async (req, res) => {
       limit: Number(req.query.limit ?? 50),
       offset: Number(req.query.offset ?? 0),
     };
-    const enrollments = await EnrollmentService.getEnrollmentsByUser(
-      req.params.userId,
-      options
-    );
+    const enrollments = await EnrollmentService.getEnrollmentsByUser(req.params.userId, options);
     res.json(enrollments);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -92,7 +89,7 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 /**
- * Get course staff (TAs and tutors) for an offering
+ * Get staff (TA + tutor) enrollments for an offering
  * GET /enrollments/offering/:offeringId/staff?limit=50&offset=0
  */
 router.get('/offering/:offeringId/staff', async (req, res) => {
@@ -101,7 +98,7 @@ router.get('/offering/:offeringId/staff', async (req, res) => {
       limit: Number(req.query.limit ?? 50),
       offset: Number(req.query.offset ?? 0),
     };
-    const staff = await EnrollmentService.getCourseStaff(req.params.offeringId, options);
+    const staff = await EnrollmentService.getStaff(req.params.offeringId, options);
     res.json(staff);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -180,25 +177,31 @@ router.put('/:id', async (req, res) => {
  * PUT /enrollments/offering/:offeringId/user/:userId/role
  * Body: { course_role: 'ta' | 'tutor' | 'student' }
  */
-router.put('/offering/:offeringId/user/:userId/role', requireRole('admin', 'instructor'), async (req, res) => {
-  try {
-    // TODO: Get updatedBy from auth middleware when authentication is implemented
-    const updatedBy = req.body.updated_by || null;
-    const { course_role } = req.body;
-    if (!course_role || !['student', 'ta', 'tutor'].includes(course_role)) {
-      return res.status(400).json({ error: 'Invalid course_role. Must be student, ta, or tutor' });
+router.put(
+  '/offering/:offeringId/user/:userId/role',
+  ...protectRole('admin', 'instructor'),
+  async (req, res) => {
+    try {
+      // TODO: Get updatedBy from auth middleware when authentication is implemented
+      const updatedBy = req.body.updated_by || null;
+      const { course_role } = req.body;
+      if (!course_role || !['student', 'ta', 'tutor'].includes(course_role)) {
+        return res
+          .status(400)
+          .json({ error: 'Invalid course_role. Must be student, ta, or tutor' });
+      }
+      const updated = await EnrollmentService.updateCourseRole(
+        req.params.offeringId,
+        req.params.userId,
+        course_role,
+        updatedBy
+      );
+      res.json(updated);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
     }
-    const updated = await EnrollmentService.updateCourseRole(
-      req.params.offeringId,
-      req.params.userId,
-      course_role,
-      updatedBy
-    );
-    res.json(updated);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
   }
-});
+);
 
 /**
  * Drop enrollment (set status to 'dropped')
@@ -223,7 +226,7 @@ router.post('/offering/:offeringId/user/:userId/drop', async (req, res) => {
  * Delete enrollment (hard delete)
  * DELETE /enrollments/:id
  */
-router.delete('/:id', requireRole('admin', 'instructor'), async (req, res) => {
+router.delete('/:id', ...protectRole('admin', 'instructor'), async (req, res) => {
   try {
     // TODO: Get deletedBy from auth middleware when authentication is implemented
     const deletedBy = req.body.deleted_by || null;
@@ -238,14 +241,17 @@ router.delete('/:id', requireRole('admin', 'instructor'), async (req, res) => {
  * Get enrollment statistics for an offering
  * GET /enrollments/offering/:offeringId/stats
  */
-router.get('/offering/:offeringId/stats', requireAnyPermission(['roster.view', 'course.manage'], 'course'), async (req, res) => {
-  try {
-    const stats = await EnrollmentService.getEnrollmentStats(req.params.offeringId);
-    res.json(stats);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+router.get(
+  '/offering/:offeringId/stats',
+  ...protectAny(['roster.view', 'course.manage'], 'course'),
+  async (req, res) => {
+    try {
+      const stats = await EnrollmentService.getEnrollmentStats(req.params.offeringId);
+      res.json(stats);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   }
-});
+);
 
 export default router;
-

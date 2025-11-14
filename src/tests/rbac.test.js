@@ -492,6 +492,7 @@ export async function runAllRBACTests(includeIntegration = false) {
 }
 
 // Auto-run tests if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  runAllRBACTests().catch(console.error);
+if (process.argv[1].includes('rbac.test.js')) {
+  const includeIntegration = process.argv[2] === 'true';
+  runAllRBACTests(includeIntegration).catch(console.error);
 }
