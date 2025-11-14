@@ -10,7 +10,7 @@
     "GOOGLE_CALLBACK_URL": "@google_callback_url",
     "ALLOWED_GOOGLE_DOMAIN": "ucsd.edu",
     "LOGIN_FAILURE_THRESHOLD": "3",
-    "LOGIN_FAILURE_WINDOW_MINUTES": "15",
+    "LOGIN_FAILURE_WINDOW_MINUTES": "1",
     "INVITE_TTL_HOURS": "72",
     "PGSSLMODE": "require"
   },
