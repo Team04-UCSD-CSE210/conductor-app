@@ -75,11 +75,11 @@ export class EnrollmentService {
 
   /**
    * Get enrollment by offering and user
+   * Returns null if not found (doesn't throw) - allows caller to handle gracefully
    */
   static async getEnrollmentByOfferingAndUser(offeringId, userId) {
     const enrollment = await EnrollmentModel.findByOfferingAndUser(offeringId, userId);
-    if (!enrollment) throw new Error('Enrollment not found');
-    return enrollment;
+    return enrollment || null;
   }
 
   /**

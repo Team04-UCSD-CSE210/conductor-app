@@ -438,7 +438,7 @@ export class RosterService {
         if (user) {
           fullUsers.push(user);
         }
-      } catch (error) {
+      } catch {
         // Skip users that can't be found (shouldn't happen but handle gracefully)
         // User not found - skip silently
       }

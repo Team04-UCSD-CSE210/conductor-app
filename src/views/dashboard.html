@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Conductor IAM Dashboard</title>
-  <link rel="stylesheet" href="../../src/public/css/style.css">
-  <link rel="stylesheet" href="../../src/public/css/console.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/console.css">
 </head>
 
 <body class="console-body">
@@ -14,6 +15,7 @@
       <img id="userPic" class="profile-pic" src="" alt="User Picture" width="90" height="90">
       <h3 id="userName"></h3>
       <p id="userEmail"></p>
+      <p id="userRole" class="role-badge"></p>
       <button id="logoutBtn">Logout</button>
     </div>
 
@@ -23,39 +25,96 @@
       <h3>Permissions</h3>
       <ul id="permList"></ul>
     </section>
+
+    <hr>
+
+    <section id="quickLinks">
+      <h3>Quick Links</h3>
+      <div id="linksContainer"></div>
+    </section>
   </div>
 
   <script>
     async function fetchUser() {
       try {
         const res = await fetch("/api/user");
+        if (!res.ok) {
+          // If not logged in, redirect back to login
+          window.location.href = "/login";
+          return;
+        }
+        
         const user = await res.json();
         if (user.error) {
-          // If not logged in, redirect back to login
-          window.location.href = "/login.html";
+          window.location.href = "/login";
           return;
         }
 
-        // Populate info
-        document.getElementById("userPic").src = user.picture;
-        document.getElementById("userName").innerText = user.name;
-        document.getElementById("userEmail").innerText = user.email;
-
-        // Example: dynamic role-based permission list
-        const role = user.email.includes("ta") ? "Teaching Assistant"
-                    : user.email.includes("instructor") ? "Instructor"
-                    : "Student";
-        const rolePermissions = {
-          "Instructor": ["Manage roles", "View all users", "Access logs"],
-          "Teaching Assistant": ["Mark attendance", "View class data"],
-          "Student": ["Submit journal", "View attendance record"]
+        // Populate user info
+        document.getElementById("userPic").src = user.picture || "/assets/default-avatar.png";
+        document.getElementById("userPic").onerror = function() {
+          this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ccircle cx='45' cy='45' r='40' fill='%23ccc'/%3E%3Ctext x='45' y='50' text-anchor='middle' font-size='30' fill='%23666'%3E" + (user.name?.charAt(0) || 'U') + "%3C/text%3E%3C/svg%3E";
         };
-        const perms = rolePermissions[role] || [];
+        document.getElementById("userName").innerText = user.name || "User";
+        document.getElementById("userEmail").innerText = user.email || "";
+
+        // Determine role from email domain and structure
+        const email = (user.email || "").toLowerCase();
+        let role = "Student";
+        let roleDisplay = "Student";
+        
+        if (email.includes("admin") || email.includes("@ucsd.edu") && email.includes("admin")) {
+          role = "Admin";
+          roleDisplay = "Administrator";
+        } else if (email.includes("instructor") || email.includes("prof") || email.includes("professor")) {
+          role = "Instructor";
+          roleDisplay = "Instructor";
+        } else if (email.includes("ta") || email.includes("tutor")) {
+          role = "Teaching Assistant";
+          roleDisplay = "Teaching Assistant";
+        }
+        
+        document.getElementById("userRole").innerText = roleDisplay;
+        document.getElementById("userRole").className = `role-badge role-${role.toLowerCase().replace(/\s+/g, '-')}`;
+
+        // Role-based permissions
+        const rolePermissions = {
+          "Admin": ["Manage users", "Manage roles", "View all users", "Access logs", "System administration"],
+          "Instructor": ["Manage courses", "View all users", "Access logs", "Grade assignments"],
+          "Teaching Assistant": ["Mark attendance", "View class data", "Grade assignments"],
+          "Student": ["Submit assignments", "View attendance record", "View grades"]
+        };
+        const perms = rolePermissions[role] || rolePermissions["Student"];
         document.getElementById("permList").innerHTML =
           perms.map(p => `<li>${p}</li>`).join("");
+
+        // Quick links based on role
+        const quickLinks = {
+          "Admin": [
+            { text: "Admin Dashboard", href: "/admin-dashboard" },
+            { text: "User Management", href: "/api/users" }
+          ],
+          "Instructor": [
+            { text: "Faculty Dashboard", href: "/faculty-dashboard" },
+            { text: "My Courses", href: "/api/my-courses" }
+          ],
+          "Teaching Assistant": [
+            { text: "TA Dashboard", href: "/ta-dashboard" },
+            { text: "My Courses", href: "/api/my-courses" }
+          ],
+          "Student": [
+            { text: "Student Dashboard", href: "/student-dashboard" },
+            { text: "My Courses", href: "/api/my-courses" }
+          ]
+        };
+        
+        const links = quickLinks[role] || quickLinks["Student"];
+        document.getElementById("linksContainer").innerHTML =
+          links.map(link => `<a href="${link.href}" class="link-button">${link.text}</a>`).join("");
+
       } catch (err) {
         console.error("Fetch failed", err);
-        window.location.href = "/login.html";
+        window.location.href = "/login";
       }
     }
 
@@ -64,6 +123,7 @@
       window.location.href = "/logout";
     });
 
+    // Load user data on page load
     fetchUser();
   </script>
 
@@ -71,7 +131,75 @@
     .profile-pic {
       border-radius: 50%;
       margin-bottom: 10px;
-      border: 2px solid var(--accent-color);
+      border: 2px solid var(--accent-color, #007bff);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 600;
+      margin-top: 8px;
+      background-color: #e9ecef;
+      color: #495057;
+    }
+
+    .role-badge.role-admin {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .role-badge.role-instructor {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .role-badge.role-teaching-assistant {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .role-badge.role-student {
+      background-color: #17a2b8;
+      color: white;
+    }
+
+    #linksContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .link-button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: var(--accent-color, #007bff);
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .link-button:hover {
+      background-color: var(--accent-color-dark, #0056b3);
+      text-decoration: none;
+    }
+
+    #permList {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    #permList li {
+      padding: 5px 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    #permList li:last-child {
+      border-bottom: none;
     }
   </style>
 </body>
