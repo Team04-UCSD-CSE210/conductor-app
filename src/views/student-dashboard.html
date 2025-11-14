@@ -1,264 +1,161 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Student Dashboard</title>
-    <link rel="stylesheet" href="../public/reset.css" />
-    <link rel="stylesheet" href="../public/variables.css" />
-    <link rel="stylesheet" href="../public/dashboard.css" />
-  </head>
-  <body>
-    <section class="app">
-            <aside class="sidebar">
-        <p class="sidebar-role">
-          Logged in as<br /><strong>Student</strong>
-        </p>
-        <hr class="sidebar-sep" />
-        <nav aria-label="Primary">
-          <ul class="sidebar-nav">
-            <li>
-              <a class="nav-item" href="#">
-                <!-- people/roster -->
-                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="9" cy="8" r="3" />
-                  <path d="M4 18c0-3 2.5-5 5-5" />
-                  <circle cx="17" cy="10" r="2" />
-                  <path d="M14 18c0-2 1.7-3.5 3-3.5" />
-                </svg>
-                <span>Class Directory</span>
-              </a>
-            </li>
-            <li>
-              <a class="nav-item" href="#">
-                <!-- calendar -->
-                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="3" y="5" width="18" height="16" rx="2" />
-                  <path d="M8 3v4M16 3v4M3 10h18" />
-                </svg>
-                <span>Attendance</span>
-              </a>
-            </li>
-            <li>
-              <a class="nav-item" href="#">
-                <!-- journal/book -->
-                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z" />
-                  <path d="M8 4v13" />
-                </svg>
-                <span>Work Journal</span>
-              </a>
-            </li>
-            <li>
-              <a class="nav-item" href="#">
-                <!-- clipboard -->
-                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="5" y="4" width="14" height="16" rx="2" />
-                  <rect x="9" y="2" width="6" height="4" rx="1" />
-                </svg>
-                <span>Evaluations</span>
-              </a>
-            </li>
-            <li>
-              <a class="nav-item" href="#">
-                <!-- document -->
-                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
-                  <path d="M14 3v6h6" />
-                </svg>
-                <span>Documentation</span>
-              </a>
-            </li>
-            <li>
-              <a class="nav-item" href="#">
-                <!-- users -->
-                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="9" cy="9" r="3" />
-                  <circle cx="17" cy="9" r="2.5" />
-                  <path d="M3.5 19c0-3.3 3.2-5 5.5-5s5.5 1.7 5.5 5" />
-                  <path d="M14.5 19c0-1.8 1.6-3.2 3.5-3.2" />
-                </svg>
-                <span>Participation</span>
-              </a>
-            </li>
-            <li>
-              <a class="nav-item" href="#">
-                <!-- chat bubble -->
-                <svg class="nav-svg" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 5h14v10H9l-4 4V5z" />
-                </svg>
-                <span>Meetings</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
 
+  <link rel="stylesheet" href="../public/global.css">
+  <link rel="stylesheet" href="../public/dashboard-global.css">
+  <link rel="stylesheet" href="../public/student-dashboard.css">
+</head>
 
-      <main class="main" role="main">
-        <header class="header">
-          <h1>Student Dashboard</h1>
-          <p>Track your progress and stay organized</p>
-        </header>
+<body class="dashboard-page">
 
-        <!-- Stats -->
-        <section class="stats" aria-label="Quick stats">
-          <article class="card stat-card">
-            <header class="stat-head">
-              <span>Attendance Rate</span>
-              <span class="icon icon-calendar" aria-hidden="true"></span>
-            </header>
-            <strong class="stat-value" aria-label="Attendance rate 96 percent">96%</strong>
+  <!-- Hamburger Menu Button (mobile only, same as professor) -->
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <!-- Sidebar Navigation (reuse professor styling) -->
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="../assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/attendance">Attendance</a>
+      <a href="/work-journal">Work Journal</a>
+      <a href="/my-team">My Team</a>
+    </nav>
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </footer>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container" id="main">
+    <h2 class="page-title">Dashboard</h2>
+
+    <section class="frame" role="region" aria-label="Student dashboard content">
+      <section class="content">
+
+        <!-- TOP ROW: Course info (left) + Recent Activity (right) -->
+        <section class="top-cards-wrapper">
+
+          <!-- Course Info (professor-style card) -->
+          <article class="card card-course-info" aria-label="Course information">
+            <strong class="course-code">CSE 210</strong>
+            <p class="course-title">Software Engineering</p>
+            <p class="course-term">Fall 2025</p>
+
+            <dl class="course-schedule">
+              <dt>Lectures</dt>
+              <dd>Tue/Thu 5:00–6:20 pm</dd>
+
+              <dt>Office Hours</dt>
+              <dd>Tue 2–4 pm</dd>
+            </dl>
+
+            <figure class="course-stats">
+              <figcaption class="stat-item">
+                <span class="stat-value">13</span>
+                <span class="stat-label">Group Members</span>
+              </figcaption>
+              <figcaption class="stat-item">
+                <span class="stat-value">2</span>
+                <span class="stat-label">Assignments Due</span>
+              </figcaption>
+              <figcaption class="stat-item">
+                <span class="stat-value">4</span>
+                <span class="stat-label">Weeks Left</span>
+              </figcaption>
+            </figure>
           </article>
 
-          <article class="card stat-card">
-            <header class="stat-head">
-              <span>Tasks Completed</span>
-              <span class="icon icon-menu" aria-hidden="true"></span>
-            </header>
-            <strong class="stat-value" aria-label="Tasks completed 24 of 28">24/28</strong>
+          <!-- Recent Activity (now top-right card) -->
+          <article class="card" aria-label="Recent activity">
+            <h3>Recent Activity</h3>
+            <section class="student-card-body">
+              <p><strong>Tasks completed:</strong> Finished API unit tests, submitted Week 6 reflection</p>
+              <p><strong>Upcoming tasks:</strong> Finalize slides for Thursday presentation, update team repo README</p>
+              <p><strong>Recent communications:</strong> TA left feedback on sprint board; team lead requested slide draft by Tuesday night</p>
+            </section>
           </article>
 
-          <article class="card stat-card">
-            <header class="stat-head">
-              <span>Team Members</span>
-              <span class="icon icon-users" aria-hidden="true"></span>
-            </header>
-            <strong class="stat-value">5</strong>
-          </article>
-
-          <article class="card stat-card">
-            <header class="stat-head">
-              <span>Journal Entries</span>
-              <span class="icon icon-doc" aria-hidden="true"></span>
-            </header>
-            <strong class="stat-value">42</strong>
-          </article>
         </section>
 
-        <!-- Tasks & Events -->
-        <section class="grid" aria-label="Tasks and events">
-          <article class="card">
-            <h2>My Tasks</h2>
-            <p class="muted">Your current assignments</p>
-            <ul class="list" aria-label="Task list">
-              <li class="list-row">
-                <section class="row-main">
-                  <p class="row-title">Complete user authentication module</p>
-                  <p class="row-sub">
-                    <span>Due: Today</span>
-                    <span class="chip chip-status">In Progress</span>
-                  </p>
-                </section>
-                <span class="chip chip-high" aria-label="priority high">high</span>
-              </li>
+        <!-- REPORTS + MENTAL HEALTH ROW -->
+        <section class="content-row student-mid-row">
 
-              <li class="list-row">
-                <section class="row-main">
-                  <p class="row-title">Write unit tests for API endpoints</p>
-                  <p class="row-sub">
-                    <span>Due: Tomorrow</span>
-                    <span class="chip chip-status">To Do</span>
-                  </p>
-                </section>
-                <span class="chip chip-high" aria-label="priority high">high</span>
-              </li>
-
-              <li class="list-row">
-                <section class="row-main">
-                  <p class="row-title">Review teammate's pull request</p>
-                  <p class="row-sub">
-                    <span>Due: Nov 7</span>
-                    <span class="chip chip-status">To Do</span>
-                  </p>
-                </section>
-                <span class="chip chip-medium" aria-label="priority medium">medium</span>
-              </li>
-
-              <li class="list-row">
-                <section class="row-main">
-                  <p class="row-title">Update project documentation</p>
-                  <p class="row-sub">
-                    <span>Due: Nov 8</span>
-                    <span class="chip chip-status">To Do</span>
-                  </p>
-                </section>
-                <span class="chip chip-low" aria-label="priority low">low</span>
-              </li>
-            </ul>
+          <!-- Reports -->
+          <article class="card student-reports-card" aria-label="Reports">
+            <h3>Reports</h3>
+            <section class="student-card-body">
+              <section class="student-placeholder-box">
+                <p><strong>Status report</strong></p>
+                <p>High-level summary of what you accomplished this week and what’s blocked.</p>
+              </section>
+              <section class="student-placeholder-box">
+                <p><strong>Visual diagram of work done</strong></p>
+                <p>Space for architecture diagrams, workflow sketches, or links to design docs.</p>
+              </section>
+            </section>
           </article>
 
-          <article class="card">
-            <h2>Upcoming Events</h2>
-            <p class="muted">Your schedule</p>
-            <ul class="list" aria-label="Upcoming events">
-              <li class="list-row">
-                <section class="row-main">
-                  <p class="row-title">Team Stand-up Meeting</p>
-                  <p class="row-sub">Today, 10:00 AM</p>
-                </section>
-                <span class="icon icon-calendar soft" aria-hidden="true"></span>
-              </li>
-
-              <li class="list-row">
-                <section class="row-main">
-                  <p class="row-title">Lab Session</p>
-                  <p class="row-sub">Today, 2:00 PM</p>
-                </section>
-                <span class="icon icon-calendar soft" aria-hidden="true"></span>
-              </li>
-
-              <li class="list-row">
-                <section class="row-main">
-                  <p class="row-title">TA Check-in</p>
-                  <p class="row-sub">Tomorrow, 3:00 PM</p>
-                </section>
-                <span class="icon icon-calendar soft" aria-hidden="true"></span>
-              </li>
-
-              <li class="list-row">
-                <section class="row-main">
-                  <p class="row-title">Sprint Review</p>
-                  <p class="row-sub">Nov 8, 11:00 AM</p>
-                </section>
-                <span class="icon icon-calendar soft" aria-hidden="true"></span>
-              </li>
-            </ul>
+          <!-- Mental Health -->
+          <article class="card student-mental-card" aria-label="Mental health check-ins">
+            <h3>Mental Health</h3>
+            <section class="student-card-body">
+              <section class="student-placeholder-box">
+                <p><strong>Pulses</strong></p>
+                <p>How are you feeling personally, about your team, and about the course this week?</p>
+                <p>If something isn’t going well, you can leave notes here so staff know how to support you.</p>
+              </section>
+            </section>
           </article>
+
         </section>
 
-        <!-- Progress -->
-        <article class="card">
-          <h2>Course Progress</h2>
-          <p class="muted">Your overall performance</p>
+        <!-- AVAILABILITY / CALENDAR -->
+        <section class="card student-availability-card" aria-label="Availability">
+          <h3>Weekly Calendar</h3>
+          <section class="student-card-body">
+            <p><strong>This week:</strong> Team presentation due on Thursday during lecture.</p>
 
-          <section class="stack" aria-label="Progress bars">
-            <section class="progress-row">
-              <p class="progress-label">
-                <span>Participation Score</span>
-                <span>88/100</span>
-              </p>
-              <progress class="progress" value="88" max="100" aria-label="Participation score 88 of 100"></progress>
-            </section>
-
-            <section class="progress-row">
-              <p class="progress-label">
-                <span>Assignment Completion</span>
-                <span>24/28 (86%)</span>
-              </p>
-              <progress class="progress" value="86" max="100" aria-label="Assignment completion 86 percent"></progress>
-            </section>
-
-            <section class="progress-row">
-              <p class="progress-label">
-                <span>Team Contribution</span>
-                <span>92/100</span>
-              </p>
-              <progress class="progress" value="92" max="100" aria-label="Team contribution 92 of 100"></progress>
+            <section class="student-placeholder-box student-availability-box">
+              <p>Weekly calendar placeholder</p>
+              <table class="student-calendar" aria-label="Weekly availability">
+                <thead>
+                  <tr>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td></td>
+                    <td>5:00–6:20pm<br>Lecture</td>
+                    <td></td>
+                    <td class="student-calendar-event">5:00–6:20pm<br>Lecture + Presentation</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
             </section>
           </section>
-        </article>
-      </main>
+        </section>
+
+      </section>
     </section>
-  </body>
+  </main>
+
+  <script src="../public/professor-dashboard.js" defer></script>
+</body>
 </html>
