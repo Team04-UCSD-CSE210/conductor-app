@@ -24,7 +24,7 @@ import interactionRoutes from "./routes/interaction-routes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Since server.js is in src/, views are in src/views relative to project root, but "views" relative to src/
-const VIEW_DIR = "views"
+const VIEW_DIR = process.env.VERCEL ? "public" : "views"
 
 dotenv.config();
 

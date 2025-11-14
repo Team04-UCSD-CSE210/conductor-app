@@ -194,8 +194,8 @@ describe('Database Connection and Initialization', () => {
         
         // Insert test data
         await client.query(`
-          INSERT INTO users (email, name, primary_role, status)
-          VALUES ('transaction-test@example.com', 'Test User', 'student', 'active')
+          INSERT INTO users (email, name, primary_role, status, institution_type)
+          VALUES ('transaction-test@example.com', 'Test User', 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
         `);
         
         // Verify it exists in transaction

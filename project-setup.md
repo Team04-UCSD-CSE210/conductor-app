@@ -1,3 +1,5 @@
+# Project Setup Guide
+
 ## Environment Variables
 
 Create a `.env` file at the project root before running `npm start`. Required keys:
@@ -71,7 +73,8 @@ Redis also backs the server-side login throttle. Configure guardrails in `.env`:
 - `LOGIN_FAILURE_WINDOW_MINUTES` — rolling window for measuring failures (default `15`)
 - `ALLOWED_GOOGLE_DOMAIN` — permitted Google Workspace domain (`ucsd.edu` by default)
 
-When the threshold is exceeded, the app records a `LOGIN_RATE_LIMITED` audit entry and rejects new sign-in attempts until the window expires.
+When the threshold is exceeded, the app records a `LOGIN_RATE_LIMITED` audit entry
+and rejects new sign-in attempts until the window expires.
 
 ### Auth Log Retention
 
@@ -99,7 +102,6 @@ Follow this procedure to prepare a local PostgreSQL instance:
    ```
 
 3. Disconnect from the session with `\q`.
-
 
 ### Steps to run the application
 

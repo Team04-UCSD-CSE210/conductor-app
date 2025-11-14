@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document provides a comprehensive audit of all authentication and login-related features, files, and implementations in the Conductor application.
+This document provides a comprehensive audit of all authentication and login-related
+features, files, and implementations in the Conductor application.
 
 **Last Updated**: 2025-01-XX  
 **Authentication Method**: Google OAuth 2.0  
@@ -15,13 +16,13 @@ This document provides a comprehensive audit of all authentication and login-rel
 
 1. [Core Features](#core-features)
 2. [Architecture & Flow](#architecture--flow)
-3. [Files & Components](#files--components)
-4. [Routes & Endpoints](#routes--endpoints)
+3. [Files & Components](#files-components)
+4. [Routes & Endpoints](#routes-endpoints)
 5. [Database Models](#database-models)
 6. [Security Features](#security-features)
 7. [Dependencies](#dependencies)
 8. [Environment Variables](#environment-variables)
-9. [User Roles & Types](#user-roles--types)
+9. [User Roles & Types](#user-roles-types)
 10. [Login Flow Diagrams](#login-flow-diagrams)
 
 ---
@@ -29,41 +30,48 @@ This document provides a comprehensive audit of all authentication and login-rel
 ## Core Features
 
 ### 1. **Google OAuth 2.0 Authentication**
-   - Passport.js integration with Google OAuth 2.0 strategy
-   - Supports UCSD domain (@ucsd.edu) and whitelisted extension students
-   - Automatic user provisioning on first login
+
+- Passport.js integration with Google OAuth 2.0 strategy
+- Supports UCSD domain (@ucsd.edu) and whitelisted extension students
+- Automatic user provisioning on first login
 
 ### 2. **Session Management**
-   - Redis-backed session store for scalability
-   - Express-session middleware for session handling
-   - Session persistence across requests
+
+- Redis-backed session store for scalability
+- Express-session middleware for session handling
+- Session persistence across requests
 
 ### 3. **Rate Limiting & Security**
-   - Redis-based login attempt tracking
-   - Configurable failure thresholds and time windows
-   - Whitelist bypass for approved users
-   - IP and email-based tracking
+
+- Redis-based login attempt tracking
+- Configurable failure thresholds and time windows
+- Whitelist bypass for approved users
+- IP and email-based tracking
 
 ### 4. **Access Control**
-   - Whitelist system for extension students
-   - Access request workflow for non-UCSD users
-   - Admin approval system
-   - Role-based dashboard routing
+
+- Whitelist system for extension students
+- Access request workflow for non-UCSD users
+- Admin approval system
+- Role-based dashboard routing
 
 ### 5. **Authentication Logging**
-   - Comprehensive audit logging of all auth events
-   - Event types: LOGIN_SUCCESS, LOGIN_FAILURE, LOGIN_RATE_LIMITED, etc.
-   - IP address, user email, and metadata tracking
+
+- Comprehensive audit logging of all auth events
+- Event types: LOGIN_SUCCESS, LOGIN_FAILURE, LOGIN_RATE_LIMITED, etc.
+- IP address, user email, and metadata tracking
 
 ### 6. **User Registration Flow**
-   - Unregistered users redirected to registration page
-   - Role selection (Admin, Professor, TA, Student)
-   - Automatic course enrollment for students
+
+- Unregistered users redirected to registration page
+- Role selection (Admin, Professor, TA, Student)
+- Automatic course enrollment for students
 
 ### 7. **Course Enrollment**
-   - Token-based enrollment system
-   - Invite generation for UCSD and extension students
-   - Role-based enrollment (Student, TA, Tutor, Professor)
+
+- Token-based enrollment system
+- Invite generation for UCSD and extension students
+- Role-based enrollment (Student, TA, Tutor, Professor)
 
 ---
 
@@ -71,7 +79,7 @@ This document provides a comprehensive audit of all authentication and login-rel
 
 ### High-Level Architecture
 
-```
+```text
 ┌─────────────┐
 │   Browser   │
 └──────┬──────┘
@@ -116,7 +124,7 @@ This document provides a comprehensive audit of all authentication and login-rel
 │  Role-Based     │
 │   Dashboard     │
 └─────────────────┘
-```
+```text
 
 ### Login Flow Sequence
 
@@ -154,11 +162,12 @@ This document provides a comprehensive audit of all authentication and login-rel
 
 ---
 
-## Files & Components
+## Files & Components {#files-components}
 
 ### Core Server Files
 
 #### `server.js` (Root)
+
 - **Purpose**: Main application server with OAuth and session management
 - **Lines**: ~957
 - **Key Responsibilities**:
@@ -172,15 +181,17 @@ This document provides a comprehensive audit of all authentication and login-rel
   - Auth event logging
 
 #### `src/config/db.js`
+
 - **Purpose**: Sequelize database configuration
 - **Key Features**:
   - PostgreSQL connection setup
   - SSL mode configuration
   - Dialect options builder
 
-### Database Models
+### Database Models (Sequelize)
 
 #### `src/models/auth-log.js`
+
 - **Purpose**: Authentication event logging model
 - **Table**: `auth_logs`
 - **Fields**:
@@ -194,6 +205,7 @@ This document provides a comprehensive audit of all authentication and login-rel
   - `created_at` (TIMESTAMP)
 
 #### `src/models/whitelist.js`
+
 - **Purpose**: Whitelist management for extension students
 - **Table**: `whitelist`
 - **Fields**:
@@ -202,6 +214,7 @@ This document provides a comprehensive audit of all authentication and login-rel
   - `approved_at` (TIMESTAMP)
 
 #### `src/models/access-request.js`
+
 - **Purpose**: Access request tracking for non-UCSD users
 - **Table**: `access_requests`
 - **Fields**:
@@ -210,6 +223,7 @@ This document provides a comprehensive audit of all authentication and login-rel
   - `requested_at` (TIMESTAMP)
 
 #### `src/models/course-models.js`
+
 - **Purpose**: Course, enrollment, and invite models
 - **Tables**:
   - `courses`
@@ -219,12 +233,14 @@ This document provides a comprehensive audit of all authentication and login-rel
 ### View Files
 
 #### `src/views/login.html`
+
 - **Purpose**: Login page UI
 - **Features**:
   - Google OAuth button
   - Redirects to `/auth/google`
 
 #### `src/views/register.html`
+
 - **Purpose**: User registration page
 - **Features**:
   - Role selection dropdown
@@ -232,6 +248,7 @@ This document provides a comprehensive audit of all authentication and login-rel
   - Available roles: Admin, Instructor, Student
 
 #### `src/views/blocked.html`
+
 - **Purpose**: Access denied page
 - **Features**:
   - Shows blocked email
@@ -239,6 +256,7 @@ This document provides a comprehensive audit of all authentication and login-rel
   - Admin contact information
 
 #### Dashboard Views
+
 - `src/views/admin-dashboard.html`
 - `src/views/professor-dashboard.html`
 - `src/views/ta-dashboard.html`
@@ -248,17 +266,19 @@ This document provides a comprehensive audit of all authentication and login-rel
 ### Scripts
 
 #### `scripts/prune-auth-logs.js`
+
 - **Purpose**: Cleanup old authentication logs
 - **Usage**: `npm run prune:auth-logs`
 
 ### Tests
 
 #### `tests/auth-log.test.js`
+
 - **Purpose**: Authentication log model tests
 
 ---
 
-## Routes & Endpoints
+## Routes & Endpoints {#routes-endpoints}
 
 ### Authentication Routes
 
@@ -318,7 +338,7 @@ This document provides a comprehensive audit of all authentication and login-rel
 
 ---
 
-## Database Models
+## Database Models {#database-models}
 
 ### User Model (Defined in `server.js`)
 
@@ -329,7 +349,7 @@ User {
   user_type: ENUM('Admin', 'Professor', 'TA', 'Student', 'Unregistered')
   created_at: DATE
 }
-```
+```text
 
 ### AuthLog Model
 
@@ -344,7 +364,7 @@ AuthLog {
   metadata: JSONB
   created_at: TIMESTAMP
 }
-```
+```text
 
 ### Whitelist Model
 
@@ -354,7 +374,7 @@ Whitelist {
   approved_by: STRING
   approved_at: TIMESTAMP
 }
-```
+```text
 
 ### AccessRequest Model
 
@@ -364,7 +384,7 @@ AccessRequest {
   reason: TEXT
   requested_at: DATE
 }
-```
+```text
 
 ### Course Models
 
@@ -394,61 +414,66 @@ Invite {
   verified: BOOLEAN
   accepted_at: DATE
 }
-```
+```text
 
 ---
 
-## Security Features
+## Security Features {#security-features}
 
 ### 1. **Rate Limiting**
-   - **Storage**: Redis
-   - **Key Format**: `login_attempts:{identifier}`
-   - **Identifier**: Email (if available) or IP address
-   - **Threshold**: `LOGIN_FAILURE_THRESHOLD` (default: 3)
-   - **Window**: `LOGIN_FAILURE_WINDOW_MINUTES` (default: 15 minutes)
-   - **Bypass**: Whitelisted users bypass rate limits
+
+- **Storage**: Redis
+- **Key Format**: `login_attempts:{identifier}`
+- **Identifier**: Email (if available) or IP address
+- **Threshold**: `LOGIN_FAILURE_THRESHOLD` (default: 3)
+- **Window**: `LOGIN_FAILURE_WINDOW_MINUTES` (default: 15 minutes)
+- **Bypass**: Whitelisted users bypass rate limits
 
 ### 2. **Domain Validation**
-   - UCSD emails (@ucsd.edu) automatically allowed
-   - Non-UCSD emails require whitelist approval
-   - Domain extracted from Google profile `hd` field
+
+- UCSD emails (@ucsd.edu) automatically allowed
+- Non-UCSD emails require whitelist approval
+- Domain extracted from Google profile `hd` field
 
 ### 3. **Session Security**
-   - Redis-backed sessions (not in-memory)
-   - Session secret required from environment
-   - HTTPS support (if certificates available)
-   - Session destruction on logout
+
+- Redis-backed sessions (not in-memory)
+- Session secret required from environment
+- HTTPS support (if certificates available)
+- Session destruction on logout
 
 ### 4. **Authentication Middleware**
-   - `ensureAuthenticated` middleware protects routes
-   - Logs unauthorized access attempts
-   - JSON/HTML response based on request type
+
+- `ensureAuthenticated` middleware protects routes
+- Logs unauthorized access attempts
+- JSON/HTML response based on request type
 
 ### 5. **Auth Event Logging**
-   - All authentication events logged
-   - IP address tracking
-   - Metadata capture for debugging
-   - Event types:
-     - `LOGIN_SUCCESS`
-     - `LOGIN_FAILURE`
-     - `LOGIN_RATE_LIMITED`
-     - `LOGIN_REJECTED_DOMAIN`
-     - `LOGIN_SUCCESS_WHITELIST`
-     - `LOGIN_SUCCESS_WHITELIST_BYPASS`
-     - `LOGIN_ERROR`
-     - `ROUTE_UNAUTHORIZED_ACCESS`
-     - `PROFILE_UNAUTHORIZED`
-     - `ENROLL_SUCCESS`
-     - `ENROLL_REJECTED_DOMAIN`
-     - `INVITE_INVALID`
-     - `INVITE_EMAIL_MISMATCH`
-     - `ACCESS_REQUEST_SUBMITTED`
-     - `ACCESS_REQUEST_UPDATED`
-     - `COURSE_FORBIDDEN`
+
+- All authentication events logged
+- IP address tracking
+- Metadata capture for debugging
+- Event types:
+  - `LOGIN_SUCCESS`
+  - `LOGIN_FAILURE`
+  - `LOGIN_RATE_LIMITED`
+  - `LOGIN_REJECTED_DOMAIN`
+  - `LOGIN_SUCCESS_WHITELIST`
+  - `LOGIN_SUCCESS_WHITELIST_BYPASS`
+  - `LOGIN_ERROR`
+  - `ROUTE_UNAUTHORIZED_ACCESS`
+  - `PROFILE_UNAUTHORIZED`
+  - `ENROLL_SUCCESS`
+  - `ENROLL_REJECTED_DOMAIN`
+  - `INVITE_INVALID`
+  - `INVITE_EMAIL_MISMATCH`
+  - `ACCESS_REQUEST_SUBMITTED`
+  - `ACCESS_REQUEST_UPDATED`
+  - `COURSE_FORBIDDEN`
 
 ---
 
-## Dependencies
+## Dependencies {#dependencies}
 
 ### Core Authentication
 
@@ -460,7 +485,7 @@ Invite {
   "connect-redis": "^9.0.0",
   "redis": "^5.9.0"
 }
-```
+```text
 
 ### Database
 
@@ -470,7 +495,7 @@ Invite {
   "pg": "^8.16.3",
   "pg-hstore": "^2.3.4"
 }
-```
+```text
 
 ### Utilities
 
@@ -480,11 +505,11 @@ Invite {
   "dotenv": "^17.2.3",
   "cors": "^2.8.5"
 }
-```
+```text
 
 ---
 
-## Environment Variables
+## Environment Variables {#environment-variables}
 
 ### Required Variables
 
@@ -506,7 +531,7 @@ REDIS_URL=redis://localhost:6379
 
 # Domain
 ALLOWED_GOOGLE_DOMAIN=ucsd.edu
-```
+```text
 
 ### Optional Variables
 
@@ -522,11 +547,11 @@ INVITE_SECRET=your_invite_secret
 # Server
 PORT=8080
 VERCEL=true|false
-```
+```text
 
 ---
 
-## User Roles & Types
+## User Roles & Types {#user-roles-types}
 
 ### User Types (user_type enum)
 
@@ -564,11 +589,11 @@ VERCEL=true|false
 
 ---
 
-## Login Flow Diagrams
+## Login Flow Diagrams {#login-flow-diagrams}
 
 ### Successful UCSD Login
 
-```
+```text
 User → /login
   ↓
 Click "Sign in with Google"
@@ -592,11 +617,11 @@ Redirect based on user_type:
   ├─ TA → /ta-dashboard
   ├─ Student → /student-dashboard
   └─ Unregistered → /register.html
-```
+```text
 
 ### Whitelisted Extension Student Login
 
-```
+```text
 User → /login
   ↓
 Click "Sign in with Google"
@@ -622,11 +647,11 @@ User selects role → POST /register/submit
 Redirect to /auth/google (re-login)
   ↓
 Dashboard based on selected role
-```
+```text
 
 ### Rejected Login (Non-Whitelisted)
 
-```
+```text
 User → /login
   ↓
 Click "Sign in with Google"
@@ -647,11 +672,11 @@ Passport Strategy:
 Redirect to /auth/failure
   ↓
 Show blocked.html with access request form
-```
+```text
 
 ### Rate Limited Login
 
-```
+```text
 User → /login
   ↓
 Multiple failed attempts
@@ -668,7 +693,7 @@ Passport Strategy:
 Redirect to /auth/failure
   ↓
 Show "Too many failed attempts" message
-```
+```text
 
 ---
 
@@ -678,7 +703,8 @@ Show "Too many failed attempts" message
 
 ```javascript
 ensureAuthenticated(req, res, next)
-```
+```text
+
 - Checks if user is authenticated via `req.isAuthenticated()`
 - Logs unauthorized access attempts
 - Redirects to `/login` if not authenticated
@@ -698,21 +724,21 @@ recordFailedLoginAttempt(identifier)
 
 clearLoginAttempts(identifier)
 // Clears attempt counter from Redis
-```
+```text
 
 ### Auth Logging
 
 ```javascript
 logAuthEvent(eventType, { req, message, userEmail, userId, metadata })
 // Logs authentication event to auth_logs table
-```
+```text
 
 ### User Management
 
 ```javascript
 User.findOrCreate({ where: { email }, defaults: {...} })
 // Creates user if doesn't exist, returns existing if found
-```
+```text
 
 ---
 
@@ -743,9 +769,10 @@ User.findOrCreate({ where: { email }, defaults: {...} })
 ### Pruning Auth Logs
 
 Run periodically to clean old logs:
+
 ```bash
 npm run prune:auth-logs
-```
+```text
 
 ### Monitoring
 
@@ -791,8 +818,4 @@ npm run prune:auth-logs
 - Access requests can be approved by admins via `/admin/approve`
 
 ---
-
-**Document Version**: 1.0  
-**Maintained By**: Development Team  
-**Last Review**: 2025-01-XX
 

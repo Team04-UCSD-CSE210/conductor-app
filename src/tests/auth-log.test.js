@@ -12,7 +12,8 @@ describe('Auth Logs (Postgres)', () => {
 
   beforeEach(async () => {
     // Clean up auth logs before each test
-    await pool.query('TRUNCATE TABLE auth_logs RESTART IDENTITY CASCADE');
+    // Use DELETE instead of TRUNCATE to avoid deadlocks in concurrent tests
+    await pool.query('DELETE FROM auth_logs');
   });
 
   afterAll(async () => {
@@ -36,7 +37,14 @@ describe('Auth Logs (Postgres)', () => {
     });
 
     it('should create auth log with all fields', async () => {
-      const userId = '00000000-0000-0000-0000-000000000001';
+      // Create a test user first to satisfy foreign key constraint
+      const userResult = await pool.query(`
+        INSERT INTO users (email, name, primary_role, status, institution_type)
+        VALUES ('user@example.com', 'Test User', 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum)
+        RETURNING id
+      `);
+      const userId = userResult.rows[0].id;
+      
       const metadata = { attempts: 2, reason: 'rate_limited' };
       
       const result = await pool.query(`
@@ -64,10 +72,10 @@ describe('Auth Logs (Postgres)', () => {
 
     it('should create auth log with default empty metadata', async () => {
       const result = await pool.query(`
-        INSERT INTO auth_logs (event_type, message, user_email)
-        VALUES ($1, $2, $3)
+        INSERT INTO auth_logs (event_type, message, user_email, metadata)
+        VALUES ($1, $2, $3, $4::jsonb)
         RETURNING *
-      `, ['LOGIN_SUCCESS', 'User logged in', 'test@example.com']);
+      `, ['LOGIN_SUCCESS', 'User logged in', 'test@example.com', '{}']);
 
       expect(result.rows[0].metadata).toEqual({});
     });
@@ -179,6 +187,11 @@ describe('Auth Logs (Postgres)', () => {
   });
 
   describe('Auth Log Event Types', () => {
+    beforeEach(async () => {
+      // Clean up before this specific test suite
+      await pool.query('DELETE FROM auth_logs');
+    });
+
     const eventTypes = [
       'LOGIN_SUCCESS',
       'LOGIN_FAILURE',

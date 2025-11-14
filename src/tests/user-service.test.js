@@ -9,8 +9,11 @@ describe('UserService (business rules)', () => {
   });
 
   beforeEach(async () => {
-    await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
-    await pool.query('TRUNCATE TABLE activity_logs RESTART IDENTITY CASCADE');
+    // Use DELETE instead of TRUNCATE to avoid deadlocks
+    await pool.query('DELETE FROM activity_logs');
+    await pool.query('DELETE FROM enrollments');
+    await pool.query('DELETE FROM auth_logs');
+    await pool.query('DELETE FROM users');
   });
 
   afterAll(async () => {
