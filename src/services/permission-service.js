@@ -2,8 +2,7 @@
  * PermissionService
  * ------------------------------------------------------------
  * Unified RBAC permission checker for global, course, and team
- * role layers. Uses a single SQL query per check and optional
- * LRU caching for performance.
+ * role layers. Uses a single SQL query per check.
  *
  * Role layers supported:
  *   - Global role (users.role)
@@ -21,13 +20,7 @@
  * ------------------------------------------------------------
  */
 
-import LRU from "lru-cache";
 import { pool } from "../db.js";
-
-// ------------------------------------------------------------
-// Cache each permission check for 1 minute
-// ------------------------------------------------------------
-const cache = new LRU({ max: 10000, ttl: 60_000 });
 
 
 
@@ -51,11 +44,6 @@ export class PermissionService {
    */
   static async hasPermission(userId, permissionCode, offeringId = null, teamId = null) {
     if (!userId || !permissionCode) return false;
-
-    // Cache key
-    const key = `${userId}:${permissionCode}:${offeringId ?? "no-course"}:${teamId ?? "no-team"}`;
-    const cached = cache.get(key);
-    if (cached !== undefined) return cached;
 
     // ------------------------------------------------------------
     // Single SQL that checks:
@@ -142,7 +130,6 @@ export class PermissionService {
     const { rows } = await pool.query(sql, [permissionCode, userId, offeringId, teamId]);
     const allowed = rows[0]?.allowed === true;
 
-    cache.set(key, allowed);
     return allowed;
   }
 

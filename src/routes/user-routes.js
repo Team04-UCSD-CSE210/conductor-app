@@ -3,7 +3,7 @@ import multer from 'multer';
 import { UserService } from '../services/user-service.js';
 import { RosterService } from '../services/roster-service.js';
 import { rosterImportLimiter } from '../middleware/rate-limiter.js';
-import { requirePermission, requireRole } from '../middleware/permission-middleware.js';
+import { requireRole } from '../middleware/permission-middleware.js';
 
 const router = Router();
 

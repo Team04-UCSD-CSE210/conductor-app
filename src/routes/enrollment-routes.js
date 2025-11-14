@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { EnrollmentService } from '../services/enrollment-service.js';
-import { requirePermission, requireAnyPermission } from '../middleware/permission-middleware.js';
+import { requireRole, requireAnyPermission } from '../middleware/permission-middleware.js';
 
 const router = Router();
 

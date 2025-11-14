@@ -2,7 +2,7 @@ import express from 'express';
 import { assertDb } from './db.js';
 import userRoutes from './routes/user-routes.js';
 import enrollmentRoutes from './routes/enrollment-routes.js';
-import { skipAuthForPublic } from './middleware/auth-middleware.js';
+import { skipAuthForPublic } from './middleware/permission-middleware.js';
 
 async function main() {
   console.log('[server] booting…');
