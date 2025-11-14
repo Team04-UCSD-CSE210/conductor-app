@@ -19,7 +19,7 @@ import bodyParser from "body-parser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const VIEW_DIR = "src/views"
+const VIEW_DIR = process.env.VERCEL ? "public" : "src/views"
 
 dotenv.config();
 
@@ -46,9 +46,15 @@ try {
 
 const app = express();
 // Serve static frontend assets
-app.use(express.static(path.join(__dirname, "src/views")));
-app.use(express.static(path.join(__dirname, "src/public")));
-app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
+if (process.env.VERCEL) {
+  // In production, serve from public directory
+  app.use(express.static(path.join(__dirname, "public")));
+} else {
+  // In development, serve from src directories
+  app.use(express.static(path.join(__dirname, "src/views")));
+  app.use(express.static(path.join(__dirname, "src/public")));
+  app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
+}
 
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -418,9 +424,6 @@ app.get("/student-dashboard", ensureAuthenticated, (req, res) => res.sendFile(bu
 app.get("/ta-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("ta-dashboard.html")));
 app.get("/faculty-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("professor-dashboard.html")));
 app.get("/admin-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("admin-dashboard.html")));
-
-// serve all your static files (HTML, CSS, JS, etc.)
-app.use(express.static(__dirname));
 
 // Serve blocked page with injected email (before static middleware)
 app.get("/blocked.html", (req, res) => {
