@@ -22,7 +22,10 @@ jobs:
         
       - name: Run tests
         run: npm test
+<<<<<<< HEAD
         timeout-minutes: 5
+=======
+>>>>>>> main
         
       - name: Deploy to Vercel (Preview)
         if: github.event_name == 'pull_request'

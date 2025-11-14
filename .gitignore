@@ -4,5 +4,8 @@ AGENTS.md
 node_modules
 certs/
 .envpublic/
+<<<<<<< HEAD
 .env
 .vercel
+=======
+>>>>>>> main
