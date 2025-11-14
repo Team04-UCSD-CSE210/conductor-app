@@ -1,7 +1,7 @@
 {
   "name": "login",
   "version": "1.0.0",
-  "description": "",
+  "description": "Final project for CSE 210.",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -39,7 +39,7 @@
     "@eslint/json": "^0.14.0",
     "@eslint/markdown": "^7.5.1",
     "eslint": "^9.39.1",
-     "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react": "^7.37.5",
     "globals": "^16.5.0",
     "htmlhint": "^1.1.4",
     "jsdoc": "^4.0.2",
@@ -47,8 +47,6 @@
     "stylelint": "^16.0.0",
     "stylelint-config-standard": "^36.0.0"
   },
-  "description": "Final project for CSE 210.",
-  "main": "commitlint.config.js",
   "directories": {
     "doc": "docs"
   },
@@ -56,9 +54,6 @@
     "type": "git",
     "url": "git+https://github.com/CSE210-FA25-Team04/conductor-app.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/CSE210-FA25-Team04/conductor-app/issues"
   },
