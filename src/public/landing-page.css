@@ -63,6 +63,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  text-align: center;
 }
 
 .hero-title {
@@ -71,6 +72,7 @@
   color: var(--gray-900, #111827);
   line-height: 1.4;
   margin-bottom: 1.5rem;
+  background: yellow; /* TEST - remove this */
 }
 
 .hero-description {
@@ -98,7 +100,7 @@
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
   display: block;
-  width: 110%;
+  width: 100%;
   height: auto;
 }
 
