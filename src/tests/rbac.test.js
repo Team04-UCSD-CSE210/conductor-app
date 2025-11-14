@@ -133,10 +133,7 @@ function createMockNext() {
  */
 export async function testAuthentication() {
   console.log('Testing Authentication Middleware...');
-
-  // Mock the database pool
-  const originalQuery = global.pool ? global.pool.query : null;
-  
+ 
   // Create a temporary mock for the middleware
   const { pool: realPool } = await import('../db.js');
   const originalPoolQuery = realPool.query;
