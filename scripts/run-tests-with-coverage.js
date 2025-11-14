@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 
 const MIN_COVERAGE = 80;
 
-const subprocess = spawnSync('node', ['--test', '--experimental-test-coverage'], {
+const subprocess = spawnSync('node', ['--test', '--experimental-test-coverage', 'tests/'], {
   env: process.env,
   encoding: 'utf-8'
 });
