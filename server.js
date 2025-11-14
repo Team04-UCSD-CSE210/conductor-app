@@ -48,9 +48,11 @@ const app = express();
 // Serve static frontend assets
 if (process.env.VERCEL) {
   // In production, serve from public directory
+  console.log('📁 Serving static files from public directory');
   app.use(express.static(path.join(__dirname, "public")));
 } else {
   // In development, serve from src directories
+  console.log('📁 Serving static files from src directories');
   app.use(express.static(path.join(__dirname, "src/views")));
   app.use(express.static(path.join(__dirname, "src/public")));
   app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
@@ -119,7 +121,8 @@ const AccessRequest = defineAccessRequestModel(sequelize);
 // Initialize associations using explicit FKs before sync
 initCourseAssociations(sequelize, { User, Course, CourseUser, Invite });
 // Ensure tables exist on startup
-await sequelize.sync({ alter: true });
+// Temporarily disabled for testing
+// await sequelize.sync({ alter: true });
 
 
 const redisClient = createClient({ url: REDIS_URL });
@@ -728,9 +731,10 @@ app.post("/register/submit", ensureAuthenticated, async (req, res) => {
 // --- START HTTPS SERVER ---
 const startServer = async () => {
   try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true }); // create users table if missing
-    console.log("✅ Database connection established");
+    // Temporarily disabled for testing
+    // await sequelize.authenticate();
+    // await sequelize.sync({ alter: true }); // create users table if missing
+    // console.log("✅ Database connection established");
   } catch (error) {
     console.error("Failed to connect to the database", error);
     process.exit(1);

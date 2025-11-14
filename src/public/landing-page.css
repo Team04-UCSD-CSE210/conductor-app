@@ -63,6 +63,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  text-align: center;
 }
 
 .hero-title {
@@ -98,7 +99,7 @@
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
   display: block;
-  width: 110%;
+  width: 100%;
   height: auto;
 }
 

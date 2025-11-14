@@ -28,9 +28,8 @@ This project includes automated deployment to Vercel:
 **Quick Deploy to Vercel:**
 ```bash
 npm run setup:vercel
+vercel dev
 ```
-
-See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed deployment instructions.
 
 ## Team Standards & Deployment Policies
 
