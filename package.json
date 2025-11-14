@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
+    "build": "echo 'Build completed'",
     "test": "node scripts/run-tests-with-coverage.js",
     "lint": "npm run lint:js || echo 'Skipping CSS/HTML/MD lint'",
     "lint:js": "eslint .",
@@ -13,7 +14,8 @@
     "lint:html": "htmlhint '**/*.html' || echo 'No HTML files found'",
     "lint:md": "markdownlint '**/*.md'",
     "docs": "echo 'No documentation build required'",
-    "prune:auth-logs": "node scripts/prune-auth-logs.js"
+    "prune:auth-logs": "node scripts/prune-auth-logs.js",
+    "setup:vercel": "node scripts/setup-vercel.js"
   },
   "keywords": [],
   "author": "",
