@@ -8,14 +8,6 @@
   ],
   "routes": [
     {
-      "src": "/src/public/(.*)",
-      "dest": "/src/public/$1"
-    },
-    {
-      "src": "/src/assets/(.*)",
-      "dest": "/src/assets/$1"
-    },
-    {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
     },
@@ -28,9 +20,5 @@
     "api/index.js": {
       "maxDuration": 30
     }
-  },
-  "env": {
-    "NODE_ENV": "production",
-    "VERCEL": "true"
   }
 }
