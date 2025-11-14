@@ -1,412 +1,76 @@
-:root{
-  --bg:#f6f7fb;
-  --panel:#fff;
-  --border:#e6e8ef;
-  --muted:#6b7280;
-  --text:#0f172a;
-  --radius-lg:16px;
-  --radius-md:12px;
-  --shadow:0 1px 2px rgb(16 24 40 / 6%), 0 8px 24px rgb(16 24 40 / 6%);
-  --chip-high:#fce2e2;
-  --chip-med:#fdecc7;
-  --chip-low:#e6f2fe;
-  --chip-text:#111827;
-  --progress:#0b1220;
+/* Team Lead Dashboard Overrides */
+
+:root {
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --emerald-100: #d1fae5;
 }
 
-/* Layout */
-.app{
-  display:grid;
-  grid-template-columns:240px 1fr;
-  min-height:100vh;
-  background:var(--bg);
+/* Match professor/student card spacing */
+.student-card-body {
+  display: grid;
+  gap: 0.75rem;
 }
 
-/* Sidebar */
-.sidebar{
-  background:var(--panel);
-  border-right:1px solid var(--border);
-  padding:16px;
+/* Placeholder boxes */
+.student-placeholder-box {
+  background: #fff;
+  border: 1px dashed var(--gray-300);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  min-height: 80px;
 }
 
-.sidebar-role{
-  font-size:12px;
-  color:var(--muted);
-  margin-bottom:16px;
+/* Mid row layout */
+.student-mid-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.sidebar-role strong{
-  color:var(--text);
+/* Calendar */
+.student-calendar {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
 }
 
-.sidebar-nav{
-  list-style:none;
-  padding:0;
-  margin:0;
-  display:grid;
-  gap:8px;
+.student-calendar th {
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--gray-200);
+  font-weight: 600;
 }
 
-.sidebar-sep{
-  border:0;
-  border-top:1px solid var(--border);
-  margin:12px 0 16px;
+.student-calendar td {
+  text-align: center;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-300);
+  background: #fff;
 }
 
-.nav-item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 10px;
-  border-radius:10px;
-  text-decoration:none;
-  color:var(--text);
-  border:1px solid transparent;
+.student-calendar-event {
+  background: var(--emerald-100);
+  font-weight: 600;
 }
 
-.nav-item:hover{
-  background:#fafafa;
-  border-color:var(--border);
+/* Allow full-page scrolling on team lead dashboard */
+body.teamlead-page {
+  height: auto;
+  min-height: 100vh;
+  overflow: auto;
 }
 
-.nav-svg{
-  width:20px;
-  height:20px;
-  flex:0 0 20px;
-  color:#6b7280;
+body.teamlead-page .main-container {
+  height: auto;
 }
 
-.nav-svg *{
-  fill:none;
-  stroke:currentcolor;
-  stroke-width:1.5;
-  stroke-linecap:round;
-  stroke-linejoin:round;
+body.teamlead-page .frame {
+  height: auto;
+  overflow: visible;
 }
 
-/* Main */
-.main{
-  padding:24px 24px 48px;
-}
-
-.header h1{
-  font-size:22px;
-  margin:0 0 4px;
-}
-
-.header p{
-  color:var(--muted);
-  margin:0 0 16px;
-}
-
-/* Card */
-.card{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:var(--radius-lg);
-  box-shadow:var(--shadow);
-  padding:16px;
-}
-
-/* Stats row */
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4, 1fr);
-  gap:16px;
-  margin-bottom:16px;
-}
-
-.stat-card{
-  padding:16px;
-}
-
-.stat-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  color:var(--muted);
-  font-size:12px;
-  margin-bottom:18px;
-}
-
-.stat-value{
-  font-weight:600;
-}
-
-/* Simple emblem icons (like student page) */
-.icon{
-  width:28px;
-  height:28px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  display:inline-block;
-  position:relative;
-  background:#fafafa;
-}
-
-.icon.soft{
-  background:#fff;
-}
-
-.icon-calendar::before,
-.icon-calendar::after{
-  content:"";
-  position:absolute;
-  left:6px;
-  right:6px;
-  border-radius:2px;
-  background:#e9ebf2;
-}
-
-.icon-calendar::before{
-  top:8px;
-  height:8px;
-}
-
-.icon-calendar::after{
-  bottom:7px;
-  height:6px;
-}
-
-.icon-menu::before{
-  content:"";
-  position:absolute;
-  inset:8px 7px;
-  border-top:2px solid #e9ebf2;
-  border-bottom:2px solid #e9ebf2;
-}
-
-.icon-users::before{
-  content:"";
-  position:absolute;
-  width:10px;
-  height:10px;
-  border-radius:999px;
-  left:5px;
-  top:6px;
-  background:#e9ebf2;
-}
-
-.icon-users::after{
-  content:"";
-  position:absolute;
-  width:12px;
-  height:8px;
-  border-radius:8px 8px 0 0;
-  left:12px;
-  bottom:7px;
-  background:#e9ebf2;
-}
-
-.icon-doc::before{
-  content:"";
-  position:absolute;
-  inset:6px 8px;
-  background:#e9ebf2;
-  border-radius:2px;
-}
-
-/* Two-column middle */
-.grid{
-  display:grid;
-  grid-template-columns:7fr 5fr;
-  gap:16px;
-  margin-bottom:16px;
-}
-
-h2{
-  font-size:16px;
-  margin:0 0 6px;
-}
-
-.muted{
-  color:var(--muted);
-  font-size:12px;
-  margin:0 0 12px;
-}
-
-/* Member list */
-.member-list{
-  list-style:none;
-  padding:0;
-  margin:0;
-  display:grid;
-  gap:10px;
-}
-
-.member-row{
-  display:grid;
-  grid-template-columns:auto 1fr auto;
-  gap:12px;
-  align-items:center;
-  padding:12px;
-  border:1px solid var(--border);
-  border-radius:var(--radius-md);
-  background:#fff;
-}
-
-.avatar{
-  display:inline-grid;
-  place-items:center;
-  width:34px;
-  height:34px;
-  border-radius:999px;
-  background:#eef1f5;
-  color:#0f172a;
-  font-weight:600;
-  font-size:12px;
-}
-
-.member-main{
-  display:block;
-}
-
-.member-name{
-  margin:0;
-  font-weight:600;
-}
-
-.member-role{
-  margin:0;
-  color:var(--muted);
-  font-size:12px;
-}
-
-.member-meta{
-  margin:6px 0;
-  color:var(--muted);
-  font-size:12px;
-}
-
-/* Progress (reuse look from student) */
-.progress{
-  width:100%;
-  height:12px;
-  appearance:none;
-  background:#f2f2f6;
-  border:1px solid var(--border);
-  border-radius:999px;
-  overflow:hidden;
-}
-
-progress.progress::-webkit-progress-bar{
-  background:transparent;
-}
-
-progress.progress::-webkit-progress-value{
-  background:var(--progress);
-  border-radius:999px;
-}
-
-progress.progress::-moz-progress-bar{
-  background:var(--progress);
-}
-
-/* Chips */
-.chip{
-  display:inline-block;
-  padding:3px 10px;
-  border-radius:999px;
-  font-size:12px;
-  border:1px solid #e5e7eb;
-  background:#fafafa;
-  color:var(--chip-text);
-}
-
-.chip-status{
-  background:#eef1f5;
-}
-
-.chip-high{
-  background:var(--chip-high);
-}
-
-/* Stand-up feed */
-.standup-list{
-  list-style:none;
-  padding:0;
-  margin:0;
-  display:grid;
-  gap:10px;
-}
-
-.standup-row{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:12px;
-  align-items:center;
-  padding:12px;
-  border:1px solid var(--border);
-  border-radius:var(--radius-md);
-  background:#fff;
-}
-
-.standup-main{
-  display:block;
-}
-
-.standup-name{
-  margin:0;
-  font-weight:600;
-}
-
-.standup-update{
-  margin:4px 0 0;
-}
-
-.standup-meta{
-  margin:4px 0 0;
-  color:var(--muted);
-  font-size:12px;
-}
-
-.standup-time{
-  color:var(--muted);
-  font-size:12px;
-}
-
-/* Generic list rows (upcoming tasks) */
-.list{
-  display:grid;
-  gap:10px;
-  list-style:none;
-  padding:0;
-  margin:0;
-}
-
-.list-row{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:12px;
-  align-items:center;
-  padding:12px;
-  border:1px solid var(--border);
-  border-radius:var(--radius-md);
-  background:#fff;
-}
-
-.row-main{
-  display:block;
-}
-
-.row-title{
-  margin:0;
-  font-weight:600;
-}
-
-.row-sub{
-  margin:4px 0 0;
-  color:var(--muted);
-  font-size:12px;
-}
-
-/* Responsive */
-@media (width <= 1100px){
-  .stats{
-    grid-template-columns:repeat(2, 1fr);
-  }
-
-  .grid{
-    grid-template-columns:1fr;
-  }
+body.teamlead-page .content {
+  height: auto;
+  overflow: visible;
 }
