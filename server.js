@@ -544,6 +544,49 @@ app.get(
       });
       return res.redirect("/auth/failure");
     }
+  });
+
+
+  // Redirect based on user type
+  switch (user.user_type) {
+    case "Admin":
+      return res.redirect("/admin-dashboard.html");
+    case "Professor":
+      return res.redirect("/faculty-dashboard.html");
+    case "TA":
+      return res.redirect("/ta-dashboard.html");
+    case "Student":
+      return res.redirect("/student-dashboard.html");
+    default:
+      return res.redirect("/register.html");
+  }
+
+      const role = req.user?.role || "Student";
+      switch (role) {
+        case "Professor":
+          return res.redirect("/professor-dashboard");
+        case "TA":
+        case "Tutor":
+          return res.redirect("/ta-dashboard");
+        case "Admin":
+          return res.redirect("/admin-dashboard");
+        case "Student":
+        default:
+          return res.redirect("/student-dashboard");
+      }
+    });
+  })(req, res, next);
+});
+
+    console.log("✅ Login success for:", email);
+    await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
+      req,
+      message: "OAuth callback completed successfully",
+      userEmail: email,
+      userId: req.user?.id,
+      metadata: { provider: "google" }
+    });
+    res.redirect("/dashboard");
   }
 );
 
