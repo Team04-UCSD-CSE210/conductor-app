@@ -23,11 +23,26 @@ const VIEW_DIR = "src/views"
 
 dotenv.config();
 
-// SSL certificate and key
-const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, "certs", "server.key")),
-  cert: fs.readFileSync(path.join(__dirname, "certs", "server.crt")),
-};
+// SSL certificate and key (optional for local dev)
+let sslOptions = null;
+let HTTPS_AVAILABLE = false;
+try {
+  const keyPath = path.join(__dirname, "certs", "server.key");
+  const certPath = path.join(__dirname, "certs", "server.crt");
+  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    sslOptions = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath),
+    };
+    HTTPS_AVAILABLE = true;
+  } else {
+    console.warn("⚠️ SSL cert/key not found in ./certs — falling back to HTTP for local dev. To enable HTTPS, place server.key and server.crt in the certs/ directory or generate self-signed certs.");
+  }
+} catch (err) {
+  console.error("Error reading SSL certs, falling back to HTTP:", err);
+  sslOptions = null;
+  HTTPS_AVAILABLE = false;
+}
 
 const app = express();
 // Serve static frontend assets
@@ -475,68 +490,60 @@ app.get("/auth/google", (req, res, next) => {
 
 
 
-app.get("/auth/google/callback",
+app.get(
+  "/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/auth/failure" }),
   async (req, res) => {
     const email = req.user?.emails?.[0]?.value || "unknown";
 
-     // ✅ DEBUG LOGS
-    console.log("🔐 New login detected:");
-    console.log("   Session ID:", req.sessionID);
-    console.log("   Logged-in user:", email);
+    try {
+      // DEBUG LOGS
+      console.log("🔐 New login detected:");
+      console.log("   Session ID:", req.sessionID);
+      console.log("   Logged-in user:", email);
 
-    // Adding Middleware for USER redirection
+      // Ensure user exists in DB (create as Unregistered by default)
+      const [user] = await User.findOrCreate({
+        where: { email },
+        defaults: {
+          name: req.user.displayName,
+          user_type: "Unregistered",
+        },
+      });
 
-    // Check if user exists in DB
-  const [user, created] = await User.findOrCreate({
-    where: { email },
-    defaults: {
-      name: req.user.displayName,
-      user_type: "Unregistered"
-    }
-  });
+      // Log successful callback
+      console.log("✅ Login success for:", email);
+      await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
+        req,
+        message: "OAuth callback completed successfully",
+        userEmail: email,
+        userId: req.user?.id,
+        metadata: { provider: "google" },
+      });
 
-
-  // Redirect based on user type
-  switch (user.user_type) {
-    case "Admin":
-      return res.redirect("/admin-dashboard.html");
-    case "Professor":
-      return res.redirect("/faculty-dashboard.html");
-    case "TA":
-      return res.redirect("/ta-dashboard.html");
-    case "Student":
-      return res.redirect("/student-dashboard.html");
-    default:
-      return res.redirect("/register.html");
-  }
-
-      const role = req.user?.role || "Student";
-      switch (role) {
-        case "Professor":
-          return res.redirect("/professor-dashboard");
-        case "TA":
-        case "Tutor":
-          return res.redirect("/ta-dashboard");
+      // Redirect based on user type (use app routes, not file paths)
+      switch (user.user_type) {
         case "Admin":
           return res.redirect("/admin-dashboard");
+        case "Professor":
+          return res.redirect("/faculty-dashboard");
+        case "TA":
+          return res.redirect("/ta-dashboard");
         case "Student":
-        default:
           return res.redirect("/student-dashboard");
+        default:
+          return res.redirect("/register.html");
       }
-    });
-  })(req, res, next);
-});
-
-    console.log("✅ Login success for:", email);
-    await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
-      req,
-      message: "OAuth callback completed successfully",
-      userEmail: email,
-      userId: req.user?.id,
-      metadata: { provider: "google" }
-    });
-    res.redirect("/dashboard");
+    } catch (error) {
+      console.error("Error in /auth/google/callback handler:", error);
+      await logAuthEvent("LOGIN_CALLBACK_ERROR", {
+        req,
+        message: "Error handling OAuth callback",
+        userEmail: email,
+        metadata: { error: error?.message },
+      });
+      return res.redirect("/auth/failure");
+    }
   }
 );
 
@@ -679,10 +686,12 @@ app.get("/switch-account", (req, res) => {
 
 
 
-// HTTP --> HTTPS
+// HTTP --> HTTPS: only enforce when HTTPS is available
 app.use((req, res, next) => {
-  if (!req.secure) {
-    return res.redirect(`https://${req.headers.host}${req.url}`);
+  if (HTTPS_AVAILABLE) {
+    if (!req.secure) {
+      return res.redirect(`https://${req.headers.host}${req.url}`);
+    }
   }
   next();
 });
@@ -711,9 +720,16 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  https.createServer(sslOptions, app).listen(8443, () => {
-    console.log("✅ HTTPS server running at https://localhost:8443");
-  });
+  if (HTTPS_AVAILABLE && sslOptions) {
+    https.createServer(sslOptions, app).listen(8443, () => {
+      console.log("✅ HTTPS server running at https://localhost:8443");
+    });
+  } else {
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => {
+      console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
+    });
+  }
 };
 
 startServer();
