@@ -1425,7 +1425,7 @@ const startServer = async () => {
     // Set SEED_ON_START=true in .env to automatically seed demo data on startup
     // Defaults to true for convenience
     const shouldSeed = process.env.SEED_ON_START !== 'false';
-    await DatabaseInitializer.initialize({ seed: shouldSeed, force: false });
+    await DatabaseInitializer.initialize({ seed: shouldSeed, force: true });
     console.log("✅ Database connection established");
     if (shouldSeed) {
       console.log("✅ Demo users and data seeded");
@@ -1447,4 +1447,21 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start server if this file is run directly, not when imported
+if (import.meta.url === `file://${process.argv[1]}`) {
+  startServer();
+} else if (process.env.VERCEL) {
+  // For Vercel, initialize database on cold start
+  (async () => {
+    try {
+      await sequelize.authenticate();
+      await sequelize.sync({ alter: true });
+      console.log("✅ Database connection established for Vercel");
+    } catch (error) {
+      console.error("Failed to connect to the database", error);
+    }
+  })();
+}
+
+// Export app for Vercel
+export default app;
