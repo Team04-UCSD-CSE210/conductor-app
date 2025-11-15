@@ -21,7 +21,6 @@ import teamRoutes from "./routes/team-routes.js";
 import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Since server.js is in src/, views are in src/views relative to project root, but "views" relative to src/
@@ -1454,8 +1453,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // For Vercel, initialize database on cold start
   (async () => {
     try {
-      await sequelize.authenticate();
-      await sequelize.sync({ alter: true });
+      const { DatabaseInitializer } = await import('./database/init.js');
+      await DatabaseInitializer.initialize();
       console.log("✅ Database connection established for Vercel");
     } catch (error) {
       console.error("Failed to connect to the database", error);
