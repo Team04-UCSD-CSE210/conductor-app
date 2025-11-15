@@ -34,13 +34,27 @@ export class DatabaseInitializer {
       await pool.query(sql);
       console.log(`✓ ${description} executed successfully`);
     } catch (error) {
-      // Check if error is due to object already existing (idempotent operations)
-      if (error.code === '42P07' || error.code === '42710') {
-        // Table or object already exists - this is OK for idempotent migrations
-        console.log(`⚠ ${description} skipped (already exists)`);
-        return;
+      // 42P01 = relation does not exist (this is an error, don't skip)
+      if (error.code === '42P01') {
+        throw new Error(`Failed to execute ${description}: ${error.message} (code: ${error.code})`);
       }
-      throw new Error(`Failed to execute ${description}: ${error.message}`);
+      
+      // Check if error is due to object already existing (idempotent operations)
+      // 42P07 = duplicate_table, 42710 = duplicate_object
+      // Only skip if it's truly a "already exists" error
+      if (error.code === '42P07' || error.code === '42710') {
+        // Verify this is actually an "already exists" error by checking the message
+        if (error.message && (
+          error.message.includes('already exists') || 
+          error.message.includes('duplicate') ||
+          (error.message.includes('relation') && error.message.includes('already'))
+        )) {
+          console.log(`⚠ ${description} skipped (already exists)`);
+          return;
+        }
+      }
+      // For other errors, throw them - don't silently skip
+      throw new Error(`Failed to execute ${description}: ${error.message} (code: ${error.code})`);
     }
   }
 
@@ -74,7 +88,8 @@ export class DatabaseInitializer {
    * @param {boolean} includeSeeds - Whether to run seed data migrations (files with "seed" in name)
    */
   static async runMigrations(includeSeeds = false) {
-    console.log('[database] Running migrations...\n');
+    const seedLabel = includeSeeds ? ' (including seeds)' : ' (schema only)';
+    console.log(`[database] Running migrations${seedLabel}...\n`);
 
     const allMigrations = this.discoverMigrations();
     
@@ -89,12 +104,19 @@ export class DatabaseInitializer {
       return;
     }
 
+    console.log(`[database] Found ${migrationsToRun.length} migration(s) to run:\n`);
+    migrationsToRun.forEach(m => {
+      const type = m.file.toLowerCase().includes('seed') ? '🌱 SEED' : '📋 SCHEMA';
+      console.log(`  ${type}: ${m.file}`);
+    });
+    console.log('');
+
     for (const migration of migrationsToRun) {
       const sql = this.readMigrationFile(migration.file);
       await this.executeSql(sql, migration.description);
     }
 
-    console.log('\n[database] Migrations completed\n');
+    console.log(`\n[database] Migrations completed${seedLabel}\n`);
   }
 
   /**
@@ -163,15 +185,23 @@ export class DatabaseInitializer {
 
       if (schemaExists && !force) {
         console.log('[database] Schema already initialized. Use force=true to re-run migrations.\n');
+        // If schema exists but seed is requested, run seed migrations
+        // Seed files use ON CONFLICT, so they're safe to run multiple times
+        if (seed) {
+          console.log('[database] Running seed migrations (idempotent - safe to re-run)...\n');
+          await this.runMigrations(true);
+        }
         return;
       }
 
-      // Run migrations
+      // Run migrations (force will re-run everything)
       await this.runMigrations(seed);
 
       // Final verification
       const isValid = await this.verifySchema();
       if (!isValid) {
+        console.error('[database] Schema verification failed. Database may be in an inconsistent state.');
+        console.error('[database] Try running: npm run db:reset');
         throw new Error('Schema verification failed after initialization');
       }
 
@@ -190,10 +220,44 @@ export class DatabaseInitializer {
     console.log('[database] Dropping all tables...\n');
 
     try {
+      // Drop all tables in correct order (respecting foreign keys)
       await pool.query(`
+        DROP TABLE IF EXISTS activity_logs CASCADE;
+        DROP TABLE IF EXISTS attendance CASCADE;
+        DROP TABLE IF EXISTS submissions CASCADE;
+        DROP TABLE IF EXISTS team_members CASCADE;
+        DROP TABLE IF EXISTS team CASCADE;
+        DROP TABLE IF EXISTS assignments CASCADE;
+        DROP TABLE IF EXISTS enrollments CASCADE;
+        DROP TABLE IF EXISTS course_offerings CASCADE;
+        DROP TABLE IF EXISTS auth_logs CASCADE;
+        DROP TABLE IF EXISTS access_requests CASCADE;
+        DROP TABLE IF EXISTS whitelist CASCADE;
         DROP TABLE IF EXISTS users CASCADE;
-        DROP TYPE IF EXISTS user_role CASCADE;
-        DROP TYPE IF EXISTS user_status CASCADE;
+        
+        -- Drop permission tables (from migration 04)
+        DROP TABLE IF EXISTS course_staff CASCADE;
+        DROP TABLE IF EXISTS team_role_permissions CASCADE;
+        DROP TABLE IF EXISTS enrollment_role_permissions CASCADE;
+        DROP TABLE IF EXISTS global_role_permissions CASCADE;
+        DROP TABLE IF EXISTS permissions CASCADE;
+        
+        -- Drop all ENUM types
+        DROP TYPE IF EXISTS user_role_enum CASCADE;
+        DROP TYPE IF EXISTS user_status_enum CASCADE;
+        DROP TYPE IF EXISTS institution_type_enum CASCADE;
+        DROP TYPE IF EXISTS course_role_enum CASCADE;
+        DROP TYPE IF EXISTS enrollment_status_enum CASCADE;
+        DROP TYPE IF EXISTS course_offering_status_enum CASCADE;
+        DROP TYPE IF EXISTS assignment_type_enum CASCADE;
+        DROP TYPE IF EXISTS assignment_assigned_to_enum CASCADE;
+        DROP TYPE IF EXISTS team_status_enum CASCADE;
+        DROP TYPE IF EXISTS team_member_role_enum CASCADE;
+        DROP TYPE IF EXISTS submission_status_enum CASCADE;
+        DROP TYPE IF EXISTS attendance_status_enum CASCADE;
+        DROP TYPE IF EXISTS activity_action_type_enum CASCADE;
+        
+        -- Drop functions
         DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
       `);
 

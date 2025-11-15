@@ -30,13 +30,16 @@ h1, h2, h3, h4 {
   font-weight: 600;
   color: #e6edf3;
 }
+
 p, li, a {
   color: var(--text-color);
 }
+
 a {
   color: var(--accent-color);
   text-decoration: none;
 }
+
 a:hover {
   color: var(--accent-hover);
   text-decoration: underline;
@@ -50,7 +53,7 @@ a:hover {
   padding: 2rem;
   margin: 2rem auto;
   max-width: 700px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 40%);
 }
 
 /* ----- Buttons ----- */
@@ -64,12 +67,15 @@ button {
   font-family: var(--font-stack);
   transition: background 0.2s ease;
 }
+
 button:hover {
   background: var(--accent-hover);
 }
+
 button.danger {
   background: var(--error-color);
 }
+
 button.danger:hover {
   background: #f85149;
 }
@@ -84,6 +90,7 @@ input, select, textarea {
   margin: 5px 0;
   font-family: var(--font-stack);
 }
+
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent-color);
@@ -94,13 +101,16 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar {
   width: 10px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--bg-color);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-color);
 }
@@ -112,38 +122,44 @@ table {
   margin-top: 1rem;
   font-size: 0.9rem;
 }
+
 th, td {
   padding: 10px;
   border-bottom: 1px solid var(--border-color);
   text-align: left;
 }
+
 th {
   color: #e6edf3;
 }
+
 tr:hover {
-  background-color: rgba(255,255,255,0.04);
+  background-color: rgb(255 255 255 / 4%);
 }
 
 /* ----- Small Utility Classes ----- */
 .center {
   text-align: center;
 }
+
 .hidden {
   display: none;
 }
+
 .error-msg {
   color: var(--error-color);
   font-size: 0.9rem;
   margin-top: 0.5rem;
 }
 
-#userCard {
+#user-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 5px;
 }
-#logoutBtn {
+
+#logout-btn {
   margin-top: 10px;
   width: 120px;
 }

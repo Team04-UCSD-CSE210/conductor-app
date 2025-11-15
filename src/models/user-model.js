@@ -2,7 +2,8 @@ import validator from 'validator';
 import { pool } from '../db.js';
 
 // Global roles for system/dashboard access
-const ROLES = ['admin', 'instructor', 'student'];
+// Valid primary_role values: admin, instructor, student, unregistered
+const ROLES = ['admin', 'instructor', 'student', 'unregistered'];
 const STATUSES = ['active', 'busy', 'inactive'];
 const INSTITUTION_TYPES = ['ucsd', 'extension'];
 
@@ -15,6 +16,13 @@ export class UserModel {
    * Determine institution type from email
    * UCSD: email ends with @ucsd.edu
    * Extension: gmail or other non-ucsd.edu emails
+   * 
+   * NOTE: This method returns 'extension' for any non-UCSD email, but in practice,
+   * 'extension' should only be set for whitelisted users. For OAuth login flow,
+   * the whitelist is checked in server.js before setting institution_type.
+   * For roster import (admin-only), admins can explicitly set institution_type
+   * in the CSV/JSON data, or this method will auto-detect (which is acceptable
+   * for admin bulk imports).
    */
   static determineInstitutionType(email) {
     if (!email) return null;
@@ -23,6 +31,7 @@ export class UserModel {
       return 'ucsd';
     }
     // Extension students typically use gmail or other non-ucsd.edu emails
+    // Note: In OAuth flow, whitelist check is done before setting this value
     return 'extension';
   }
 
@@ -111,7 +120,9 @@ export class UserModel {
         image_url,
         phone_number,
         github_username,
-        linkedin_url
+        linkedin_url,
+        google_id,
+        oauth_provider
       )
       VALUES (
         LOWER($1)::citext,
@@ -133,7 +144,9 @@ export class UserModel {
         $14,
         $15,
         $16,
-        $17
+        $17,
+        $18,
+        COALESCE($19, 'google')
       )
       ON CONFLICT (email) DO UPDATE
       SET
@@ -152,6 +165,8 @@ export class UserModel {
         phone_number    = COALESCE(EXCLUDED.phone_number,    users.phone_number),
         github_username = COALESCE(EXCLUDED.github_username, users.github_username),
         linkedin_url    = COALESCE(EXCLUDED.linkedin_url,    users.linkedin_url),
+        google_id       = COALESCE(EXCLUDED.google_id,       users.google_id),
+        oauth_provider  = COALESCE(EXCLUDED.oauth_provider,  users.oauth_provider),
         updated_at      = NOW()
       RETURNING
         id,
@@ -172,6 +187,8 @@ export class UserModel {
         phone_number,
         github_username,
         linkedin_url,
+        google_id,
+        oauth_provider,
         created_at,
         updated_at,
         updated_by,
@@ -196,6 +213,8 @@ export class UserModel {
       data.phone_number ?? null,
       data.github_username ?? null,
       data.linkedin_url ?? null,
+      data.google_id ?? null,
+      data.oauth_provider ?? 'google',
     ]);
     
     return rows[0];
@@ -229,6 +248,8 @@ export class UserModel {
         phone_number,
         github_username,
         linkedin_url,
+        google_id,
+        oauth_provider,
         created_at,
         updated_at,
         updated_by,
@@ -269,6 +290,8 @@ export class UserModel {
         phone_number,
         github_username,
         linkedin_url,
+        google_id,
+        oauth_provider,
         created_at,
         updated_at,
         updated_by,
@@ -313,6 +336,8 @@ export class UserModel {
         phone_number,
         github_username,
         linkedin_url,
+        google_id,
+        oauth_provider,
         created_at,
         updated_at,
         updated_by,
@@ -414,6 +439,16 @@ export class UserModel {
     setClauses.push(`linkedin_url = $${paramIndex++}`);
     params.push(merged.linkedin_url ?? null);
     
+    if (merged.google_id !== undefined && merged.google_id !== null) {
+      setClauses.push(`google_id = $${paramIndex++}`);
+      params.push(merged.google_id);
+    }
+    
+    if (merged.oauth_provider !== undefined && merged.oauth_provider !== null) {
+      setClauses.push(`oauth_provider = $${paramIndex++}`);
+      params.push(merged.oauth_provider);
+    }
+    
     setClauses.push(`updated_at = NOW()`);
     
     params.push(id); // For WHERE clause
@@ -424,23 +459,25 @@ export class UserModel {
       WHERE id = $${paramIndex}::uuid
       RETURNING
         id,
-      email,
-      ucsd_pid,
-      name,
-      preferred_name,
-      major,
-      degree_program,
-      academic_year,
-      department,
+        email,
+        ucsd_pid,
+        name,
+        preferred_name,
+        major,
+        degree_program,
+        academic_year,
+        department,
         class_level,
         primary_role,
         status,
         institution_type,
         profile_url,
-      image_url,
+        image_url,
         phone_number,
-      github_username,
-      linkedin_url,
+        github_username,
+        linkedin_url,
+        google_id,
+        oauth_provider,
         created_at,
         updated_at,
         updated_by,
@@ -481,6 +518,8 @@ export class UserModel {
         phone_number,
         github_username,
         linkedin_url,
+        google_id,
+        oauth_provider,
         created_at,
         updated_at,
         updated_by,
@@ -523,6 +562,8 @@ export class UserModel {
         phone_number,
         github_username,
         linkedin_url,
+        google_id,
+        oauth_provider,
         created_at,
         updated_at,
         updated_by,

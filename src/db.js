@@ -1,10 +1,21 @@
 import 'dotenv/config';
 import pg from 'pg';
 
-const url = process.env.DATABASE_URL;
+// Use DATABASE_URL from environment, or default to a test database URL for CI/tests
+// This allows tests to run in CI environments without requiring a .env file
+// Try multiple common PostgreSQL usernames for local development
+const getDefaultTestUrl = () => {
+  const username = process.env.USER || process.env.USERNAME || 'postgres';
+  return `postgresql://${username}@localhost:5432/conductor_test`;
+};
+
+const url = process.env.DATABASE_URL || 
+  (process.env.NODE_ENV === 'test' || process.env.VITEST 
+    ? process.env.TEST_DATABASE_URL || getDefaultTestUrl()
+    : null);
 
 if (!url) {
-  throw new Error('DATABASE_URL not defined in .env');
+  throw new Error('DATABASE_URL not defined in .env. For tests, set TEST_DATABASE_URL or ensure DATABASE_URL is set.');
 }
 
 export const pool = new pg.Pool({

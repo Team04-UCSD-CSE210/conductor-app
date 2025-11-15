@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "citext";
 -- =====================================================
 -- ENUM TYPES
 -- =====================================================
-CREATE TYPE user_role_enum AS ENUM ('admin', 'instructor', 'student');
+CREATE TYPE user_role_enum AS ENUM ('admin', 'instructor', 'student', 'unregistered');
 CREATE TYPE user_status_enum AS ENUM ('active', 'busy', 'inactive');
 CREATE TYPE institution_type_enum AS ENUM ('ucsd', 'extension');
 CREATE TYPE course_role_enum AS ENUM ('student', 'ta', 'tutor');
@@ -70,6 +70,8 @@ CREATE TABLE IF NOT EXISTS users (
     phone_number TEXT,
     github_username TEXT,
     linkedin_url TEXT,
+    google_id TEXT UNIQUE,
+    oauth_provider TEXT DEFAULT 'google',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_by UUID REFERENCES users(id),
@@ -78,6 +80,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_primary_role ON users(primary_role);
+CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -308,3 +311,59 @@ CREATE TRIGGER update_attendance_updated_at BEFORE UPDATE ON attendance
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 COMMENT ON TABLE attendance IS 'Tracks student attendance for each class date';
+
+-- =====================================================
+-- 10. AUTH_LOGS
+-- Tracks authentication events (login, logout, etc.)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS auth_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type TEXT NOT NULL,
+    message TEXT,
+    user_email CITEXT,
+    ip_address TEXT,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    path TEXT,
+    metadata JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_logs_user_email ON auth_logs(user_email);
+CREATE INDEX IF NOT EXISTS idx_auth_logs_user_id ON auth_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_auth_logs_event_type ON auth_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_auth_logs_created_at ON auth_logs(created_at);
+
+COMMENT ON TABLE auth_logs IS 'Audit trail of all authentication events';
+
+-- =====================================================
+-- 11. WHITELIST
+-- Approved extension students who can access the system
+-- =====================================================
+CREATE TABLE IF NOT EXISTS whitelist (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email CITEXT UNIQUE NOT NULL,
+    approved_by TEXT NOT NULL,
+    approved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_whitelist_email ON whitelist(email);
+
+COMMENT ON TABLE whitelist IS 'Approved extension students who can access the system';
+
+-- =====================================================
+-- 12. ACCESS_REQUESTS
+-- Pending access requests from non-UCSD users
+-- =====================================================
+CREATE TABLE IF NOT EXISTS access_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email CITEXT UNIQUE NOT NULL,
+    reason TEXT,
+    requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_access_requests_email ON access_requests(email);
+CREATE INDEX IF NOT EXISTS idx_access_requests_requested_at ON access_requests(requested_at);
+
+COMMENT ON TABLE access_requests IS 'Pending access requests from non-UCSD users';

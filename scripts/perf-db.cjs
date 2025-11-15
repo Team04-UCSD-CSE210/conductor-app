@@ -52,7 +52,7 @@ function ms(s, e){ return Number(e - s) / 1e6; }
 
     // 2) paged read
     const r0 = now();
-    const page = await client.query(
+    await client.query(
       `SELECT id,name,email,role,status,created_at
        FROM users
        ORDER BY created_at ASC, email ASC
@@ -86,7 +86,9 @@ function ms(s, e){ return Number(e - s) / 1e6; }
     console.log(`count(${count}): ${ms(c0,c1).toFixed(1)} ms`);
   } catch (e) {
     console.error('perf-db error:', e.message);
-    try { await client.query('ROLLBACK'); } catch {}
+    try { await client.query('ROLLBACK'); } catch {
+      // Ignore rollback errors
+    }
   } finally {
     client.release();
     await pool.end();

@@ -3,6 +3,8 @@ import multer from 'multer';
 import { UserService } from '../services/user-service.js';
 import { RosterService } from '../services/roster-service.js';
 import { rosterImportLimiter } from '../middleware/rate-limiter.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
+import { protect, protectAny } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
@@ -24,11 +26,11 @@ const upload = multer({
  * Create a new user
  * POST /users
  * Body: { email, name, role, auth_source, ... }
+ * Requires: user.manage permission (global)
  */
-router.post('/', async (req, res) => {
+router.post('/', ...protect('user.manage', 'global'), async (req, res) => {
   try {
-    // TODO: Get createdBy from auth middleware when authentication is implemented
-    const createdBy = req.body.created_by || null;
+    const createdBy = req.currentUser.id;
     const newUser = await UserService.createUser(req.body, createdBy);
     res.status(201).json(newUser);
   } catch (err) {
@@ -39,6 +41,7 @@ router.post('/', async (req, res) => {
 /**
  * Get all users with pagination
  * GET /users?limit=50&offset=0&includeDeleted=false
+ * Public endpoint - no authentication required
  */
 router.get('/', async (req, res) => {
   try {
@@ -55,67 +58,9 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * Get user by ID
- * GET /users/:id
- */
-router.get('/:id', async (req, res) => {
-  try {
-    const user = await UserService.getUserById(req.params.id);
-  res.json(user);
-  } catch (err) {
-    res.status(404).json({ error: err.message });
-  }
-});
-
-/**
- * Update user
- * PUT /users/:id
- * Body: { name, email, role, status, auth_source, ... }
- */
-router.put('/:id', async (req, res) => {
-  try {
-    // TODO: Get updatedBy from auth middleware when authentication is implemented
-    const updatedBy = req.body.updated_by || req.params.id; // Default to self-update
-    const updatedUser = await UserService.updateUser(req.params.id, req.body, updatedBy);
-    res.json(updatedUser);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-/**
- * Soft delete user
- * DELETE /users/:id
- */
-router.delete('/:id', async (req, res) => {
-  try {
-    // TODO: Get deletedBy from auth middleware when authentication is implemented
-    const deletedBy = req.body.deleted_by || req.params.id; // Default to self-delete
-    await UserService.deleteUser(req.params.id, deletedBy);
-    res.json({ deleted: true });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-/**
- * Restore soft-deleted user
- * POST /users/:id/restore
- */
-router.post('/:id/restore', async (req, res) => {
-  try {
-    // TODO: Get restoredBy from auth middleware when authentication is implemented
-    const restoredBy = req.body.restored_by || req.params.id;
-    await UserService.restoreUser(req.params.id, restoredBy);
-    res.json({ restored: true });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-/**
  * Get users by primary_role
  * GET /users/role/:role?limit=50&offset=0
+ * Public endpoint - no authentication required
  */
 router.get('/role/:role', async (req, res) => {
   try {
@@ -134,6 +79,7 @@ router.get('/role/:role', async (req, res) => {
 /**
  * Get users by institution_type (ucsd or extension)
  * GET /users/institution/:type?limit=50&offset=0
+ * Public endpoint - no authentication required
  */
 router.get('/institution/:type', async (req, res) => {
   try {
@@ -152,8 +98,76 @@ router.get('/institution/:type', async (req, res) => {
   }
 });
 
+/**
+ * Get user by ID
+ * GET /users/:id
+ * Public endpoint - no authentication required
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await UserService.getUserById(req.params.id);
+    res.json(user);
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+/**
+ * Update user
+ * PUT /users/:id
+ * Body: { name, email, role, status, auth_source, ... }
+ * Requires: Authentication (users can update themselves, admins/instructors can update anyone)
+ */
+router.put('/:id', ensureAuthenticated, async (req, res) => {
+  try {
+    // Users can update themselves, admins/instructors can update anyone
+    // Note: IDs are UUIDs (strings), not integers, so compare directly
+    if (req.currentUser.id !== req.params.id && 
+        req.currentUser.primary_role !== 'admin' && 
+        req.currentUser.primary_role !== 'instructor') {
+      return res.status(403).json({ error: "forbidden" });
+    }
+    const updatedBy = req.currentUser.id;
+    const updatedUser = await UserService.updateUser(req.params.id, req.body, updatedBy);
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Soft delete user
+ * DELETE /users/:id
+ * Requires: user.manage permission (global)
+ */
+router.delete('/:id', ...protect('user.manage', 'global'), async (req, res) => {
+  try {
+    const deletedBy = req.currentUser.id;
+    await UserService.deleteUser(req.params.id, deletedBy);
+    res.json({ deleted: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Restore soft-deleted user
+ * POST /users/:id/restore
+ * Requires: user.manage permission (global)
+ */
+router.post('/:id/restore', ...protect('user.manage', 'global'), async (req, res) => {
+  try {
+    const restoredBy = req.currentUser.id;
+    await UserService.restoreUser(req.params.id, restoredBy);
+    res.json({ restored: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Roster Management Routes
-router.post('/roster/import/json', rosterImportLimiter, async (req, res) => {
+// Requires: roster.import permission (course scope)
+router.post('/roster/import/json', ...protect('roster.import', 'course'), rosterImportLimiter, async (req, res) => {
   try {
     // Validate file size if content is large
     const contentSize = JSON.stringify(req.body).length;
@@ -196,7 +210,7 @@ router.post('/roster/import/json', rosterImportLimiter, async (req, res) => {
   }
 });
 
-router.post('/roster/import/csv', rosterImportLimiter, upload.single('file'), async (req, res) => {
+router.post('/roster/import/csv', ...protect('roster.import', 'course'), rosterImportLimiter, upload.single('file'), async (req, res) => {
   try {
     let csvText;
 
@@ -267,7 +281,7 @@ router.post('/roster/import/csv', rosterImportLimiter, upload.single('file'), as
   }
 });
 
-router.get('/roster/export/json', async (req, res) => {
+router.get('/roster/export/json', ...protectAny(['roster.view', 'roster.export'], 'course'), async (req, res) => {
   try {
     const users = await RosterService.exportRosterToJson();
 
@@ -282,7 +296,7 @@ router.get('/roster/export/json', async (req, res) => {
   }
 });
 
-router.get('/roster/export/csv', async (req, res) => {
+router.get('/roster/export/csv', ...protectAny(['roster.view', 'roster.export'], 'course'), async (req, res) => {
   try {
     const csv = await RosterService.exportRosterToCsv();
 
@@ -298,7 +312,7 @@ router.get('/roster/export/csv', async (req, res) => {
 });
 
 // Export imported users as CSV
-router.post('/roster/export/imported/csv', async (req, res) => {
+router.post('/roster/export/imported/csv', ensureAuthenticated, async (req, res) => {
   try {
     const { importedUsers } = req.body;
 
@@ -324,7 +338,8 @@ router.post('/roster/export/imported/csv', async (req, res) => {
 });
 
 // Rollback endpoint for failed imports
-router.post('/roster/rollback', async (req, res) => {
+// Requires: Admin or Instructor
+router.post('/roster/rollback', ...protect('roster.import', 'course'), async (req, res) => {
   try {
     const { userIds } = req.body;
 
