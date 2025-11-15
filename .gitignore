@@ -4,4 +4,4 @@ AGENTS.md
 node_modules
 certs/
 .env
-./idea/** 
+.idea
