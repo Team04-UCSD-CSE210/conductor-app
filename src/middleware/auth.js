@@ -42,7 +42,7 @@ export const ensureAuthenticated = async (req, res, next) => {
 /**
  * Get current user from session and database
  */
-const getCurrentUser = async (req) => {
+export const getCurrentUser = async (req) => {
   if (!req.isAuthenticated || !req.isAuthenticated()) {
     return null;
   }

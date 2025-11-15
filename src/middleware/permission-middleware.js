@@ -1,73 +1,43 @@
 // src/middleware/permission-middleware.js
 import { PermissionService } from "../services/permission-service.js";
-import { pool } from "../db.js";
+import { getCurrentUser } from "./auth.js";
 
 /**
  * Authentication middleware using OAuth session
  * Converts OAuth user format to permission system format
  */
-export function authenticate(req, res, next) {
-  // Check for OAuth session authentication
-  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-    // Convert OAuth user format to permission system format
-    const oauthEmail = req.user?.emails?.[0]?.value;
-    if (oauthEmail) {
-      return authenticateByOAuthEmail(oauthEmail, req, res, next);
-    }
-  }
-
-  // No authentication provided
-  return res.status(401).json({
-    error: 'Unauthorized',
-    message: 'Authentication required. Please log in via OAuth.'
-  });
-}
-
-/**
- * Authenticate using OAuth email and verify user is active
- */
-async function authenticateByOAuthEmail(email, req, res, next) {
+export async function authenticate(req, res, next) {
   try {
-    const { rows } = await pool.query(`
-      SELECT id, email, name, primary_role, status, institution_type 
-      FROM users 
-      WHERE email = $1 AND deleted_at IS NULL
-    `, [email]);
-
-    if (rows.length === 0) {
+    if (!(req.isAuthenticated && req.isAuthenticated() && req.user)) {
       return res.status(401).json({
-        error: 'Unauthorized',
-        message: 'User not found or inactive'
+        error: "Unauthorized",
+        message: "Authentication required. Please log in via OAuth.",
       });
     }
 
-    const user = rows[0];
-
-    // Check if user is active
-    if (user.status !== 'active') {
+    const user = await getCurrentUser(req);
+    if (!user) {
       return res.status(401).json({
-        error: 'Unauthorized', 
-        message: `User account is ${user.status}. Only active users can authenticate.`
+        error: "Unauthorized",
+        message: "User not found or inactive",
       });
     }
 
-    // Attach user info to request
-    req.user = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.primary_role,
-      status: user.status,
-      institution: user.institution_type
-    };
+    if (user.status !== "active") {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: `User account is ${user.status}. Only active users can authenticate.`,
+      });
+    }
 
-    next();
+    req.currentUser = user;
+
+    return next();
   } catch (err) {
-    console.error('Email authentication error:', err);
-    res.status(500).json({ error: 'Authentication failed' });
+    console.error("Authentication error:", err);
+    return res.status(500).json({ error: "Authentication failed" });
   }
 }
-
 
 /**
  * Skip authentication for health checks and public endpoints
@@ -84,7 +54,7 @@ export function skipAuthForPublic(req, res, next) {
  * Extract userId + scope IDs from request in one place.
  */
 function getAuthContext(req, scope) {
-  const userId = req.user?.id;
+  const userId = req.currentUser?.id;
 
   const offeringId =
     scope === "course"
@@ -130,18 +100,6 @@ export function requirePermission(permissionCode, scope = "global") {
           message: `Permission required: ${permissionCode}`,
         });
       }
-
-      // Set req.currentUser for backward compatibility (if not already set)
-      if (!req.currentUser && req.user?.id) {
-        const { rows } = await pool.query(
-          'SELECT * FROM users WHERE id = $1::uuid AND deleted_at IS NULL',
-          [req.user.id]
-        );
-        if (rows.length > 0) {
-          req.currentUser = rows[0];
-        }
-      }
-
       next();
     } catch (err) {
       console.error("[PermissionMiddleware] Error checking permission:", err);
@@ -179,16 +137,6 @@ export function requireAnyPermission(permissionCodes, scope = "global") {
           teamId
         );
         if (allowed) {
-          // Set req.currentUser for backward compatibility (if not already set)
-          if (!req.currentUser && req.user?.id) {
-            const { rows } = await pool.query(
-              'SELECT * FROM users WHERE id = $1::uuid AND deleted_at IS NULL',
-              [req.user.id]
-            );
-            if (rows.length > 0) {
-              req.currentUser = rows[0];
-            }
-          }
           return next();
         }
       }
@@ -211,47 +159,27 @@ export function requireAnyPermission(permissionCodes, scope = "global") {
  * Require a specific global role (bypassing permissions).
  */
 export function requireRole(...roles) {
-  return async (req, res, next) => {
-    try {
-      const userId = req.user?.id;
+  return (req, res, next) => {
+    const user = req.currentUser;
 
-      if (!userId) {
-        return res.status(401).json({
-          error: "Unauthorized",
-          message: "User authentication required",
-        });
-      }
-
-      const { rows } = await pool.query(
-        "SELECT primary_role AS role FROM users WHERE id = $1::uuid AND deleted_at IS NULL",
-        [userId]
-      );
-
-      if (rows.length === 0) {
-        return res.status(401).json({
-          error: "Unauthorized",
-          message: "User not found",
-        });
-      }
-
-      const userRole = rows[0].role;
-
-      if (!roles.includes(userRole)) {
-        return res.status(403).json({
-          error: "Forbidden",
-          message: `Required role: ${roles.join(" or ")}`,
-        });
-      }
-
-      req.userRole = userRole;
-      next();
-    } catch (err) {
-      console.error("[PermissionMiddleware] Error checking role:", err);
-      return res.status(500).json({
-        error: "Role check failed",
-        message: err.message,
+    if (!user) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "User authentication required",
       });
     }
+
+    const userRole = user.primary_role;
+
+    if (!roles.includes(userRole)) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: `Required role: ${roles.join(" or ")}`,
+      });
+    }
+
+    req.userRole = userRole;
+    return next();
   };
 }
 
