@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { protect } from '../middleware/permission-middleware.js';
+import { protect, protectAny } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
@@ -8,9 +8,9 @@ const router = Router();
  * Submit interaction report
  * POST /api/interactions
  * Body: { offering_id, team_id?, user_id?, interaction_type, notes }
- * Requires: course.manage permission (course scope)
+ * Requires: interaction.create permission (course scope)
  */
-router.post('/', ...protect('course.manage', 'course'), async (req, res) => {
+router.post('/', ...protect('interaction.create', 'course'), async (req, res) => {
   try {
     const { offering_id, team_id, user_id, interaction_type, notes } = req.body;
 
@@ -53,9 +53,9 @@ router.post('/', ...protect('course.manage', 'course'), async (req, res) => {
 /**
  * Get all interactions for an offering
  * GET /api/interactions?offering_id=:id
- * Requires: course.manage permission (course scope)
+ * Requires: interaction.view or course.manage permission (course scope)
  */
-router.get('/', ...protect('course.manage', 'course'), async (req, res) => {
+router.get('/', ...protectAny(['interaction.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const { offering_id, team_id, user_id } = req.query;
 
@@ -102,68 +102,92 @@ router.get('/', ...protect('course.manage', 'course'), async (req, res) => {
 });
 
 /**
- * Get interactions for a team
- * GET /api/interactions/team/:teamId
- * Requires: course.manage permission (course scope)
+ * Get interactions for a team in an offering
+ * GET /api/interactions/team/:teamId?offering_id=:offeringId
+ * Requires: interaction.view or course.manage (course scope)
  */
-router.get('/team/:teamId', ...protect('course.manage', 'course'), async (req, res) => {
-  try {
-    const { teamId } = req.params;
+router.get(
+  '/team/:teamId',
+  ...protectAny(['interaction.view', 'course.manage'], 'course'),
+  async (req, res) => {
+    try {
+      const { teamId } = req.params;
+      const { offering_id } = req.query;
 
-    const result = await pool.query(
-      `SELECT 
-        al.id,
-        al.created_at,
-        al.metadata,
-        u.name as created_by_name,
-        u.email as created_by_email
-      FROM activity_logs al
-      INNER JOIN users u ON al.user_id = u.id
-      WHERE al.metadata->>'team_id' = $1
-        AND al.action_type = 'grade_submission'::activity_action_type_enum
-        AND al.metadata->>'interaction_type' IS NOT NULL
-      ORDER BY al.created_at DESC`,
-      [teamId]
-    );
+      if (!offering_id) {
+        return res
+          .status(400)
+          .json({ error: 'offering_id query parameter is required' });
+      }
 
-    res.json({ interactions: result.rows });
-  } catch (err) {
-    console.error('Error fetching team interactions:', err);
-    res.status(500).json({ error: err.message });
+      const result = await pool.query(
+        `SELECT 
+          al.id,
+          al.created_at,
+          al.metadata,
+          u.name as created_by_name,
+          u.email as created_by_email
+        FROM activity_logs al
+        INNER JOIN users u ON al.user_id = u.id
+        WHERE al.offering_id = $1
+          AND al.metadata->>'team_id' = $2
+          AND al.action_type = 'grade_submission'::activity_action_type_enum
+          AND al.metadata->>'interaction_type' IS NOT NULL
+        ORDER BY al.created_at DESC`,
+        [offering_id, teamId]
+      );
+
+      res.json({ interactions: result.rows });
+    } catch (err) {
+      console.error('Error fetching team interactions:', err);
+      res.status(500).json({ error: err.message });
+    }
   }
-});
+);
 
 /**
- * Get interactions for a student
- * GET /api/interactions/student/:userId
- * Requires: course.manage permission (course scope)
+ * Get interactions for a student in an offering
+ * GET /api/interactions/student/:userId?offering_id=:offeringId
+ * Requires: interaction.view or course.manage (course scope)
  */
-router.get('/student/:userId', ...protect('course.manage', 'course'), async (req, res) => {
-  try {
-    const { userId } = req.params;
+router.get(
+  '/student/:userId',
+  ...protectAny(['interaction.view', 'course.manage'], 'course'),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { offering_id } = req.query;
 
-    const result = await pool.query(
-      `SELECT 
-        al.id,
-        al.created_at,
-        al.metadata,
-        u.name as created_by_name,
-        u.email as created_by_email
-      FROM activity_logs al
-      INNER JOIN users u ON al.user_id = u.id
-      WHERE al.metadata->>'user_id' = $1
-        AND al.action_type = 'grade_submission'::activity_action_type_enum
-        AND al.metadata->>'interaction_type' IS NOT NULL
-      ORDER BY al.created_at DESC`,
-      [userId]
-    );
+      if (!offering_id) {
+        return res
+          .status(400)
+          .json({ error: 'offering_id query parameter is required' });
+      }
 
-    res.json({ interactions: result.rows });
-  } catch (err) {
-    console.error('Error fetching student interactions:', err);
-    res.status(500).json({ error: err.message });
+      const result = await pool.query(
+        `SELECT 
+          al.id,
+          al.created_at,
+          al.metadata,
+          u.name as created_by_name,
+          u.email as created_by_email
+        FROM activity_logs al
+        INNER JOIN users u ON al.user_id = u.id
+        WHERE al.offering_id = $1
+          AND al.metadata->>'user_id' = $2
+          AND al.action_type = 'grade_submission'::activity_action_type_enum
+          AND al.metadata->>'interaction_type' IS NOT NULL
+        ORDER BY al.created_at DESC`,
+        [offering_id, userId]
+      );
+
+      res.json({ interactions: result.rows });
+    } catch (err) {
+      console.error('Error fetching student interactions:', err);
+      res.status(500).json({ error: err.message });
+    }
   }
-});
+);
 
 export default router;
 

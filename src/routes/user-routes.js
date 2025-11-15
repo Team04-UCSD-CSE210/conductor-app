@@ -26,7 +26,7 @@ const upload = multer({
  * Create a new user
  * POST /users
  * Body: { email, name, role, auth_source, ... }
- * Requires: user.manage permission (global)
+ * Requires: user.manage permission (global); admin-only
  */
 router.post('/', ...protect('user.manage', 'global'), async (req, res) => {
   try {
@@ -41,9 +41,9 @@ router.post('/', ...protect('user.manage', 'global'), async (req, res) => {
 /**
  * Get all users with pagination
  * GET /users?limit=50&offset=0&includeDeleted=false
- * Public endpoint - no authentication required
+ * admin-only
  */
-router.get('/', async (req, res) => {
+router.get('/', ...protect('user.manage', 'global'), async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -60,9 +60,9 @@ router.get('/', async (req, res) => {
 /**
  * Get users by primary_role
  * GET /users/role/:role?limit=50&offset=0
- * Public endpoint - no authentication required
+ * admin-only
  */
-router.get('/role/:role', async (req, res) => {
+router.get('/role/:role', ...protect('user.manage', 'global'), async (req, res) => {
   try {
     const { role } = req.params;
     const options = {
@@ -79,9 +79,9 @@ router.get('/role/:role', async (req, res) => {
 /**
  * Get users by institution_type (ucsd or extension)
  * GET /users/institution/:type?limit=50&offset=0
- * Public endpoint - no authentication required
+ * admin-only
  */
-router.get('/institution/:type', async (req, res) => {
+router.get('/institution/:type', ...protect('user.manage', 'global'), async (req, res) => {
   try {
     const { type } = req.params;
     if (!['ucsd', 'extension'].includes(type)) {
@@ -101,15 +101,47 @@ router.get('/institution/:type', async (req, res) => {
 /**
  * Get user by ID
  * GET /users/:id
- * Public endpoint - no authentication required
+ * admin-only
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', ...protect('user.manage', 'global'), async (req, res) => {
   try {
     const user = await UserService.getUserById(req.params.id);
     res.json(user);
   } catch (err) {
     res.status(404).json({ error: err.message });
   }
+});
+
+/**
+ * Get current authenticated user (self)
+ * GET /users/me
+ */
+router.get('/me', ensureAuthenticated, async (req, res) => {
+  const {
+    id,
+    email,
+    name,
+    preferred_name,
+    primary_role,
+    profile_url,
+    image_url,
+    major,
+    degree_program,
+    academic_year,
+  } = req.currentUser;
+
+  res.json({
+    id,
+    email,
+    name,
+    preferred_name,
+    primary_role,
+    profile_url,
+    image_url,
+    major,
+    degree_program,
+    academic_year,
+  });
 });
 
 /**

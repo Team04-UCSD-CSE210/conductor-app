@@ -1,19 +1,48 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { protect, protectAny } from '../middleware/permission-middleware.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
+import { PermissionService } from '../services/permission-service.js';
 
 const router = Router();
 
 /**
+ * Helper: load team with offering_id
+ */
+async function getTeamWithOffering(teamId) {
+  const { rows } = await pool.query(
+    `SELECT t.*, t.offering_id
+     FROM team t
+     WHERE t.id = $1`,
+    [teamId]
+  );
+  return rows[0] || null;
+}
+
+/**
  * Get all teams for an offering
  * GET /api/teams?offering_id=:id
- * Requires: roster.view or course.manage permission (course scope)
+ * Access:
+ *   - Users with team.view_all or course.manage for this offering
+ *     (Instructor, TA, Tutor, Admin)
  */
-router.get('/', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     const { offering_id } = req.query;
     if (!offering_id) {
-      return res.status(400).json({ error: 'offering_id query parameter is required' });
+      return res
+        .status(400)
+        .json({ error: 'offering_id query parameter is required' });
+    }
+
+    const userId = req.currentUser.id;
+
+    const [canViewAll, canManageCourse] = await Promise.all([
+      PermissionService.hasPermission(userId, 'team.view_all', offering_id, null),
+      PermissionService.hasPermission(userId, 'course.manage', offering_id, null),
+    ]);
+
+    if (!canViewAll && !canManageCourse) {
+      return res.status(403).json({ error: 'forbidden' });
     }
 
     const result = await pool.query(
@@ -30,9 +59,19 @@ router.get('/', ...protectAny(['roster.view', 'course.manage'], 'course'), async
         COUNT(tm.user_id) as member_count
       FROM team t
       LEFT JOIN users u ON t.leader_id = u.id
-      LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.left_at IS NULL
+      LEFT JOIN team_members tm
+        ON t.id = tm.team_id AND tm.left_at IS NULL
       WHERE t.offering_id = $1
-      GROUP BY t.id, t.name, t.team_number, t.leader_id, t.status, t.formed_at, t.created_at, u.name, u.email
+      GROUP BY
+        t.id,
+        t.name,
+        t.team_number,
+        t.leader_id,
+        t.status,
+        t.formed_at,
+        t.created_at,
+        u.name,
+        u.email
       ORDER BY t.team_number, t.name`,
       [offering_id]
     );
@@ -47,13 +86,50 @@ router.get('/', ...protectAny(['roster.view', 'course.manage'], 'course'), async
 /**
  * Get team by ID with members
  * GET /api/teams/:teamId
- * Requires: roster.view or course.manage permission (course scope)
+ * Access:
+ *   - Staff / tutor with team.view_all or course.manage for this offering
+ *   - Team leads/members via team-role permissions or membership
  */
-router.get('/:teamId', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/:teamId', ensureAuthenticated, async (req, res) => {
   try {
     const { teamId } = req.params;
+    const userId = req.currentUser.id;
 
-    // Get team details
+    const team = await getTeamWithOffering(teamId);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const offeringId = team.offering_id;
+
+    // Course-level permissions (instructor / TA / tutor / admin)
+    const [canViewAllCourse, canManageCourse] = await Promise.all([
+      PermissionService.hasPermission(userId, 'team.view_all', offeringId, null),
+      PermissionService.hasPermission(userId, 'course.manage', offeringId, null),
+    ]);
+
+    // Team-level permissions (team lead via team_role_permissions)
+    const canViewAsTeamRole = await PermissionService.hasPermission(
+      userId,
+      'team.view_all',
+      null,
+      teamId
+    );
+
+    // Membership (any team member can view their own team)
+    const { rows: membershipRows } = await pool.query(
+      `SELECT 1
+       FROM team_members
+       WHERE team_id = $1 AND user_id = $2 AND left_at IS NULL`,
+      [teamId, userId]
+    );
+    const isMember = membershipRows.length > 0;
+
+    if (!canViewAllCourse && !canManageCourse && !canViewAsTeamRole && !isMember) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+
+    // Get leader info + full team details
     const teamResult = await pool.query(
       `SELECT 
         t.*,
@@ -64,10 +140,6 @@ router.get('/:teamId', ...protectAny(['roster.view', 'course.manage'], 'course')
       WHERE t.id = $1`,
       [teamId]
     );
-
-    if (teamResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Team not found' });
-    }
 
     // Get team members
     const membersResult = await pool.query(
@@ -88,7 +160,7 @@ router.get('/:teamId', ...protectAny(['roster.view', 'course.manage'], 'course')
 
     res.json({
       ...teamResult.rows[0],
-      members: membersResult.rows
+      members: membersResult.rows,
     });
   } catch (err) {
     console.error('Error fetching team:', err);
@@ -100,34 +172,53 @@ router.get('/:teamId', ...protectAny(['roster.view', 'course.manage'], 'course')
  * Create a new team
  * POST /api/teams
  * Body: { offering_id, name, team_number, leader_id, status }
- * Requires: course.manage permission (course scope)
+ * Access:
+ *   - Users with team.manage for this offering
+ *     (Instructor, TA, Admin)
  */
-router.post('/', ...protect('course.manage', 'course'), async (req, res) => {
+router.post('/', ensureAuthenticated, async (req, res) => {
   try {
     const { offering_id, name, team_number, leader_id, status = 'forming' } = req.body;
     
     if (!offering_id || !name) {
-      return res.status(400).json({ error: 'offering_id and name are required' });
+      return res
+        .status(400)
+        .json({ error: 'offering_id and name are required' });
+    }
+
+    const userId = req.currentUser.id;
+
+    const canManageTeams = await PermissionService.hasPermission(
+      userId,
+      'team.manage',
+      offering_id,
+      null
+    );
+
+    if (!canManageTeams) {
+      return res.status(403).json({ error: 'forbidden' });
     }
 
     const result = await pool.query(
       `INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
        VALUES ($1, $2, $3, $4, $5::team_status_enum, CURRENT_DATE, $6)
        RETURNING *`,
-      [offering_id, name, team_number || null, leader_id || null, status, req.currentUser.id]
+      [offering_id, name, team_number || null, leader_id || null, status, userId]
     );
 
-    // If leader_id is provided, add them as a member
+    const team = result.rows[0];
+
+    // If leader_id is provided, add them as a member (leader role)
     if (leader_id) {
       await pool.query(
         `INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
          VALUES ($1, $2, 'leader'::team_member_role_enum, CURRENT_DATE, $3)
          ON CONFLICT (team_id, user_id) DO NOTHING`,
-        [result.rows[0].id, leader_id, req.currentUser.id]
+        [team.id, leader_id, userId]
       );
     }
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(team);
   } catch (err) {
     console.error('Error creating team:', err);
     res.status(400).json({ error: err.message });
@@ -138,12 +229,31 @@ router.post('/', ...protect('course.manage', 'course'), async (req, res) => {
  * Update team
  * PUT /api/teams/:teamId
  * Body: { name, team_number, leader_id, status }
- * Requires: Admin or Instructor
+ * Access:
+ *   - team.manage for the offering (Instructor/TA/Admin), OR
+ *   - team.manage at team scope (team lead)
  */
-router.put('/:teamId', ...protect('course.manage', 'course'), async (req, res) => {
+router.put('/:teamId', ensureAuthenticated, async (req, res) => {
   try {
     const { teamId } = req.params;
+    const userId = req.currentUser.id;
     const { name, team_number, leader_id, status } = req.body;
+
+    const team = await getTeamWithOffering(teamId);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const offeringId = team.offering_id;
+
+    const [canManageCourseTeam, canManageTeamRole] = await Promise.all([
+      PermissionService.hasPermission(userId, 'team.manage', offeringId, null),
+      PermissionService.hasPermission(userId, 'team.manage', null, teamId),
+    ]);
+
+    if (!canManageCourseTeam && !canManageTeamRole) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
 
     const updates = [];
     const values = [];
@@ -171,11 +281,14 @@ router.put('/:teamId', ...protect('course.manage', 'course'), async (req, res) =
     }
 
     updates.push(`updated_by = $${paramCount++}`);
-    values.push(req.currentUser.id);
+    values.push(userId);
     values.push(teamId);
 
     const result = await pool.query(
-      `UPDATE team SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+      `UPDATE team
+       SET ${updates.join(', ')}
+       WHERE id = $${paramCount}
+       RETURNING *`,
       values
     );
 
@@ -193,13 +306,35 @@ router.put('/:teamId', ...protect('course.manage', 'course'), async (req, res) =
 /**
  * Delete team
  * DELETE /api/teams/:teamId
- * Requires: Admin or Instructor
+ * Access:
+ *   - team.manage for the offering (Instructor/TA/Admin), OR
+ *   - team.manage at team scope (team lead)
  */
-router.delete('/:teamId', ...protect('course.manage', 'course'), async (req, res) => {
+router.delete('/:teamId', ensureAuthenticated, async (req, res) => {
   try {
     const { teamId } = req.params;
+    const userId = req.currentUser.id;
 
-    const result = await pool.query('DELETE FROM team WHERE id = $1 RETURNING id', [teamId]);
+    const team = await getTeamWithOffering(teamId);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const offeringId = team.offering_id;
+
+    const [canManageCourseTeam, canManageTeamRole] = await Promise.all([
+      PermissionService.hasPermission(userId, 'team.manage', offeringId, null),
+      PermissionService.hasPermission(userId, 'team.manage', null, teamId),
+    ]);
+
+    if (!canManageCourseTeam && !canManageTeamRole) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM team WHERE id = $1 RETURNING id',
+      [teamId]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Team not found' });
@@ -215,11 +350,44 @@ router.delete('/:teamId', ...protect('course.manage', 'course'), async (req, res
 /**
  * Get team members
  * GET /api/teams/:teamId/members
- * Requires: roster.view or course.manage permission (course scope)
+ * Access:
+ *   - Staff / tutor: team.view_all or course.manage (course scope)
+ *   - Team leads/members: membership or team.view_all at team scope
  */
-router.get('/:teamId/members', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/:teamId/members', ensureAuthenticated, async (req, res) => {
   try {
     const { teamId } = req.params;
+    const userId = req.currentUser.id;
+
+    const team = await getTeamWithOffering(teamId);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+    const offeringId = team.offering_id;
+
+    const [canViewAllCourse, canManageCourse] = await Promise.all([
+      PermissionService.hasPermission(userId, 'team.view_all', offeringId, null),
+      PermissionService.hasPermission(userId, 'course.manage', offeringId, null),
+    ]);
+
+    const canViewAsTeamRole = await PermissionService.hasPermission(
+      userId,
+      'team.view_all',
+      null,
+      teamId
+    );
+
+    const { rows: membershipRows } = await pool.query(
+      `SELECT 1
+       FROM team_members
+       WHERE team_id = $1 AND user_id = $2 AND left_at IS NULL`,
+      [teamId, userId]
+    );
+    const isMember = membershipRows.length > 0;
+
+    if (!canViewAllCourse && !canManageCourse && !canViewAsTeamRole && !isMember) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
 
     const result = await pool.query(
       `SELECT 
@@ -250,15 +418,34 @@ router.get('/:teamId/members', ...protectAny(['roster.view', 'course.manage'], '
  * Add member to team
  * POST /api/teams/:teamId/members
  * Body: { user_id, role }
- * Requires: Admin or Instructor
+ * Access:
+ *   - team.manage for the offering (Instructor/TA/Admin), OR
+ *   - team.manage at team scope (team lead)
  */
-router.post('/:teamId/members', ...protect('course.manage', 'course'), async (req, res) => {
+router.post('/:teamId/members', ensureAuthenticated, async (req, res) => {
   try {
     const { teamId } = req.params;
     const { user_id, role = 'member' } = req.body;
+    const userId = req.currentUser.id;
 
     if (!user_id) {
       return res.status(400).json({ error: 'user_id is required' });
+    }
+
+    const team = await getTeamWithOffering(teamId);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const offeringId = team.offering_id;
+
+    const [canManageCourseTeam, canManageTeamRole] = await Promise.all([
+      PermissionService.hasPermission(userId, 'team.manage', offeringId, null),
+      PermissionService.hasPermission(userId, 'team.manage', null, teamId),
+    ]);
+
+    if (!canManageCourseTeam && !canManageTeamRole) {
+      return res.status(403).json({ error: 'forbidden' });
     }
 
     const result = await pool.query(
@@ -271,7 +458,7 @@ router.post('/:teamId/members', ...protect('course.manage', 'course'), async (re
          left_at = NULL,
          added_by = EXCLUDED.added_by
        RETURNING *`,
-      [teamId, user_id, role, req.currentUser.id]
+      [teamId, user_id, role, userId]
     );
 
     res.status(201).json(result.rows[0]);
@@ -284,22 +471,43 @@ router.post('/:teamId/members', ...protect('course.manage', 'course'), async (re
 /**
  * Remove member from team
  * DELETE /api/teams/:teamId/members/:userId
- * Requires: Admin or Instructor
+ * Access:
+ *   - team.manage for the offering (Instructor/TA/Admin), OR
+ *   - team.manage at team scope (team lead)
  */
-router.delete('/:teamId/members/:userId', ...protect('course.manage', 'course'), async (req, res) => {
+router.delete('/:teamId/members/:userId', ensureAuthenticated, async (req, res) => {
   try {
-    const { teamId, userId } = req.params;
+    const { teamId, userId: targetUserId } = req.params;
+    const actorId = req.currentUser.id;
+
+    const team = await getTeamWithOffering(teamId);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    const offeringId = team.offering_id;
+
+    const [canManageCourseTeam, canManageTeamRole] = await Promise.all([
+      PermissionService.hasPermission(actorId, 'team.manage', offeringId, null),
+      PermissionService.hasPermission(actorId, 'team.manage', null, teamId),
+    ]);
+
+    if (!canManageCourseTeam && !canManageTeamRole) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
 
     const result = await pool.query(
       `UPDATE team_members 
        SET left_at = CURRENT_DATE, removed_by = $1
        WHERE team_id = $2 AND user_id = $3 AND left_at IS NULL
        RETURNING *`,
-      [req.currentUser.id, teamId, userId]
+      [actorId, teamId, targetUserId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Team member not found or already removed' });
+      return res
+        .status(404)
+        .json({ error: 'Team member not found or already removed' });
     }
 
     res.json({ removed: true, member: result.rows[0] });
@@ -310,4 +518,3 @@ router.delete('/:teamId/members/:userId', ...protect('course.manage', 'course'),
 });
 
 export default router;
-
