@@ -1,0 +1,210 @@
+// src/middleware/permission-middleware.js
+import { PermissionService } from "../services/permission-service.js";
+import { getCurrentUser } from "./auth.js";
+
+/**
+ * Authentication middleware using OAuth session
+ * Converts OAuth user format to permission system format
+ */
+export async function authenticate(req, res, next) {
+  try {
+    if (!(req.isAuthenticated && req.isAuthenticated() && req.user)) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Authentication required. Please log in via OAuth.",
+      });
+    }
+
+    const user = await getCurrentUser(req);
+    if (!user) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "User not found or inactive",
+      });
+    }
+
+    if (user.status !== "active") {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: `User account is ${user.status}. Only active users can authenticate.`,
+      });
+    }
+
+    req.currentUser = user;
+
+    return next();
+  } catch (err) {
+    console.error("Authentication error:", err);
+    return res.status(500).json({ error: "Authentication failed" });
+  }
+}
+
+/**
+ * Skip authentication for health checks and public endpoints
+ */
+export function skipAuthForPublic(req, res, next) {
+  const publicPaths = ['/health', '/'];
+  if (publicPaths.includes(req.path)) {
+    return next();
+  }
+  return authenticate(req, res, next);
+}
+
+/**
+ * Extract userId + scope IDs from request in one place.
+ */
+function getAuthContext(req, scope) {
+  const userId = req.currentUser?.id;
+
+  const offeringId =
+    scope === "course"
+      ? req.params.offeringId ?? req.params.courseId ?? req.body.offeringId ?? req.body.courseId ?? req.query.offering_id ?? null
+      : null;
+
+  const teamId =
+    scope === "team"
+      ? req.params.teamId ?? req.body.teamId ?? req.query.team_id ?? null
+      : null;
+
+  return { userId, offeringId, teamId };
+}
+
+/**
+ * Require a specific permission.
+ *
+ * @param {string} permissionCode
+ * @param {"global"|"course"|"team"} scope
+ */
+export function requirePermission(permissionCode, scope = "global") {
+  return async (req, res, next) => {
+    try {
+      const { userId, offeringId, teamId } = getAuthContext(req, scope);
+
+      if (!userId) {
+        return res.status(401).json({
+          error: "Unauthorized",
+          message: "User authentication required",
+        });
+      }
+
+      const allowed = await PermissionService.hasPermission(
+        userId,
+        permissionCode,
+        offeringId,
+        teamId
+      );
+
+      if (!allowed) {
+        return res.status(403).json({
+          error: "Forbidden",
+          message: `Permission required: ${permissionCode}`,
+        });
+      }
+      next();
+    } catch (err) {
+      console.error("[PermissionMiddleware] Error checking permission:", err);
+      return res.status(500).json({
+        error: "Permission check failed",
+        message: err.message,
+      });
+    }
+  };
+}
+
+/**
+ * Require at least one of multiple permissions.
+ *
+ * @param {string[]} permissionCodes
+ * @param {"global"|"course"|"team"} scope
+ */
+export function requireAnyPermission(permissionCodes, scope = "global") {
+  return async (req, res, next) => {
+    try {
+      const { userId, offeringId, teamId } = getAuthContext(req, scope);
+
+      if (!userId) {
+        return res.status(401).json({
+          error: "Unauthorized",
+          message: "User authentication required",
+        });
+      }
+
+      for (const code of permissionCodes) {
+        const allowed = await PermissionService.hasPermission(
+          userId,
+          code,
+          offeringId,
+          teamId
+        );
+        if (allowed) {
+          return next();
+        }
+      }
+
+      return res.status(403).json({
+        error: "Forbidden",
+        message: `One of these permissions required: ${permissionCodes.join(", ")}`,
+      });
+    } catch (err) {
+      console.error("[PermissionMiddleware] Error checking permissions:", err);
+      return res.status(500).json({
+        error: "Permission check failed",
+        message: err.message,
+      });
+    }
+  };
+}
+
+/**
+ * Require a specific global role (bypassing permissions).
+ */
+export function requireRole(...roles) {
+  return (req, res, next) => {
+    const user = req.currentUser;
+
+    if (!user) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "User authentication required",
+      });
+    }
+
+    const userRole = user.primary_role;
+
+    if (!roles.includes(userRole)) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: `Required role: ${roles.join(" or ")}`,
+      });
+    }
+
+    req.userRole = userRole;
+    return next();
+  };
+}
+
+// Convenience helpers to attach auth + RBAC in routes
+
+/**
+ * Protect a route with a single permission.
+ * Usage: ...protect("roster.view", "course")
+ */
+export function protect(permissionCode, scope = "global") {
+  return [authenticate, requirePermission(permissionCode, scope)];
+}
+
+/**
+ * Protect a route with "any of" multiple permissions.
+ * Usage: ...protectAny(["roster.view", "course.manage"], "course")
+ */
+export function protectAny(permissionCodes, scope = "global") {
+  return [authenticate, requireAnyPermission(permissionCodes, scope)];
+}
+
+/**
+ * Protect a route by global role(s) only.
+ * Usage: ...protectRole("admin", "instructor")
+ */
+export function protectRole(...roles) {
+  return [authenticate, requireRole(...roles)];
+}

@@ -4,57 +4,39 @@
 // Usage: node reset-database.js
 
 import dotenv from 'dotenv';
-import { createSequelize } from '../config/db.js';
-import { defineWhitelistModel } from '../models/whitelist.js';
-import { defineAccessRequestModel } from '../models/access-request.js';
-import { defineAuthLogModel } from '../models/auth-log.js';
-import { DataTypes } from 'sequelize';
+import { pool } from '../db.js';
 
 dotenv.config();
 
 const DATABASE_URL = process.env.DATABASE_URL;
-const PG_SSL_MODE = process.env.PGSSLMODE;
 
 if (!DATABASE_URL) {
   console.error('❌ DATABASE_URL not found in environment. Please set it in .env file.');
   process.exit(1);
 }
 
-const sequelize = createSequelize({ databaseUrl: DATABASE_URL, sslMode: PG_SSL_MODE });
-
-// Define all models to clean
-const User = sequelize.define('User', {
-  email: { type: DataTypes.STRING, unique: true, allowNull: false },
-  name: { type: DataTypes.STRING },
-  user_type: {
-    type: DataTypes.ENUM('Admin', 'Professor', 'TA', 'Student', 'Unregistered'),
-    defaultValue: 'Unregistered'
-  },
-  created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
-}, {
-  tableName: 'users',
-  timestamps: false
-});
-
-const Whitelist = defineWhitelistModel(sequelize);
-const AccessRequest = defineAccessRequestModel(sequelize);
-const AuthLog = defineAuthLogModel(sequelize);
-
 async function resetDatabase() {
   try {
-    await sequelize.authenticate();
+    // Test connection
+    await pool.query('SELECT 1');
     console.log('✅ Connected to database');
 
-    const tables = [AccessRequest, Whitelist, AuthLog, User];
+    // Tables to clear (in order to respect foreign key constraints)
+    const tables = [
+      'access_requests',
+      'whitelist',
+      'auth_logs',
+      'enrollments',
+      'users'
+    ];
 
     for (const table of tables) {
-      const name = table.getTableName();
-      await table.destroy({ where: {}, truncate: true, restartIdentity: true });
-      console.log(`🧹 Cleared table: ${name}`);
+      await pool.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
+      console.log(`🧹 Cleared table: ${table}`);
     }
 
     console.log('✅ Database reset completed successfully.');
-    await sequelize.close();
+    await pool.end();
   } catch (error) {
     console.error('❌ Error resetting database:', error);
     process.exit(1);
@@ -62,4 +44,3 @@ async function resetDatabase() {
 }
 
 resetDatabase();
-

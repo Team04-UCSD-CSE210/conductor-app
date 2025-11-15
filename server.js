@@ -553,15 +553,6 @@ app.get(
   });
 
 // --- AUTH FAILURE ROUTE ---
-app.get("/auth/failure", (req, res) => {
-  res.send(`
-    <h1>Authentication Failed</h1>
-    <p>There was an error during authentication. Please try again.</p>
-    <a href="/login">Back to Login</a>
-  `);
-});
-
-// Failed login route
 app.get("/auth/failure", async (req, res) => {
   console.warn("⚠️ Google OAuth failed or unauthorized user.");
   await logAuthEvent("LOGIN_FAILURE", {
@@ -816,7 +807,7 @@ app.get("/admin/approve", async (req, res) => {
   if (!email) return res.status(400).send("Missing email");
 
   // Use findOrCreate to avoid duplicate whitelist entries
-  const [entry, created] = await Whitelist.findOrCreate({
+  const [, created] = await Whitelist.findOrCreate({
     where: { email },
     defaults: { approved_by: "Admin" }
   });
@@ -950,7 +941,6 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   const courses = memberships.map(m => ({ id: m.Course.id, code: m.Course.code, title: m.Course.title, role: m.role }));
   res.json({ courses });
 });
-
 // Start server if not running on Vercel
 if (!process.env.VERCEL) {
   startServer();

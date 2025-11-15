@@ -3,9 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <title>Tutor Dashboard - Conductor</title>
+  <link rel="stylesheet" href="/global.css">
+  <link rel="stylesheet" href="/dashboard-global.css">
+  <link rel="stylesheet" href="/ta-dashboard.css">
 </head>
-<body>
+
+<body class="dashboard-page">
+
+  <!-- Hamburger Menu Button (mobile only) -->
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <!-- Sidebar Navigation -->
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/attendance">Attendance</a>
+      <a href="/class-directory">Class Directory</a>
+    </nav>
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </footer>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container" id="main">
+    <h2 class="page-title">Tutor Dashboard</h2>
+
+    <section class="frame" role="region" aria-label="Dashboard content">
+      <section class="content">
+        
+        <!-- Top Cards Container -->
+        <section class="top-cards-wrapper">
+          <article class="card card-course-info" aria-label="Course information card">
+            <strong class="course-code">CSE 210</strong>
+            <p class="course-title">Software Engineering</p>
+            <p class="course-term">Fall 2025</p>
+            <dl class="course-schedule">
+              <dt>Office Hours</dt>
+              <dd>Thu 2–4 pm</dd>
+            </dl>
+            <figure class="course-stats">
+              <figcaption class="stat-item">
+                <span class="stat-value">4</span>
+                <span class="stat-label">Teams Assigned</span>
+              </figcaption>
+              <figcaption class="stat-item">
+                <span class="stat-value">8</span>
+                <span class="stat-label">To Grade</span>
+              </figcaption>
+            </figure>
+          </article>
+
+          <article class="card card-scrollable" aria-label="Teams card">
+            <h3>My Teams</h3>
+            <nav class="teams-list">
+              <a href="/teams/1" class="team-item" aria-label="Team 1">
+                <span class="team-name">Team 1</span>
+                <span class="team-count">8 members</span>
+              </a>
+              <a href="/teams/2" class="team-item" aria-label="Team 2">
+                <span class="team-name">Team 2</span>
+                <span class="team-count">8 members</span>
+              </a>
+            </nav>
+          </article>
+
+          <!-- Recent Updates -->
+          <section class="card wide recent-updates" aria-label="Recent activity">
+            <h3>Recent Updates</h3>
+            <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-700);">
+              <li>Sprint 2 deliverables graded</li>
+              <li>New assignments posted</li>
+            </ul>
+          </section>
+        </section>
+
+      </section>
+    </section>
+  </main>
+
+  <script src="/professor-dashboard.js" defer></script>
     
 </body>
 </html>
