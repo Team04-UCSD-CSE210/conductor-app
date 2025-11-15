@@ -101,22 +101,6 @@ const Team = defineTeamModel(sequelize);
 const TeamMember = defineTeamMembersModel(sequelize);
 const User = defineUserModel(sequelize);
 
-// ---------- Define User Model ----------
-// import { DataTypes } from "sequelize";
-
-// const User = sequelize.define("User", {
-//   email: { type: DataTypes.STRING, unique: true, allowNull: false },
-//   name: { type: DataTypes.STRING },
-//   user_type: {
-//     type: DataTypes.ENUM("Admin", "Professor", "TA", "Student", "Unregistered"),
-//     defaultValue: "Unregistered"
-//   },
-//   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
-// }, {
-//   tableName: "users",
-//   timestamps: false
-// });
-
 // ---- Whitelist and AccessRequest Models ----
 import {defineWhitelistModel} from "./src/models/whitelist.js";
 import {defineAccessRequestModel} from "./src/models/access-request.js";
@@ -1429,10 +1413,13 @@ const startServer = async () => {
         });
     }
 };
-
-registerGroupApis(app, {authMiddleware: devSafeAuth, models: {User, Team, TeamMember}});
+const noAuth = (_req, _res, next) => next();
+registerGroupApis(app, {
+    authMiddleware: noAuth,
+    models: {User, Team, TeamMember}
+});
 registerClassApis(app, {
-    authMiddleware: devSafeAuth,
+    authMiddleware: noAuth,
     models: {Course: CourseOffering, CourseUser, User}
 });
 startServer().catch((err) => {
