@@ -13,6 +13,12 @@
   background: var(--red-200, #fecaca);
 }
 
+/* Center the + and - content inside the interaction buttons  */
+.interaction-btn {
+	justify-content: center;
+	text-align: center; /* fallback for non-flex user agents */
+}
+
 /* Interaction Report Form Styles */
 .interaction-form {
   display: flex;
