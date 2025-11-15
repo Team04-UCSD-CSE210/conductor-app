@@ -73,6 +73,22 @@ CREATE INDEX IF NOT EXISTS idx_permissions_scope ON permissions(scope);
 -- ------------------------------------------------------------
 -- user_role_permissions: global role → permission
 -- ------------------------------------------------------------
+DO $$ 
+BEGIN
+    -- Drop table if it exists with wrong structure
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'user_role_permissions'
+        AND NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'user_role_permissions' 
+            AND column_name = 'user_role'
+        )
+    ) THEN
+        DROP TABLE IF EXISTS user_role_permissions CASCADE;
+    END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS user_role_permissions (
     user_role     user_role_enum NOT NULL,
     permission_id UUID NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,

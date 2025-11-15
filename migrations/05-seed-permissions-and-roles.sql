@@ -39,18 +39,18 @@ WHERE p.code IN (
 )
 ON CONFLICT (user_role, permission_id) DO NOTHING;
 
--- 4) Student: basic permissions (roster.view)
+-- 4) Student: NO roster permissions (read-only via course enrollments only)
 INSERT INTO user_role_permissions (user_role, permission_id)
 SELECT 'student'::user_role_enum, p.id
 FROM permissions p
-WHERE p.code = 'roster.view'
+WHERE p.code IN ('roster.view')  -- Only view, no import/export
 ON CONFLICT (user_role, permission_id) DO NOTHING;
 
--- 5) Unregistered: same permissions as student
+-- 5) Unregistered: NO roster permissions
 INSERT INTO user_role_permissions (user_role, permission_id)
 SELECT 'unregistered'::user_role_enum, p.id
 FROM permissions p
-WHERE p.code = 'roster.view'
+WHERE p.code IN ('roster.view')  -- Only view, no import/export
 ON CONFLICT (user_role, permission_id) DO NOTHING;
 
 
@@ -63,11 +63,11 @@ FROM permissions p
 WHERE p.code = 'roster.view'
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 
--- TA: roster.view + roster.import + enrollment.manage + course.manage
+-- TA: roster.view + enrollment.manage + course.manage (NO roster.import or roster.export)
 INSERT INTO enrollment_role_permissions (enrollment_role, permission_id)
 SELECT 'ta'::course_role_enum, p.id
 FROM permissions p
-WHERE p.code IN ('roster.view', 'roster.import', 'enrollment.manage', 'course.manage')
+WHERE p.code IN ('roster.view', 'enrollment.manage', 'course.manage')
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 
 -- Tutor: roster.view only
@@ -76,3 +76,15 @@ SELECT 'tutor'::course_role_enum, p.id
 FROM permissions p
 WHERE p.code = 'roster.view'
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
+
+
+-- ============================================================
+-- Cleanup: Remove roster.import from TAs (restrict to admin/instructor only)
+-- ============================================================
+
+-- Remove roster.import from TAs (course role)
+DELETE FROM enrollment_role_permissions
+WHERE enrollment_role = 'ta'::course_role_enum
+  AND permission_id IN (
+    SELECT id FROM permissions WHERE code = 'roster.import'
+  );
