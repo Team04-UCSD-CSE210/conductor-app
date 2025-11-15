@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Conductor IAM Dashboard</title>
+  <link rel="stylesheet" href="../../src/public/css/style.css">
+  <link rel="stylesheet" href="../../src/public/css/console.css">
+</head>
+
+<body class="console-body">
+  <div id="console" class="card center">
+    <h1>🧭 Conductor IAM Dashboard</h1>
+    <div id="userCard" class="center">
+      <img id="userPic" class="profile-pic" src="" alt="User Picture" width="90" height="90">
+      <h3 id="userName"></h3>
+      <p id="userEmail"></p>
+      <button id="logoutBtn">Logout</button>
+    </div>
+
+    <hr>
+
+    <section id="permissions">
+      <h3>Permissions</h3>
+      <ul id="permList"></ul>
+    </section>
+  </div>
+
+  <script>
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/user");
+        const user = await res.json();
+        if (user.error) {
+          // If not logged in, redirect back to login
+          window.location.href = "/login.html";
+          return;
+        }
+
+        // Populate info
+        document.getElementById("userPic").src = user.picture;
+        document.getElementById("userName").innerText = user.name;
+        document.getElementById("userEmail").innerText = user.email;
+
+        // Example: dynamic role-based permission list
+        const role = user.email.includes("ta") ? "Teaching Assistant"
+                    : user.email.includes("instructor") ? "Instructor"
+                    : "Student";
+        const rolePermissions = {
+          "Instructor": ["Manage roles", "View all users", "Access logs"],
+          "Teaching Assistant": ["Mark attendance", "View class data"],
+          "Student": ["Submit journal", "View attendance record"]
+        };
+        const perms = rolePermissions[role] || [];
+        document.getElementById("permList").innerHTML =
+          perms.map(p => `<li>${p}</li>`).join("");
+      } catch (err) {
+        console.error("Fetch failed", err);
+        window.location.href = "/login.html";
+      }
+    }
+
+    // Logout action
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      window.location.href = "/logout";
+    });
+
+    fetchUser();
+  </script>
+
+  <style>
+    .profile-pic {
+      border-radius: 50%;
+      margin-bottom: 10px;
+      border: 2px solid var(--accent-color);
+    }
+  </style>
+</body>
+</html>

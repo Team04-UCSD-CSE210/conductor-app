@@ -13,6 +13,7 @@ import {isUuid} from "../../utils/validation.js";
  * @param {Object} options.models - Sequelize models { Course, CourseUser, User }
  */
 export function registerClassApis(app, { authMiddleware: _authMiddleware, models }) {
+    console.log("📝 registerClassApis called, models:", Object.keys(models));
     const { Course } = models; // Course should be the CourseOffering model
 
     // Always use no-op auth to keep endpoint public
@@ -23,6 +24,7 @@ export function registerClassApis(app, { authMiddleware: _authMiddleware, models
      * Fetch detailed information about a specific course offering
      */
     app.get("/api/class/:id", auth, async (req, res) => {
+        console.log("🎯 Class API hit:", req.params.id);
         const courseId = req.params.id; // course_offerings.id is UUID
         if (!isUuid(courseId)) {
             // Treat non-UUID as not found to avoid DB error surfacing as 500

@@ -6,14 +6,16 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
+    "build": "node scripts/build.js",
     "test": "node scripts/run-tests-with-coverage.js",
     "lint": "npm run lint:js || echo 'Skipping CSS/HTML/MD lint'",
-    "lint:js": "eslint .",
+    "lint:js": "npx eslint . --config config/eslint.config.js",
     "lint:css": "stylelint '**/*.css' || echo 'No CSS files found'",
     "lint:html": "htmlhint '**/*.html' || echo 'No HTML files found'",
     "lint:md": "markdownlint '**/*.md'",
     "docs": "echo 'No documentation build required'",
-    "prune:auth-logs": "node scripts/prune-auth-logs.js"
+    "prune:auth-logs": "node scripts/prune-auth-logs.js",
+    "setup:vercel": "node scripts/setup-vercel.js"
   },
   "keywords": [],
   "author": "",

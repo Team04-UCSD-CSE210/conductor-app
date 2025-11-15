@@ -3,6 +3,8 @@ AGENTS.md
 **/.DS_Store
 node_modules
 certs/
+.envpublic/
 .env
-.idea
 .vercel
+
+.idea
