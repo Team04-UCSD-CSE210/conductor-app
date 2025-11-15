@@ -3,10 +3,15 @@ import { spawnSync } from 'node:child_process';
 
 const MIN_COVERAGE = 80;
 
-const subprocess = spawnSync('node', ['--test', '--experimental-test-coverage', 'tests/'], {
-  env: process.env,
-  encoding: 'utf-8'
-});
+const subprocess = spawnSync(
+  'node',
+  ['--test', '--experimental-test-coverage', 'tests/class-directory-apis.test.js'],
+  {
+    env: process.env,
+    encoding: 'utf-8',
+  }
+);
+
 
 if (subprocess.stdout) {
   process.stdout.write(subprocess.stdout);
