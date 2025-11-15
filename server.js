@@ -19,7 +19,7 @@ import bodyParser from "body-parser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const VIEW_DIR = "src/views"
+const VIEW_DIR = process.env.VERCEL ? "public" : "src/views"
 
 dotenv.config();
 
@@ -46,9 +46,17 @@ try {
 
 const app = express();
 // Serve static frontend assets
-app.use(express.static(path.join(__dirname, "src/views")));
-app.use(express.static(path.join(__dirname, "src/public")));
-app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
+if (process.env.VERCEL) {
+  // In production, serve from public directory
+  console.log('📁 Serving static files from public directory');
+  app.use(express.static(path.join(__dirname, "public")));
+} else {
+  // In development, serve from src directories
+  console.log('📁 Serving static files from src directories');
+  app.use(express.static(path.join(__dirname, "src/views")));
+  app.use(express.static(path.join(__dirname, "src/public")));
+  app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
+}
 
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -113,7 +121,8 @@ const AccessRequest = defineAccessRequestModel(sequelize);
 // Initialize associations using explicit FKs before sync
 initCourseAssociations(sequelize, { User, Course, CourseUser, Invite });
 // Ensure tables exist on startup
-await sequelize.sync({ alter: true });
+// Temporarily disabled for testing
+// await sequelize.sync({ alter: true });
 
 
 const redisClient = createClient({ url: REDIS_URL });
@@ -419,9 +428,6 @@ app.get("/ta-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFu
 app.get("/faculty-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("professor-dashboard.html")));
 app.get("/admin-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("admin-dashboard.html")));
 
-// serve all your static files (HTML, CSS, JS, etc.)
-app.use(express.static(__dirname));
-
 // Serve blocked page with injected email (before static middleware)
 app.get("/blocked.html", (req, res) => {
   const email = req.session.blockedEmail || "";
@@ -546,7 +552,7 @@ app.get(
     }
   });
 
-// Failed login route
+// --- AUTH FAILURE ROUTE ---
 app.get("/auth/failure", async (req, res) => {
   console.warn("⚠️ Google OAuth failed or unauthorized user.");
   await logAuthEvent("LOGIN_FAILURE", {
@@ -582,6 +588,11 @@ app.get("/auth/failure", async (req, res) => {
 function buildFullViewPath(viewFileName){
   return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
 }
+
+// Root route - redirect to login
+app.get("/", (req, res) => {
+  res.redirect("/login");
+});
 
 // Reset any leftover session before showing login page
 app.get("/login", (req, res) => {
@@ -711,9 +722,10 @@ app.post("/register/submit", ensureAuthenticated, async (req, res) => {
 // --- START HTTPS SERVER ---
 const startServer = async () => {
   try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true }); // create users table if missing
-    console.log("✅ Database connection established");
+    // Temporarily disabled for testing
+    // await sequelize.authenticate();
+    // await sequelize.sync({ alter: true }); // create users table if missing
+    // console.log("✅ Database connection established");
   } catch (error) {
     console.error("Failed to connect to the database", error);
     process.exit(1);
@@ -730,9 +742,6 @@ const startServer = async () => {
     });
   }
 };
-
-startServer();
-
 
 // --- Access Request Submission ---
 app.post("/request-access", async (req, res) => {
@@ -932,3 +941,10 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   const courses = memberships.map(m => ({ id: m.Course.id, code: m.Course.code, title: m.Course.title, role: m.role }));
   res.json({ courses });
 });
+// Start server if not running on Vercel
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+// Export app for Vercel
+export default app;
