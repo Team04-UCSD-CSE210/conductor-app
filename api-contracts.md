@@ -9,48 +9,30 @@
 #### Response
 ```json
 {
-  "id": "cse210-fa25",
+  "id": "00000000-aaaa-0001-aaaa-000000000001",
   "code": "CSE210",
   "name": "Software Engineering",
-  "department": "Computer Science and Engineering",
-  "term": "Fall",
+  "department": "CSE",
+  "term": "FA",
   "year": 2025,
   "credits": 4,
-  "start_date": "2025-09-22",
-  "end_date": "2025-12-12",
-  "enrollment_cap": 150,
+  "start_date": "2025-09-20",
+  "end_date": "2025-12-15",
+  "enrollment_cap": 200,
   "status": "open",
-  "location": "Building A",
+  "location": "Center Hall 101",
   "class_timings": {
-    "lectures": [
-      {
-        "day": "Monday",
-        "startTime": "10:00",
-        "endTime": "11:20",
-        "location": "Building A, Room 101"
-      }
-    ],
-    "office_hours": [
-      {
-        "day": "Wednesday",
-        "startTime": "14:00",
-        "endTime": "15:20",
-        "location": "Building B, Room 202"
-      }
+    "time intervals": [
+      "Mon 10:00-11:20",
+      "Wed 10:00-11:20"
     ]
   },
-  "syllabus_url": "https://cdn...",
-  "currentEnrollment": 145,
-  "createdAt": "2025-06-01T12:00:00Z",
-    "updatedAt": "2025-08-15T09:30:00Z",
-  "created_by": {
-    "userId": "uuid-admin-1",
-    "name": "Admin User"
-  },
-    "updated_by": {
-        "userId": "uuid-admin-2",
-        "name": "Editor User"
-    }
+  "syllabus_url": "https://example.com/syllabus",
+  "currentEnrollment": null,
+  "createdAt": "2025-11-15T00:04:08.214Z",
+  "updatedAt": "2025-11-15T00:04:08.214Z",
+  "created_by": null,
+  "updated_by": null
 }
 ```
 #### Backend logic
@@ -246,25 +228,45 @@
 #### Response
 ```json
 {
-  "offeringId": "cse210-fa25",
+  "offeringId": "00000000-aaaa-0001-aaaa-000000000001",
   "groups": [
     {
-      "teamId": "uuid-team-1",
+      "teamId": "00000000-aaaa-0002-aaaa-000000000001",
       "name": "Team Alpha",
       "status": "active",
       "number": 1,
-      "logo": "https://cdn...",
-      "mantra": "Ship fast",
+      "logo": null,
+      "mantra": null,
       "links": {
-        "slack": "https://slack...",
-        "githubRepo": "https://github.com/...",
+        "slack": null,
+        "githubRepo": null,
         "notion": null
       },
-      "memberCount": 5,
+      "memberCount": 2,
       "leaders": [
         {
-          "userId": "uuid-user-1",
-          "name": "Alice Chen"
+          "userId": "00000000-aaaa-0000-aaaa-000000000301",
+          "name": "Bob Student"
+        }
+      ]
+    },
+    {
+      "teamId": "00000000-aaaa-0002-aaaa-000000000002",
+      "name": "Team Beta",
+      "status": "active",
+      "number": 2,
+      "logo": null,
+      "mantra": null,
+      "links": {
+        "slack": null,
+        "githubRepo": null,
+        "notion": null
+      },
+      "memberCount": 2,
+      "leaders": [
+        {
+          "userId": "00000000-aaaa-0000-aaaa-000000000302",
+          "name": "Carol Student"
         }
       ]
     }
@@ -285,40 +287,46 @@
 | memberCount | COUNT(TEAM_MEMBERS)                     |
 | leaders     | TEAM_MEMBERS.role = 'leader' join USERS |
 
+
 ### Get a specific group in a class
 **GET** `/api/class//group/{teamId}`
 #### Response
 ```json
 {
-  "teamId": "uuid-team-1",
-  "offeringId": "cse210-fa25",
+  "teamId": "00000000-aaaa-0002-aaaa-000000000001",
+  "offeringId": "00000000-aaaa-0001-aaaa-000000000001",
   "name": "Team Alpha",
   "number": 1,
-  "logo": "https://cdn...",
-  "mantra": "Ship fast",
+  "logo": null,
+  "mantra": null,
   "status": "active",
   "links": {
-    "slack": "https://slack...",
-    "githubRepo": "https://github.com/team-alpha",
-    "drive": "https://drive..."
+    "slack": null,
+    "githubRepo": null,
+    "drive": null
   },
   "members": [
     {
-      "userId": "uuid-user-1",
-      "name": "Alice Chen",
-      "preferredName": "Alice",
-      "pronouns": "she/her",
-      "photo": "https://cdn...",
-      "email": "alice@ucsd.edu",
+      "userId": "00000000-aaaa-0000-aaaa-000000000301",
+      "name": "Bob Student",
+      "preferredName": "Bob",
+      "pronouns": null,
+      "photo": null,
+      "email": "bob@ucsd.edu",
       "role": "LEADER",
-      "joinedAt": "2025-02-05",
-      "phone": "+1 858 123 4567"
+      "joinedAt": "2025-11-15",
+      "phone": null
     },
     {
-      "userId": "uuid-user-2",
-      "name": "Bob Lee",
-      "pronouns": "he/him",
-      "role": "MEMBER"
+      "userId": "00000000-aaaa-0000-aaaa-000000000303",
+      "name": "Dave Student",
+      "preferredName": "Dave",
+      "pronouns": null,
+      "photo": null,
+      "email": "dave@ucsd.edu",
+      "role": "MEMBER",
+      "joinedAt": "2025-11-15",
+      "phone": null
     }
   ]
 }
@@ -329,6 +337,7 @@
 - Parse `metadata (logo, mantra, links)`
 - Query `TEAM_MEMBERS where team_id = {teamId}`
 - Join `USERS` to get complete user info
+
 
 
 
