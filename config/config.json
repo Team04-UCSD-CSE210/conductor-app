@@ -1,0 +1,26 @@
+{
+  "development": {
+    "username": "helenahundhausen",
+    "password": null,
+    "database": "conductor",
+    "host": "localhost",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "helenahundhausen",
+    "password": null,
+    "database": "conductor_test",
+    "host": "localhost",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "helenahundhausen",
+    "password": null,
+    "database": "conductor_production",
+    "host": "localhost",
+    "port": 5432,
+    "dialect": "postgres"
+  }
+}
