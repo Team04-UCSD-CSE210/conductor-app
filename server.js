@@ -19,21 +19,44 @@ import bodyParser from "body-parser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const VIEW_DIR = "src/views"
+const VIEW_DIR = process.env.VERCEL ? "public" : "src/views"
 
 dotenv.config();
 
-// SSL certificate and key
-const sslOptions = {
-  key: fs.readFileSync(path.join(__dirname, "certs", "server.key")),
-  cert: fs.readFileSync(path.join(__dirname, "certs", "server.crt")),
-};
+// SSL certificate and key (optional for local dev)
+let sslOptions = null;
+let HTTPS_AVAILABLE = false;
+try {
+  const keyPath = path.join(__dirname, "certs", "server.key");
+  const certPath = path.join(__dirname, "certs", "server.crt");
+  if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+    sslOptions = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath),
+    };
+    HTTPS_AVAILABLE = true;
+  } else {
+    console.warn("⚠️ SSL cert/key not found in ./certs — falling back to HTTP for local dev. To enable HTTPS, place server.key and server.crt in the certs/ directory or generate self-signed certs.");
+  }
+} catch (err) {
+  console.error("Error reading SSL certs, falling back to HTTP:", err);
+  sslOptions = null;
+  HTTPS_AVAILABLE = false;
+}
 
 const app = express();
 // Serve static frontend assets
-app.use(express.static(path.join(__dirname, "src/views")));
-app.use(express.static(path.join(__dirname, "src/public")));
-app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
+if (process.env.VERCEL) {
+  // In production, serve from public directory
+  console.log('📁 Serving static files from public directory');
+  app.use(express.static(path.join(__dirname, "public")));
+} else {
+  // In development, serve from src directories
+  console.log('📁 Serving static files from src directories');
+  app.use(express.static(path.join(__dirname, "src/views")));
+  app.use(express.static(path.join(__dirname, "src/public")));
+  app.use('/assets', express.static(path.join(__dirname, 'src/assets')));
+}
 
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -89,10 +112,17 @@ const User = sequelize.define("User", {
   timestamps: false
 });
 
+// ---- Whitelist and AccessRequest Models ----
+import { defineWhitelistModel } from "./src/models/whitelist.js";
+import { defineAccessRequestModel } from "./src/models/access-request.js";
+const Whitelist = defineWhitelistModel(sequelize);
+const AccessRequest = defineAccessRequestModel(sequelize);
+
 // Initialize associations using explicit FKs before sync
 initCourseAssociations(sequelize, { User, Course, CourseUser, Invite });
 // Ensure tables exist on startup
-await sequelize.sync({ alter: true });
+// Temporarily disabled for testing
+// await sequelize.sync({ alter: true });
 
 
 const redisClient = createClient({ url: REDIS_URL });
@@ -232,6 +262,25 @@ passport.use(new GoogleStrategy({
   const identifier = getLoginIdentifier(email, req);
   const { blocked, attempts: recentAttempts } = await getLoginAttemptStatus(identifier);
 
+
+  // --- Whitelist bypass for rate limits ---
+  if (email) {
+    const whitelistEntry = await Whitelist.findOne({ where: { email } });
+    if (whitelistEntry) {
+      console.log(`[TRACE] Whitelisted user bypassing rate-limit: ${email}`);
+      await clearLoginAttempts(identifier);
+      await logAuthEvent("LOGIN_SUCCESS_WHITELIST_BYPASS", {
+        req,
+        message: "Whitelisted user bypassed rate-limit",
+        userEmail: email,
+        userId,
+        metadata: { provider: "google" }
+      });
+      return done(null, profile);
+    }
+  }
+
+  console.log(`🔐 Login attempt for email: ${email}. Blocked: ${blocked}. Recent attempts: ${recentAttempts}`);
   if (blocked) {
     await logAuthEvent("LOGIN_RATE_LIMITED", {
       req,
@@ -250,45 +299,73 @@ passport.use(new GoogleStrategy({
   }
 
   try {
-    if (domain !== ALLOWED_DOMAIN) {
-      const attempts = await recordFailedLoginAttempt(identifier);
-      await logAuthEvent("LOGIN_REJECTED_DOMAIN", {
+    // --- Step 1: UCSD domain always allowed ---
+    if (domain === ALLOWED_DOMAIN) {
+      console.log(`🔐 UCSD domain login successful email: ${email}`);
+      await clearLoginAttempts(identifier);
+      await logAuthEvent("LOGIN_SUCCESS", {
         req,
-        message: `Attempted login from disallowed domain ${domain || "unknown"}`,
+        message: "Google OAuth login succeeded (UCSD domain)",
         userEmail: email,
         userId,
-        metadata: {
-          provider: "google",
-          domain,
-          attempts,
-          threshold: LOGIN_FAILURE_THRESHOLD,
-          windowMinutes: LOGIN_FAILURE_WINDOW_MINUTES
-        }
+        metadata: { provider: "google" }
       });
-      return done(null, false, { message: "Non-UCSD account" });
+      return done(null, profile);
     }
 
-    // UCSD domain: upsert user, attach role
-    const [userRecord] = await User.findOrCreate({
-      where: { email },
-      defaults: { name: profile.displayName || null, user_type: "Unregistered" }
-    });
+    // --- Step 2: Non-UCSD (gmail etc.) → check whitelist ---
+    console.log(`🔐 Non-UCSD domain login successful email: ${email}`);
+    if (email) {
+      console.log(`[TRACE] Checking whitelist for email: ${email}`);
+      const whitelistEntry = await Whitelist.findOne({ where: { email } });
+      if (whitelistEntry) {
+        console.log(`[TRACE] Whitelist entry found for email: ${email}`);
+        await clearLoginAttempts(identifier);
+        await logAuthEvent("LOGIN_SUCCESS_WHITELIST", {
+          req,
+          message: "Whitelisted non-UCSD user allowed login",
+          userEmail: email,
+          userId,
+          metadata: { provider: "google" }
+        });
 
-    // Clear attempts on success
-    await clearLoginAttempts(identifier);
+        // ✅ Treat whitelisted users as 'Unregistered'
+        console.log(`[TRACE] Creating or finding 'Unregistered' user for email: ${email}`);
+        await User.findOrCreate({
+          where: { email },
+          defaults: {
+            name: profile.displayName,
+            user_type: "Unregistered"
+          }
+        });
 
-    // Attach role to profile for session persistence
-    const userWithRole = { ...profile, role: userRecord.user_type, email };
+        console.log(`[TRACE] Login successful for whitelisted user: ${email}`);
+        return done(null, profile);
+      } else {
+        console.log(`[TRACE] No whitelist entry for email: ${email}`);
+      }
+    }
 
-    await logAuthEvent("LOGIN_SUCCESS", {
+    // --- Step 3: All others → block and log ---
+    const attempts = await recordFailedLoginAttempt(identifier);
+    await logAuthEvent("LOGIN_REJECTED_DOMAIN", {
       req,
-      message: "Google OAuth login succeeded",
+      message: `Attempted login from unauthorized domain: ${domain || "unknown"}`,
       userEmail: email,
       userId,
-      metadata: { provider: "google", role: userRecord.user_type }
+      metadata: {
+        provider: "google",
+        domain,
+        attempts,
+        threshold: LOGIN_FAILURE_THRESHOLD,
+        windowMinutes: LOGIN_FAILURE_WINDOW_MINUTES
+      }
     });
-
-    return done(null, userWithRole);
+    // Store email in session before redirect so /auth/failure can access it
+    if (req.session && email) {
+      req.session.userEmail = email;
+    }
+    return done(null, false, { message: "Non-UCSD or unapproved account" });
   } catch (error) {
     console.error("Error during Google OAuth verification", error);
     const attempts = await recordFailedLoginAttempt(identifier);
@@ -306,6 +383,10 @@ passport.use(new GoogleStrategy({
         windowMinutes: LOGIN_FAILURE_WINDOW_MINUTES
       }
     });
+    // Store email in session before redirect so /auth/failure can access it
+    if (req.session && email) {
+      req.session.userEmail = email;
+    }
     return done(error);
   }
 }));
@@ -337,77 +418,148 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/dashboard", ensureAuthenticated, (req, res) => {
-  // Fallback dashboard if role-based route not used
+app.get("/dashboard", ensureAuthenticated, (_req, res) => {
   res.sendFile(buildFullViewPath("dashboard.html"));
 });
 
 // Role-based dashboards
 app.get("/student-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("student-dashboard.html")));
 app.get("/ta-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("ta-dashboard.html")));
-app.get("/faculty-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("faculty-dashboard.html")));
+app.get("/faculty-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("professor-dashboard.html")));
 app.get("/admin-dashboard", ensureAuthenticated, (req, res) => res.sendFile(buildFullViewPath("admin-dashboard.html")));
 
-// serve all your static files (HTML, CSS, JS, etc.)
-app.use(express.static(__dirname));
-// Serve blocked page
+// Serve blocked page with injected email (before static middleware)
+app.get("/blocked.html", (req, res) => {
+  const email = req.session.blockedEmail || "";
+  delete req.session.blockedEmail; // Clear after use
+
+  const filePath = path.join(__dirname, "src/views/blocked.html");
+  fs.readFile(filePath, "utf8", (err, data) => {
+    if (err) return res.status(500).send("Error loading page");
+    const modified = data.replace(
+      "</body>",
+      `<script>window.prefilledEmail=${JSON.stringify(email)};</script></body>`
+    );
+    res.send(modified);
+  });
+});
+
+// Serve /blocked for legacy routes
 app.get("/blocked", (req, res) => {
   res.sendFile(buildFullViewPath("blocked.html"));
-
 });
 
-// Root route serves landing page
-app.get('/', (_req, res) => {
-  res.sendFile(buildFullViewPath('index.html'));
-});
+
 
 // -------------------- ROUTES --------------------
-app.get("/auth/google", (req, res, next) => {
-  console.log("🔄 /auth/google hit. Redirecting to Google with callback:", CALLBACK_URL);
-  // If user was trying to enroll via token, preserve target for after login
-  const pending = req.query.next || req.session.nextAfterLogin;
-  if (pending) req.session.nextAfterLogin = pending;
-  logAuthEvent("LOGIN_REDIRECT", {
+
+// Handle Google OAuth errors (e.g., org_internal)
+app.get("/auth/error", (req, res) => {
+  console.warn("⚠️ OAuth error detected:", req.query);
+
+  const attemptedEmail =
+    req.query.email ||
+    req.query.login_hint ||
+    req.query.user_email ||
+    req.session?.userEmail ||
+    "unknown";
+
+  console.log(`🔐 Attempted email: ${attemptedEmail}`);
+  logAuthEvent("LOGIN_ERROR_REDIRECT", {
     req,
-    message: "Redirecting user to Google OAuth",
-    metadata: { provider: "google", callbackURL: CALLBACK_URL }
+    message: "OAuth error redirect triggered",
+    metadata: { query: req.query }
   });
-  passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+
+  // Redirect user to blocked page with their email if available
+  req.session.blockedEmail = attemptedEmail;
+  res.redirect("/blocked.html");
 });
 
-// OAuth callback to issue role-based redirect
-app.get("/auth/google/callback", (req, res, next) => {
-  passport.authenticate("google", { failureRedirect: "/auth/failure" }, async (err, user) => {
-    if (err) return next(err);
-    if (!user) return res.redirect("/auth/failure");
+// Always force account chooser on each login attempt
+app.get("/auth/google", (req, res, next) => {
+  req.logout(() => {});       // clear any cached user
+  req.session?.destroy(() => {});  // destroy session
 
-    req.logIn(user, async (loginErr) => {
-      if (loginErr) return next(loginErr);
+  const loginHint = req.query.email || req.query.login_hint || ""; // capture hint if provided
 
-      // After login, if we have a pending next, use it
-      const nextAfterLogin = req.session.nextAfterLogin;
-      if (nextAfterLogin) {
-        delete req.session.nextAfterLogin;
-        return res.redirect(nextAfterLogin);
-      }
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    prompt: "select_account",
+    accessType: "offline",
+    includeGrantedScopes: true,
+    loginHint, // ✅ helps Google return user email on redirect
+    failureRedirect: "/auth/error"
+  })(req, res, next);
+  console.log("🔄 Starting Google OAuth login flow with hint:", loginHint);
+});
 
-      const role = req.user?.role || "Student";
-      switch (role) {
+
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/auth/failure" }),
+  async (req, res) => {
+    const email = req.user?.emails?.[0]?.value || "unknown";
+
+    try {
+      // DEBUG LOGS
+      console.log("🔐 New login detected:");
+      console.log("   Session ID:", req.sessionID);
+      console.log("   Logged-in user:", email);
+
+      // Ensure user exists in DB (create as Unregistered by default)
+      const [user] = await User.findOrCreate({
+        where: { email },
+        defaults: {
+          name: req.user.displayName,
+          user_type: "Unregistered",
+        },
+      });
+
+      // Log successful callback
+      console.log("✅ Login success for:", email);
+      await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
+        req,
+        message: "OAuth callback completed successfully",
+        userEmail: email,
+        userId: req.user?.id,
+        metadata: { provider: "google" },
+      });
+
+      // Redirect based on user type (use app routes, not file paths)
+      switch (user.user_type) {
+        case "Admin":
+          return res.redirect("/admin-dashboard");
         case "Professor":
           return res.redirect("/faculty-dashboard");
         case "TA":
-        case "Tutor":
           return res.redirect("/ta-dashboard");
-        case "Admin":
-          return res.redirect("/admin-dashboard");
         case "Student":
-        default:
           return res.redirect("/student-dashboard");
+        default:
+          return res.redirect("/register.html");
       }
-    });
-  })(req, res, next);
-});
+    } catch (error) {
+      console.error("Error in /auth/google/callback handler:", error);
+      await logAuthEvent("LOGIN_CALLBACK_ERROR", {
+        req,
+        message: "Error handling OAuth callback",
+        userEmail: email,
+        metadata: { error: error?.message },
+      });
+      return res.redirect("/auth/failure");
+    }
+  });
 
+// --- AUTH FAILURE ROUTE ---
+app.get("/auth/failure", (req, res) => {
+  res.send(`
+    <h1>Authentication Failed</h1>
+    <p>There was an error during authentication. Please try again.</p>
+    <a href="/login">Back to Login</a>
+  `);
+});
 
 // Failed login route
 app.get("/auth/failure", async (req, res) => {
@@ -417,7 +569,28 @@ app.get("/auth/failure", async (req, res) => {
     message: "Google OAuth failed or unauthorized user",
     metadata: { provider: "google" }
   });
-  res.redirect("/blocked");
+
+  const email =
+    req.session?.userEmail ||
+    req.user?.emails?.[0]?.value ||
+    req.query.email ||
+    req.query.login_hint ||
+    req.query.user_email ||
+    req.query.openid_email ||
+    req.query.id_token_hint ||
+    req.query.authuser ||
+    req.email ||
+    "unknown";
+
+  console.log("🚫 Failed login email captured:", email);
+
+  // Clear the session email after reading it
+  if (req.session) {
+    delete req.session.userEmail;
+  }
+
+  req.session.blockedEmail = email;
+  res.redirect("/blocked.html");
 });
 
 
@@ -425,9 +598,24 @@ function buildFullViewPath(viewFileName){
   return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
 }
 
-app.get("/login", (req, res) =>{
-  res.sendFile(buildFullViewPath("login.html"))
+// Root route - redirect to login
+app.get("/", (req, res) => {
+  res.redirect("/login");
 });
+
+// Reset any leftover session before showing login page
+app.get("/login", (req, res) => {
+  // Clear Passport user and Redis session if any
+  try {
+    if (req.logout) req.logout(() => {});
+    if (req.session) req.session.destroy(() => {});
+  } catch (err) {
+    console.error("⚠️ Error while resetting session on /login:", err);
+  }
+
+  res.sendFile(buildFullViewPath("login.html"));
+});
+
 
 
 
@@ -446,7 +634,7 @@ app.get("/api/user", ensureAuthenticated, (req, res) => {
   });
 });
 
-// Public endpoint to show current login attempt status (by email if authenticated, else by IP)
+// Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {
   const email = req.user?.emails?.[0]?.value || null;
   const identifier = getLoginIdentifier(email, req);
@@ -467,12 +655,16 @@ app.get('/api/login-attempts', async (req, res) => {
 app.get("/logout", ensureAuthenticated, (req, res, next) => {
   const email = req.user?.emails?.[0]?.value || "unknown";
   const userId = req.user?.id || null;
+
+  console.log("🚪 Logging out session:", req.sessionID);
+
   logAuthEvent("LOGOUT_INITIATED", {
     req,
     message: "User requested logout",
     userEmail: email,
     userId
   });
+
   req.logout((error) => {
     if (error) {
       logAuthEvent("LOGOUT_ERROR", {
@@ -485,26 +677,47 @@ app.get("/logout", ensureAuthenticated, (req, res, next) => {
       return next(error);
     }
 
-    logAuthEvent("LOGOUT_SUCCESS", {
-      req,
-      message: "User logged out successfully",
-      userEmail: email,
-      userId
+    req.session.destroy(() => {
+      logAuthEvent("LOGOUT_SUCCESS", {
+        req,
+        message: "User logged out successfully",
+        userEmail: email,
+        userId
+      });
+
+      // ✅ Just go back to login page
+      res.redirect("/login");
     });
-    res.redirect("/login");
   });
 });
 
-// HTTP --> HTTPS
+// Route for switching UCSD accounts: logs out the user, destroys session, and redirects to IdP logout.
+app.get("/switch-account", (req, res) => {
+  req.logout(() => {});
+  if (req.session) {
+    req.session.destroy(() => {
+      res.redirect("https://idp.ucsd.edu/idp/profile/Logout?return=https://localhost:8443/login");
+    });
+  } else {
+    res.redirect("https://idp.ucsd.edu/idp/profile/Logout?return=https://localhost:8443/login");
+  }
+});
+
+
+
+// HTTP --> HTTPS: only enforce when HTTPS is available
 app.use((req, res, next) => {
-  if (!req.secure) {
-    return res.redirect(`https://${req.headers.host}${req.url}`);
+  if (HTTPS_AVAILABLE) {
+    if (!req.secure) {
+      return res.redirect(`https://${req.headers.host}${req.url}`);
+    }
   }
   next();
 });
 
 // ADD A Simple POST to register login
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.post("/register/submit", ensureAuthenticated, async (req, res) => {
   const email = req.user?.emails?.[0]?.value;
@@ -518,19 +731,111 @@ app.post("/register/submit", ensureAuthenticated, async (req, res) => {
 // --- START HTTPS SERVER ---
 const startServer = async () => {
   try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true }); // create users table if missing
-    console.log("✅ Database connection established");
+    // Temporarily disabled for testing
+    // await sequelize.authenticate();
+    // await sequelize.sync({ alter: true }); // create users table if missing
+    // console.log("✅ Database connection established");
   } catch (error) {
     console.error("Failed to connect to the database", error);
     process.exit(1);
   }
 
-  https.createServer(sslOptions, app).listen(8443, () => {
-    console.log("✅ HTTPS server running at https://localhost:8443");
-  });
+  if (HTTPS_AVAILABLE && sslOptions) {
+    https.createServer(sslOptions, app).listen(8443, () => {
+      console.log("✅ HTTPS server running at https://localhost:8443");
+    });
+  } else {
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => {
+      console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
+    });
+  }
 };
 
+// --- Access Request Submission ---
+app.post("/request-access", async (req, res) => {
+  const { email, reason } = req.body;
+  if (!email) return res.status(400).send("Missing email");
+
+  // Check if already approved (whitelisted)
+  const whitelisted = await Whitelist.findOne({ where: { email } });
+  if (whitelisted) {
+    return res.status(200).send(`<h3>✅ ${email} is already approved for access.</h3>`);
+  }
+
+  // Check if an access request already exists
+  const existingRequest = await AccessRequest.findOne({ where: { email } });
+  if (existingRequest) {
+    // ✅ Update the existing entry instead of skipping
+    await existingRequest.update({ reason, requested_at: new Date() });
+
+    await logAuthEvent("ACCESS_REQUEST_UPDATED", {
+      req,
+      message: `Access request for ${email} was updated.`,
+      userEmail: email,
+      metadata: { reason }
+    });
+
+    return res.status(200).send(`<h3>🔄 Your previous request for ${email} has been updated successfully.</h3>`);
+  }
+
+  // ✅ Create a new request if it doesn’t exist
+  await AccessRequest.create({ email, reason });
+  await logAuthEvent("ACCESS_REQUEST_SUBMITTED", {
+    req,
+    message: `Access request submitted by ${email}`,
+    userEmail: email,
+    metadata: { reason }
+  });
+
+  res.status(200).send(`<h3>✅ Your access request for ${email} has been submitted.</h3>`);
+});
+
+// --- Simple Admin Approval Page and Approve Route ---
+app.get("/admin/whitelist", async (req, res) => {
+  const requests = await AccessRequest.findAll();
+  const whitelist = await Whitelist.findAll();
+  res.send(`
+    <h2>Pending Access Requests</h2>
+    <ul>
+      ${requests.map(r => `
+        <li>${r.email} — ${r.reason || ""} 
+          <a href="/admin/approve?email=${encodeURIComponent(r.email)}">Approve</a>
+        </li>
+      `).join("")}
+    </ul>
+    <h2>Approved Users</h2>
+    <ul>
+      ${whitelist.map(w => `<li>${w.email}</li>`).join("")}
+    </ul>
+  `);
+});
+
+app.get("/admin/approve", async (req, res) => {
+  const email = req.query.email;
+  if (!email) return res.status(400).send("Missing email");
+
+  // Use findOrCreate to avoid duplicate whitelist entries
+  const [entry, created] = await Whitelist.findOrCreate({
+    where: { email },
+    defaults: { approved_by: "Admin" }
+  });
+  if (!created) {
+    console.log(`ℹ️ ${email} already exists in whitelist.`);
+  }
+
+  // Ensure matching user exists in users table
+  await User.findOrCreate({
+    where: { email },
+    defaults: {
+      name: email.split("@")[0],
+      user_type: "Unregistered"
+    }
+  });
+
+  await AccessRequest.destroy({ where: { email } });
+  res.redirect("/admin/whitelist");
+});
 // -------------------- INVITE & ENROLLMENT --------------------
 const INVITE_TTL_HOURS = parsePositiveInt(process.env.INVITE_TTL_HOURS, 72);
 const signToken = (payload) => {
@@ -632,7 +937,7 @@ app.get('/enroll/:token', async (req, res) => {
   // Redirect by role to dashboard
   const role = decoded.role || 'Student';
   if (role === 'TA' || role === 'Tutor') return res.redirect('/ta-dashboard');
-  if (role === 'Professor') return res.redirect('/faculty-dashboard');
+  if (role === 'Professor') return res.redirect('/professor-dashboard');
   return res.redirect('/student-dashboard');
 });
 
@@ -646,4 +951,10 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   res.json({ courses });
 });
 
-startServer();
+// Start server if not running on Vercel
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+// Export app for Vercel
+export default app;
