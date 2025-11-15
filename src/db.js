@@ -3,9 +3,15 @@ import pg from 'pg';
 
 // Use DATABASE_URL from environment, or default to a test database URL for CI/tests
 // This allows tests to run in CI environments without requiring a .env file
+// Try multiple common PostgreSQL usernames for local development
+const getDefaultTestUrl = () => {
+  const username = process.env.USER || process.env.USERNAME || 'postgres';
+  return `postgresql://${username}@localhost:5432/conductor_test`;
+};
+
 const url = process.env.DATABASE_URL || 
   (process.env.NODE_ENV === 'test' || process.env.VITEST 
-    ? process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/conductor_test'
+    ? process.env.TEST_DATABASE_URL || getDefaultTestUrl()
     : null);
 
 if (!url) {

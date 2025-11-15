@@ -13,7 +13,8 @@ import { pool } from "./db.js";
 import { DatabaseInitializer } from "./database/init.js";
 import bodyParser from "body-parser";
 import crypto from "crypto";
-import { requireAdmin, requireInstructor, ensureAuthenticated } from "./middleware/auth.js";
+import { ensureAuthenticated } from "./middleware/auth.js";
+import { protect } from "./middleware/permission-middleware.js";
 import userRoutes from "./routes/user-routes.js";
 import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
@@ -430,7 +431,7 @@ passport.use(new GoogleStrategy({
   }
   
   const { blocked, attempts: recentAttempts } = await getLoginAttemptStatus(identifier);
-  
+
   // --- Whitelist bypass for rate limits (only for non-UCSD emails) ---
   if (email && !isUCSDEmail) {
     const whitelistEntry = await findWhitelistEntry(email);
@@ -637,12 +638,12 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Role-based dashboards with access control
-app.get("/admin-dashboard", ensureAuthenticated, requireAdmin, (req, res) => {
+// Role-based dashboards with permission-based access control
+app.get("/admin-dashboard", ...protect('user.manage', 'global'), (req, res) => {
   res.sendFile(buildFullViewPath("admin-dashboard.html"));
 });
 
-app.get("/faculty-dashboard", ensureAuthenticated, requireInstructor, (req, res) => {
+app.get("/faculty-dashboard", ...protect('course.manage', 'course'), (req, res) => {
   res.sendFile(buildFullViewPath("professor-dashboard.html"));
 });
 
@@ -813,7 +814,7 @@ app.get(
         console.log(`[DEBUG] User ${email} is unregistered, redirecting to register page`);
         return res.redirect("/register.html");
       }
-      
+
       // Dashboard routing based on enrollment role (TA comes from enrollments table)
       const enrollmentRole = await getUserEnrollmentRole(user.id);
       
@@ -901,21 +902,41 @@ app.get("/login", (req, res) => {
   res.sendFile(buildFullViewPath("login.html"));
 });
 
-
-
-
+// Health check endpoint (public, no authentication required)
+app.get("/health", async (req, res) => {
+  try {
+    // Check database connection
+    await pool.query('SELECT 1');
+    res.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      database: "connected"
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "unhealthy",
+      timestamp: new Date().toISOString(),
+      database: "disconnected",
+      error: error.message
+    });
+  }
+});
 
 app.get("/api/user", ensureAuthenticated, (req, res) => {
+  const email = req.user?.emails?.[0]?.value;
+  const name = req.user?.displayName;
+  const picture = req.user?.photos?.[0]?.value || null;
+  
   logAuthEvent("PROFILE_ACCESSED", {
     req,
     message: "Retrieved authenticated user info",
-    userEmail: req.user?.emails?.[0]?.value,
+    userEmail: email,
     userId: req.user?.id
   });
   res.json({
-    name: req.user.displayName,
-    email: req.user.emails[0].value,
-    picture: req.user.photos[0].value
+    name: name,
+    email: email,
+    picture: picture
   });
 });
 
@@ -1086,11 +1107,11 @@ app.post("/request-access", async (req, res) => {
 });
 
 // --- Simple Admin Approval Page and Approve Route ---
-app.get("/admin/whitelist", ensureAuthenticated, requireAdmin, async (req, res) => {
+app.get("/admin/whitelist", ...protect('user.manage', 'global'), async (req, res) => {
   try {
-    const requests = await getAllAccessRequests();
-    const whitelist = await getAllWhitelist();
-    res.send(`
+  const requests = await getAllAccessRequests();
+  const whitelist = await getAllWhitelist();
+  res.send(`
       <!DOCTYPE html>
       <html>
       <head>
@@ -1107,35 +1128,35 @@ app.get("/admin/whitelist", ensureAuthenticated, requireAdmin, async (req, res) 
       </head>
       <body>
         <h1>Admin Whitelist Management</h1>
-        <h2>Pending Access Requests</h2>
+    <h2>Pending Access Requests</h2>
         ${requests.length > 0 ? `
-          <ul>
-            ${requests.map(r => `
+    <ul>
+      ${requests.map(r => `
               <li>${r.email} — ${r.reason || "No reason provided"} 
-                <a href="/admin/approve?email=${encodeURIComponent(r.email)}">Approve</a>
-              </li>
-            `).join("")}
-          </ul>
+          <a href="/admin/approve?email=${encodeURIComponent(r.email)}">Approve</a>
+        </li>
+      `).join("")}
+    </ul>
         ` : '<p>No pending requests.</p>'}
         <h2>Approved Users (Whitelist)</h2>
         ${whitelist.length > 0 ? `
-          <ul>
+    <ul>
             ${whitelist.map(w => `<li class="approved">${w.email} (approved by: ${w.approved_by || 'system'})</li>`).join("")}
-          </ul>
+    </ul>
         ` : '<p>No approved users yet.</p>'}
         <p><a href="/admin-dashboard">← Back to Admin Dashboard</a></p>
       </body>
       </html>
-    `);
+  `);
   } catch (error) {
     console.error("Error loading whitelist page:", error);
     res.status(500).send("Error loading whitelist page");
   }
 });
 
-app.get("/admin/approve", ensureAuthenticated, requireAdmin, async (req, res) => {
+app.get("/admin/approve", ...protect('user.manage', 'global'), async (req, res) => {
   try {
-    const email = req.query.email;
+  const email = req.query.email;
     if (!email) {
       return res.status(400).send("Missing email parameter");
     }
@@ -1144,26 +1165,26 @@ app.get("/admin/approve", ensureAuthenticated, requireAdmin, async (req, res) =>
     const decodedEmail = decodeURIComponent(email);
     console.log(`[ADMIN] Approving access for: ${decodedEmail}`);
 
-    // Use findOrCreate to avoid duplicate whitelist entries
+  // Use findOrCreate to avoid duplicate whitelist entries
     const existing = await findWhitelistEntry(decodedEmail);
-    if (!existing) {
+  if (!existing) {
       await findOrCreateWhitelist(decodedEmail, req.user?.emails?.[0]?.value || "Admin");
       console.log(`✅ Added ${decodedEmail} to whitelist`);
-    } else {
+  } else {
       console.log(`ℹ️ ${decodedEmail} already exists in whitelist.`);
-    }
+  }
 
-    // Ensure matching user exists in users table (as unregistered, will need to register)
+  // Ensure matching user exists in users table (as unregistered, will need to register)
     await findOrCreateUser(decodedEmail, {
       name: decodedEmail.split("@")[0],
-      primary_role: 'unregistered'
-    });
+    primary_role: 'unregistered'
+  });
     console.log(`✅ Created/updated user: ${decodedEmail}`);
 
     await deleteAccessRequest(decodedEmail);
     console.log(`✅ Deleted access request for: ${decodedEmail}`);
 
-    res.redirect("/admin/whitelist");
+  res.redirect("/admin/whitelist");
   } catch (error) {
     console.error("Error approving access:", error);
     res.status(500).send(`Error approving access: ${error.message}`);
@@ -1195,67 +1216,11 @@ const verifyToken = (token) => {
   }
 };
 
-// Middleware to require user is instructor or admin of course offering
-const requireInstructorOfCourse = async (req, res, next) => {
-  try {
-    const offeringId = req.params.courseId || req.params.offeringId;
-    if (!offeringId) {
-      return res.status(400).json({ error: 'Course offering ID is required' });
-    }
-
-    const email = req.user?.emails?.[0]?.value;
-    if (!email) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const user = await findUserByEmail(email);
-    if (!user) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-
-    // Admins can access any course
-    if (user.primary_role === 'admin') {
-      return next();
-    }
-
-    // Check if user is instructor of this course offering
-    const offeringResult = await pool.query(
-      'SELECT instructor_id FROM course_offerings WHERE id = $1::uuid AND is_active = TRUE',
-      [offeringId]
-    );
-
-    if (offeringResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Course offering not found' });
-    }
-
-    const offering = offeringResult.rows[0];
-    if (offering.instructor_id === user.id || user.primary_role === 'instructor') {
-      return next();
-    }
-
-    // Check if user is TA/tutor for this course (they can also create invites)
-    const enrollmentResult = await pool.query(
-      `SELECT course_role FROM enrollments 
-       WHERE offering_id = $1::uuid AND user_id = $2::uuid 
-       AND course_role IN ('ta', 'tutor') AND status = 'enrolled'`,
-      [offeringId, user.id]
-    );
-
-    if (enrollmentResult.rows.length > 0) {
-      return next();
-    }
-
-    return res.status(403).json({ error: 'Forbidden - must be instructor, admin, or course staff' });
-  } catch (error) {
-    console.error('Error in requireInstructorOfCourse:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
 // Create invite token for course enrollment
-app.post('/api/courses/:courseId/invites', ensureAuthenticated, requireInstructorOfCourse, express.json(), async (req, res) => {
+// Uses permission middleware: enrollment.manage with course scope
+app.post('/api/courses/:courseId/invites', ...protect('enrollment.manage', 'course'), express.json(), async (req, res) => {
   try {
-    const offeringId = req.params.courseId;
+    const offeringId = req.params.courseId || req.body.offeringId;
     const { course_role = 'student', expiresInHours } = req.body;
 
     // Validate course_role
@@ -1457,8 +1422,14 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
 const startServer = async () => {
   try {
     // Initialize database using migrations
-    await DatabaseInitializer.initialize({ seed: false, force: false });
+    // Set SEED_ON_START=true in .env to automatically seed demo data on startup
+    // Defaults to true for convenience
+    const shouldSeed = process.env.SEED_ON_START !== 'false';
+    await DatabaseInitializer.initialize({ seed: shouldSeed, force: false });
     console.log("✅ Database connection established");
+    if (shouldSeed) {
+      console.log("✅ Demo users and data seeded");
+    }
   } catch (error) {
     console.error("Failed to connect to the database", error);
     process.exit(1);

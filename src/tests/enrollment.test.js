@@ -57,7 +57,9 @@ describe('EnrollmentModel (Postgres)', () => {
 
   beforeEach(async () => {
     // Use DELETE instead of TRUNCATE to avoid deadlocks
-    // Don't CASCADE as we need to keep users and offerings for tests
+    // Delete in order to respect foreign keys
+    // Don't delete users or offerings - they're needed for tests
+    await pool.query('DELETE FROM activity_logs');
     await pool.query('DELETE FROM enrollments');
   });
 

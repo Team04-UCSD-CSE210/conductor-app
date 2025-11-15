@@ -4,6 +4,41 @@
 
 All endpoints require authentication unless otherwise noted.
 
+## Permission-Based Access Control (RBAC)
+
+This API uses a **permission-based RBAC system** instead of simple role checks. Permissions are checked at multiple levels:
+
+- **Global Permissions**: Based on user's `primary_role` (admin, instructor, student, unregistered)
+- **Course Permissions**: Based on enrollment `course_role` (student, ta, tutor) in a specific course offering
+- **Team Permissions**: Based on team membership role (leader, member)
+
+### Permission Hierarchy
+
+1. **Course-level permissions** override global permissions
+2. **Team-level permissions** override course-level permissions
+3. **Admin** automatically has all permissions
+
+### Available Permissions
+
+- `user.view` - View user information (global)
+- `user.manage` - Create, update, delete users (global)
+- `roster.view` - View roster and enrollment lists (course)
+- `roster.import` - Import roster from JSON/CSV (course)
+- `roster.export` - Export roster as JSON/CSV (global/course)
+- `enrollment.manage` - Create/update/delete enrollments (course)
+- `course.manage` - Course-level admin & stats (course)
+
+### Permission Mapping by Role
+
+| Role | Global Permissions | Course Permissions (when enrolled) |
+|------|-------------------|-----------------------------------|
+| **Admin** | All permissions | All permissions |
+| **Instructor** | `user.view`, `user.manage`, `roster.export` | `roster.*`, `enrollment.*`, `course.*` |
+| **Student** | `roster.view` | `roster.view` |
+| **Unregistered** | `roster.view` | `roster.view` |
+| **TA** (course role) | - | `roster.*`, `enrollment.*`, `course.*` |
+| **Tutor** (course role) | - | `roster.view` |
+
 ---
 
 ## Table of Contents
@@ -38,6 +73,7 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/users?limit=50&offset=0&includeDeleted=false`
 - **Description**: Get paginated list of all users
 - **Auth**: Required
+- **Permission**: `user.view` (global)
 - **Query Parameters**:
   - `limit` (number): Number of users per page (default: 50)
   - `offset` (number): Number of users to skip (default: 0)
@@ -47,7 +83,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **GET** `/api/users/:id`
 - **Description**: Get a specific user by their UUID
-- **Auth**: Required (users can view themselves, admins/instructors can view anyone)
+- **Auth**: Required
+- **Permission**: `user.view` (global) OR user viewing themselves
 - **Path Parameters**:
   - `id` (UUID): User UUID
 
@@ -55,7 +92,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/users`
 - **Description**: Create a new user
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `user.manage` (global)
 - **Body**:
 
   ```json
@@ -74,7 +112,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **PUT** `/api/users/:id`
 - **Description**: Update user information
-- **Auth**: Required (users can update themselves, admins/instructors can update anyone)
+- **Auth**: Required
+- **Permission**: Users can update themselves, OR `user.manage` (global) to update others
 - **Path Parameters**:
   - `id` (UUID): User UUID
 - **Body**: Partial user object with fields to update
@@ -83,7 +122,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **DELETE** `/api/users/:id`
 - **Description**: Soft delete a user
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `user.manage` (global)
 - **Path Parameters**:
   - `id` (UUID): User UUID
 
@@ -91,7 +131,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/users/:id/restore`
 - **Description**: Restore a soft-deleted user
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `user.manage` (global)
 - **Path Parameters**:
   - `id` (UUID): User UUID
 
@@ -111,6 +152,7 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/users/institution/:type?limit=50&offset=0`
 - **Description**: Get users filtered by institution_type
 - **Auth**: Required
+- **Permission**: `user.view` (global)
 - **Path Parameters**:
   - `type` (string): One of: `ucsd`, `extension`
 - **Query Parameters**:
@@ -125,7 +167,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/users/roster/import/json`
 - **Description**: Bulk import users from JSON array
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `roster.import` (course scope - requires `offering_id` in body or query)
 - **Body**: Array of user objects
 
   ```json
@@ -143,7 +186,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/users/roster/import/csv`
 - **Description**: Bulk import users from CSV file
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `roster.import` (course scope - requires `offering_id` in body or query)
 - **Content-Type**: `multipart/form-data`
 - **Body**: CSV file upload
 
@@ -152,6 +196,7 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/users/roster/export/json`
 - **Description**: Export all users as JSON
 - **Auth**: Required
+- **Permission**: `roster.view` OR `roster.export` (course scope)
 - **Response**: JSON file download
 
 ### Export Roster (CSV)
@@ -159,13 +204,15 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/users/roster/export/csv`
 - **Description**: Export all users as CSV
 - **Auth**: Required
+- **Permission**: `roster.view` OR `roster.export` (course scope)
 - **Response**: CSV file download
 
 ### Rollback Import
 
 - **POST** `/api/users/roster/rollback`
 - **Description**: Rollback the last roster import
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `roster.import` (course scope)
 - **Body**:
 
   ```json
@@ -206,7 +253,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/courses/:courseId/invites`
 - **Description**: Create enrollment invites for a course
-- **Auth**: Required (Instructor or TA for the course)
+- **Auth**: Required
+- **Permission**: `enrollment.manage` (course scope - `courseId` in path)
 - **Path Parameters**:
   - `courseId` (UUID): Course UUID
 - **Body**:
@@ -236,6 +284,7 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/offerings/:offeringId`
 - **Description**: Get course offering details with enrollment and team statistics
 - **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
 - **Path Parameters**:
   - `offeringId` (UUID): Offering UUID
 - **Response**: Offering object with counts (student_count, ta_count, tutor_count, team_count)
@@ -245,6 +294,7 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/offerings/:offeringId/stats`
 - **Description**: Get detailed statistics for a course offering
 - **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
 - **Path Parameters**:
   - `offeringId` (UUID): Offering UUID
 - **Response**:
@@ -270,6 +320,7 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/teams?offering_id=:id`
 - **Description**: Get all teams for a course offering
 - **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
 - **Query Parameters**:
   - `offering_id` (UUID, required): Offering UUID
 - **Response**: Array of team objects with member counts
@@ -279,6 +330,7 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/teams/:teamId`
 - **Description**: Get team details with members
 - **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
 - **Path Parameters**:
   - `teamId` (UUID): Team UUID
 - **Response**: Team object with members array
@@ -287,7 +339,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/teams`
 - **Description**: Create a new team
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope - requires `offering_id` in body)
 - **Body**:
 
   ```json
@@ -304,7 +357,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **PUT** `/api/teams/:teamId`
 - **Description**: Update team details
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope)
 - **Path Parameters**:
   - `teamId` (UUID): Team UUID
 - **Body**: Partial team object
@@ -321,7 +375,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **DELETE** `/api/teams/:teamId`
 - **Description**: Delete a team
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope)
 - **Path Parameters**:
   - `teamId` (UUID): Team UUID
 
@@ -330,6 +385,7 @@ All endpoints require authentication unless otherwise noted.
 - **GET** `/api/teams/:teamId/members`
 - **Description**: Get all members of a team
 - **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
 - **Path Parameters**:
   - `teamId` (UUID): Team UUID
 - **Response**: Array of team member objects
@@ -338,7 +394,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/teams/:teamId/members`
 - **Description**: Add a member to a team
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope)
 - **Path Parameters**:
   - `teamId` (UUID): Team UUID
 - **Body**:
@@ -354,7 +411,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **DELETE** `/api/teams/:teamId/members/:userId`
 - **Description**: Remove a member from a team
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope)
 - **Path Parameters**:
   - `teamId` (UUID): Team UUID
   - `userId` (UUID): User UUID
@@ -367,7 +425,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/interactions`
 - **Description**: Submit an interaction report (positive or negative) for a team or student
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope - requires `offering_id` in body)
 - **Body**:
 
   ```json
@@ -386,7 +445,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **GET** `/api/interactions?offering_id=:id&team_id=:id&user_id=:id`
 - **Description**: Get all interactions for an offering with optional filters
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope - `offering_id` in query)
 - **Query Parameters**:
   - `offering_id` (UUID, required): Offering UUID
   - `team_id` (UUID, optional): Filter by team
@@ -396,7 +456,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **GET** `/api/interactions/team/:teamId`
 - **Description**: Get all interactions for a specific team
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope)
 - **Path Parameters**:
   - `teamId` (UUID): Team UUID
 
@@ -404,7 +465,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **GET** `/api/interactions/student/:userId`
 - **Description**: Get all interactions for a specific student
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `course.manage` (course scope)
 - **Path Parameters**:
   - `userId` (UUID): User UUID
 
@@ -416,7 +478,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **POST** `/api/enrollments`
 - **Description**: Create a new enrollment
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `enrollment.manage` (course scope - requires `offering_id` in body)
 - **Body**:
 
   ```json
@@ -432,7 +495,8 @@ All endpoints require authentication unless otherwise noted.
 
 - **GET** `/api/enrollments/:id`
 - **Description**: Get enrollment details
-- **Auth**: Required (users can view their own, admins/instructors can view any)
+- **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope) OR user viewing their own enrollment
 - **Path Parameters**:
   - `id` (UUID): Enrollment UUID
 
@@ -440,16 +504,92 @@ All endpoints require authentication unless otherwise noted.
 
 - **GET** `/api/enrollments/offering/:offeringId/user/:userId`
 - **Description**: Get enrollment for a specific user in an offering
-- **Auth**: Required (users can view their own, admins/instructors can view any)
+- **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope) OR user viewing their own enrollment
 - **Path Parameters**:
   - `offeringId` (UUID): Offering UUID
   - `userId` (UUID): User UUID
+
+### Get All Enrollments for an Offering
+
+- **GET** `/api/enrollments/offering/:offeringId?limit=50&offset=0&course_role=ta&status=enrolled`
+- **Description**: Get all enrollments for a course offering with optional filters
+- **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
+- **Path Parameters**:
+  - `offeringId` (UUID): Offering UUID
+- **Query Parameters**:
+  - `limit` (number): Number of enrollments per page (default: 50)
+  - `offset` (number): Number of enrollments to skip (default: 0)
+  - `course_role` (string, optional): Filter by course_role (student, ta, tutor)
+  - `status` (string, optional): Filter by status (enrolled, waitlisted, dropped, completed)
+
+### Get All Enrollments for a User
+
+- **GET** `/api/enrollments/user/:userId?limit=50&offset=0`
+- **Description**: Get all enrollments for a specific user
+- **Auth**: Required
+- **Permission**: Users can view their own enrollments, OR `roster.view` (global) to view others
+- **Path Parameters**:
+  - `userId` (UUID): User UUID
+- **Query Parameters**:
+  - `limit` (number): Number of enrollments per page (default: 50)
+  - `offset` (number): Number of enrollments to skip (default: 0)
+
+### Get Course Staff
+
+- **GET** `/api/enrollments/offering/:offeringId/staff?limit=50&offset=0`
+- **Description**: Get all course staff (TAs and tutors) for an offering
+- **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
+- **Path Parameters**:
+  - `offeringId` (UUID): Offering UUID
+- **Query Parameters**:
+  - `limit` (number): Number of staff per page (default: 50)
+  - `offset` (number): Number of staff to skip (default: 0)
+
+### Get TAs
+
+- **GET** `/api/enrollments/offering/:offeringId/tas?limit=50&offset=0`
+- **Description**: Get all TAs for an offering
+- **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
+- **Path Parameters**:
+  - `offeringId` (UUID): Offering UUID
+- **Query Parameters**:
+  - `limit` (number): Number of TAs per page (default: 50)
+  - `offset` (number): Number of TAs to skip (default: 0)
+
+### Get Tutors
+
+- **GET** `/api/enrollments/offering/:offeringId/tutors?limit=50&offset=0`
+- **Description**: Get all tutors for an offering
+- **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
+- **Path Parameters**:
+  - `offeringId` (UUID): Offering UUID
+- **Query Parameters**:
+  - `limit` (number): Number of tutors per page (default: 50)
+  - `offset` (number): Number of tutors to skip (default: 0)
+
+### Get Students
+
+- **GET** `/api/enrollments/offering/:offeringId/students?limit=50&offset=0`
+- **Description**: Get all students for an offering
+- **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
+- **Path Parameters**:
+  - `offeringId` (UUID): Offering UUID
+- **Query Parameters**:
+  - `limit` (number): Number of students per page (default: 50)
+  - `offset` (number): Number of students to skip (default: 0)
 
 ### Update Enrollment Role
 
 - **PUT** `/api/enrollments/offering/:offeringId/user/:userId/role`
 - **Description**: Promote/Demote student to TA/tutor or change course_role
-- **Auth**: Required (Admin or Instructor)
+- **Auth**: Required
+- **Permission**: `enrollment.manage` (course scope)
 - **Path Parameters**:
   - `offeringId` (UUID): Offering UUID
   - `userId` (UUID): User UUID
@@ -463,9 +603,10 @@ All endpoints require authentication unless otherwise noted.
 
 ### Update Enrollment Status
 
-- **PUT** `/api/enrollments/:id/status`
-- **Description**: Update enrollment status (enrolled, waitlisted, dropped, completed)
-- **Auth**: Required (Admin or Instructor)
+- **PUT** `/api/enrollments/:id`
+- **Description**: Update enrollment status or other fields (enrolled, waitlisted, dropped, completed)
+- **Auth**: Required
+- **Permission**: `enrollment.manage` (course scope) OR user updating their own enrollment
 - **Path Parameters**:
   - `id` (UUID): Enrollment UUID
 - **Body**:
@@ -476,13 +617,33 @@ All endpoints require authentication unless otherwise noted.
   }
   ```
 
+### Drop Enrollment
+
+- **POST** `/api/enrollments/offering/:offeringId/user/:userId/drop`
+- **Description**: Drop an enrollment (set status to 'dropped')
+- **Auth**: Required
+- **Permission**: Users can drop themselves, OR `enrollment.manage` (course scope) to drop others
+- **Path Parameters**:
+  - `offeringId` (UUID): Offering UUID
+  - `userId` (UUID): User UUID
+
 ### Delete Enrollment
 
 - **DELETE** `/api/enrollments/:id`
-- **Description**: Delete an enrollment
-- **Auth**: Required (Admin or Instructor)
+- **Description**: Hard delete an enrollment
+- **Auth**: Required
+- **Permission**: `enrollment.manage` (course scope)
 - **Path Parameters**:
   - `id` (UUID): Enrollment UUID
+
+### Get Enrollment Statistics
+
+- **GET** `/api/enrollments/offering/:offeringId/stats`
+- **Description**: Get enrollment statistics for an offering
+- **Auth**: Required
+- **Permission**: `roster.view` OR `course.manage` (course scope)
+- **Path Parameters**:
+  - `offeringId` (UUID): Offering UUID
 
 ---
 
@@ -543,7 +704,6 @@ Error response format:
 - `user_id`: User UUID (get from `/api/user` or create user response)
 - `offering_id`: Course offering UUID (get from seed data or database)
 - `team_id`: Team UUID (get from `/api/teams?offering_id=:id`)
-- `course_id`: Legacy course UUID (use `offering_id` instead)
 
 ### Role Hierarchy
 

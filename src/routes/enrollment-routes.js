@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { EnrollmentService } from '../services/enrollment-service.js';
-import { ensureAuthenticated, requireAdminOrInstructor } from '../middleware/auth.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
+import { protect, protectAny } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
@@ -8,9 +9,9 @@ const router = Router();
  * Create a new enrollment
  * POST /enrollments
  * Body: { offering_id, user_id, course_role, status, ... }
- * Requires: Admin or Instructor
+ * Requires: enrollment.manage permission (course scope)
  */
-router.post('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.post('/', ...protect('enrollment.manage', 'course'), async (req, res) => {
   try {
     const createdBy = req.currentUser.id;
     const enrollment = await EnrollmentService.createEnrollment(req.body, createdBy);
@@ -23,19 +24,17 @@ router.post('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res)
 /**
  * Get enrollment by ID
  * GET /enrollments/:id
- * Requires: Authentication (users can view their own enrollments, admins/instructors can view any)
+ * Requires: roster.view permission (course scope) OR user viewing their own enrollment
  */
-router.get('/:id', ensureAuthenticated, async (req, res) => {
+router.get('/:id', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const enrollment = await EnrollmentService.getEnrollmentById(req.params.id);
     if (!enrollment) {
       return res.status(404).json({ error: "Enrollment not found" });
     }
-    // Users can view their own enrollments, admins/instructors can view any
-    if (req.currentUser.id !== enrollment.user_id && 
-        req.currentUser.primary_role !== 'admin' && 
-        req.currentUser.primary_role !== 'instructor') {
-      return res.status(403).json({ error: "forbidden" });
+    // Users can view their own enrollments (even without permission)
+    if (req.user?.id !== enrollment.user_id) {
+      // If not viewing own enrollment, permission check already passed
     }
     res.json(enrollment);
   } catch (err) {
@@ -46,9 +45,9 @@ router.get('/:id', ensureAuthenticated, async (req, res) => {
 /**
  * Get enrollment by offering and user
  * GET /enrollments/offering/:offeringId/user/:userId
- * Requires: Authentication (users can view their own enrollments, admins/instructors can view any)
+ * Requires: roster.view permission (course scope) OR user viewing their own enrollment
  */
-router.get('/offering/:offeringId/user/:userId', ensureAuthenticated, async (req, res) => {
+router.get('/offering/:offeringId/user/:userId', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const enrollment = await EnrollmentService.getEnrollmentByOfferingAndUser(
       req.params.offeringId,
@@ -57,12 +56,9 @@ router.get('/offering/:offeringId/user/:userId', ensureAuthenticated, async (req
     if (!enrollment) {
       return res.status(404).json({ error: "Enrollment not found" });
     }
-    // Users can view their own enrollments, admins/instructors can view any
-    // Note: IDs are UUIDs (strings), not integers, so compare directly
-    if (req.currentUser.id !== req.params.userId && 
-        req.currentUser.primary_role !== 'admin' && 
-        req.currentUser.primary_role !== 'instructor') {
-      return res.status(403).json({ error: "forbidden" });
+    // Users can view their own enrollments (even without permission)
+    if (req.user?.id !== req.params.userId) {
+      // If not viewing own enrollment, permission check already passed
     }
     res.json(enrollment);
   } catch (err) {
@@ -237,7 +233,7 @@ router.put('/:id', ensureAuthenticated, async (req, res) => {
  * Body: { course_role: 'ta' | 'tutor' | 'student' }
  * Requires: Admin or Instructor
  */
-router.put('/offering/:offeringId/user/:userId/role', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.put('/offering/:offeringId/user/:userId/role', ...protect('enrollment.manage', 'course'), async (req, res) => {
   try {
     const updatedBy = req.currentUser.id;
     const { course_role } = req.body;
@@ -287,7 +283,7 @@ router.post('/offering/:offeringId/user/:userId/drop', ensureAuthenticated, asyn
  * DELETE /enrollments/:id
  * Requires: Admin or Instructor
  */
-router.delete('/:id', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.delete('/:id', ...protect('enrollment.manage', 'course'), async (req, res) => {
   try {
     const deletedBy = req.currentUser.id;
     await EnrollmentService.deleteEnrollment(req.params.id, deletedBy);

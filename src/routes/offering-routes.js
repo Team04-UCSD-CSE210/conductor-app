@@ -1,24 +1,24 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { ensureAuthenticated } from '../middleware/auth.js';
+import { protectAny } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
 /**
  * Get offering details
  * GET /api/offerings/:offeringId
- * Requires: Authentication
+ * Requires: roster.view or course.manage permission (course scope)
  */
-router.get('/:offeringId', ensureAuthenticated, async (req, res) => {
+router.get('/:offeringId', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const { offeringId } = req.params;
 
     const result = await pool.query(
       `SELECT 
         co.*,
-        COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role = 'student' AND e.status = 'enrolled') as student_count,
-        COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role = 'ta' AND e.status = 'enrolled') as ta_count,
-        COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role = 'tutor' AND e.status = 'enrolled') as tutor_count,
+        COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role::text = 'student' AND e.status = 'enrolled') as student_count,
+        COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role::text = 'ta' AND e.status = 'enrolled') as ta_count,
+        COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role::text = 'tutor' AND e.status = 'enrolled') as tutor_count,
         COUNT(DISTINCT t.id) as team_count
       FROM course_offerings co
       LEFT JOIN enrollments e ON co.id = e.offering_id
@@ -42,9 +42,9 @@ router.get('/:offeringId', ensureAuthenticated, async (req, res) => {
 /**
  * Get offering statistics
  * GET /api/offerings/:offeringId/stats
- * Requires: Authentication
+ * Requires: roster.view or course.manage permission (course scope)
  */
-router.get('/:offeringId/stats', ensureAuthenticated, async (req, res) => {
+router.get('/:offeringId/stats', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const { offeringId } = req.params;
 

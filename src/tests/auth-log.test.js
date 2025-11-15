@@ -161,6 +161,15 @@ describe('Auth Logs (Postgres)', () => {
     });
 
     it('should query auth logs with metadata filter', async () => {
+      // Create test logs with metadata first
+      await pool.query(`
+        INSERT INTO auth_logs (event_type, message, user_email, metadata)
+        VALUES 
+          ('LOGIN_SUCCESS', 'Test login 1', 'test1@example.com', '{"source": "google"}'::jsonb),
+          ('LOGIN_SUCCESS', 'Test login 2', 'test2@example.com', '{"source": "google"}'::jsonb),
+          ('LOGIN_SUCCESS', 'Test login 3', 'test3@example.com', '{"source": "github"}'::jsonb)
+      `);
+
       const result = await pool.query(`
         SELECT * FROM auth_logs 
         WHERE metadata->>'source' = $1
@@ -187,11 +196,6 @@ describe('Auth Logs (Postgres)', () => {
   });
 
   describe('Auth Log Event Types', () => {
-    beforeEach(async () => {
-      // Clean up before this specific test suite
-      await pool.query('DELETE FROM auth_logs');
-    });
-
     const eventTypes = [
       'LOGIN_SUCCESS',
       'LOGIN_FAILURE',
@@ -212,6 +216,9 @@ describe('Auth Logs (Postgres)', () => {
     ];
 
     it('should create logs for all event types', async () => {
+      // Clean up before creating test logs
+      await pool.query('DELETE FROM auth_logs');
+      
       for (const eventType of eventTypes) {
         const result = await pool.query(`
           INSERT INTO auth_logs (event_type, message, user_email)

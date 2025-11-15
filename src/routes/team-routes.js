@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { ensureAuthenticated, requireAdminOrInstructor } from '../middleware/auth.js';
+import { protect, protectAny } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
 /**
  * Get all teams for an offering
  * GET /api/teams?offering_id=:id
- * Requires: Authentication
+ * Requires: roster.view or course.manage permission (course scope)
  */
-router.get('/', ensureAuthenticated, async (req, res) => {
+router.get('/', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const { offering_id } = req.query;
     if (!offering_id) {
@@ -47,9 +47,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 /**
  * Get team by ID with members
  * GET /api/teams/:teamId
- * Requires: Authentication
+ * Requires: roster.view or course.manage permission (course scope)
  */
-router.get('/:teamId', ensureAuthenticated, async (req, res) => {
+router.get('/:teamId', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const { teamId } = req.params;
 
@@ -100,9 +100,9 @@ router.get('/:teamId', ensureAuthenticated, async (req, res) => {
  * Create a new team
  * POST /api/teams
  * Body: { offering_id, name, team_number, leader_id, status }
- * Requires: Admin or Instructor
+ * Requires: course.manage permission (course scope)
  */
-router.post('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.post('/', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { offering_id, name, team_number, leader_id, status = 'forming' } = req.body;
     
@@ -140,7 +140,7 @@ router.post('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res)
  * Body: { name, team_number, leader_id, status }
  * Requires: Admin or Instructor
  */
-router.put('/:teamId', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.put('/:teamId', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { teamId } = req.params;
     const { name, team_number, leader_id, status } = req.body;
@@ -195,7 +195,7 @@ router.put('/:teamId', ensureAuthenticated, requireAdminOrInstructor, async (req
  * DELETE /api/teams/:teamId
  * Requires: Admin or Instructor
  */
-router.delete('/:teamId', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.delete('/:teamId', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { teamId } = req.params;
 
@@ -215,9 +215,9 @@ router.delete('/:teamId', ensureAuthenticated, requireAdminOrInstructor, async (
 /**
  * Get team members
  * GET /api/teams/:teamId/members
- * Requires: Authentication
+ * Requires: roster.view or course.manage permission (course scope)
  */
-router.get('/:teamId/members', ensureAuthenticated, async (req, res) => {
+router.get('/:teamId/members', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
   try {
     const { teamId } = req.params;
 
@@ -252,7 +252,7 @@ router.get('/:teamId/members', ensureAuthenticated, async (req, res) => {
  * Body: { user_id, role }
  * Requires: Admin or Instructor
  */
-router.post('/:teamId/members', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.post('/:teamId/members', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { teamId } = req.params;
     const { user_id, role = 'member' } = req.body;
@@ -286,7 +286,7 @@ router.post('/:teamId/members', ensureAuthenticated, requireAdminOrInstructor, a
  * DELETE /api/teams/:teamId/members/:userId
  * Requires: Admin or Instructor
  */
-router.delete('/:teamId/members/:userId', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.delete('/:teamId/members/:userId', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { teamId, userId } = req.params;
 

@@ -3,7 +3,8 @@ import multer from 'multer';
 import { UserService } from '../services/user-service.js';
 import { RosterService } from '../services/roster-service.js';
 import { rosterImportLimiter } from '../middleware/rate-limiter.js';
-import { ensureAuthenticated, requireAdminOrInstructor } from '../middleware/auth.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
+import { protect, protectAny } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
@@ -25,9 +26,9 @@ const upload = multer({
  * Create a new user
  * POST /users
  * Body: { email, name, role, auth_source, ... }
- * Requires: Admin or Instructor
+ * Requires: user.manage permission (global)
  */
-router.post('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.post('/', ...protect('user.manage', 'global'), async (req, res) => {
   try {
     const createdBy = req.currentUser.id;
     const newUser = await UserService.createUser(req.body, createdBy);
@@ -40,9 +41,9 @@ router.post('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res)
 /**
  * Get all users with pagination
  * GET /users?limit=50&offset=0&includeDeleted=false
- * Requires: Authentication
+ * Public endpoint - no authentication required
  */
-router.get('/', ensureAuthenticated, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -57,19 +58,54 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 });
 
 /**
+ * Get users by primary_role
+ * GET /users/role/:role?limit=50&offset=0
+ * Public endpoint - no authentication required
+ */
+router.get('/role/:role', async (req, res) => {
+  try {
+    const { role } = req.params;
+    const options = {
+      limit: Number(req.query.limit ?? 50),
+      offset: Number(req.query.offset ?? 0),
+    };
+    const users = await UserService.getUsersByRole(role, options);
+    res.json(users);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Get users by institution_type (ucsd or extension)
+ * GET /users/institution/:type?limit=50&offset=0
+ * Public endpoint - no authentication required
+ */
+router.get('/institution/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+    if (!['ucsd', 'extension'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid institution type. Must be "ucsd" or "extension"' });
+    }
+    const options = {
+      limit: Number(req.query.limit ?? 50),
+      offset: Number(req.query.offset ?? 0),
+    };
+    const users = await UserService.getUsersByInstitutionType(type, options);
+    res.json(users);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
  * Get user by ID
  * GET /users/:id
- * Requires: Authentication (users can view themselves, admins/instructors can view anyone)
+ * Public endpoint - no authentication required
  */
-router.get('/:id', ensureAuthenticated, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const user = await UserService.getUserById(req.params.id);
-    // Users can view themselves, admins/instructors can view anyone
-    if (req.currentUser.id !== user.id && 
-        req.currentUser.primary_role !== 'admin' && 
-        req.currentUser.primary_role !== 'instructor') {
-      return res.status(403).json({ error: "forbidden" });
-    }
     res.json(user);
   } catch (err) {
     res.status(404).json({ error: err.message });
@@ -102,9 +138,9 @@ router.put('/:id', ensureAuthenticated, async (req, res) => {
 /**
  * Soft delete user
  * DELETE /users/:id
- * Requires: Admin or Instructor
+ * Requires: user.manage permission (global)
  */
-router.delete('/:id', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.delete('/:id', ...protect('user.manage', 'global'), async (req, res) => {
   try {
     const deletedBy = req.currentUser.id;
     await UserService.deleteUser(req.params.id, deletedBy);
@@ -117,9 +153,9 @@ router.delete('/:id', ensureAuthenticated, requireAdminOrInstructor, async (req,
 /**
  * Restore soft-deleted user
  * POST /users/:id/restore
- * Requires: Admin or Instructor
+ * Requires: user.manage permission (global)
  */
-router.post('/:id/restore', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.post('/:id/restore', ...protect('user.manage', 'global'), async (req, res) => {
   try {
     const restoredBy = req.currentUser.id;
     await UserService.restoreUser(req.params.id, restoredBy);
@@ -129,50 +165,9 @@ router.post('/:id/restore', ensureAuthenticated, requireAdminOrInstructor, async
   }
 });
 
-/**
- * Get users by primary_role
- * GET /users/role/:role?limit=50&offset=0
- * Requires: Authentication
- */
-router.get('/role/:role', ensureAuthenticated, async (req, res) => {
-  try {
-    const { role } = req.params;
-    const options = {
-      limit: Number(req.query.limit ?? 50),
-      offset: Number(req.query.offset ?? 0),
-    };
-    const users = await UserService.getUsersByRole(role, options);
-    res.json(users);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-/**
- * Get users by institution_type (ucsd or extension)
- * GET /users/institution/:type?limit=50&offset=0
- * Requires: Authentication
- */
-router.get('/institution/:type', ensureAuthenticated, async (req, res) => {
-  try {
-    const { type } = req.params;
-    if (!['ucsd', 'extension'].includes(type)) {
-      return res.status(400).json({ error: 'Invalid institution type. Must be "ucsd" or "extension"' });
-    }
-    const options = {
-      limit: Number(req.query.limit ?? 50),
-      offset: Number(req.query.offset ?? 0),
-    };
-    const users = await UserService.getUsersByInstitutionType(type, options);
-    res.json(users);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
 // Roster Management Routes
-// Requires: Admin or Instructor
-router.post('/roster/import/json', ensureAuthenticated, requireAdminOrInstructor, rosterImportLimiter, async (req, res) => {
+// Requires: roster.import permission (course scope)
+router.post('/roster/import/json', ...protect('roster.import', 'course'), rosterImportLimiter, async (req, res) => {
   try {
     // Validate file size if content is large
     const contentSize = JSON.stringify(req.body).length;
@@ -215,7 +210,7 @@ router.post('/roster/import/json', ensureAuthenticated, requireAdminOrInstructor
   }
 });
 
-router.post('/roster/import/csv', ensureAuthenticated, requireAdminOrInstructor, rosterImportLimiter, upload.single('file'), async (req, res) => {
+router.post('/roster/import/csv', ...protect('roster.import', 'course'), rosterImportLimiter, upload.single('file'), async (req, res) => {
   try {
     let csvText;
 
@@ -286,7 +281,7 @@ router.post('/roster/import/csv', ensureAuthenticated, requireAdminOrInstructor,
   }
 });
 
-router.get('/roster/export/json', ensureAuthenticated, async (req, res) => {
+router.get('/roster/export/json', ...protectAny(['roster.view', 'roster.export'], 'course'), async (req, res) => {
   try {
     const users = await RosterService.exportRosterToJson();
 
@@ -301,7 +296,7 @@ router.get('/roster/export/json', ensureAuthenticated, async (req, res) => {
   }
 });
 
-router.get('/roster/export/csv', ensureAuthenticated, async (req, res) => {
+router.get('/roster/export/csv', ...protectAny(['roster.view', 'roster.export'], 'course'), async (req, res) => {
   try {
     const csv = await RosterService.exportRosterToCsv();
 
@@ -344,7 +339,7 @@ router.post('/roster/export/imported/csv', ensureAuthenticated, async (req, res)
 
 // Rollback endpoint for failed imports
 // Requires: Admin or Instructor
-router.post('/roster/rollback', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.post('/roster/rollback', ...protect('roster.import', 'course'), async (req, res) => {
   try {
     const { userIds } = req.body;
 

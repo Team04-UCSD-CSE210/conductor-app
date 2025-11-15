@@ -321,8 +321,11 @@ Missing Name,invalid-email,student,active`;
 
   describe('exportRosterToCsv', () => {
     it('should export empty CSV with headers when no users exist', async () => {
-      // Clean up all users first
-      await pool.query('TRUNCATE TABLE users RESTART IDENTITY CASCADE');
+      // Clean up all users first (delete in order to respect foreign keys)
+      await pool.query('DELETE FROM activity_logs');
+      await pool.query('DELETE FROM enrollments');
+      await pool.query('DELETE FROM auth_logs');
+      await pool.query('DELETE FROM users');
       
       const result = await RosterService.exportRosterToCsv();
 
@@ -569,6 +572,12 @@ Missing Name,invalid-email,student,active`;
 
   describe('Integration: Import then Export', () => {
     it('should maintain data integrity through import-export cycle', async () => {
+      // Clean up before test to ensure clean state
+      await pool.query('DELETE FROM activity_logs');
+      await pool.query('DELETE FROM enrollments');
+      await pool.query('DELETE FROM auth_logs');
+      await pool.query('DELETE FROM users');
+      
       // Import via JSON
       const importData = [
         { name: 'Round Trip User', email: 'roundtrip@ucsd.edu', primary_role: 'student', status: 'active' },

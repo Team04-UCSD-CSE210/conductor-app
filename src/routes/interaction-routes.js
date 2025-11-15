@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { ensureAuthenticated, requireAdminOrInstructor } from '../middleware/auth.js';
+import { protect } from '../middleware/permission-middleware.js';
 
 const router = Router();
 
@@ -8,9 +8,9 @@ const router = Router();
  * Submit interaction report
  * POST /api/interactions
  * Body: { offering_id, team_id?, user_id?, interaction_type, notes }
- * Requires: Authentication (Admin/Instructor)
+ * Requires: course.manage permission (course scope)
  */
-router.post('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.post('/', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { offering_id, team_id, user_id, interaction_type, notes } = req.body;
 
@@ -53,9 +53,9 @@ router.post('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res)
 /**
  * Get all interactions for an offering
  * GET /api/interactions?offering_id=:id
- * Requires: Authentication (Admin/Instructor)
+ * Requires: course.manage permission (course scope)
  */
-router.get('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.get('/', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { offering_id, team_id, user_id } = req.query;
 
@@ -104,9 +104,9 @@ router.get('/', ensureAuthenticated, requireAdminOrInstructor, async (req, res) 
 /**
  * Get interactions for a team
  * GET /api/interactions/team/:teamId
- * Requires: Authentication (Admin/Instructor)
+ * Requires: course.manage permission (course scope)
  */
-router.get('/team/:teamId', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.get('/team/:teamId', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { teamId } = req.params;
 
@@ -136,9 +136,9 @@ router.get('/team/:teamId', ensureAuthenticated, requireAdminOrInstructor, async
 /**
  * Get interactions for a student
  * GET /api/interactions/student/:userId
- * Requires: Authentication (Admin/Instructor)
+ * Requires: course.manage permission (course scope)
  */
-router.get('/student/:userId', ensureAuthenticated, requireAdminOrInstructor, async (req, res) => {
+router.get('/student/:userId', ...protect('course.manage', 'course'), async (req, res) => {
   try {
     const { userId } = req.params;
 

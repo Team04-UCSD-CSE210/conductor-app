@@ -184,6 +184,17 @@ export class RosterService {
   static async processUserImport(userData) {
     try {
       RosterService.validateUserData(userData);
+      
+      // Check for duplicate email before creating
+      const existing = await UserModel.findByEmail(userData.email);
+      if (existing) {
+        return {
+          success: false,
+          email: userData.email || 'unknown',
+          error: 'User with this email already exists',
+        };
+      }
+      
       const user = await UserModel.create(userData);
       return {
         success: true,
