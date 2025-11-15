@@ -5,4 +5,5 @@ node_modules
 certs/
 .envpublic/
 .env
-.vercel
+.env.vercel
+.vercel/
