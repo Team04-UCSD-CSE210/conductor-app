@@ -1,0 +1,48 @@
+/* Student personal info styling */
+.student-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--teal-600, #0d9488); /* same teal as course code */
+}
+
+.student-subtitle {
+  margin: 0.25rem 0 0;
+  font-weight: 500;
+  color: var(--gray-700, #374151);
+}
+
+.student-card-header {
+  margin-bottom: 0.75rem;
+}
+
+.student-calendar {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.student-calendar th,
+.student-calendar td {
+  border: 1px solid var(--gray-200, #e5e7eb);
+  text-align: center;
+  padding: 0.25rem 0.3rem;
+  height: 28px;
+}
+
+.student-calendar th {
+  background: var(--gray-100, #f3f4f6);
+  font-weight: 600;
+  color: var(--gray-700, #374151);
+}
+
+.student-calendar td {
+  background: #fff;
+  color: var(--gray-800, #1f2937);
+}
+
+.student-calendar-event {
+  background: var(--emerald-50, #ecfdf5);
+  color: var(--teal-700, #047857);
+  font-weight: 600;
+}
