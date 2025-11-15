@@ -951,10 +951,5 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   res.json({ courses });
 });
 
-// Start server if not running on Vercel
-if (!process.env.VERCEL) {
-  startServer();
-}
-
 // Export app for Vercel
 export default app;
