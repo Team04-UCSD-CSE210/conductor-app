@@ -175,13 +175,14 @@ export class EnrollmentModel {
     const params = [offeringId];
     
     if (options.course_role) {
-      whereClause += ' AND course_role = $2';
+      const paramIndex = params.length + 1;
+      whereClause += ` AND course_role = $${paramIndex}::course_role_enum`;
       params.push(options.course_role);
     }
     
     if (options.status) {
       const paramIndex = params.length + 1;
-      whereClause += ` AND status = $${paramIndex}`;
+      whereClause += ` AND status = $${paramIndex}::enrollment_status_enum`;
       params.push(options.status);
     }
     
@@ -268,7 +269,7 @@ export class EnrollmentModel {
         created_by,
         updated_by
       FROM enrollments
-      WHERE offering_id = $1::uuid AND course_role = $2
+      WHERE offering_id = $1::uuid AND course_role = $2::course_role_enum
       ORDER BY enrolled_at DESC
       LIMIT $3 OFFSET $4
       `,

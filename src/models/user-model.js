@@ -167,6 +167,7 @@ export class UserModel {
         linkedin_url    = COALESCE(EXCLUDED.linkedin_url,    users.linkedin_url),
         google_id       = COALESCE(EXCLUDED.google_id,       users.google_id),
         oauth_provider  = COALESCE(EXCLUDED.oauth_provider,  users.oauth_provider),
+        deleted_at      = NULL,
         updated_at      = NOW()
       RETURNING
         id,
@@ -269,6 +270,8 @@ export class UserModel {
    */
   static async findByEmail(email, includeDeleted = false) {
     const deletedClause = includeDeleted ? '' : 'AND deleted_at IS NULL';
+    // Normalize email to lowercase to match how emails are stored (LOWER() in INSERT)
+    const normalizedEmail = email ? String(email).toLowerCase().trim() : '';
     const { rows } = await pool.query(
       `
       SELECT
@@ -299,7 +302,7 @@ export class UserModel {
       FROM users
       WHERE email = $1::citext ${deletedClause}
       `,
-      [String(email)]
+      [normalizedEmail]
     );
     return rows[0] ?? null;
   }

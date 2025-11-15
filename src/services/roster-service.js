@@ -409,7 +409,8 @@ export class RosterService {
     const users = await RosterService.retrieveAllUsers();
 
     if (users.length === 0) {
-      return 'name,email,primary_role,status,institution_type,created_at,updated_at\n';
+      // Return header only, no trailing newline
+      return 'name,email,primary_role,status,institution_type,created_at,updated_at';
     }
 
     const csvRows = users.map((user) => ({

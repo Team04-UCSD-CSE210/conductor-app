@@ -5,7 +5,7 @@
  * Vitest global setup format:
  * export default async function setup() { ... }
  */
-import { DatabaseInitializer } from '../database/init.js';
+import { DatabaseInitializer } from './src/database/init.js';
 
 export default async function setup() {
   try {

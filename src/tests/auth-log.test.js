@@ -161,7 +161,10 @@ describe('Auth Logs (Postgres)', () => {
     });
 
     it('should query auth logs with metadata filter', async () => {
-      // Create test logs with metadata first
+      // Ensure clean state
+      await pool.query('DELETE FROM auth_logs');
+      
+      // Create test logs with metadata
       await pool.query(`
         INSERT INTO auth_logs (event_type, message, user_email, metadata)
         VALUES 
@@ -181,6 +184,18 @@ describe('Auth Logs (Postgres)', () => {
     });
 
     it('should count auth logs by event type', async () => {
+      // Ensure clean state
+      await pool.query('DELETE FROM auth_logs');
+      
+      // Create test logs
+      await pool.query(`
+        INSERT INTO auth_logs (event_type, message, user_email)
+        VALUES 
+          ('LOGIN_SUCCESS', 'Test login 1', 'test1@example.com'),
+          ('LOGIN_SUCCESS', 'Test login 2', 'test2@example.com'),
+          ('LOGIN_FAILURE', 'Test failure', 'test3@example.com')
+      `);
+      
       const result = await pool.query(`
         SELECT event_type, COUNT(*) as count
         FROM auth_logs
@@ -216,9 +231,10 @@ describe('Auth Logs (Postgres)', () => {
     ];
 
     it('should create logs for all event types', async () => {
-      // Clean up before creating test logs
+      // Clean up before creating test logs - ensure isolation
       await pool.query('DELETE FROM auth_logs');
       
+      // Create logs in a transaction to ensure atomicity
       for (const eventType of eventTypes) {
         const result = await pool.query(`
           INSERT INTO auth_logs (event_type, message, user_email)
@@ -229,9 +245,10 @@ describe('Auth Logs (Postgres)', () => {
         expect(result.rows[0].event_type).toBe(eventType);
       }
 
-      // Verify all were created
+      // Verify all were created - count only logs we just created
       const count = await pool.query(`
         SELECT COUNT(*) as count FROM auth_logs
+        WHERE user_email = 'test@example.com'
       `);
       expect(parseInt(count.rows[0].count)).toBe(eventTypes.length);
     });

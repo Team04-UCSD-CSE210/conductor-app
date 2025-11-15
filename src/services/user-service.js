@@ -12,19 +12,37 @@ export class UserService {
    * @param {string} [createdBy] - User ID who is creating this user (for audit)
    */
   static async createUser(userData, createdBy = null) {
-    // Check for duplicate email
-    const existing = await UserModel.findByEmail(userData.email);
-    if (existing) {
+    // Normalize email for consistent comparison
+    const normalizedEmail = userData.email ? String(userData.email).toLowerCase().trim() : '';
+    
+    // Check for duplicate email (including soft-deleted users)
+    const existing = await UserModel.findByEmail(normalizedEmail, true); // includeDeleted = true
+    if (existing && !existing.deleted_at) {
+      // User exists and is not soft-deleted
       throw new Error('User with this email already exists');
     }
+    if (existing && existing.deleted_at) {
+      // User exists but is soft-deleted - restore and update with new data
+      await UserModel.restore(existing.id);
+      // Update the restored user with new data (if provided)
+      const updatedUser = await UserModel.update(existing.id, { ...userData, email: normalizedEmail });
+      // Log the restoration as creation
+      if (createdBy) {
+        await AuditService.logUserCreate(createdBy, userData);
+      } else {
+        await AuditService.logUserCreate(updatedUser.id, userData);
+      }
+      return updatedUser;
+    }
 
-    const user = await UserModel.create(userData);
+    // Create new user with normalized email
+    const user = await UserModel.create({ ...userData, email: normalizedEmail });
 
     // Log the creation
     if (createdBy) {
       await AuditService.logUserCreate(createdBy, userData);
     } else {
-      // Self-registration
+      // Self-registration - use the created user's ID
       await AuditService.logUserCreate(user.id, userData);
     }
 
@@ -59,10 +77,15 @@ export class UserService {
     const current = await UserModel.findById(id);
     if (!current) throw new Error('User not found');
 
-    // Check for duplicate email if changing email
-    if (updateData.email && updateData.email !== current.email) {
-      const dup = await UserModel.findByEmail(updateData.email);
-      if (dup) throw new Error('Email already in use by another user');
+    // Normalize email if provided
+    let normalizedEmail = current.email;
+    if (updateData.email) {
+      normalizedEmail = String(updateData.email).toLowerCase().trim();
+      // Check for duplicate email if changing email
+      if (normalizedEmail !== current.email.toLowerCase()) {
+        const dup = await UserModel.findByEmail(normalizedEmail);
+        if (dup && dup.id !== id) throw new Error('Email already in use by another user');
+      }
     }
 
     // Track role change for audit
@@ -71,7 +94,7 @@ export class UserService {
 
     const updated = await UserModel.update(id, {
       name: updateData.name ?? current.name,
-      email: updateData.email ?? current.email,
+      email: normalizedEmail,
       ucsd_pid: updateData.ucsd_pid ?? current.ucsd_pid,
       preferred_name: updateData.preferred_name ?? current.preferred_name,
       major: updateData.major ?? current.major,
@@ -105,14 +128,26 @@ export class UserService {
    * @param {string} deletedBy - User ID who is deleting (for audit)
    */
   static async deleteUser(id, deletedBy) {
-    const user = await UserModel.findById(id);
+    const user = await UserModel.findById(id, false); // Don't include deleted
     if (!user) throw new Error('User not found');
 
     const ok = await UserModel.delete(id);
-    if (!ok) throw new Error('User not found or already deleted');
+    if (!ok) {
+      // Check if already deleted
+      const deletedUser = await UserModel.findById(id, true); // Include deleted
+      if (deletedUser && deletedUser.deleted_at) {
+        throw new Error('User already deleted');
+      }
+      throw new Error('Failed to delete user');
+    }
 
-    // Log the deletion
-    await AuditService.logUserDelete(deletedBy, id);
+    // Log the deletion - only if user exists and wasn't already deleted
+    try {
+      await AuditService.logUserDelete(deletedBy, id);
+    } catch (error) {
+      // Logging failure shouldn't prevent deletion
+      console.warn('[UserService] Failed to log user deletion:', error.message);
+    }
 
     return true;
   }
@@ -125,13 +160,21 @@ export class UserService {
   static async restoreUser(id, restoredBy) {
     const user = await UserModel.findById(id, true); // Include deleted
     if (!user) throw new Error('User not found');
-    if (!user.deleted_at) throw new Error('User is not deleted');
+    if (!user.deleted_at) {
+      // User is not deleted, return success (idempotent)
+      return true;
+    }
 
     const ok = await UserModel.restore(id);
     if (!ok) throw new Error('Failed to restore user');
 
     // Log the restoration
-    await AuditService.logUserRestore(restoredBy, id);
+    try {
+      await AuditService.logUserRestore(restoredBy, id);
+    } catch (error) {
+      // Logging failure shouldn't prevent restoration
+      console.warn('[UserService] Failed to log user restoration:', error.message);
+    }
 
     return true;
   }

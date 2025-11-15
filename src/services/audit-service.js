@@ -15,6 +15,19 @@ export class AuditService {
    */
   static async logActivity({ userId, offeringId = null, action, metadata = null }) {
     try {
+      // Validate userId exists before logging (for foreign key constraint)
+      if (userId) {
+        const userCheck = await pool.query(
+          'SELECT id FROM users WHERE id = $1::uuid AND deleted_at IS NULL',
+          [userId]
+        );
+        if (userCheck.rows.length === 0) {
+          // User doesn't exist or is deleted - skip logging
+          console.warn(`[AuditService] Skipping log for non-existent user: ${userId}`);
+          return null;
+        }
+      }
+      
       // Map old action names to new action_type values if needed
       const actionTypeMap = {
         'user.created': 'enroll',

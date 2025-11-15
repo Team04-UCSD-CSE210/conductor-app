@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     threads: false,                 // run tests in a single thread
     sequence: { concurrent: false },// run files in order
-    globalSetup: './src/tests/setup.js', // Initialize database before all tests
+    globalSetup: './setup.js', // Initialize database before all tests
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

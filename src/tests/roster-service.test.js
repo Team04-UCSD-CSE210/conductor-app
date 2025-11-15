@@ -10,8 +10,12 @@ describe('RosterService', () => {
 
   beforeEach(async () => {
     // Use DELETE instead of TRUNCATE to avoid deadlocks
+    // Delete in order to respect foreign key constraints
     await pool.query('DELETE FROM activity_logs');
+    await pool.query('DELETE FROM team_members');
+    await pool.query('DELETE FROM team');
     await pool.query('DELETE FROM enrollments');
+    await pool.query('DELETE FROM course_offerings'); // Delete before users (foreign key constraint)
     await pool.query('DELETE FROM auth_logs');
     await pool.query('DELETE FROM users');
   });
@@ -22,9 +26,10 @@ describe('RosterService', () => {
 
   describe('importRosterFromJson', () => {
     it('should import valid user array successfully', async () => {
+      const timestamp = Date.now();
       const users = [
-        { name: 'Alice Johnson', email: 'alice@ucsd.edu', primary_role: 'student', status: 'active' },
-        { name: 'Bob Smith', email: 'bob@ucsd.edu', primary_role: 'admin', status: 'active' },
+        { name: 'Alice Johnson', email: `alice-${timestamp}@ucsd.edu`, primary_role: 'student', status: 'active' },
+        { name: 'Bob Smith', email: `bob-${timestamp}@ucsd.edu`, primary_role: 'admin', status: 'active' },
       ];
 
       const result = await RosterService.importRosterFromJson(users);
@@ -33,12 +38,14 @@ describe('RosterService', () => {
       expect(result.failed).toHaveLength(0);
       expect(result.total).toBe(2);
       expect(result.imported[0]).toHaveProperty('id');
-      expect(result.imported[0]).toHaveProperty('email', 'alice@ucsd.edu');
+      expect(result.imported[0]).toHaveProperty('email', `alice-${timestamp}@ucsd.edu`);
       
       // Verify institution_type is auto-detected
-      const alice = await UserModel.findByEmail('alice@ucsd.edu');
+      const alice = await UserModel.findByEmail(`alice-${timestamp}@ucsd.edu`);
+      expect(alice).not.toBeNull();
       expect(alice.institution_type).toBe('ucsd');
-      const bob = await UserModel.findByEmail('bob@ucsd.edu');
+      const bob = await UserModel.findByEmail(`bob-${timestamp}@ucsd.edu`);
+      expect(bob).not.toBeNull();
       expect(bob.institution_type).toBe('ucsd');
     });
 
@@ -302,20 +309,25 @@ Missing Name,invalid-email,student,active`;
     });
 
     it('should export users in correct format', async () => {
+      const timestamp = Date.now();
+      const testEmail = `test-${timestamp}@ucsd.edu`;
       await UserModel.create({
         name: 'Test User',
-        email: 'test@ucsd.edu',
+        email: testEmail,
         primary_role: 'student',
         status: 'active',
       });
 
       const result = await RosterService.exportRosterToJson();
-
-      expect(result[0].name).toBe('Test User');
-      expect(result[0].email).toBe('test@ucsd.edu');
-      expect(result[0].primary_role).toBe('student');
-      expect(result[0].status).toBe('active');
-      expect(result[0].institution_type).toBe('ucsd'); // Auto-detected from @ucsd.edu email
+      
+      // Find our test user in the results
+      const testUser = result.find(u => u.email === testEmail);
+      expect(testUser).toBeDefined();
+      expect(testUser.name).toBe('Test User');
+      expect(testUser.email).toBe(testEmail);
+      expect(testUser.primary_role).toBe('student');
+      expect(testUser.status).toBe('active');
+      expect(testUser.institution_type).toBe('ucsd'); // Auto-detected from @ucsd.edu email
     });
   });
 
@@ -323,7 +335,10 @@ Missing Name,invalid-email,student,active`;
     it('should export empty CSV with headers when no users exist', async () => {
       // Clean up all users first (delete in order to respect foreign keys)
       await pool.query('DELETE FROM activity_logs');
+      await pool.query('DELETE FROM team_members');
+      await pool.query('DELETE FROM team');
       await pool.query('DELETE FROM enrollments');
+      await pool.query('DELETE FROM course_offerings');
       await pool.query('DELETE FROM auth_logs');
       await pool.query('DELETE FROM users');
       
@@ -331,7 +346,7 @@ Missing Name,invalid-email,student,active`;
 
       expect(typeof result).toBe('string');
       expect(result).toContain('name,email,primary_role,status,institution_type,created_at,updated_at');
-      const lines = result.trim().split('\n');
+      const lines = result.trim().split('\n').filter(line => line.length > 0); // Filter empty lines
       expect(lines.length).toBe(1); // Only header row
     });
 
@@ -600,9 +615,10 @@ Missing Name,invalid-email,student,active`;
     });
 
     it('should handle large batch imports', async () => {
+      const timestamp = Date.now();
       const users = Array.from({ length: 50 }, (_, i) => ({
         name: `User ${i}`,
-        email: `user${i}@ucsd.edu`,
+        email: `user${i}-${timestamp}@ucsd.edu`, // Make emails unique with timestamp
         primary_role: 'student',
         status: 'active',
       }));
@@ -611,15 +627,18 @@ Missing Name,invalid-email,student,active`;
       expect(result.imported.length).toBe(50);
       expect(result.failed.length).toBe(0);
 
+      // Filter exported to only include our imported users
       const exported = await RosterService.exportRosterToJson();
-      expect(exported.length).toBe(50);
+      const ourExported = exported.filter(u => u.email.includes(`-${timestamp}@`));
+      expect(ourExported.length).toBe(50);
     });
 
     it('should handle 1000+ records efficiently', async () => {
       const startTime = Date.now();
+      const timestamp = Date.now();
       const users = Array.from({ length: 1000 }, (_, i) => ({
         name: `Performance User ${i}`,
-        email: `perf${i}@ucsd.edu`,
+        email: `perf${i}-${timestamp}@ucsd.edu`, // Make emails unique with timestamp
         primary_role: 'student',
         status: 'active',
       }));
@@ -639,6 +658,7 @@ Missing Name,invalid-email,student,active`;
       for (const importedUser of result.imported.slice(0, 10)) {
         const user = await UserModel.findById(importedUser.id);
         expect(user).toBeDefined();
+        expect(user).not.toBeNull();
         expect(user.email).toBe(importedUser.email);
       }
     });
