@@ -262,6 +262,7 @@ passport.use(new GoogleStrategy({
   const identifier = getLoginIdentifier(email, req);
   const { blocked, attempts: recentAttempts } = await getLoginAttemptStatus(identifier);
 
+  console.log(`[DEBUG] OAuth strategy - SessionID: ${req.sessionID}, Email: ${email}`);
 
   // --- Whitelist bypass for rate limits ---
   if (email) {
@@ -281,7 +282,11 @@ passport.use(new GoogleStrategy({
   }
 
   console.log(`🔐 Login attempt for email: ${email}. Blocked: ${blocked}. Recent attempts: ${recentAttempts}`);
-  if (blocked) {
+  
+  // Skip old rate limiting entirely for non-UCSD users - they use new 3-attempt system
+  const isNonUCSD = domain !== ALLOWED_DOMAIN;
+  
+  if (blocked && !isNonUCSD) {
     await logAuthEvent("LOGIN_RATE_LIMITED", {
       req,
       message: "Login blocked due to too many failed attempts.",
@@ -314,7 +319,7 @@ passport.use(new GoogleStrategy({
     }
 
     // --- Step 2: Non-UCSD (gmail etc.) → check whitelist ---
-    console.log(`🔐 Non-UCSD domain login successful email: ${email}`);
+    console.log(`🔐 Non-UCSD domain login attempt for email: ${email}`);
     if (email) {
       console.log(`[TRACE] Checking whitelist for email: ${email}`);
       const whitelistEntry = await Whitelist.findOne({ where: { email } });
@@ -346,26 +351,55 @@ passport.use(new GoogleStrategy({
       }
     }
 
-    // --- Step 3: All others → block and log ---
+    // --- Step 3: Non-UCSD users not on whitelist → 3 attempt limit ---
     const attempts = await recordFailedLoginAttempt(identifier);
+    console.log(`[TRACE] Non-UCSD login attempt ${attempts}/3 for ${email}`);
+    
+    if (attempts >= 3) {
+      console.log(`[DEBUG] User ${email} blocked after 3 attempts - redirecting to blocked.html`);
+      await logAuthEvent("LOGIN_BLOCKED_MAX_ATTEMPTS", {
+        req,
+        message: `Non-UCSD user blocked after 3 attempts: ${email}`,
+        userEmail: email,
+        userId,
+        metadata: {
+          provider: "google",
+          domain,
+          attempts,
+          maxAttempts: 3
+        }
+      });
+      
+      // Direct redirect approach - set session data and use error callback
+      if (req.session && email) {
+        req.session.blockedEmail = email;
+        req.session.save((err) => {
+          if (err) console.error('[DEBUG] Session save error:', err);
+        });
+      }
+      
+      // Use error callback to trigger redirect to blocked page
+      return done(new Error("BLOCKED_MAX_ATTEMPTS"), false);
+    }
+
     await logAuthEvent("LOGIN_REJECTED_DOMAIN", {
       req,
-      message: `Attempted login from unauthorized domain: ${domain || "unknown"}`,
+      message: `Non-UCSD login attempt ${attempts}/3 from: ${domain || "unknown"}`,
       userEmail: email,
       userId,
       metadata: {
         provider: "google",
         domain,
         attempts,
-        threshold: LOGIN_FAILURE_THRESHOLD,
-        windowMinutes: LOGIN_FAILURE_WINDOW_MINUTES
+        maxAttempts: 3
       }
     });
-    // Store email in session before redirect so /auth/failure can access it
+    
     if (req.session && email) {
       req.session.userEmail = email;
+      req.session.attemptsRemaining = 3 - attempts;
     }
-    return done(null, false, { message: "Non-UCSD or unapproved account" });
+    return done(null, false, { message: `Access denied. ${3 - attempts} attempts remaining.` });
   } catch (error) {
     console.error("Error during Google OAuth verification", error);
     const attempts = await recordFailedLoginAttempt(identifier);
@@ -479,7 +513,11 @@ app.get("/auth/error", (req, res) => {
 // Always force account chooser on each login attempt
 app.get("/auth/google", (req, res, next) => {
   req.logout(() => {});       // clear any cached user
-  req.session?.destroy(() => {});  // destroy session
+  // Don't destroy session - just clear user data
+  if (req.session) {
+    delete req.session.passport;
+    // Keep session alive but clear auth-related data except our tracking
+  }
 
   const loginHint = req.query.email || req.query.login_hint || ""; // capture hint if provided
 
@@ -498,7 +536,27 @@ app.get("/auth/google", (req, res, next) => {
 
 app.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/auth/failure" }),
+  (req, res, next) => {
+    passport.authenticate("google", (err, user, info) => {
+      if (err) {
+        console.log(`[DEBUG] OAuth error: ${err.message}`);
+        if (err.message === "BLOCKED_MAX_ATTEMPTS") {
+          console.log(`[DEBUG] Redirecting to blocked.html due to max attempts`);
+          return res.redirect("/blocked.html");
+        }
+        return res.redirect("/auth/failure");
+      }
+      if (!user) {
+        return res.redirect("/auth/failure");
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.redirect("/auth/failure");
+        }
+        return next();
+      });
+    })(req, res, next);
+  },
   async (req, res) => {
     const email = req.user?.emails?.[0]?.value || "unknown";
 
@@ -553,17 +611,15 @@ app.get(
   });
 
 // --- AUTH FAILURE ROUTE ---
-app.get("/auth/failure", (req, res) => {
-  res.send(`
-    <h1>Authentication Failed</h1>
-    <p>There was an error during authentication. Please try again.</p>
-    <a href="/login">Back to Login</a>
-  `);
-});
-
-// Failed login route
 app.get("/auth/failure", async (req, res) => {
   console.warn("⚠️ Google OAuth failed or unauthorized user.");
+  console.log("[DEBUG] Session data in failure route:", {
+    userEmail: req.session?.userEmail,
+    maxAttemptsReached: req.session?.maxAttemptsReached,
+    attemptsRemaining: req.session?.attemptsRemaining,
+    sessionID: req.sessionID
+  });
+  
   await logAuthEvent("LOGIN_FAILURE", {
     req,
     message: "Google OAuth failed or unauthorized user",
@@ -584,13 +640,37 @@ app.get("/auth/failure", async (req, res) => {
 
   console.log("🚫 Failed login email captured:", email);
 
+  // Check if user has reached max attempts
+  if (req.session?.maxAttemptsReached) {
+    console.log("🚫 User reached max attempts, redirecting to blocked page");
+    req.session.blockedEmail = email;
+    delete req.session.maxAttemptsReached;
+    delete req.session.userEmail;
+    return res.redirect("/blocked.html");
+  }
+
   // Clear the session email after reading it
   if (req.session) {
     delete req.session.userEmail;
   }
 
-  req.session.blockedEmail = email;
-  res.redirect("/blocked.html");
+  // Show attempts remaining if available
+  const attemptsRemaining = req.session?.attemptsRemaining;
+  if (attemptsRemaining !== undefined) {
+    delete req.session.attemptsRemaining;
+    return res.send(`
+      <h1>Access Denied</h1>
+      <p>You have ${attemptsRemaining} attempts remaining.</p>
+      <a href="/login">Try Again</a>
+    `);
+  }
+
+  // Default failure message
+  res.send(`
+    <h1>Authentication Failed</h1>
+    <p>There was an error during authentication. Please try again.</p>
+    <a href="/login">Back to Login</a>
+  `);
 });
 
 
@@ -664,6 +744,14 @@ app.get("/logout", ensureAuthenticated, (req, res, next) => {
     userEmail: email,
     userId
   });
+
+  // Clear login attempts for this user on logout
+  if (email) {
+    const identifier = getLoginIdentifier(email, req);
+    clearLoginAttempts(identifier).catch(err => 
+      console.error("Error clearing login attempts on logout:", err)
+    );
+  }
 
   req.logout((error) => {
     if (error) {
