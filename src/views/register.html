@@ -2,25 +2,90 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Register User Type</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register User Type - Conductor</title>
+  <link rel="stylesheet" href="/global.css">
   <style>
-    body { font-family: sans-serif; background: #fff3f3; padding: 2rem; }
-    h1 { color: #cc0000; }
-    label, select, button { display: block; margin-top: 1rem; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .register-card {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    label {
+      display: block;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 1rem;
+      background: white;
+      cursor: pointer;
+    }
+    select:focus {
+      outline: none;
+      border-color: #4285f4;
+    }
+    button {
+      margin-top: 2rem;
+      padding: 12px 24px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #357ae8;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
   </style>
 </head>
 <body>
-  <h1>Unregistered User</h1>
-  <p>Your account has been created but not yet assigned a role.</p>
+  <div class="register-card">
+    <h1>Complete Your Registration</h1>
+    <p>Your account has been created but not yet assigned a role. Please select your role below.</p>
   <form action="/register/submit" method="post">
     <label for="role">Select your role:</label>
-    <select name="role" id="role">
-      <option value="Student">Student</option>
-      <option value="TA">TA</option>
-      <option value="Professor">Professor</option>
+      <select name="role" id="role" required>
+        <option value="">-- Please select --</option>
+        <option value="student">Student</option>
+        <option value="instructor">Professor</option>
     </select>
     <button type="submit">Submit</button>
   </form>
+  </div>
 </body>
 </html>
 
