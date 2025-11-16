@@ -557,10 +557,13 @@ conductor-app/
 **Permission-Based Access Control:**
 
 - ✅ Global permissions (based on `primary_role`)
-- ✅ Course permissions (based on `course_role` in enrollments)
-- ✅ Team permissions (based on team membership roles)
-- ✅ Permission middleware: `protect()` and `protectAny()`
-- ✅ Multiple scope support: `global`, `course`, `team`
+- ✅ Course permissions (based on `course_role` in `enrollments`)
+- ✅ Team permissions (based on `team_role` in `team_members`)
+- ✅ Centralized permission checker (`PermissionService.hasPermission`)
+- ✅ Middleware: `protect()` and `protectAny()`
+- ✅ Automatic scope support: `global`, `course`, `team`
+- ✅ Automatic scope resolution from URL/query/body
+- ✅ Admin receives all permissions automatically
 
 **Available Permissions:**
 
@@ -571,6 +574,10 @@ conductor-app/
 - ✅ `roster.export` - Export roster as JSON/CSV (course/global)
 - ✅ `enrollment.manage` - Create/update/delete enrollments (course)
 - ✅ `course.manage` - Course-level admin & stats (course)
+- ✅ `team.view` – View all teams in a course
+- ✅ `team.manage` – Full management of teams and team membership
+- ✅ `interaction.view` – View interaction reports
+- ✅ `interaction.create` – Create interaction reports
 
 **Permission Middleware:**
 
@@ -786,7 +793,6 @@ This section verifies all API endpoints documented in `current-apis.md` and thei
 | `/api/enrollments/offering/:offeringId/user/:userId` | GET | ✅ Implemented | Get specific enrollment |
 | `/api/enrollments/offering/:offeringId` | GET | ✅ Implemented | List enrollments with filters |
 | `/api/enrollments/user/:userId` | GET | ✅ Implemented | List user's enrollments |
-| `/api/enrollments/offering/:offeringId/staff` | GET | ✅ Implemented | Get course staff |
 | `/api/enrollments/offering/:offeringId/tas` | GET | ✅ Implemented | Get TAs only |
 | `/api/enrollments/offering/:offeringId/tutors` | GET | ✅ Implemented | Get tutors only |
 | `/api/enrollments/offering/:offeringId/students` | GET | ✅ Implemented | Get students only |
