@@ -1,34 +1,17 @@
-version: '3.8'
-
 services:
-  app:
-    build: .
-    ports:
-      - "8080:8080"
+  db:
+    image: postgres:15
+    container_name: conductor-db
+    restart: always
     environment:
-      - NODE_ENV=production
-      - PORT=8080
-    env_file:
-      - .env.production
-    depends_on:
-      - redis
-      - postgres
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-  postgres:
-    image: postgres:15-alpine
-    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app_pw
       POSTGRES_DB: conductor
-      POSTGRES_USER: conductor
-      POSTGRES_PASSWORD: conductor_password
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
 
 volumes:
-  postgres_data:
+  pgdata:
