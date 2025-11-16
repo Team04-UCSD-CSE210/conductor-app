@@ -5,13 +5,17 @@ const MIN_COVERAGE = 80;
 
 const subprocess = spawnSync(
   'node',
-  ['--test', '--experimental-test-coverage', 'tests/class-directory-apis.test.js'],
+  [
+    '--test',
+    '--experimental-test-coverage',
+    './tests/auth-log.test.js',
+    './tests/database.test.js'
+  ],
   {
     env: process.env,
-    encoding: 'utf-8',
+    encoding: 'utf-8'
   }
 );
-
 
 if (subprocess.stdout) {
   process.stdout.write(subprocess.stdout);
@@ -42,7 +46,9 @@ if (!summaryLineRaw) {
 
 const summaryLine = summaryLineRaw.replace(/^ℹ\s*/, '');
 
-const match = summaryLine.match(/all files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|/);
+const match = summaryLine.match(
+  /all files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|/
+);
 
 if (!match) {
   console.error('Unable to parse coverage summary:', summaryLine);
@@ -57,11 +63,15 @@ const coverageChecks = [
   { label: 'functions', value: funcPct }
 ];
 
-const failures = coverageChecks.filter((check) => Number.isFinite(check.value) && check.value < MIN_COVERAGE);
+const failures = coverageChecks.filter(
+  (check) => Number.isFinite(check.value) && check.value < MIN_COVERAGE
+);
 
 if (failures.length > 0) {
   failures.forEach((check) => {
-    console.error(`Coverage for ${check.label} is below ${MIN_COVERAGE}%: ${check.value.toFixed(2)}%`);
+    console.error(
+      `Coverage for ${check.label} is below ${MIN_COVERAGE}%: ${check.value.toFixed(2)}%`
+    );
   });
   process.exit(1);
 }
