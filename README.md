@@ -26,6 +26,7 @@ This project includes automated deployment to Vercel:
 - **Health Monitoring**: Automated status updates to team Slack channel
 
 **Quick Deploy to Vercel:**
+
 ```bash
 npm run setup:vercel
 vercel dev
