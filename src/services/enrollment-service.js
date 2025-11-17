@@ -100,10 +100,9 @@ export class EnrollmentService {
    * Get course staff (TAs and tutors) for an offering
    */
   static async getCourseStaff(offeringId, options = {}) {
-    const enrollments = await EnrollmentModel.findByOffering(offeringId, {
-      ...options,
-      course_role: undefined, // Get all roles, then filter
-    });
+    // Get all enrollments for the offering (without course_role filter)
+    const { course_role, ...otherOptions } = options;
+    const enrollments = await EnrollmentModel.findByOffering(offeringId, otherOptions);
     
     // Filter to only TAs and tutors
     return enrollments.filter(e => e.course_role === 'ta' || e.course_role === 'tutor');
