@@ -307,7 +307,7 @@ Missing Name,invalid-email-${timestamp},student,active`;
                              'instructor1@ucsd.edu')
             )
         `);
-      } catch (_error) {
+      } catch {
         // Ignore cleanup errors - test may still work
       }
       
