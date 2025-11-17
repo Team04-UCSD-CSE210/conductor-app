@@ -6,16 +6,10 @@
  * export default async function setup() { ... }
  */
 import { DatabaseInitializer } from './src/database/init.js';
-import dotenv from 'dotenv';
-
-// Load environment variables from .env file
-dotenv.config();
 
 export default async function setup() {
   try {
     console.log('[test setup] Initializing database schema...');
-    // dotenv.config();
-    // console.error(process.env.DATABASE_URL);
 
     // Check if schema already exists
     const isValid = await DatabaseInitializer.verifySchema();
