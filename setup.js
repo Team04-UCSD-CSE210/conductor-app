@@ -10,7 +10,7 @@ import { DatabaseInitializer } from './src/database/init.js';
 export default async function setup() {
   try {
     console.log('[test setup] Initializing database schema...');
-    
+
     // Check if schema already exists
     const isValid = await DatabaseInitializer.verifySchema();
     
