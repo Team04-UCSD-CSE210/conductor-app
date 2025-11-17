@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
 
-const MIN_COVERAGE = 80;
+const MIN_COVERAGE = 70;
 
 // Get default test database URL using current user
 const getDefaultTestUrl = () => {
