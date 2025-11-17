@@ -1,5 +1,5 @@
 // vitest.config.js
-import { defineConfig } from 'vitest/config';
+import {defineConfig} from 'vitest/config';
 
 // Get default test database URL using current user
 const getDefaultTestUrl = () => {

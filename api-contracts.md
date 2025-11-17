@@ -1,12 +1,13 @@
-
 # Class Directories
 
 ## Class API
 
 ### Get class info
+
 **GET** `/api/class/{id}`
 
-#### Response
+#### Response (example)
+
 ```json
 {
   "id": "00000000-aaaa-0001-aaaa-000000000001",
@@ -35,9 +36,13 @@
   "updated_by": null
 }
 ```
-#### Backend logic
+
+#### Backend logic (notes)
+
 - Query `Course_Offerings` by `id`
+
 ---
+
 ## Professor API
 
 ### Get professor info for a class
@@ -79,18 +84,22 @@
   ]
 }
 ```
+
 #### Backend logic
 
 - Query `Course_Offerings → instructor_id`
 - Join `Users` and `Availability`
 
-
 ---
+
 ## TA APIs
 
 ### Get all TAs for a class
+
 **GET** `/api/class/{offeringId}/tas`
-#### Response
+
+#### Response format
+
 ```json
 {
   "offeringId": "cse210-fa25",
@@ -115,14 +124,19 @@
   ]
 }
 ```
-#### Backend logic
+
+#### Backend implementation
+
 - Query `ENROLLMENTS` where `role = 'ta'` for the given `offeringId`.
 - Join `Users` and `Availability`.
 - Future works: Add activity during development phase of attendance sys.
 
-### Get a TA's info.
-`GET /api/class/ta/{taId}`
-#### Response
+### Get a TA's info
+
+**GET** `/api/class/ta/{taId}`
+
+#### Response (specific TA)
+
 ```json
 {
   "userId": "uuid",
@@ -142,7 +156,9 @@
   "activity": null
 }
 ```
-#### Backend logic
+
+#### Backend logic (TA info)
+
 - Query `ENROLLMENTS` where `role = 'ta'` for the given `taId`.
 - Join `Users` and `Availability`.
 
@@ -154,22 +170,22 @@
 
 **GET** `/api/class/{offeringId}/students`
 
-#### Support filters：
+#### Support filters
 
 | Key      | Description                     |
 | -------- |---------------------------------|
 | `section`| by given section (e.g., A02)    |
 | `search` | by name, preferred name, email  |
-| `group`  | by given group name              |
+| `group`  | by given group name             |
 
-#### Support pagination：
+#### Support pagination
 
 | Key     | Description               |
 | ------- |---------------------------|
 | `page`  | page number (default 1)   |
 | `limit` | items per page (default 20)|
 
-#### Response
+#### Response (students list)
 
 ```json
 {
@@ -201,22 +217,24 @@
 }
 ```
 
-#### Backend logic
+#### Backend logic (students list)
 
 - `ENROLLMENTS` where `role = 'student'`
+
 ---
+
 ## Groups API
 
 ### Get all groups in a class
+
 **GET** `/api/class/{offeringId}/groups`
 
-#### Query params（optional）
+#### Query params (optional)
 
 | Key      | Description         |
 | -------- |---------------------|
 | `search` | by given group name |
 | `sort`   | name / number       |
-
 
 #### Pagination params (optional)
 
@@ -225,7 +243,8 @@
 | `page`  | page number (default 1)   |
 | `limit` | items per page (default 20)|
 
-#### Response
+#### Response (groups list)
+
 ```json
 {
   "offeringId": "00000000-aaaa-0001-aaaa-000000000001",
@@ -274,7 +293,7 @@
 }
 ```
 
-#### Backend logic
+#### Backend logic (groups list)
 
 | Field       | Source                                  |
 | ----------- | --------------------------------------- |
@@ -287,10 +306,12 @@
 | memberCount | COUNT(TEAM_MEMBERS)                     |
 | leaders     | TEAM_MEMBERS.role = 'leader' join USERS |
 
-
 ### Get a specific group in a class
+
 **GET** `/api/class//group/{teamId}`
-#### Response
+
+#### Response (specific group)
+
 ```json
 {
   "teamId": "00000000-aaaa-0002-aaaa-000000000001",
@@ -331,17 +352,10 @@
   ]
 }
 ```
+
 #### Backend Implementation
 
 - Query `TEAM`
 - Parse `metadata (logo, mantra, links)`
 - Query `TEAM_MEMBERS where team_id = {teamId}`
 - Join `USERS` to get complete user info
-
-
-
-
-
-
-
-
