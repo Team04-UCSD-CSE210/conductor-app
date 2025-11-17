@@ -77,6 +77,10 @@
       transition: background 0.2s;
     }
     a:hover { background: #5588ff; }
+    .blocked-input {
+      background: #2a2a2a;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -86,7 +90,7 @@
 
 <form action="/request-access" method="POST" id="accessRequestForm">
   <label for="email">Your Email:</label>
-  <input type="email" name="email" id="email" required style="background:#2a2a2a;color:#fff;">
+  <input type="email" name="email" id="email" required class="blocked-input">
   <label for="reason">Reason (optional):</label>
   <input type="text" name="reason" id="reason" placeholder="Why you need access">
   <button type="submit">Request Access</button>
