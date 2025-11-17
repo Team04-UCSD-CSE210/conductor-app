@@ -19,7 +19,18 @@ The pipeline ensures code quality and consistency across all contributions.
 
 ### CD Pipeline
 
-This project will have CD once the deployment environment is confirmed.
+This project includes automated deployment to Vercel:
+
+- **Preview Deployments**: Automatically created for pull requests
+- **Production Deployment**: Triggered on pushes to `main` branch
+- **Health Monitoring**: Automated status updates to team Slack channel
+
+**Quick Deploy to Vercel:**
+
+```bash
+npm run setup:vercel
+vercel dev
+```
 
 ## Team Standards & Deployment Policies
 
