@@ -20,6 +20,8 @@ import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
 import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
+import sessionRoutes from "./routes/session-routes.js";
+import attendanceRoutes from "./routes/attendance-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -945,6 +947,8 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/offerings", offeringRoutes);
 app.use("/api/interactions", interactionRoutes);
+app.use("/api/sessions", sessionRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {

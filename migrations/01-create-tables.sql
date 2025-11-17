@@ -102,10 +102,14 @@ BEGIN
   NEW.updated_at = NOW();
     -- Preserve created_by and created_at
     IF TG_OP = 'UPDATE' THEN
-        IF TG_TABLE_NAME != 'users' THEN
+        -- Only preserve created_by if the column exists (not on users, attendance, session_responses)
+        IF TG_TABLE_NAME NOT IN ('users', 'attendance', 'session_responses') THEN
             NEW.created_by = OLD.created_by;
         END IF;
-        NEW.created_at = OLD.created_at;
+        -- Only preserve created_at if the column exists (not on session_responses)
+        IF TG_TABLE_NAME != 'session_responses' THEN
+            NEW.created_at = OLD.created_at;
+        END IF;
     END IF;
   RETURN NEW;
 END;
@@ -422,17 +426,15 @@ COMMENT ON TABLE session_questions IS 'Questions and prompts for class sessions'
 -- =====================================================
 CREATE TABLE IF NOT EXISTS session_responses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     question_id UUID NOT NULL REFERENCES session_questions(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     response_text TEXT,
     response_option TEXT, -- For multiple choice
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(session_id, question_id, user_id)
+    UNIQUE(question_id, user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_session_responses_session ON session_responses(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_responses_question ON session_responses(question_id);
 CREATE INDEX IF NOT EXISTS idx_session_responses_user ON session_responses(user_id);
 CREATE INDEX IF NOT EXISTS idx_session_responses_submitted ON session_responses(submitted_at);
