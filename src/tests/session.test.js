@@ -1,10 +1,10 @@
 import { describe, it, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { pool } from '../src/db.js';
-import { SessionModel } from '../src/models/session-model.js';
-import { SessionQuestionModel } from '../src/models/session-question-model.js';
-import { SessionResponseModel } from '../src/models/session-response-model.js';
-import { SessionService } from '../src/services/session-service.js';
+import { pool } from '../db.js';
+import { SessionModel } from '../models/session-model.js';
+import { SessionQuestionModel } from '../models/session-question-model.js';
+import { SessionResponseModel } from '../models/session-response-model.js';
+import { SessionService } from '../services/session-service.js';
 
 describe('Session Management Tests', () => {
   let testOffering, testUser, testStudent, testSession;

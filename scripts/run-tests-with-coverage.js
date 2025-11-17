@@ -8,7 +8,7 @@ const testEnv = {
 };
 
 // Run tests using Node's built-in test runner
-const subprocess = spawnSync('node', ['--test', 'tests/session.test.js', 'tests/attendance.test.js'], {
+const subprocess = spawnSync('node', ['--test', 'src/tests/session.test.js', 'src/tests/attendance.test.js'], {
   env: testEnv,
   encoding: 'utf-8'
 });
