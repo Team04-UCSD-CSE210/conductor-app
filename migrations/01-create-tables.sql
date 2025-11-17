@@ -287,33 +287,117 @@ CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created
 COMMENT ON TABLE activity_logs IS 'Audit trail of all user actions';
 
 -- =====================================================
--- 9. ATTENDANCE
--- Tracks student attendance for each class date
+-- 9. SESSIONS
+-- Specific class sessions with dates and access codes
+-- =====================================================
+CREATE TABLE IF NOT EXISTS sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    session_date DATE NOT NULL,
+    session_time TIME,
+    access_code TEXT NOT NULL UNIQUE,
+    code_expires_at TIMESTAMPTZ,
+    is_active BOOLEAN DEFAULT TRUE,
+    attendance_opened_at TIMESTAMPTZ,
+    attendance_closed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_offering ON sessions(offering_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(session_date);
+CREATE INDEX IF NOT EXISTS idx_sessions_access_code ON sessions(access_code);
+CREATE INDEX IF NOT EXISTS idx_sessions_created_by ON sessions(created_by);
+
+CREATE TRIGGER update_sessions_updated_at BEFORE UPDATE ON sessions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE sessions IS 'Class sessions with unique access codes for student attendance';
+
+-- =====================================================
+-- 10. SESSION_QUESTIONS
+-- Questions/prompts for sessions (text entry, multiple choice, pulse check)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS session_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    question_text TEXT NOT NULL,
+    question_type TEXT NOT NULL, -- 'text', 'multiple_choice', 'pulse_check'
+    question_order INTEGER,
+    options JSONB, -- For multiple choice options
+    is_required BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_questions_session ON session_questions(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_questions_type ON session_questions(question_type);
+
+CREATE TRIGGER update_session_questions_updated_at BEFORE UPDATE ON session_questions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE session_questions IS 'Questions and prompts for class sessions';
+
+-- =====================================================
+-- 11. SESSION_RESPONSES
+-- Student responses to session questions
+-- =====================================================
+CREATE TABLE IF NOT EXISTS session_responses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL REFERENCES session_questions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    response_text TEXT,
+    response_option TEXT, -- For multiple choice
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(session_id, question_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_responses_session ON session_responses(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_responses_question ON session_responses(question_id);
+CREATE INDEX IF NOT EXISTS idx_session_responses_user ON session_responses(user_id);
+CREATE INDEX IF NOT EXISTS idx_session_responses_submitted ON session_responses(submitted_at);
+
+CREATE TRIGGER update_session_responses_updated_at BEFORE UPDATE ON session_responses
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE session_responses IS 'Student responses to session questions';
+
+-- =====================================================
+-- 12. ATTENDANCE
+-- Tracks student attendance for each class session
 -- =====================================================
 CREATE TABLE IF NOT EXISTS attendance (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    date DATE NOT NULL,
     status attendance_status_enum NOT NULL,
-    marked_by UUID NOT NULL REFERENCES users(id),
+    checked_in_at TIMESTAMPTZ,
+    access_code_used TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(offering_id, user_id, date)
+    UNIQUE(session_id, user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_attendance_offering ON attendance(offering_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_session ON attendance(session_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_user ON attendance(user_id);
-CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date);
 CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status);
+CREATE INDEX IF NOT EXISTS idx_attendance_checked_in ON attendance(checked_in_at);
 
 CREATE TRIGGER update_attendance_updated_at BEFORE UPDATE ON attendance
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-COMMENT ON TABLE attendance IS 'Tracks student attendance for each class date';
+COMMENT ON TABLE attendance IS 'Tracks student attendance for each class session';
 
 -- =====================================================
--- 10. AUTH_LOGS
+-- 13. AUTH_LOGS
 -- Tracks authentication events (login, logout, etc.)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS auth_logs (
@@ -336,7 +420,7 @@ CREATE INDEX IF NOT EXISTS idx_auth_logs_created_at ON auth_logs(created_at);
 COMMENT ON TABLE auth_logs IS 'Audit trail of all authentication events';
 
 -- =====================================================
--- 11. WHITELIST
+-- 14. WHITELIST
 -- Approved extension students who can access the system
 -- =====================================================
 CREATE TABLE IF NOT EXISTS whitelist (
@@ -352,7 +436,7 @@ CREATE INDEX IF NOT EXISTS idx_whitelist_email ON whitelist(email);
 COMMENT ON TABLE whitelist IS 'Approved extension students who can access the system';
 
 -- =====================================================
--- 12. ACCESS_REQUESTS
+-- 15. ACCESS_REQUESTS
 -- Pending access requests from non-UCSD users
 -- =====================================================
 CREATE TABLE IF NOT EXISTS access_requests (
