@@ -10,7 +10,7 @@ console.log('🚀 Setting up Vercel deployment...\n');
 try {
   execSync('vercel --version', { stdio: 'ignore' });
   console.log('✅ Vercel CLI is installed');
-} catch (error) {
+} catch {
   console.log('📦 Installing Vercel CLI...');
   execSync('npm install -g vercel', { stdio: 'inherit' });
 }

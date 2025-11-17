@@ -1,19 +1,22 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
   "functions": {
     "api/index.js": {
       "maxDuration": 30
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "/assets/(.*)",
+      "dest": "/src/assets/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/api/index.js"
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|html))",
+      "dest": "/src/public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
     }
   ]
 }
