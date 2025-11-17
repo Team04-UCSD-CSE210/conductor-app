@@ -12,9 +12,9 @@ import {isUuid} from "../../utils/validation.js";
  * @param {Function} options.authMiddleware - Authentication middleware (ignored; endpoint is public)
  * @param {Object} options.models - Sequelize models { Course, CourseUser, User }
  */
-export function registerClassApis(app, { authMiddleware: _authMiddleware, models }) {
+export function registerClassApis(app, {authMiddleware: _authMiddleware, models}) {
     // console.log("📝 registerClassApis called, models:", Object.keys(models));
-    const { Course } = models; // Course should be the CourseOffering model
+    const {Course} = models; // Course should be the CourseOffering model
 
     // Always use no-op auth to keep endpoint public
     const auth = (_req, _res, next) => next();
@@ -28,14 +28,14 @@ export function registerClassApis(app, { authMiddleware: _authMiddleware, models
         const courseId = req.params.id; // course_offerings.id is UUID
         if (!isUuid(courseId)) {
             // Treat non-UUID as not found to avoid DB error surfacing as 500
-            return res.status(404).json({ error: "course_not_found" });
+            return res.status(404).json({error: "course_not_found"});
         }
 
         try {
             // Fetch course_offerings row
             const course = await Course.findByPk(courseId);
             if (!course) {
-                return res.status(404).json({ error: "course_not_found" });
+                return res.status(404).json({error: "course_not_found"});
             }
 
             // Build response mapping to course_offerings columns
@@ -52,7 +52,7 @@ export function registerClassApis(app, { authMiddleware: _authMiddleware, models
                 enrollment_cap: course.enrollment_cap ?? null,
                 status: course.status ?? "open",
                 location: course.location ?? null,
-                class_timings: course.class_timings || { lectures: [], office_hours: [] },
+                class_timings: course.class_timings || {lectures: [], office_hours: []},
                 syllabus_url: course.syllabus_url ?? null,
                 // Enrollment count could be computed from enrollments table when model is available
                 currentEnrollment: null,
@@ -65,7 +65,7 @@ export function registerClassApis(app, { authMiddleware: _authMiddleware, models
             return res.json(response);
         } catch (err) {
             console.error("Error in GET /api/class/:id", err);
-            return res.status(500).json({ error: "internal_error" });
+            return res.status(500).json({error: "internal_error"});
         }
     });
 }
