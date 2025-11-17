@@ -10,86 +10,86 @@ CREATE EXTENSION IF NOT EXISTS "citext";
 -- =====================================================
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_enum') THEN
-        CREATE TYPE user_role_enum AS ENUM ('admin', 'instructor', 'student', 'unregistered');
+CREATE TYPE user_role_enum AS ENUM ('admin', 'instructor', 'student', 'unregistered');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_status_enum') THEN
-        CREATE TYPE user_status_enum AS ENUM ('active', 'busy', 'inactive');
+CREATE TYPE user_status_enum AS ENUM ('active', 'busy', 'inactive');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'institution_type_enum') THEN
-        CREATE TYPE institution_type_enum AS ENUM ('ucsd', 'extension');
+CREATE TYPE institution_type_enum AS ENUM ('ucsd', 'extension');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'course_role_enum') THEN
-        CREATE TYPE course_role_enum AS ENUM ('student', 'ta', 'tutor');
+CREATE TYPE course_role_enum AS ENUM ('student', 'ta', 'tutor');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enrollment_status_enum') THEN
-        CREATE TYPE enrollment_status_enum AS ENUM ('enrolled', 'waitlisted', 'dropped', 'completed');
+CREATE TYPE enrollment_status_enum AS ENUM ('enrolled', 'waitlisted', 'dropped', 'completed');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'course_offering_status_enum') THEN
-        CREATE TYPE course_offering_status_enum AS ENUM ('open', 'closed', 'completed');
+CREATE TYPE course_offering_status_enum AS ENUM ('open', 'closed', 'completed');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'assignment_type_enum') THEN
-        CREATE TYPE assignment_type_enum AS ENUM ('project', 'hw', 'exam', 'checkpoint');
+CREATE TYPE assignment_type_enum AS ENUM ('project', 'hw', 'exam', 'checkpoint');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'assignment_assigned_to_enum') THEN
-        CREATE TYPE assignment_assigned_to_enum AS ENUM ('team', 'individual');
+CREATE TYPE assignment_assigned_to_enum AS ENUM ('team', 'individual');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'team_status_enum') THEN
-        CREATE TYPE team_status_enum AS ENUM ('forming', 'active', 'inactive');
+CREATE TYPE team_status_enum AS ENUM ('forming', 'active', 'inactive');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'team_member_role_enum') THEN
-        CREATE TYPE team_member_role_enum AS ENUM ('leader', 'member');
+CREATE TYPE team_member_role_enum AS ENUM ('leader', 'member');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'submission_status_enum') THEN
-        CREATE TYPE submission_status_enum AS ENUM ('draft', 'submitted', 'graded');
+CREATE TYPE submission_status_enum AS ENUM ('draft', 'submitted', 'graded');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attendance_status_enum') THEN
-        CREATE TYPE attendance_status_enum AS ENUM ('present', 'absent', 'late', 'excused');
+CREATE TYPE attendance_status_enum AS ENUM ('present', 'absent', 'late', 'excused');
     END IF;
 END $$;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'activity_action_type_enum') THEN
-        CREATE TYPE activity_action_type_enum AS ENUM (
-            'login', 'logout',
-            'submit_assignment', 'update_submission',
-            'join_team', 'leave_team',
-            'grade_submission',
-            'create_assignment', 'update_assignment',
-            'enroll', 'drop'
-        );
+CREATE TYPE activity_action_type_enum AS ENUM (
+    'login', 'logout',
+    'submit_assignment', 'update_submission',
+    'join_team', 'leave_team',
+    'grade_submission',
+    'create_assignment', 'update_assignment',
+    'enroll', 'drop'
+);
     END IF;
 END $$;
 
