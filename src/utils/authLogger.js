@@ -32,7 +32,7 @@ export async function checkExcessiveLoginAttempts(email, timeWindow = 15 * 60 * 
       );
 
     return entries.length >= 5;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

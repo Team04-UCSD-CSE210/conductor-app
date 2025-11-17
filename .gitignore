@@ -2,9 +2,15 @@ AGENTS.md
 .DS_Store
 **/.DS_Store
 node_modules
+.env
+*/*.md
+coverage/
+LOCAL_DB_SETUP.md
+SERVER_SETUP.md
+demo/
 certs/
 .envpublic/
-.env
 .vercel
+.env.vercel
 
 .idea
