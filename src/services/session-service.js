@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { pool } from '../db.js';
 import { SessionModel } from '../models/session-model.js';
 import { SessionQuestionModel } from '../models/session-question-model.js';
 import { SessionResponseModel } from '../models/session-response-model.js';
@@ -42,6 +43,15 @@ export class SessionService {
    * Create a new session with auto-generated access code
    */
   static async createSession(sessionData, createdBy) {
+    // Authorization: only instructors or team leaders may create sessions for an offering
+    const offeringId = sessionData.offering_id;
+    if (!offeringId) throw new Error('offering_id is required');
+
+    const canCreate = await this.userCanCreateSession(createdBy, offeringId);
+    if (!canCreate) {
+      throw new Error('Not authorized to create sessions for this offering');
+    }
+
     const accessCode = await this.generateUniqueAccessCode();
     
     // Set code expiration (default: 24 hours from session date)
@@ -70,6 +80,30 @@ export class SessionService {
     }
 
     return session;
+  }
+
+  /**
+   * Returns true if the user is allowed to create sessions for the offering
+   * Allowed if user.primary_role = 'instructor' OR user is a team leader for a team
+   * in the same offering.
+   */
+  static async userCanCreateSession(userId, offeringId) {
+    // Check primary role
+    const userRes = await pool.query('SELECT primary_role FROM users WHERE id = $1', [userId]);
+    if (userRes.rows.length === 0) return false;
+    const primaryRole = userRes.rows[0].primary_role;
+    if (primaryRole === 'instructor') return true;
+
+    // Check if user is a team leader for a team in this offering
+    const leaderRes = await pool.query(
+      `SELECT 1 FROM team t
+       LEFT JOIN team_members tm ON tm.team_id = t.id
+       WHERE t.offering_id = $1 AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
+       LIMIT 1`,
+      [offeringId, userId]
+    );
+
+    return leaderRes.rows.length > 0;
   }
 
   /**
@@ -110,6 +144,11 @@ export class SessionService {
       throw new Error('Session not found');
     }
 
+    // Only the creator may manage the session
+    if (session.created_by !== updatedBy) {
+      throw new Error('Not authorized to manage this session');
+    }
+
     // If updating access code, ensure it's unique
     if (updates.access_code) {
       const isUnique = await SessionModel.isAccessCodeUnique(updates.access_code, sessionId);
@@ -123,12 +162,17 @@ export class SessionService {
 
   /**
    * Delete session
+   * Only the creator may delete the session
    */
-  static async deleteSession(sessionId) {
+  static async deleteSession(sessionId, userId) {
     const session = await SessionModel.findById(sessionId);
-    
+
     if (!session) {
       throw new Error('Session not found');
+    }
+
+    if (session.created_by !== userId) {
+      throw new Error('Not authorized to manage this session');
     }
 
     return await SessionModel.delete(sessionId);
@@ -177,6 +221,10 @@ export class SessionService {
       throw new Error('Session not found');
     }
 
+    if (session.created_by !== userId) {
+      throw new Error('Not authorized to manage this session');
+    }
+
     return await SessionModel.openAttendance(sessionId, userId);
   }
 
@@ -190,6 +238,10 @@ export class SessionService {
       throw new Error('Session not found');
     }
 
+    if (session.created_by !== userId) {
+      throw new Error('Not authorized to manage this session');
+    }
+
     return await SessionModel.closeAttendance(sessionId, userId);
   }
 
@@ -201,6 +253,10 @@ export class SessionService {
     
     if (!session) {
       throw new Error('Session not found');
+    }
+
+    if (session.created_by !== createdBy) {
+      throw new Error('Not authorized to manage this session');
     }
 
     // Get current question count to set proper order

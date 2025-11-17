@@ -96,7 +96,7 @@ router.put('/:sessionId', ...protect('session.manage', 'course'), async (req, re
  */
 router.delete('/:sessionId', ...protect('session.manage', 'course'), async (req, res) => {
   try {
-    const deleted = await SessionService.deleteSession(req.params.sessionId);
+    const deleted = await SessionService.deleteSession(req.params.sessionId, req.currentUser.id);
     
     if (!deleted) {
       return res.status(404).json({ error: 'Session not found' });

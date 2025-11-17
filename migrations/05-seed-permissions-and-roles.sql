@@ -15,6 +15,14 @@ INSERT INTO permissions (scope, resource, action, code, description) VALUES
   ('course', 'team',       'manage',   'team.manage',      'Create, update, delete teams and team members')
 ON CONFLICT (code) DO NOTHING;
 
+-- Session & Attendance permissions
+INSERT INTO permissions (scope, resource, action, code, description) VALUES
+  ('course', 'session',    'create',   'session.create',   'Create class sessions'),
+  ('course', 'session',    'manage',   'session.manage',   'Manage sessions (open/close/modify, questions)'),
+  ('course', 'attendance', 'view',     'attendance.view',  'View attendance and related responses'),
+  ('course', 'attendance', 'mark',     'attendance.mark',  'Mark, update, and delete attendance records')
+ON CONFLICT (code) DO NOTHING;
+
 
 -- 2) Admin: all permissions
 INSERT INTO user_role_permissions (user_role, permission_id)
@@ -36,7 +44,11 @@ WHERE p.code IN (
   'interaction.view',
   'interaction.create',
   'team.view_all',
-  'team.manage'
+  'team.manage',
+  'session.create',
+  'session.manage',
+  'attendance.view',
+  'attendance.mark'
 )
 ON CONFLICT (user_role, permission_id) DO NOTHING;
 
@@ -60,7 +72,9 @@ WHERE p.code IN (
   'interaction.view',
   'interaction.create',
   'team.view_all',
-  'team.manage'
+  'team.manage',
+  'attendance.view',
+  'attendance.mark'
 )
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 
@@ -75,7 +89,7 @@ ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 INSERT INTO team_role_permissions (team_role, permission_id)
 SELECT 'leader'::team_member_role_enum, p.id
 FROM permissions p
-WHERE p.code IN ('team.manage')
+WHERE p.code IN ('team.manage', 'session.create', 'session.manage')
 ON CONFLICT (team_role, permission_id) DO NOTHING;
 
 -- Team member: no special permissions
