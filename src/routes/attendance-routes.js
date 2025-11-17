@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AttendanceService } from '../services/attendance-service.js';
 import { AttendanceModel } from '../models/attendance-model.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
-import { protect, protectAny } from '../middleware/permission-middleware.js';
+import { protect } from '../middleware/permission-middleware.js';
 
 const router = Router();
 

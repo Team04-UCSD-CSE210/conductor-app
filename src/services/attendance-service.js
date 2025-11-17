@@ -282,7 +282,7 @@ export class AttendanceService {
   /**
    * Bulk import attendance from CSV/array
    */
-  static async bulkImportAttendance(sessionId, attendanceData, importedBy) {
+  static async bulkImportAttendance(sessionId, attendanceData) {
     const session = await SessionModel.findById(sessionId);
     
     if (!session) {
