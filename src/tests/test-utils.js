@@ -45,7 +45,7 @@ export async function waitForRecord(table, column, value, maxRetries = 10, delay
       if (rows.length > 0) {
         return rows[0];
       }
-    } catch (error) {
+    } catch (_error) {
       // If UUID cast fails, try without cast
       try {
         const { rows } = await pool.query(
@@ -55,7 +55,7 @@ export async function waitForRecord(table, column, value, maxRetries = 10, delay
         if (rows.length > 0) {
           return rows[0];
         }
-      } catch (e) {
+      } catch (_e) {
         // Ignore and retry
       }
     }
