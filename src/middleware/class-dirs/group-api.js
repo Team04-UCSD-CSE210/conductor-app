@@ -7,7 +7,7 @@ import { isUuid } from "../../utils/validation.js";
 // - GET /api/class/group/:teamId
 // - (compat) GET /api/class/:offeringId/group/:teamId
 export function registerGroupApis(app, { authMiddleware: _authMiddleware, models = {} } = {}) {
-    console.log("📝 registerGroupApis called, models:", Object.keys(models));
+    // console.log("📝 registerGroupApis called, models:", Object.keys(models));
     // Keep endpoints public (no auth)
     const auth = (_req, _res, next) => next();
 

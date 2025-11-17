@@ -13,7 +13,7 @@ import {isUuid} from "../../utils/validation.js";
  * @param {Object} options.models - Sequelize models { Course, CourseUser, User }
  */
 export function registerClassApis(app, { authMiddleware: _authMiddleware, models }) {
-    console.log("📝 registerClassApis called, models:", Object.keys(models));
+    // console.log("📝 registerClassApis called, models:", Object.keys(models));
     const { Course } = models; // Course should be the CourseOffering model
 
     // Always use no-op auth to keep endpoint public
