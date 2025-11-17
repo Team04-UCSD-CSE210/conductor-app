@@ -160,6 +160,7 @@ CREATE INDEX IF NOT EXISTS idx_course_staff_offering ON course_staff(offering_id
 CREATE INDEX IF NOT EXISTS idx_course_staff_user ON course_staff(user_id);
 CREATE INDEX IF NOT EXISTS idx_course_staff_role ON course_staff(staff_role);
 
+DROP TRIGGER IF EXISTS update_course_staff_updated_at ON course_staff;
 CREATE TRIGGER update_course_staff_updated_at BEFORE UPDATE ON course_staff
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

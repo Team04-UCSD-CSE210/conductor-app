@@ -8,26 +8,90 @@ CREATE EXTENSION IF NOT EXISTS "citext";
 -- =====================================================
 -- ENUM TYPES
 -- =====================================================
-CREATE TYPE user_role_enum AS ENUM ('admin', 'instructor', 'student', 'unregistered');
-CREATE TYPE user_status_enum AS ENUM ('active', 'busy', 'inactive');
-CREATE TYPE institution_type_enum AS ENUM ('ucsd', 'extension');
-CREATE TYPE course_role_enum AS ENUM ('student', 'ta', 'tutor');
-CREATE TYPE enrollment_status_enum AS ENUM ('enrolled', 'waitlisted', 'dropped', 'completed');
-CREATE TYPE course_offering_status_enum AS ENUM ('open', 'closed', 'completed');
-CREATE TYPE assignment_type_enum AS ENUM ('project', 'hw', 'exam', 'checkpoint');
-CREATE TYPE assignment_assigned_to_enum AS ENUM ('team', 'individual');
-CREATE TYPE team_status_enum AS ENUM ('forming', 'active', 'inactive');
-CREATE TYPE team_member_role_enum AS ENUM ('leader', 'member');
-CREATE TYPE submission_status_enum AS ENUM ('draft', 'submitted', 'graded');
-CREATE TYPE attendance_status_enum AS ENUM ('present', 'absent', 'late', 'excused');
-CREATE TYPE activity_action_type_enum AS ENUM (
-    'login', 'logout',
-    'submit_assignment', 'update_submission',
-    'join_team', 'leave_team',
-    'grade_submission',
-    'create_assignment', 'update_assignment',
-    'enroll', 'drop'
-);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_enum') THEN
+        CREATE TYPE user_role_enum AS ENUM ('admin', 'instructor', 'student', 'unregistered');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_status_enum') THEN
+        CREATE TYPE user_status_enum AS ENUM ('active', 'busy', 'inactive');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'institution_type_enum') THEN
+        CREATE TYPE institution_type_enum AS ENUM ('ucsd', 'extension');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'course_role_enum') THEN
+        CREATE TYPE course_role_enum AS ENUM ('student', 'ta', 'tutor');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enrollment_status_enum') THEN
+        CREATE TYPE enrollment_status_enum AS ENUM ('enrolled', 'waitlisted', 'dropped', 'completed');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'course_offering_status_enum') THEN
+        CREATE TYPE course_offering_status_enum AS ENUM ('open', 'closed', 'completed');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'assignment_type_enum') THEN
+        CREATE TYPE assignment_type_enum AS ENUM ('project', 'hw', 'exam', 'checkpoint');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'assignment_assigned_to_enum') THEN
+        CREATE TYPE assignment_assigned_to_enum AS ENUM ('team', 'individual');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'team_status_enum') THEN
+        CREATE TYPE team_status_enum AS ENUM ('forming', 'active', 'inactive');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'team_member_role_enum') THEN
+        CREATE TYPE team_member_role_enum AS ENUM ('leader', 'member');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'submission_status_enum') THEN
+        CREATE TYPE submission_status_enum AS ENUM ('draft', 'submitted', 'graded');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attendance_status_enum') THEN
+        CREATE TYPE attendance_status_enum AS ENUM ('present', 'absent', 'late', 'excused');
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'activity_action_type_enum') THEN
+        CREATE TYPE activity_action_type_enum AS ENUM (
+            'login', 'logout',
+            'submit_assignment', 'update_submission',
+            'join_team', 'leave_team',
+            'grade_submission',
+            'create_assignment', 'update_assignment',
+            'enroll', 'drop'
+        );
+    END IF;
+END $$;
 
 -- =====================================================
 -- TRIGGER FUNCTION FOR UPDATED_AT
@@ -82,6 +146,7 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_primary_role ON users(primary_role);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
 
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -119,6 +184,7 @@ CREATE INDEX IF NOT EXISTS idx_course_offerings_instructor ON course_offerings(i
 CREATE INDEX IF NOT EXISTS idx_course_offerings_active ON course_offerings(is_active);
 CREATE INDEX IF NOT EXISTS idx_course_offerings_created_by ON course_offerings(created_by);
 
+DROP TRIGGER IF EXISTS update_course_offerings_updated_at ON course_offerings;
 CREATE TRIGGER update_course_offerings_updated_at BEFORE UPDATE ON course_offerings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -150,6 +216,7 @@ CREATE INDEX IF NOT EXISTS idx_enrollments_user ON enrollments(user_id);
 CREATE INDEX IF NOT EXISTS idx_enrollments_course_role ON enrollments(course_role);
 CREATE INDEX IF NOT EXISTS idx_enrollments_created_by ON enrollments(created_by);
 
+DROP TRIGGER IF EXISTS update_enrollments_updated_at ON enrollments;
 CREATE TRIGGER update_enrollments_updated_at BEFORE UPDATE ON enrollments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -178,6 +245,7 @@ CREATE INDEX IF NOT EXISTS idx_assignments_offering ON assignments(offering_id);
 CREATE INDEX IF NOT EXISTS idx_assignments_due_date ON assignments(due_date);
 CREATE INDEX IF NOT EXISTS idx_assignments_created_by ON assignments(created_by);
 
+DROP TRIGGER IF EXISTS update_assignments_updated_at ON assignments;
 CREATE TRIGGER update_assignments_updated_at BEFORE UPDATE ON assignments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -204,6 +272,7 @@ CREATE INDEX IF NOT EXISTS idx_team_offering ON team(offering_id);
 CREATE INDEX IF NOT EXISTS idx_team_leader ON team(leader_id);
 CREATE INDEX IF NOT EXISTS idx_team_created_by ON team(created_by);
 
+DROP TRIGGER IF EXISTS update_team_updated_at ON team;
 CREATE TRIGGER update_team_updated_at BEFORE UPDATE ON team
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -261,6 +330,7 @@ CREATE INDEX IF NOT EXISTS idx_submissions_team ON submissions(team_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);
 CREATE INDEX IF NOT EXISTS idx_submissions_graded_by ON submissions(graded_by);
 
+DROP TRIGGER IF EXISTS update_submissions_updated_at ON submissions;
 CREATE TRIGGER update_submissions_updated_at BEFORE UPDATE ON submissions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -287,33 +357,121 @@ CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created
 COMMENT ON TABLE activity_logs IS 'Audit trail of all user actions';
 
 -- =====================================================
--- 9. ATTENDANCE
--- Tracks student attendance for each class date
+-- 9. SESSIONS
+-- Specific class sessions with dates and access codes
+-- =====================================================
+CREATE TABLE IF NOT EXISTS sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    session_date DATE NOT NULL,
+    session_time TIME,
+    access_code TEXT NOT NULL UNIQUE,
+    code_expires_at TIMESTAMPTZ,
+    is_active BOOLEAN DEFAULT TRUE,
+    attendance_opened_at TIMESTAMPTZ,
+    attendance_closed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_offering ON sessions(offering_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(session_date);
+CREATE INDEX IF NOT EXISTS idx_sessions_access_code ON sessions(access_code);
+CREATE INDEX IF NOT EXISTS idx_sessions_created_by ON sessions(created_by);
+
+DROP TRIGGER IF EXISTS update_sessions_updated_at ON sessions;
+CREATE TRIGGER update_sessions_updated_at BEFORE UPDATE ON sessions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE sessions IS 'Class sessions with unique access codes for student attendance';
+
+-- =====================================================
+-- 10. SESSION_QUESTIONS
+-- Questions/prompts for sessions (text entry, multiple choice, pulse check)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS session_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    question_text TEXT NOT NULL,
+    question_type TEXT NOT NULL, -- 'text', 'multiple_choice', 'pulse_check'
+    question_order INTEGER,
+    options JSONB, -- For multiple choice options
+    is_required BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_questions_session ON session_questions(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_questions_type ON session_questions(question_type);
+
+DROP TRIGGER IF EXISTS update_session_questions_updated_at ON session_questions;
+CREATE TRIGGER update_session_questions_updated_at BEFORE UPDATE ON session_questions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE session_questions IS 'Questions and prompts for class sessions';
+
+-- =====================================================
+-- 11. SESSION_RESPONSES
+-- Student responses to session questions
+-- =====================================================
+CREATE TABLE IF NOT EXISTS session_responses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL REFERENCES session_questions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    response_text TEXT,
+    response_option TEXT, -- For multiple choice
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(session_id, question_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_responses_session ON session_responses(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_responses_question ON session_responses(question_id);
+CREATE INDEX IF NOT EXISTS idx_session_responses_user ON session_responses(user_id);
+CREATE INDEX IF NOT EXISTS idx_session_responses_submitted ON session_responses(submitted_at);
+
+DROP TRIGGER IF EXISTS update_session_responses_updated_at ON session_responses;
+CREATE TRIGGER update_session_responses_updated_at BEFORE UPDATE ON session_responses
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE session_responses IS 'Student responses to session questions';
+
+-- =====================================================
+-- 12. ATTENDANCE
+-- Tracks student attendance for each class session
 -- =====================================================
 CREATE TABLE IF NOT EXISTS attendance (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    date DATE NOT NULL,
     status attendance_status_enum NOT NULL,
-    marked_by UUID NOT NULL REFERENCES users(id),
+    checked_in_at TIMESTAMPTZ,
+    access_code_used TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(offering_id, user_id, date)
+    UNIQUE(session_id, user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_attendance_offering ON attendance(offering_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_session ON attendance(session_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_user ON attendance(user_id);
-CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(date);
 CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status);
+CREATE INDEX IF NOT EXISTS idx_attendance_checked_in ON attendance(checked_in_at);
 
+DROP TRIGGER IF EXISTS update_attendance_updated_at ON attendance;
 CREATE TRIGGER update_attendance_updated_at BEFORE UPDATE ON attendance
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-COMMENT ON TABLE attendance IS 'Tracks student attendance for each class date';
+COMMENT ON TABLE attendance IS 'Tracks student attendance for each class session';
 
 -- =====================================================
--- 10. AUTH_LOGS
+-- 13. AUTH_LOGS
 -- Tracks authentication events (login, logout, etc.)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS auth_logs (
@@ -336,7 +494,7 @@ CREATE INDEX IF NOT EXISTS idx_auth_logs_created_at ON auth_logs(created_at);
 COMMENT ON TABLE auth_logs IS 'Audit trail of all authentication events';
 
 -- =====================================================
--- 11. WHITELIST
+-- 14. WHITELIST
 -- Approved extension students who can access the system
 -- =====================================================
 CREATE TABLE IF NOT EXISTS whitelist (
@@ -352,7 +510,7 @@ CREATE INDEX IF NOT EXISTS idx_whitelist_email ON whitelist(email);
 COMMENT ON TABLE whitelist IS 'Approved extension students who can access the system';
 
 -- =====================================================
--- 12. ACCESS_REQUESTS
+-- 15. ACCESS_REQUESTS
 -- Pending access requests from non-UCSD users
 -- =====================================================
 CREATE TABLE IF NOT EXISTS access_requests (
