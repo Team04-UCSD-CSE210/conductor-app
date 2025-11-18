@@ -1,5 +1,15 @@
 /* Tutor dashboard overrides and layout tweaks.
    Base layout, colors, and card styles come from global.css and dashboard-global.css. */
+.sidebar-user {
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--gray-700, #374151);
+}
+
+.sidebar-user-role {
+  color: var(--teal-600, #0d9488);
+  font-weight: 600;
+}
 
 .tutor-on-duty-card {
   display: flex;
