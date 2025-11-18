@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Roster</title>
+
+  <link rel="stylesheet" href="../public/global.css">
+  <link rel="stylesheet" href="../public/dashboard-global.css">
+  <link rel="stylesheet" href="../public/professor-dashboard.css">
+  <style>
+    .roster-search {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--gray-300, #ccc);
+      border-radius: 6px;
+      width: 100%;
+      max-width: 420px;
+      font-size: 0.95rem;
+      background: var(--white, #fff);
+    }
+    .no-results {
+      color: var(--gray-600, #666);
+      font-size: 0.95rem;
+      margin-left: auto;
+    }
+    .roster-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+      .table-scroll {
+        max-height: 50vh;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+      }
+      /* sticky header inside the scrolling table */
+      .table-scroll thead th {
+        position: sticky;
+        top: 0;
+        background: var(--white, #fff);
+        z-index: 3;
+        /* subtle separator */
+        box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+      }
+      /* Role editor dropdown styling */
+      .role-editor-select {
+        margin-right: 0.5rem;
+        min-width: 140px;
+      }
+      .btn-save-role {
+        margin-right: 0.25rem;
+      }
+  </style>
+</head>
+
+<body class="dashboard-page">
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="../assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/settings">Settings</a>
+      <a href="/attendance">Attendance</a>
+      <a href="/class-directory">Class Directory</a>
+    </nav>
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <h2 class="page-title">Student Roster</h2>
+    <section class="frame" role="region" aria-label="Student roster">
+      <div class="table-wrap card">
+            <div class="table-controls" style="display:flex; align-items:center; gap:1rem; margin-bottom:0.5rem;">
+              <label for="search" class="sr-only">Search students</label>
+              <input id="search" type="search" placeholder="Search by name, PID, email, team, or role" class="interaction-text roster-search" aria-label="Search students">
+              <div id="no-results" class="no-results" style="display:none;">No matches</div>
+              <div class="roster-actions" style="margin-left:auto; display:flex; gap:0.5rem; align-items:center;">
+                <button id="export-csv" type="button" class="btn btn-ghost" title="Export visible roster as CSV">Export CSV</button>
+                <button id="export-json" type="button" class="btn btn-ghost" title="Export visible roster as JSON">Export JSON</button>
+                <label for="import-file" class="btn btn-ghost" style="margin:0; cursor:pointer;">Import</label>
+                <input id="import-file" type="file" accept="text/csv,application/json,.csv,.json" style="display:none;">
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="roster-table" role="table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left; padding:0.75rem;">Name
+                      <button type="button" class="btn btn-ghost sort-btn" data-col="0" aria-label="Sort by Name" title="Sort by Name">↕</button>
+                    </th>
+                    <th style="text-align:left; padding:0.75rem;">PID
+                      <button type="button" class="btn btn-ghost sort-btn" data-col="1" aria-label="Sort by PID" title="Sort by PID">↕</button>
+                    </th>
+                    <th style="text-align:left; padding:0.75rem;">Email
+                      <button type="button" class="btn btn-ghost sort-btn" data-col="2" aria-label="Sort by Email" title="Sort by Email">↕</button>
+                    </th>
+                    <th style="text-align:left; padding:0.75rem;">Team
+                      <button type="button" class="btn btn-ghost sort-btn" data-col="3" aria-label="Sort by Team" title="Sort by Team">↕</button>
+                    </th>
+                    <th style="text-align:left; padding:0.75rem;">Role
+                      <button type="button" class="btn btn-ghost sort-btn" data-col="4" aria-label="Sort by Role" title="Sort by Role">↕</button>
+                    </th>
+                    <th style="text-align:right; padding:0.75rem;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-uid="A12345678">
+                    <td style="padding:0.75rem;"><a href="/class-directory/A12345678">Alex Morgan</a></td>
+                    <td style="padding:0.75rem;">A12345678</td>
+                    <td style="padding:0.75rem;">alex@ucsd.edu</td>
+                    <td style="padding:0.75rem;">Team 2</td>
+                    <td style="padding:0.75rem;">Student</td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      <button class="btn btn-ghost btn-edit-role" type="button" data-uid="A12345678">Edit Role</button>
+                      <button class="btn btn-danger btn-remove-course" type="button" data-uid="A12345678">Remove</button>
+                    </td>
+                  </tr>
+                  <tr data-uid="A87654321">
+                    <td style="padding:0.75rem;"><a href="/class-directory/A87654321">Jamie Chen</a></td>
+                    <td style="padding:0.75rem;">A87654321</td>
+                    <td style="padding:0.75rem;">jamie@ucsd.edu</td>
+                    <td style="padding:0.75rem;">Team 5</td>
+                    <td style="padding:0.75rem;">Team Lead</td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      <button class="btn btn-ghost btn-edit-role" type="button" data-uid="A87654321">Edit Role</button>
+                      <button class="btn btn-danger btn-remove-course" type="button" data-uid="A87654321">Remove</button>
+                    </td>
+                  </tr>
+                  <tr data-uid="A11223344">
+                    <td style="padding:0.75rem;"><a href="/class-directory/A11223344">Taylor Lee</a></td>
+                    <td style="padding:0.75rem;">A11223344</td>
+                    <td style="padding:0.75rem;">taylor@ucsd.edu</td>
+                    <td style="padding:0.75rem;">Team 1</td>
+                    <td style="padding:0.75rem;">Student</td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      <button class="btn btn-ghost btn-edit-role" type="button" data-uid="A11223344">Edit Role</button>
+                      <button class="btn btn-danger btn-remove-course" type="button" data-uid="A11223344">Remove</button>
+                    </td>
+                  </tr>
+                  <tr data-uid="A99887766">
+                    <td style="padding:0.75rem;"><a href="/class-directory/A99887766">A Smith</a></td>
+                    <td style="padding:0.75rem;">A99887766</td>
+                    <td style="padding:0.75rem;">a@ucsd.edu</td>
+                    <td style="padding:0.75rem;">Team 3</td>
+                    <td style="padding:0.75rem;">Student</td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      <button class="btn btn-ghost btn-edit-role" type="button" data-uid="A99887766">Edit Role</button>
+                      <button class="btn btn-danger btn-remove-course" type="button" data-uid="A99887766">Remove</button>
+                    </td>
+                  </tr>
+                  <tr data-uid="A99887766">
+                    <td style="padding:0.75rem;"><a href="/class-directory/A99887766">B Smith</a></td>
+                    <td style="padding:0.75rem;">A99887766</td>
+                    <td style="padding:0.75rem;">b@ucsd.edu</td>
+                    <td style="padding:0.75rem;">Team 3</td>
+                    <td style="padding:0.75rem;">Student</td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      <button class="btn btn-ghost btn-edit-role" type="button" data-uid="A99887766">Edit Role</button>
+                      <button class="btn btn-danger btn-remove-course" type="button" data-uid="A99887766">Remove</button>
+                    </td>
+                  </tr>
+                  <tr data-uid="A99887766">
+                    <td style="padding:0.75rem;"><a href="/class-directory/A99887766">C Smith</a></td>
+                    <td style="padding:0.75rem;">A99887766</td>
+                    <td style="padding:0.75rem;">C@ucsd.edu</td>
+                    <td style="padding:0.75rem;">Team 3</td>
+                    <td style="padding:0.75rem;">Student</td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      <button class="btn btn-ghost btn-edit-role" type="button" data-uid="A99887766">Edit Role</button>
+                      <button class="btn btn-danger btn-remove-course" type="button" data-uid="A99887766">Remove</button>
+                    </td>
+                  </tr>
+                  <tr data-uid="A99887766">
+                    <td style="padding:0.75rem;"><a href="/class-directory/A99887766">d Smith</a></td>
+                    <td style="padding:0.75rem;">A99887766</td>
+                    <td style="padding:0.75rem;">d@ucsd.edu</td>
+                    <td style="padding:0.75rem;">Team 3</td>
+                    <td style="padding:0.75rem;">Student</td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      <button class="btn btn-ghost btn-edit-role" type="button" data-uid="A99887766">Edit Role</button>
+                      <button class="btn btn-danger btn-remove-course" type="button" data-uid="A99887766">Remove</button>
+                    </td>
+                  </tr>
+                  <tr data-uid="A99887766">
+                    <td style="padding:0.75rem;"><a href="/class-directory/A99887766">e Smith</a></td>
+                    <td style="padding:0.75rem;">A99887766</td>
+                    <td style="padding:0.75rem;">d@ucsd.edu</td>
+                    <td style="padding:0.75rem;">Team 3</td>
+                    <td style="padding:0.75rem;">Student</td>
+                    <td style="padding:0.75rem; text-align:right;">
+                      <button class="btn btn-ghost btn-edit-role" type="button" data-uid="A99887766">Edit Role</button>
+                      <button class="btn btn-danger btn-remove-course" type="button" data-uid="A99887766">Remove</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+      </div>
+      <!-- footer intentionally kept outside the rounded card/border so it does not get enclosed -->
+      <div id="roster-footer" style="display:flex; align-items:baseline; gap:1rem; margin-top:0.75rem;">
+        <div id="showing-indicator" style="color:var(--gray-700,#444);">Showing 0 of 0 students</div>
+        <div id="pager-controls" style="margin-left:auto; display:flex; gap:0.5rem; align-items:center;">
+          <button id="prev-page" class="btn btn-ghost" type="button" aria-label="Previous page">Prev</button>
+          <span id="page-info" style="min-width:6ch; text-align:center;">1 / 1</span>
+          <button id="next-page" class="btn btn-ghost" type="button" aria-label="Next page">Next</button>
+          <label for="page-size" id="page-size-label" style="display:none; margin-left:0.5rem; align-items:center;">Show</label>
+          <select id="page-size" style="display:none;" aria-label="Page size">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+    </section>
+    </section>
+  </main>
+
+  <script>
+  // table sorting and filtering for the roster table
+  document.addEventListener('DOMContentLoaded', function () {
+    const table = document.querySelector('.roster-table');
+    if (!table) return;
+    const tbody = table.tBodies[0];
+    const buttons = document.querySelectorAll('.sort-btn');
+    const search = document.getElementById('search');
+    const noResults = document.getElementById('no-results');
+
+    const getCellText = (row, idx) => (row.cells[idx] && row.cells[idx].textContent || '').trim().toLowerCase();
+
+    // Pagination state
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    const pageInfo = document.getElementById('page-info');
+    const pageSizeSelect = document.getElementById('page-size');
+    const pageSizeLabel = document.getElementById('page-size-label');
+    const showingIndicator = document.getElementById('showing-indicator');
+
+    let currentPage = 1;
+    let pageSize = pageSizeSelect ? parseInt(pageSizeSelect.value, 10) : 25;
+
+    // Filtering + pagination: show rows that match query in any of the first 5 columns,
+    // then show only the current page slice. If total students >= 200, show page-size control.
+    function filterRows() {
+      const q = search && search.value.trim().toLowerCase();
+      const allRows = Array.from(tbody.rows);
+      const totalAll = allRows.length;
+      // find matched rows
+      const matched = [];
+      allRows.forEach(row => {
+        const text = Array.from(row.cells).slice(0,5).map(c => (c.textContent || '').toLowerCase()).join(' ');
+        if (!q || text.indexOf(q) !== -1) {
+          matched.push(row);
+        }
+      });
+
+      const totalFiltered = matched.length;
+
+      // show or hide page-size controls based on totalAll (large courses)
+      if (pageSizeSelect && pageSizeLabel) {
+        if (totalAll >= 200) {
+          pageSizeSelect.style.display = '';
+          pageSizeLabel.style.display = '';
+        } else {
+          pageSizeSelect.style.display = 'none';
+          pageSizeLabel.style.display = 'none';
+        }
+      }
+
+      // pagination math
+      const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize || 1));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+
+      // show only rows in matched slice, hide others
+      let shown = 0;
+      allRows.forEach(row => row.style.display = 'none');
+      matched.forEach((row, idx) => {
+        if (idx >= start && idx < end) {
+          row.style.display = '';
+          shown++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // no-results indicator
+      if (noResults) noResults.style.display = shown === 0 ? '' : 'none';
+
+      // update footer UI
+      if (showingIndicator) showingIndicator.textContent = `Showing ${shown} of ${totalFiltered} students`;
+      if (pageInfo) pageInfo.textContent = `${currentPage} / ${totalPages}`;
+      if (prevBtn) prevBtn.disabled = currentPage <= 1;
+      if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    }
+
+    // Sorting setup
+    buttons.forEach(btn => btn.dataset.order = 'desc');
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', function () {
+        const col = parseInt(this.dataset.col, 10);
+        const asc = this.dataset.order === 'asc';
+        const rows = Array.from(tbody.rows);
+
+        rows.sort((a, b) => {
+          const ta = getCellText(a, col);
+          const tb = getCellText(b, col);
+
+          // try numeric compare when both look numeric
+          const na = parseFloat(ta.replace(/[^0-9.-]+/g, ''));
+          const nb = parseFloat(tb.replace(/[^0-9.-]+/g, ''));
+          if (!isNaN(na) && !isNaN(nb) && ta !== '' && tb !== '') {
+            return asc ? na - nb : nb - na;
+          }
+
+          if (ta < tb) return asc ? -1 : 1;
+          if (ta > tb) return asc ? 1 : -1;
+          return 0;
+        });
+
+        // re-append rows in sorted order
+        rows.forEach(r => tbody.appendChild(r));
+
+        // After sorting, re-apply filter so hidden rows remain hidden
+        filterRows();
+
+        // toggle order for next click
+        this.dataset.order = asc ? 'desc' : 'asc';
+
+        // update aria-pressed visual state
+        buttons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+        this.setAttribute('aria-pressed', 'true');
+      });
+    });
+
+    // Wire search input
+    if (search) {
+      search.addEventListener('input', function () {
+        // reset to first page when filtering
+        currentPage = 1;
+        filterRows();
+      });
+    }
+
+    // pager event handlers
+    if (prevBtn) prevBtn.addEventListener('click', function () {
+      if (currentPage > 1) {
+        currentPage--;
+        filterRows();
+      }
+    });
+    if (nextBtn) nextBtn.addEventListener('click', function () {
+      currentPage++;
+      filterRows();
+    });
+    if (pageSizeSelect) pageSizeSelect.addEventListener('change', function () {
+      const v = parseInt(this.value, 10) || 25;
+      pageSize = v;
+      currentPage = 1;
+      filterRows();
+    });
+
+    // initial filter to hide nothing / show the no-results appropriately
+    filterRows();
+
+    // Export visible rows as CSV
+    const exportCsvBtn = document.getElementById('export-csv');
+    const exportJsonBtn = document.getElementById('export-json');
+    const importFile = document.getElementById('import-file');
+
+    function gatherVisibleData() {
+      const rows = Array.from(tbody.rows).filter(r => r.style.display !== 'none');
+      return rows.map(r => ({
+        Name: (r.cells[0] && r.cells[0].textContent || '').trim(),
+        UID: (r.cells[1] && r.cells[1].textContent || '').trim(),
+        Email: (r.cells[2] && r.cells[2].textContent || '').trim(),
+        Team: (r.cells[3] && r.cells[3].textContent || '').trim(),
+        Role: (r.cells[4] && r.cells[4].textContent || '').trim(),
+      }));
+    }
+
+    function download(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function toCSV(data) {
+      const cols = ['Name','UID','Email','Team','Role'];
+      const escape = (v) => '"' + (v || '').replace(/"/g,'""') + '"';
+      const lines = [cols.join(',')];
+      data.forEach(row => {
+        lines.push(cols.map(c => escape(row[c])).join(','));
+      });
+      return lines.join('\n');
+    }
+
+    if (exportCsvBtn) exportCsvBtn.addEventListener('click', () => {
+      const data = gatherVisibleData();
+      const csv = toCSV(data);
+      download('roster.csv', csv, 'text/csv');
+    });
+
+    if (exportJsonBtn) exportJsonBtn.addEventListener('click', () => {
+      const data = gatherVisibleData();
+      const json = JSON.stringify(data, null, 2);
+      download('roster.json', json, 'application/json');
+    });
+
+    // Import handler - accepts JSON array or CSV with headers
+    function parseCSV(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+      if (lines.length === 0) return [];
+      // naive CSV row parser that supports quoted fields
+      function parseRow(row) {
+        const re = /(?:"([^"]*(?:""[^"]*)*)"|([^,]*))(?:,|$)/g;
+        const out = [];
+        let m;
+        while ((m = re.exec(row)) !== null) {
+          if (m[1] !== undefined) out.push(m[1].replace(/""/g,'"'));
+          else out.push(m[2]);
+        }
+        return out;
+      }
+      const header = parseRow(lines[0]).map(h => h.trim());
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const row = parseRow(lines[i]);
+        if (row.length === 0) continue;
+        const obj = {};
+        for (let j = 0; j < header.length; j++) {
+          obj[header[j]] = row[j] !== undefined ? row[j] : '';
+        }
+        data.push(obj);
+      }
+      return data;
+    }
+
+    function normalizeImportedArray(arr) {
+      // arr is array of objects (headers may vary). Map to our columns.
+      const cols = ['Name','UID','Email','Team','Role'];
+      return arr.map(item => {
+        if (Array.isArray(item)) {
+          // array form fallback
+          return {
+            Name: item[0] || '',
+            UID: item[1] || '',
+            Email: item[2] || '',
+            Team: item[3] || '',
+            Role: item[4] || ''
+          };
+        }
+        const obj = {};
+        const lower = {};
+        Object.keys(item).forEach(k => lower[k.toLowerCase().trim()] = item[k]);
+        cols.forEach(c => {
+          const v = lower[c.toLowerCase()] !== undefined ? lower[c.toLowerCase()] : (item[c] !== undefined ? item[c] : '');
+          obj[c] = v || '';
+        });
+        return obj;
+      });
+    }
+
+    function populateRowsFromArray(arr) {
+      // arr: array of objects with keys Name,UID,Email,Team,Role
+      tbody.innerHTML = '';
+      arr.forEach(row => {
+        const tr = document.createElement('tr');
+        if (row.UID) tr.dataset.uid = row.UID;
+        // Name cell - clickable to class directory profile
+        const tdName = document.createElement('td');
+        tdName.style.padding = '0.75rem';
+        const nameLink = document.createElement('a');
+        nameLink.textContent = row['Name'] || '';
+        const uidForLink = row['UID'] || '';
+        // assumption: profile URL is /class-directory/<UID>
+        nameLink.href = uidForLink ? ('/class-directory/' + encodeURIComponent(uidForLink)) : '#';
+        tdName.appendChild(nameLink);
+        tr.appendChild(tdName);
+
+        ['UID','Email','Team','Role'].forEach(k => {
+          const td = document.createElement('td');
+          td.style.padding = '0.75rem';
+          td.textContent = row[k] || '';
+          tr.appendChild(td);
+        });
+
+        const tdAct = document.createElement('td');
+        tdAct.style.padding = '0.75rem';
+        tdAct.style.textAlign = 'right';
+        const btnEdit = document.createElement('button');
+        btnEdit.type = 'button';
+        btnEdit.className = 'btn btn-ghost btn-edit-role';
+        btnEdit.dataset.uid = uidForLink;
+        btnEdit.textContent = 'Edit Role';
+        const btnRemove = document.createElement('button');
+        btnRemove.type = 'button';
+        btnRemove.className = 'btn btn-danger btn-remove-course';
+        btnRemove.dataset.uid = uidForLink;
+        btnRemove.textContent = 'Remove';
+        tdAct.appendChild(btnEdit);
+        tdAct.appendChild(btnRemove);
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      });
+      // re-run filter so imported rows obey current search
+      filterRows();
+    }
+
+    if (importFile) {
+      importFile.addEventListener('change', function (e) {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          const content = ev.target.result;
+          const name = (f.name || '').toLowerCase();
+          try {
+            if (name.endsWith('.json') || f.type === 'application/json') {
+              const parsed = JSON.parse(content);
+              if (!Array.isArray(parsed)) {
+                alert('JSON must be an array of objects');
+                return;
+              }
+              const normalized = normalizeImportedArray(parsed);
+              populateRowsFromArray(normalized);
+            } else {
+              // assume CSV
+              const parsed = parseCSV(content);
+              const normalized = normalizeImportedArray(parsed);
+              populateRowsFromArray(normalized);
+            }
+          } catch (err) {
+            console.error('Import error', err);
+            alert('Failed to import file: ' + err.message);
+          } finally {
+            importFile.value = '';
+          }
+        };
+        reader.readAsText(f);
+      });
+    }
+
+    // Event delegation for Edit Role (opens inline dropdown) and Remove actions
+    tbody.addEventListener('click', function (ev) {
+      const t = ev.target;
+
+      // Start role edit: replace role cell with select and actions with Save/Cancel
+      if (t && t.matches('.btn-edit-role')) {
+        const rowEl = t.closest('tr');
+        if (!rowEl || rowEl.dataset.editing) return;
+        const roleCell = rowEl.cells[4];
+        if (!roleCell) return;
+
+        // store previous role and actions
+        rowEl.dataset.prevRole = (roleCell.textContent || '').trim();
+        const actionsCell = rowEl.cells[rowEl.cells.length - 1];
+        rowEl.dataset.origActions = actionsCell.innerHTML;
+
+        // create select with allowed options
+        const opts = ['TA','Tutor','Student','Team Lead'];
+        const sel = document.createElement('select');
+        sel.className = 'role-editor-select interaction-text';
+        opts.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o;
+          opt.textContent = o;
+          sel.appendChild(opt);
+        });
+        // set current value if it matches one of the allowed options
+        const cur = rowEl.dataset.prevRole;
+        if (opts.indexOf(cur) >= 0) sel.value = cur;
+
+        // put select into role cell
+        roleCell.innerHTML = '';
+        roleCell.appendChild(sel);
+
+        // create Save and Cancel buttons
+        actionsCell.innerHTML = '';
+        const btnSave = document.createElement('button');
+        btnSave.type = 'button';
+        btnSave.className = 'btn btn-primary btn-save-role';
+        btnSave.textContent = 'Save';
+        const btnCancel = document.createElement('button');
+        btnCancel.type = 'button';
+        btnCancel.className = 'btn btn-ghost btn-cancel-role';
+        btnCancel.textContent = 'Cancel';
+        // keep a small Remove option too (in case user wants to remove while editing)
+        const btnRemove = document.createElement('button');
+        btnRemove.type = 'button';
+        btnRemove.className = 'btn btn-danger btn-remove-course';
+        btnRemove.dataset.uid = rowEl.dataset.uid || '';
+        btnRemove.textContent = 'Remove';
+        actionsCell.appendChild(btnSave);
+        actionsCell.appendChild(btnCancel);
+        actionsCell.appendChild(btnRemove);
+
+        rowEl.dataset.editing = '1';
+        return;
+      }
+
+      // Save role
+      if (t && t.matches('.btn-save-role')) {
+        const rowEl = t.closest('tr');
+        if (!rowEl) return;
+        const roleCell = rowEl.cells[4];
+        const sel = roleCell && roleCell.querySelector('select');
+        if (!sel) return;
+        const newRole = sel.value;
+        // update role cell text
+        roleCell.textContent = newRole;
+        // restore actions
+        const actionsCell = rowEl.cells[rowEl.cells.length - 1];
+        if (rowEl.dataset.origActions) actionsCell.innerHTML = rowEl.dataset.origActions;
+        delete rowEl.dataset.origActions;
+        delete rowEl.dataset.prevRole;
+        delete rowEl.dataset.editing;
+        filterRows();
+        adjustTableHeight();
+        return;
+      }
+
+      // Cancel edit
+      if (t && t.matches('.btn-cancel-role')) {
+        const rowEl = t.closest('tr');
+        if (!rowEl) return;
+        const roleCell = rowEl.cells[4];
+        // restore previous role text
+        if (rowEl.dataset.prevRole !== undefined) roleCell.textContent = rowEl.dataset.prevRole;
+        const actionsCell = rowEl.cells[rowEl.cells.length - 1];
+        if (rowEl.dataset.origActions) actionsCell.innerHTML = rowEl.dataset.origActions;
+        delete rowEl.dataset.origActions;
+        delete rowEl.dataset.prevRole;
+        delete rowEl.dataset.editing;
+        return;
+      }
+
+      // Remove from course (works both during normal state and while editing)
+      if (t && t.matches('.btn-remove-course')) {
+        const rowEl = t.closest('tr');
+        if (!rowEl) return;
+        const uid = t.dataset.uid || rowEl.dataset.uid || (rowEl.cells[1] && rowEl.cells[1].textContent.trim());
+        const name = (rowEl.cells[0] && rowEl.cells[0].textContent) || uid;
+        if (confirm('Remove ' + name + ' (' + uid + ') from the course? This cannot be undone.')) {
+          rowEl.remove();
+          filterRows();
+          // adjust table height to account for removed row
+          adjustTableHeight();
+        }
+        return;
+      }
+    });
+
+    // Adjust .table-scroll height to fill available viewport space so table matches Chrome window size
+    const tableScrollEl = document.querySelector('.table-scroll');
+    const rosterFooterEl = document.getElementById('roster-footer');
+    function adjustTableHeight() {
+      if (!tableScrollEl) return;
+      // distance from top of viewport to top of the scroll container
+      const rect = tableScrollEl.getBoundingClientRect();
+      const top = rect.top;
+      const footerHeight = rosterFooterEl ? rosterFooterEl.offsetHeight : 0;
+      // leave a small margin (32px) for paddings and breathing room
+      const margin = 32;
+      const available = window.innerHeight - top - footerHeight - margin;
+      // enforce a sensible minimum
+      tableScrollEl.style.maxHeight = (available > 120 ? available : 200) + 'px';
+    }
+
+    // call on load and resize
+    window.addEventListener('resize', adjustTableHeight);
+    // call after import/populate and initial render
+    adjustTableHeight();
+  });
+  </script>
+
+</body>
+</html>
