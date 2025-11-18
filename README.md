@@ -25,7 +25,6 @@ Automated deployment to AWS using ECS Fargate that runs on all branches:
 - **Containerization**: Docker image built and pushed to ECR
 - **Deployment**: ECS service created/updated with health checks and rollback capability
 - **Branch Isolation**: Each branch gets its own service instance for testing
-- **Health Verification**: Automated health checks with retry logic
 - **Notifications**: PR comments with deployment status and URLs
 
 ## Team Standards & Deployment Policies
