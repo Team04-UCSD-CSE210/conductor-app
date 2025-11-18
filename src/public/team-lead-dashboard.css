@@ -6,6 +6,17 @@
   --emerald-100: #d1fae5;
 }
 
+.sidebar-user {
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--gray-700, #374151);
+}
+
+.sidebar-user-role {
+  color: var(--teal-600, #0d9488);
+  font-weight: 600;
+}
+
 /* Match professor/student card spacing */
 .student-card-body {
   display: grid;
