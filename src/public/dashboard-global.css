@@ -188,6 +188,17 @@ body.dashboard-page {
   padding-left: 1rem;
 }
 
+.sidebar footer {
+  margin-top: auto;
+  border-top: 1px solid var(--gray-200, #e5e7eb);
+  padding-top: 1rem;
+}
+
+.sidebar footer .btn-ghost {
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
 /* Main Container */
 .main-container {
   margin-left: 180px;
