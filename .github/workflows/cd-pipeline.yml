@@ -135,7 +135,10 @@ jobs:
         run: |
           # Create task definition for this branch
           # Replace family and container name but keep ECR repository as conductor-app
-          sed "s/ACCOUNT_ID/$AWS_ACCOUNT_ID/g; s/REGION/us-east-1/g; s/:latest/:$IMAGE_TAG/g; s/\"family\": \"conductor-app\"/\"family\": \"$SERVICE_NAME\"/g; s/\"name\": \"conductor-app\"/\"name\": \"$SERVICE_NAME\"/g; s/GOOGLE_CLIENT_ID_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_ID }}/g; s/GOOGLE_CLIENT_SECRET_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_SECRET }}/g; s/SESSION_SECRET_PLACEHOLDER/${{ secrets.SESSION_SECRET }}/g; s|GOOGLE_CALLBACK_URL_PLACEHOLDER|http://localhost:3001/auth/google/callback|g" aws-task-definition.json > task-def.json
+          # Use CloudFront URL for callback
+          CALLBACK_URL="https://dfbhtda4vdu81.cloudfront.net/auth/google/callback"
+          
+          sed "s/ACCOUNT_ID/$AWS_ACCOUNT_ID/g; s/REGION/us-east-1/g; s/:latest/:$IMAGE_TAG/g; s/\"family\": \"conductor-app\"/\"family\": \"$SERVICE_NAME\"/g; s/\"name\": \"conductor-app\"/\"name\": \"$SERVICE_NAME\"/g; s/GOOGLE_CLIENT_ID_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_ID }}/g; s/GOOGLE_CLIENT_SECRET_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_SECRET }}/g; s/SESSION_SECRET_PLACEHOLDER/${{ secrets.SESSION_SECRET }}/g; s|GOOGLE_CALLBACK_URL_PLACEHOLDER|$CALLBACK_URL|g" aws-task-definition.json > task-def.json
           
           # Register task definition
           TASK_DEF_ARN=$(aws ecs register-task-definition \
