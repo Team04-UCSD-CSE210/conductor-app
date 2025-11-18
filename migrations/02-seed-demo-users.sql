@@ -43,7 +43,7 @@ INSERT INTO users (
 -- ============================================
 -- INSTRUCTORS/PROFESSORS (UCSD)
 -- ============================================
-('instructor1@ucsd.edu', 'A00001234', 'Dr. Alice Smith', 'Alice',
+('bhchandna@ucsd.edu', 'A00001234', 'Dr. Alice Smith', 'Alice',
  NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
  'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  'https://cse.ucsd.edu/people/faculty/alice-smith', NULL, '+1-858-534-1234', 'alicesmith', 'https://linkedin.com/in/alicesmith'),
@@ -127,7 +127,7 @@ INSERT INTO users (
 -- ============================================
 -- EXTENSION STUDENTS (Non-UCSD emails)
 -- ============================================
-('extension1@gmail.com', NULL, 'Noah Anderson', 'Noah',
+('bhavikchandna@gmail.com', NULL, 'Noah Anderson', 'Noah',
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',
  'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
  NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),

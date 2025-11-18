@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture Responses — Instructor View</title>
+  <link rel="stylesheet" href="/global.css">
+  <link rel="stylesheet" href="/dashboard-global.css">
+  <link rel="stylesheet" href="/lecture-responses.css">
+</head>
+
+<body class="dashboard-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/course-settings">Course Settings</a>
+      <a href="/courses/cse210/lectures" class="active">Lectures</a>
+      <a href="/courses/cse210/roster">Roster</a>
+    </nav>
+    <footer>
+      <a href="/logout" class="btn btn-ghost">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <section class="responses-shell" data-lecture-id="lec-15">
+      <header class="responses-header">
+        <button class="back-button" id="back-button" aria-label="Back to lecture list">
+          <span aria-hidden="true">←</span>
+        </button>
+        <div class="lecture-info">
+          <p class="eyebrow">Lecture Attendance</p>
+          <h2 id="lecture-title">Lecture X</h2>
+          <p id="lecture-time">MM/DD/YY · HH:MM–HH:MM</p>
+        </div>
+        <div class="attendance-stat">
+          <p class="label">Attendance</p>
+          <p class="value" id="lecture-attendance">0%</p>
+        </div>
+      </header>
+
+      <section class="responses-panel">
+        <div class="question-toolbar">
+          <div>
+            <label for="question-select">View Responses</label>
+            <select id="question-select"></select>
+          </div>
+          <div class="response-count">
+            <span id="response-count">0 responses</span>
+          </div>
+        </div>
+        <div class="response-list" id="responses-list" aria-live="polite"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/js/lecture-data.service.js" defer></script>
+  <script src="/js/instructor-lecture-detail.js" defer></script>
+</body>
+</html>
+

@@ -15,16 +15,66 @@
 }
 
 .attendance-title {
-  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, var(--teal-50, #f0fdfa) 0%, white 100%);
+  border-radius: 1rem;
+  border: 1px solid var(--teal-200, #99f6e4);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
+}
+
+.attendance-title h2 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.5rem;
+  color: var(--teal-700, #0f766e);
+  font-weight: 700;
+}
+
+.attendance-title .subtitle {
+  margin: 0;
+  color: var(--gray-600, #4b5563);
+  font-size: 0.95rem;
+}
+
+.attendance-title .eyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gray-500, #6b7280);
+}
+
+.attendance-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 180px;
+}
+
+.attendance-filter label {
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--gray-900, #111827);
-  margin: 0 0 1.5rem;
-  padding: 0.5rem 1.25rem;
-  background: var(--gray-100, #f3f4f6);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-500, #6b7280);
+}
+
+.attendance-filter select {
   border-radius: 9999px;
-  display: inline-block;
-  width: fit-content;
-  border: 1px solid var(--gray-200, #e5e7eb);
+  border: 1px solid var(--gray-300, #d1d5db);
+  padding: 0.35rem 1rem;
+  font-size: 0.9rem;
+  background: white;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
 }
 
 .lecture-list {
@@ -56,29 +106,47 @@
 
 .lecture-item {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.875rem 1rem;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
   background: white;
   border: 1px solid var(--gray-200, #e5e7eb);
-  border-radius: 0.5rem;
-  transition: all 0.15s;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
   margin-bottom: 0.5rem;
+  align-items: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
 }
 
 .lecture-item:hover {
-  background: var(--gray-100, #f3f4f6);
-  border-color: var(--gray-300, #d1d5db);
+  background: var(--teal-50, #f0fdfa);
+  border-color: var(--teal-200, #99f6e4);
+  box-shadow: 0 2px 8px rgb(13 148 136 / 10%);
+  transform: translateY(-1px);
 }
 
-.lecture-badge {
+.lecture-badge,
+.lecture-pill {
   display: inline-block;
-  padding: 0.375rem 0.75rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 9999px;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
+  min-width: 100px;
+  text-align: center;
+}
+
+.lecture-pill {
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  background: transparent;
+}
+
+.lecture-pill:focus-visible {
+  outline: 2px solid var(--blue-500, #3b82f6);
+  outline-offset: 2px;
 }
 
 .lecture-badge.present {
@@ -91,24 +159,67 @@
   color: white;
 }
 
+.lecture-badge.open {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .lecture-info {
   display: flex;
   align-items: center;
   gap: 1rem;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  overflow: hidden;
 }
 
 .lecture-number {
   font-weight: 600;
   color: var(--gray-900, #111827);
   font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 .lecture-time {
   color: var(--gray-600, #4b5563);
   font-size: 0.875rem;
+}
+
+.lecture-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-width: 200px;
+}
+
+.lecture-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-link {
+  border-radius: 9999px;
+  border: 1.5px solid var(--teal-600, #0d9488);
+  background: transparent;
+  color: var(--teal-600, #0d9488);
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-link:hover {
+  background: var(--teal-600, #0d9488);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgb(13 148 136 / 25%);
 }
 
 .lecture-status {
@@ -118,17 +229,35 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-left: auto;
+  min-width: 70px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .lecture-status.open {
   background: var(--emerald-100, #d1fae5);
   color: var(--emerald-700, #047857);
+  border: 1px solid var(--emerald-300, #6ee7b7);
 }
 
 .lecture-status.closed {
   background: var(--gray-200, #e5e7eb);
   color: var(--gray-600, #4b5563);
+  border: 1px solid var(--gray-300, #d1d5db);
+}
+
+.lecture-status.error {
+  background: var(--rose-100, #ffe4e6);
+  color: var(--rose-700, #be123c);
+}
+
+.empty-state {
+  border: 1px dashed var(--gray-300, #d1d5db);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--gray-600, #4b5563);
+  font-size: 0.95rem;
 }
 
 .attendance-sidebar {
@@ -160,11 +289,11 @@
 }
 
 .help-box {
-  background: white;
-  border: 1px solid var(--gray-200, #e5e7eb);
-  border-radius: 0.5rem;
-  padding: 1.25rem;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  background: linear-gradient(135deg, white 0%, var(--teal-50, #f0fdfa) 100%);
+  border: 1px solid var(--teal-200, #99f6e4);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
 }
 
 .help-box p {
@@ -203,11 +332,11 @@
 }
 
 .stats-box {
-  background: white;
-  border: 1px solid var(--gray-200, #e5e7eb);
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  background: linear-gradient(135deg, white 0%, var(--emerald-50, #ecfdf5) 100%);
+  border: 1px solid var(--emerald-200, #a7f3d0);
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgb(16 185 129 / 10%);
   text-align: center;
 }
 
@@ -219,10 +348,11 @@
 }
 
 .attendance-percentage {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 700;
-  color: var(--teal-600, #0d9488);
+  color: var(--emerald-600, #059669);
   line-height: 1;
+  text-shadow: 0 2px 4px rgb(5 150 105 / 15%);
 }
 
 .sidebar nav a.active {
@@ -243,6 +373,189 @@
   padding: 0.5rem;
 }
 
+/* Access Code Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 50%);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.access-code-modal {
+  background: linear-gradient(135deg, white 0%, var(--teal-50, #f0fdfa) 100%);
+  border-radius: 1.25rem;
+  padding: 2.5rem;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 25%);
+  border: 1px solid var(--teal-200, #99f6e4);
+  animation: slideUp 0.3s ease;
+  position: relative;
+  pointer-events: auto;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.modal-header h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--teal-700, #0f766e);
+}
+
+.modal-header p {
+  margin: 0;
+  color: var(--gray-600, #4b5563);
+  font-size: 0.95rem;
+}
+
+.access-code-inputs {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.code-input {
+  width: 3.5rem;
+  height: 4rem;
+  border: 2px solid var(--teal-300, #5eead4);
+  border-radius: 0.75rem;
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--teal-700, #0f766e);
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.code-input:focus {
+  outline: none;
+  border-color: var(--teal-600, #0d9488);
+  box-shadow: 0 0 0 4px rgb(13 148 136 / 15%);
+  transform: scale(1.05);
+}
+
+.code-input.filled {
+  background: var(--teal-50, #f0fdfa);
+  border-color: var(--teal-500, #14b8a6);
+}
+
+.modal-actions {
+  display: none;
+}
+
+.modal-btn {
+  padding: 0.75rem 2rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.modal-btn-primary {
+  background: var(--teal-600, #0d9488);
+  color: white;
+  box-shadow: 0 4px 12px rgb(13 148 136 / 30%);
+}
+
+.modal-btn-primary:hover {
+  background: var(--teal-700, #0f766e);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgb(13 148 136 / 40%);
+}
+
+.modal-btn-primary:active {
+  transform: translateY(0);
+}
+
+.modal-btn-secondary {
+  background: white;
+  color: var(--gray-700, #374151);
+  border: 1.5px solid var(--gray-300, #d1d5db);
+}
+
+.modal-btn-secondary:hover {
+  background: var(--gray-50, #f9fafb);
+  border-color: var(--gray-400, #9ca3af);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid var(--gray-300, #d1d5db);
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-700, #374151);
+  transition: all 0.2s ease;
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 300;
+  z-index: 1001;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
+  pointer-events: auto;
+  user-select: none;
+}
+
+.modal-close:hover {
+  background: var(--red-50, #fef2f2);
+  border-color: var(--red-300, #fca5a5);
+  color: var(--red-600, #dc2626);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 8px rgb(220 38 38 / 20%);
+}
+
+.modal-error {
+  text-align: center;
+  color: var(--red-600, #dc2626);
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  min-height: 1.25rem;
+  font-weight: 500;
+}
+
 @media (width <= 768px) {
   .attendance-layout {
     flex-direction: column;
@@ -255,6 +568,25 @@
 
   .attendance-content {
     order: 1;
+  }
+
+  .attendance-title {
+    flex-direction: column;
+  }
+
+  .access-code-modal {
+    padding: 1.75rem;
+    max-width: 100%;
+  }
+
+  .code-input {
+    width: 2.75rem;
+    height: 3.5rem;
+    font-size: 1.5rem;
+  }
+
+  .access-code-inputs {
+    gap: 0.5rem;
   }
 }
 

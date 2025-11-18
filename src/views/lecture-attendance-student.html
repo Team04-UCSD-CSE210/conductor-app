@@ -35,53 +35,27 @@
 
   <main class="main-container" id="main">
     <div class="attendance-layout">
-      <section class="attendance-content">
-        <h2 class="attendance-title">Lecture Attendance</h2>
-        <div class="lecture-list" id="lecture-list">
-          <div class="lecture-item">
-            <span class="lecture-badge present">Present</span>
-            <div class="lecture-info">
-              <span class="lecture-number">Lecture 15</span>
-              <span class="lecture-time">12/15/24 10:00–11:20</span>
-              <span class="lecture-status open">Open</span>
-            </div>
+      <section class="attendance-content" data-student-id="student-1">
+        <div class="attendance-title">
+          <div>
+            <p class="eyebrow">Lecture Attendance</p>
+            <h2>Software Engineering Studio 1</h2>
+            <p class="subtitle">Scan the list below to review your status or jump into an open lecture to submit responses.</p>
           </div>
-          <div class="lecture-item">
-            <span class="lecture-badge present">Present</span>
-            <div class="lecture-info">
-              <span class="lecture-number">Lecture 14</span>
-              <span class="lecture-time">12/13/24 10:00–11:20</span>
-              <span class="lecture-status closed">Closed</span>
-            </div>
+          <div class="attendance-filter">
+            <label for="lecture-filter">Filter</label>
+            <select id="lecture-filter">
+              <option value="all" selected>All</option>
+              <option value="open">Open sessions</option>
+              <option value="present">Marked Present</option>
+              <option value="absent">Marked Absent</option>
+            </select>
           </div>
-          <div class="lecture-item">
-            <span class="lecture-badge absent">Absent</span>
-            <div class="lecture-info">
-              <span class="lecture-number">Lecture 13</span>
-              <span class="lecture-time">12/11/24 10:00–11:20</span>
-            </div>
-          </div>
-          <div class="lecture-item">
-            <span class="lecture-badge present">Present</span>
-            <div class="lecture-info">
-              <span class="lecture-number">Lecture 12</span>
-              <span class="lecture-time">12/09/24 10:00–11:20</span>
-            </div>
-          </div>
-          <div class="lecture-item">
-            <span class="lecture-badge absent">Absent</span>
-            <div class="lecture-info">
-              <span class="lecture-number">Lecture 11</span>
-              <span class="lecture-time">12/06/24 10:00–11:20</span>
-            </div>
-          </div>
-          <div class="lecture-item">
-            <span class="lecture-badge present">Present</span>
-            <div class="lecture-info">
-              <span class="lecture-number">Lecture 10</span>
-              <span class="lecture-time">12/04/24 10:00–11:20</span>
-            </div>
-          </div>
+        </div>
+
+        <div class="lecture-list" id="lecture-list" aria-live="polite"></div>
+        <div class="empty-state" id="lecture-empty" hidden>
+          <p>No lectures to show yet. Once an instructor publishes the first attendance code it will appear here.</p>
         </div>
       </section>
 
@@ -101,6 +75,7 @@
     </div>
   </main>
 
+  <script src="/js/lecture-data.service.js" defer></script>
   <script src="/lecture-attendance-student.js" defer></script>
 </body>
 </html>

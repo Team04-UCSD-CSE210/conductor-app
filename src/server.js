@@ -14,7 +14,7 @@ import { DatabaseInitializer } from "./database/init.js";
 import bodyParser from "body-parser";
 import crypto from "crypto";
 import { ensureAuthenticated } from "./middleware/auth.js";
-import { protect } from "./middleware/permission-middleware.js";
+import { protect, protectAny } from "./middleware/permission-middleware.js";
 import userRoutes from "./routes/user-routes.js";
 import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
@@ -706,6 +706,99 @@ app.get("/student-dashboard", ensureAuthenticated, async (req, res) => {
     return res.status(403).send("Forbidden: You must be enrolled as a student to access this dashboard");
   } catch (error) {
     console.error("Error accessing student dashboard:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+// -------------------- LECTURE ATTENDANCE ROUTES --------------------
+
+/**
+ * Instructor Lectures Overview
+ * View all lectures and manage attendance sessions
+ * Requires: attendance.view or session.manage permission (course scope) - Instructor/TA
+ */
+app.get("/instructor-lectures", ...protectAny(['attendance.view', 'session.manage', 'course.manage'], 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("instructor-lectures.html"));
+});
+
+/**
+ * Lecture Builder
+ * Create new lecture attendance sessions with questions
+ * Requires: session.create or session.manage permission (course scope) - Instructor
+ */
+app.get("/lecture-builder", ...protectAny(['session.create', 'session.manage', 'course.manage'], 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("lecture-builder.html"));
+});
+
+/**
+ * Lecture Responses
+ * View student responses for a lecture session
+ * Requires: attendance.view or session.manage permission (course scope) - Instructor/TA
+ */
+app.get("/lecture-responses", ...protectAny(['attendance.view', 'session.manage', 'course.manage'], 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("lecture-responses.html"));
+});
+
+/**
+ * Student Lecture Response
+ * Students can respond to lecture questions after checking in
+ * Requires: Authentication - Students
+ */
+app.get("/student-lecture-response", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow students, admins, and instructors (for testing/viewing)
+    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    if (enrollmentRole === 'student' || user.primary_role === 'student' || 
+        user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("student-lecture-response.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a student to access this page");
+  } catch (error) {
+    console.error("Error accessing student lecture response page:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * Student Lecture Attendance
+ * Students can check in to lectures using access codes
+ * Requires: Authentication - Students
+ */
+app.get("/lecture-attendance-student", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow students, admins, and instructors (for testing/viewing)
+    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    if (enrollmentRole === 'student' || user.primary_role === 'student' || 
+        user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("lecture-attendance-student.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a student to access this page");
+  } catch (error) {
+    console.error("Error accessing lecture attendance page:", error);
     return res.status(500).send("Internal server error");
   }
 });

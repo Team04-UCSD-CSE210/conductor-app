@@ -195,8 +195,15 @@ body.dashboard-page {
   width: calc(100% - 180px);
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Allow scrolling for builder pages */
+.main-container:has(.builder-shell) {
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .page-title {
