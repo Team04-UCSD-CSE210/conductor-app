@@ -6,6 +6,7 @@
   <title>Lecture Attendance - Student Dashboard</title>
   <link rel="stylesheet" href="/global.css">
   <link rel="stylesheet" href="/dashboard-global.css">
+  <link rel="stylesheet" href="/inactivity-timeout.css">
   <link rel="stylesheet" href="/lecture-attendance-student.css">
 </head>
 
@@ -23,7 +24,7 @@
     <h1 class="sidebar-title">Conductor</h1>
     <nav aria-label="Dashboard navigation">
       <a href="/courses">Courses</a>
-      <a href="/lectures" class="active">Lectures</a>
+      <a href="/lecture-attendance-student" class="active">Lectures</a>
       <a href="/meetings">Meetings</a>
       <a href="/work-journal">Work Journal</a>
       <a href="/my-team">My Team</a>
@@ -35,11 +36,11 @@
 
   <main class="main-container" id="main">
     <div class="attendance-layout">
-      <section class="attendance-content" data-student-id="student-1">
+      <section class="attendance-content" data-offering-id="">
         <div class="attendance-title">
           <div>
             <p class="eyebrow">Lecture Attendance</p>
-            <h2>Software Engineering Studio 1</h2>
+            <h2 id="course-title">Loading...</h2>
             <p class="subtitle">Scan the list below to review your status or jump into an open lecture to submit responses.</p>
           </div>
           <div class="attendance-filter">
@@ -69,12 +70,13 @@
         </div>
         <div class="stats-box">
           <h3>Your overall attendance</h3>
-          <div class="attendance-percentage">85%</div>
+          <div class="attendance-percentage" id="attendance-percentage">0%</div>
         </div>
       </aside>
     </div>
   </main>
 
+  <script src="/js/inactivity-timeout.js" defer></script>
   <script src="/js/lecture-data.service.js" defer></script>
   <script src="/lecture-attendance-student.js" defer></script>
 </body>

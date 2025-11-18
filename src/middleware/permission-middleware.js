@@ -84,8 +84,9 @@ async function getAuthContext(req, scope) {
       offeringId = 
         params.offeringId ?? 
         params.courseId ?? 
-        body.offeringId ?? 
-        body.courseId ?? 
+        (body && body.offering_id) ??
+        (body && body.offeringId) ?? 
+        (body && body.courseId) ?? 
         query.offering_id ?? 
         null;
     }
@@ -140,6 +141,12 @@ export function requirePermission(permissionCode, scope = "global") {
           message: `Permission required: ${permissionCode}`,
         });
       }
+      
+      // Attach offeringId to request for use in routes
+      if (offeringId) {
+        req.offeringId = offeringId;
+      }
+      
       next();
     } catch (err) {
       console.error("[PermissionMiddleware] Error checking permission:", err);
@@ -177,6 +184,10 @@ export function requireAnyPermission(permissionCodes, scope = "global") {
           teamId
         );
         if (allowed) {
+          // Attach offeringId to request for use in routes
+          if (offeringId) {
+            req.offeringId = offeringId;
+          }
           return next();
         }
       }

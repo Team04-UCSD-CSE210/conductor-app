@@ -13,10 +13,11 @@
   const submitBtn = document.getElementById('submit-btn');
   const cancelBtn = document.getElementById('cancel-btn');
   const saveDraftBtn = document.getElementById('save-draft-btn');
-  const courseId = document.querySelector('.builder-shell')?.getAttribute('data-course-id');
+  const container = document.querySelector('.builder-shell');
 
   if (!form || !questionList || !window.LectureService) return;
 
+  let offeringId = null;
   let questionCounter = 0;
   let autoSaveTimer = null;
   let isSubmitting = false;
@@ -154,7 +155,7 @@
     const questions = questionList.children;
     if (questions.length === 0) {
       isValid = false;
-      // Show error in question section
+      alert('Please add at least one question.');
     }
 
     return isValid;
@@ -180,7 +181,7 @@
     showSaving();
     
     autoSaveTimer = setTimeout(() => {
-      // Simulate auto-save
+      // Simulate auto-save (could be implemented with draft API later)
       showSaved();
     }, 1000);
   }
@@ -412,7 +413,7 @@
     promptInput.type = 'text';
     promptInput.id = `question-prompt-${card.dataset.questionId}`;
     promptInput.placeholder = 'Enter your question here...';
-    promptInput.value = initial.prompt || '';
+    promptInput.value = initial.prompt || initial.question_text || '';
     promptInput.required = true;
     promptInput.setAttribute('aria-label', 'Question prompt');
     promptInput.addEventListener('input', triggerAutoSave);
@@ -428,7 +429,7 @@
       <option value="mcq">Multiple choice</option>
       <option value="pulse">Pulse</option>
     `;
-    select.value = initial.type || 'text';
+    select.value = initial.type || initial.question_type || 'text';
     const dynamicArea = document.createElement('div');
 
     select.addEventListener('change', () => {
@@ -507,8 +508,8 @@
     }
     
     // Set the access code
-    if (toastCode && lecture.accessCode) {
-      toastCode.textContent = lecture.accessCode;
+    if (toastCode && (lecture.accessCode || lecture.access_code)) {
+      toastCode.textContent = lecture.accessCode || lecture.access_code;
     }
     
     // Set up view button - replace any existing handler
@@ -516,7 +517,7 @@
       toastView.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        window.location.href = `/lectures/${lecture.id}/responses`;
+        window.location.href = `/lecture-responses?sessionId=${lecture.id}`;
       };
     }
     
@@ -561,6 +562,19 @@
       return;
     }
 
+    // Get offering ID if not already loaded
+    if (!offeringId) {
+      try {
+        offeringId = await window.LectureService.getActiveOfferingId();
+        if (container) {
+          container.setAttribute('data-offering-id', offeringId);
+        }
+      } catch (error) {
+        alert(`Error getting course offering: ${error.message}`);
+        return;
+      }
+    }
+
     isSubmitting = true;
     const btnText = submitBtn.querySelector('.btn-text');
     const btnLoader = submitBtn.querySelector('.btn-loader');
@@ -589,8 +603,39 @@
         throw new Error('All questions must have a prompt');
       }
 
-      const lecture = window.LectureService.createLecture({
-        courseId,
+      // Ensure offeringId is valid - check multiple times with better validation
+      let finalOfferingId = offeringId;
+      
+      if (!finalOfferingId || finalOfferingId === 'undefined' || finalOfferingId === 'null') {
+        // Try to get offering ID again
+        try {
+          finalOfferingId = await window.LectureService.getActiveOfferingId();
+          if (finalOfferingId && container) {
+            container.setAttribute('data-offering-id', finalOfferingId);
+            offeringId = finalOfferingId; // Update module-level variable
+          }
+        } catch (err) {
+          console.error('Error getting offering ID:', err);
+          throw new Error('Unable to find an active course offering. Please ensure you have an active course offering set up. If the problem persists, refresh the page and try again.');
+        }
+      }
+      
+      // Final validation with strict check
+      if (!finalOfferingId || finalOfferingId === 'undefined' || finalOfferingId === 'null' || typeof finalOfferingId === 'undefined') {
+        console.error('offeringId validation failed:', { offeringId, finalOfferingId, type: typeof finalOfferingId });
+        throw new Error('No active course offering found. Please ensure you have an active course offering (e.g., CSE 210) set up and marked as active in the system.');
+      }
+
+      // Validate all required fields
+      if (!label || !startsAt || !endsAt) {
+        throw new Error('Please fill in all required fields (label, date, start time, end time).');
+      }
+
+      // Log for debugging
+      console.log('Creating lecture with offering_id:', finalOfferingId);
+
+      const lecture = await window.LectureService.createLecture({
+        offering_id: finalOfferingId,
         label,
         startsAt,
         endsAt,
@@ -628,6 +673,68 @@
 
   // Initialize
   function init() {
+    // Wait for LectureService to be available
+    const initOffering = async () => {
+      // Wait for LectureService to load
+      if (!window.LectureService) {
+        await new Promise((resolve) => {
+          const checkInterval = setInterval(() => {
+            if (window.LectureService) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 50);
+          // Timeout after 5 seconds
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            resolve();
+          }, 5000);
+        });
+      }
+      
+      if (!window.LectureService) {
+        console.error('LectureService not available');
+        return;
+      }
+      
+      // Get offering ID on load
+      try {
+        const fetchedOfferingId = await window.LectureService.getActiveOfferingId();
+        console.log('Fetched offering ID on load:', fetchedOfferingId, typeof fetchedOfferingId);
+        
+        if (fetchedOfferingId && fetchedOfferingId !== 'undefined' && fetchedOfferingId !== 'null') {
+          offeringId = fetchedOfferingId; // Update module-level variable
+          if (container) {
+            container.setAttribute('data-offering-id', offeringId);
+          }
+          console.log('offeringId set successfully:', offeringId);
+        } else {
+          console.warn('No active offering ID found or invalid:', fetchedOfferingId);
+          offeringId = null; // Explicitly set to null
+          // Show user-friendly error
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'error-message';
+          errorMsg.style.cssText = 'padding: 1rem; background: #fee; color: #c33; border-radius: 4px; margin-bottom: 1rem;';
+          errorMsg.innerHTML = '<strong>⚠️ No active course offering found.</strong><br>Please ensure you have an active course offering set up.';
+          if (container) {
+            container.insertBefore(errorMsg, container.firstChild);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading offering ID:', error);
+        offeringId = null; // Explicitly set to null on error
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'error-message';
+        errorMsg.style.cssText = 'padding: 1rem; background: #fee; color: #c33; border-radius: 4px; margin-bottom: 1rem;';
+        errorMsg.innerHTML = `<strong>⚠️ Error loading course offering:</strong><br>${error.message || 'Please refresh the page or contact support.'}`;
+        if (container) {
+          container.insertBefore(errorMsg, container.firstChild);
+        }
+      }
+    };
+    
+    initOffering();
+
     // Ensure toast is hidden on page load and stays hidden until successful submit
     if (toast) {
       toast.setAttribute('hidden', 'true');
@@ -643,11 +750,66 @@
       emptyState.setAttribute('hidden', 'true');
     }
     
-    // Setup date display
+    // Setup date display and pre-fill with current date/time
     const dateInput = document.getElementById('lecture-date');
+    const startTimeInput = document.getElementById('lecture-start');
+    const endTimeInput = document.getElementById('lecture-end');
+    
+    if (dateInput && !dateInput.value) {
+      // Pre-fill with current date (YYYY-MM-DD format)
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      dateInput.value = `${year}-${month}-${day}`;
+      updateDateDisplay();
+    }
+    
     if (dateInput) {
       dateInput.addEventListener('change', updateDateDisplay);
-      updateDateDisplay();
+    }
+    
+    // Pre-fill start time with current time
+    if (startTimeInput && !startTimeInput.value) {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      startTimeInput.value = `${hours}:${minutes}`;
+    }
+    
+    // Pre-fill end time as 30 minutes after start time
+    if (endTimeInput && !endTimeInput.value && startTimeInput) {
+      // Calculate end time based on start time (either already set or just set above)
+      const startValue = startTimeInput.value;
+      if (startValue) {
+        const [startHours, startMinutes] = startValue.split(':').map(Number);
+        const startDate = new Date();
+        startDate.setHours(startHours, startMinutes, 0, 0);
+        startDate.setMinutes(startDate.getMinutes() + 30);
+        
+        const endHours = String(startDate.getHours()).padStart(2, '0');
+        const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
+        endTimeInput.value = `${endHours}:${endMinutes}`;
+      }
+    }
+    
+    // Update end time when start time changes
+    if (startTimeInput && endTimeInput) {
+      startTimeInput.addEventListener('change', () => {
+        if (!endTimeInput.value) {
+          // Auto-update end time when start time changes (if end time is empty)
+          const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
+          const startDate = new Date();
+          startDate.setHours(startHours, startMinutes, 0, 0);
+          startDate.setMinutes(startDate.getMinutes() + 30);
+          
+          const endHours = String(startDate.getHours()).padStart(2, '0');
+          const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
+          endTimeInput.value = `${endHours}:${endMinutes}`;
+        }
+        validateTimeRange();
+        triggerAutoSave();
+      });
     }
 
     // Setup character counter

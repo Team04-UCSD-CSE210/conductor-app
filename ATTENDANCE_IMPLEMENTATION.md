@@ -312,9 +312,9 @@ The application uses a permission-based access control system:
 
 Apply database schema changes:
 
-```bash
-psql $DATABASE_URL < migrations/01-create-tables.sql
-```
+   ```bash
+   psql $DATABASE_URL < migrations/01-create-tables.sql
+   ```
 
 ### 2. Start the Server
 
@@ -330,16 +330,16 @@ Access the application:
 
 Verify all functionality:
 
-```bash
-npm test tests/session.test.js
-npm test tests/attendance.test.js
-```
+   ```bash
+   npm test tests/session.test.js
+   npm test tests/attendance.test.js
+   ```
 
 ### 4. Configure Permissions
 
 Configure in permission system:
-- Add `session.create`, `session.manage`, `attendance.view`, `attendance.mark`
-- Assign to appropriate roles (professor, TA, student)
+   - Add `session.create`, `session.manage`, `attendance.view`, `attendance.mark`
+   - Assign to appropriate roles (professor, TA, student)
 
 ### 5. Access Routes
 
@@ -370,11 +370,11 @@ Configure in permission system:
 
 ## 🚀 Optional Enhancements
 
-- WebSocket for real-time attendance updates
-- QR code generation for access codes
-- Email notifications for missed attendance
-- Export attendance to CSV
-- Attendance trends and analytics dashboard
+   - WebSocket for real-time attendance updates
+   - QR code generation for access codes
+   - Email notifications for missed attendance
+   - Export attendance to CSV
+   - Attendance trends and analytics dashboard
 - Mobile-responsive improvements
 
 ## 📝 Example Usage

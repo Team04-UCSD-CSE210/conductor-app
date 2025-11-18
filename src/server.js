@@ -591,6 +591,10 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Parse JSON and URL-encoded request bodies (must be before API routes)
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 // Dashboard routing - redirects to role-specific dashboard
 app.get("/dashboard", ensureAuthenticated, async (req, res) => {
   try {
@@ -733,6 +737,7 @@ app.get("/lecture-builder", ...protectAny(['session.create', 'session.manage', '
 /**
  * Lecture Responses
  * View student responses for a lecture session
+ * Query params: ?sessionId=<uuid> or ?lectureId=<uuid>
  * Requires: attendance.view or session.manage permission (course scope) - Instructor/TA
  */
 app.get("/lecture-responses", ...protectAny(['attendance.view', 'session.manage', 'course.manage'], 'course'), (req, res) => {
@@ -742,6 +747,7 @@ app.get("/lecture-responses", ...protectAny(['attendance.view', 'session.manage'
 /**
  * Student Lecture Response
  * Students can respond to lecture questions after checking in
+ * Query params: ?sessionId=<uuid> or ?lectureId=<uuid>
  * Requires: Authentication - Students
  */
 app.get("/student-lecture-response", ensureAuthenticated, async (req, res) => {
@@ -1123,10 +1129,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-// ADD A Simple POST to register login
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 app.post("/register/submit", ensureAuthenticated, async (req, res) => {
   const email = req.user?.emails?.[0]?.value;
@@ -1517,14 +1519,21 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
 // All routes must be defined BEFORE starting the server
 const startServer = async () => {
   try {
-    // Initialize database using migrations
-    // Set SEED_ON_START=true in .env to automatically seed demo data on startup
-    // Defaults to true for convenience
+    // Reset and seed database on every start
+    // This drops all tables and re-runs all migrations with seed data
     const shouldSeed = process.env.SEED_ON_START !== 'false';
-    await DatabaseInitializer.initialize({ seed: shouldSeed, force: true });
+    
+    if (shouldSeed) {
+      console.log("[database] Resetting database and seeding data...\n");
+      await DatabaseInitializer.reset(true);
+    } else {
+      console.log("[database] Resetting database (no seed data)...\n");
+      await DatabaseInitializer.reset(false);
+    }
+    
     console.log("✅ Database connection established");
     if (shouldSeed) {
-      console.log("✅ Demo users and data seeded");
+      console.log("✅ Database reset and all seed data loaded");
     }
   } catch (error) {
     console.error("Failed to connect to the database", error);

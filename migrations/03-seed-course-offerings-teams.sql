@@ -18,8 +18,20 @@ DECLARE
     j INTEGER;
     team_num INTEGER;
 BEGIN
-    -- Get instructor ID first
-    SELECT id INTO instructor_id FROM users WHERE email = 'instructor1@ucsd.edu' LIMIT 1;
+    -- Get instructor ID first (try multiple possible emails)
+    SELECT id INTO instructor_id 
+    FROM users 
+    WHERE email = 'bhchandna@ucsd.edu' 
+       OR email = 'instructor1@ucsd.edu'
+    LIMIT 1;
+    
+    -- Fallback: get any instructor
+    IF instructor_id IS NULL THEN
+        SELECT id INTO instructor_id 
+        FROM users 
+        WHERE primary_role = 'instructor' 
+        LIMIT 1;
+    END IF;
     
     IF instructor_id IS NULL THEN
         RAISE EXCEPTION 'Instructor not found. Run user seed data first.';

@@ -93,10 +93,11 @@ export class AttendanceService {
       throw new Error('You are not enrolled in this course');
     }
 
-    // Submit responses
+    // Submit responses - include session_id for each response
     const responsesWithUser = responses.map(r => ({
       ...r,
-      user_id: userId
+      user_id: userId,
+      session_id: sessionId  // Include session_id for constraint matching
     }));
 
     return await SessionResponseModel.createMany(responsesWithUser);

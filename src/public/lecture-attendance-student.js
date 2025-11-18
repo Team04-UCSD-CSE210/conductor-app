@@ -1,23 +1,38 @@
 (function lectureAttendancePage() {
   const state = {
     lectures: [],
-    filter: 'all'
+    filter: 'all',
+    offeringId: null
   };
 
   const selectors = {
     list: document.getElementById('lecture-list'),
     empty: document.getElementById('lecture-empty'),
     filter: document.getElementById('lecture-filter'),
-    attendancePercentage: document.querySelector('.attendance-percentage'),
+    attendancePercentage: document.getElementById('attendance-percentage'),
     container: document.querySelector('.attendance-content')
   };
 
+  let isLoading = false;
+
   function formatTimeRange(startIso, endIso) {
+    if (!startIso || !endIso) return '—';
+    try {
     const start = new Date(startIso);
     const end = new Date(endIso);
+      
+      // Validate dates
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return '—';
+      }
+      
     const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const timeFormatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric' });
     return `${dateFormatter.format(start)} ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
+    } catch (e) {
+      console.warn('Error formatting time range:', e, startIso, endIso);
+      return '—';
+    }
   }
 
   function buildStatusBadge(status) {
@@ -76,14 +91,14 @@
       if (lecture.sessionState === 'open') {
         if (lecture.status === 'present') {
           // Already marked present, go to view submission
-          window.location.href = `/lectures/${lecture.id}/respond`;
+          window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
         } else {
           // Need to record attendance - show modal
           showAccessCodeModal(lecture);
         }
       } else {
         // Session is closed - navigate directly to view responses
-        window.location.href = `/lectures/${lecture.id}/respond`;
+        window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
       }
     });
     actions.appendChild(actionButton);
@@ -95,19 +110,42 @@
     return row;
   }
 
-  function updateOverallAttendance() {
-    if (!selectors.attendancePercentage) return;
-    const closedLectures = state.lectures.filter((lec) => lec.sessionState === 'closed');
-    const presentCount = closedLectures.filter((lec) => lec.status === 'present').length;
-    const percent = closedLectures.length
-      ? Math.round((presentCount / closedLectures.length) * 100)
+  async function updateOverallAttendance() {
+    if (!selectors.attendancePercentage || !state.offeringId) return;
+    
+    try {
+      const stats = await window.LectureService.getStudentStatistics?.(state.offeringId);
+      if (stats && stats.attendance_percentage !== undefined) {
+        // Use attendance_percentage from backend (matches SQL column name)
+        selectors.attendancePercentage.textContent = `${Math.round(stats.attendance_percentage)}%`;
+      } else if (stats && stats.attendance_percent !== undefined) {
+        // Fallback to attendance_percent if attendance_percentage not available
+        selectors.attendancePercentage.textContent = `${Math.round(stats.attendance_percent)}%`;
+      } else {
+        // Calculate from all lectures (including open ones, matching backend logic)
+        const totalLectures = state.lectures.length;
+        const presentCount = state.lectures.filter((lec) => lec.status === 'present').length;
+        const percent = totalLectures > 0
+          ? Math.round((presentCount / totalLectures) * 100)
+          : 0;
+        selectors.attendancePercentage.textContent = `${percent}%`;
+      }
+    } catch (error) {
+      console.error('Error updating overall attendance:', error);
+      // Fallback calculation - use all lectures (matching backend logic)
+      const totalLectures = state.lectures.length;
+      const presentCount = state.lectures.filter((lec) => lec.status === 'present').length;
+      const percent = totalLectures > 0
+        ? Math.round((presentCount / totalLectures) * 100)
       : 0;
     selectors.attendancePercentage.textContent = `${percent}%`;
+    }
   }
 
   function renderLectures() {
-    if (!selectors.list) return;
+    if (!selectors.list || isLoading) return;
     selectors.list.innerHTML = '';
+    
     const filtered = state.lectures.filter((lecture) => {
       if (state.filter === 'all') return true;
       return lecture.status === state.filter || lecture.sessionState === state.filter;
@@ -124,12 +162,65 @@
     });
   }
 
-  function hydrateStudentView() {
+  function showLoading() {
+    isLoading = true;
+    if (selectors.list) {
+      selectors.list.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Loading lectures...</p>';
+    }
+  }
+
+  async function updateCourseTitle() {
+    const courseTitleEl = document.getElementById('course-title');
+    if (!courseTitleEl || !state.offeringId) return;
+    
+    try {
+      const response = await fetch(`/api/offerings/${state.offeringId}`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const offering = await response.json();
+        courseTitleEl.textContent = offering.name || offering.code || 'Course';
+      } else {
+        courseTitleEl.textContent = 'Course';
+      }
+    } catch (error) {
+      console.error('Error fetching course title:', error);
+      courseTitleEl.textContent = 'Course';
+    }
+  }
+
+  async function hydrateStudentView() {
     if (!window.LectureService || !selectors.container) return;
-    const studentId = selectors.container.getAttribute('data-student-id') || undefined;
-    state.lectures = window.LectureService.getStudentLectureList(studentId);
-    updateOverallAttendance();
+
+    showLoading();
+
+    try {
+      // Get offering ID
+      state.offeringId = selectors.container.getAttribute('data-offering-id');
+      if (!state.offeringId) {
+        state.offeringId = await window.LectureService.getActiveOfferingId();
+        selectors.container.setAttribute('data-offering-id', state.offeringId);
+      }
+
+      // Update course title dynamically
+      await updateCourseTitle();
+
+      // Get lecture list
+      state.lectures = await window.LectureService.getStudentLectureList(state.offeringId);
+      
+      await updateOverallAttendance();
+      isLoading = false;
     renderLectures();
+    } catch (error) {
+      console.error('Error hydrating student view:', error);
+      isLoading = false;
+      if (selectors.list) {
+        selectors.list.innerHTML = `<p style="color: var(--red-600); text-align: center; padding: 2rem;">Error loading lectures: ${error.message}</p>`;
+      }
+      alert(`Error loading lectures: ${error.message}`);
+    }
   }
 
   function initFilter() {
@@ -165,12 +256,12 @@
     });
   }
 
-  function showAccessCodeModal(lecture) {
+  async function showAccessCodeModal(lecture) {
     const isOpenSession = lecture.sessionState === 'open';
     const modalTitle = isOpenSession ? 'Record Attendance' : 'View Responses';
     const modalDescription = isOpenSession 
-      ? `Enter the 6-digit access code to record your attendance for ${lecture.label}`
-      : `Enter the 6-digit access code to view your responses for ${lecture.label}`;
+      ? `Enter the 6-character access code to record your attendance for ${lecture.label}`
+      : `Enter the 6-character access code to view your responses for ${lecture.label}`;
     
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -182,12 +273,12 @@
           <p>${modalDescription}</p>
         </div>
         <div class="access-code-inputs">
-          <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="Digit 1" data-index="0">
-          <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="Digit 2" data-index="1">
-          <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="Digit 3" data-index="2">
-          <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="Digit 4" data-index="3">
-          <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="Digit 5" data-index="4">
-          <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" aria-label="Digit 6" data-index="5">
+          <input type="text" class="code-input" maxlength="1" autocomplete="off" aria-label="Character 1" data-index="0" tabindex="1" style="text-transform: uppercase;">
+          <input type="text" class="code-input" maxlength="1" autocomplete="off" aria-label="Character 2" data-index="1" tabindex="2" style="text-transform: uppercase;">
+          <input type="text" class="code-input" maxlength="1" autocomplete="off" aria-label="Character 3" data-index="2" tabindex="3" style="text-transform: uppercase;">
+          <input type="text" class="code-input" maxlength="1" autocomplete="off" aria-label="Character 4" data-index="3" tabindex="4" style="text-transform: uppercase;">
+          <input type="text" class="code-input" maxlength="1" autocomplete="off" aria-label="Character 5" data-index="4" tabindex="5" style="text-transform: uppercase;">
+          <input type="text" class="code-input" maxlength="1" autocomplete="off" aria-label="Character 6" data-index="5" tabindex="6" style="text-transform: uppercase;">
         </div>
         <div class="modal-error" id="modal-error"></div>
       </div>
@@ -197,43 +288,97 @@
     const modal = overlay.querySelector('.access-code-modal');
     const inputs = Array.from(overlay.querySelectorAll('.code-input'));
     const closeBtn = overlay.querySelector('.modal-close');
+    const errorDiv = overlay.querySelector('.modal-error');
 
     // Auto-focus first input
     setTimeout(() => {
       inputs[0]?.focus();
     }, 100);
 
-    // Function to check if all inputs are filled and redirect
-    const checkAndRedirect = () => {
-      const code = inputs.map(input => input.value.trim()).join('');
-      if (code.length === 6 && /^\d{6}$/.test(code)) {
-        // All 6 digits filled, redirect to student-lecture-response
-        window.location.href = `/student-lecture-response?lectureId=${lecture.id}`;
+    // Function to check code and check in
+    const checkCodeAndCheckIn = async () => {
+      const code = inputs.map(input => input.value.trim().toUpperCase()).join('');
+      // Validate: 6 alphanumeric characters (A-Z, 0-9)
+      if (code.length === 6 && /^[A-Z0-9]{6}$/.test(code)) {
+        try {
+          // Verify code first
+          const verification = await window.LectureService.verifyAccessCode(code);
+          
+          if (!verification.valid) {
+            // Code is incorrect or session is closed - reset and show error
+            errorDiv.textContent = 'Wrong';
+            errorDiv.style.display = 'block';
+            inputs.forEach(input => {
+              input.value = '';
+              input.classList.remove('filled');
+            });
+            inputs[0]?.focus();
+            return;
+          }
+
+          // Code is correct and session is open - check in with access code
+          try {
+            await window.LectureService.checkIn(code, []);
+            
+            // Successfully checked in - redirect to response page
+            window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
+          } catch (checkInError) {
+            console.error('Error checking in:', checkInError);
+            // Check-in failed - reset and show error
+            errorDiv.textContent = 'Wrong';
+            errorDiv.style.display = 'block';
+            inputs.forEach(input => {
+              input.value = '';
+              input.classList.remove('filled');
+            });
+            inputs[0]?.focus();
+          }
+        } catch (error) {
+          console.error('Error verifying code:', error);
+          // Error occurred - reset and show error
+          errorDiv.textContent = 'Wrong';
+          errorDiv.style.display = 'block';
+          inputs.forEach(input => {
+            input.value = '';
+            input.classList.remove('filled');
+          });
+          inputs[0]?.focus();
+        }
       }
     };
 
     // Handle input navigation with auto-advance
     inputs.forEach((input, index) => {
+      // Ensure input is not disabled and can receive focus
+      input.disabled = false;
+      input.readOnly = false;
+      
       // Handle keydown for input filtering
       input.addEventListener('keydown', (e) => {
         // Allow navigation keys
-        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'Tab'].includes(e.key)) {
-          return; // Let default behavior happen
+        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'Tab', 'Enter'].includes(e.key)) {
+          if (e.key === 'ArrowLeft' && index > 0) {
+            e.preventDefault();
+            inputs[index - 1].focus();
+          } else if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+            e.preventDefault();
+            inputs[index + 1].focus();
+          }
+          return;
         }
 
         // Handle backspace
         if (e.key === 'Backspace') {
           if (input.value) {
-            // Clear current input
             input.value = '';
             input.classList.remove('filled');
           } else if (index > 0) {
-            // Move to previous and clear it
             e.preventDefault();
             inputs[index - 1].focus();
             inputs[index - 1].value = '';
             inputs[index - 1].classList.remove('filled');
           }
+          errorDiv.style.display = 'none';
           return;
         }
 
@@ -241,76 +386,96 @@
         if (e.key === 'Delete') {
           input.value = '';
           input.classList.remove('filled');
+          errorDiv.style.display = 'none';
           return;
         }
 
-        // Only allow numbers
-        if (!/^[0-9]$/.test(e.key)) {
+        // Only allow alphanumeric characters (A-Z, 0-9)
+        const key = e.key.toUpperCase();
+        if (!/^[A-Z0-9]$/.test(key)) {
           e.preventDefault();
+          e.stopPropagation();
           return;
         }
 
-        // If there's already a value, replace it
-        if (input.value) {
-          input.value = '';
-        }
+        // Set the value (will trigger input event for auto-advance)
+        input.value = key;
       });
 
       // Handle input event for auto-advance
-      input.addEventListener('input', (e) => {
-        // Get only digits
-        let value = e.target.value.replace(/[^0-9]/g, '');
+      input.addEventListener('input', async (e) => {
+        e.stopPropagation();
+        // Allow alphanumeric characters (A-Z, 0-9) and convert to uppercase
+        let value = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
         
-        // Only take the first digit
         if (value.length > 0) {
           value = value.charAt(0);
           e.target.value = value;
           input.classList.add('filled');
+          errorDiv.style.display = 'none';
           
-          // Auto-advance to next input IMMEDIATELY
+          // Auto-advance to next input
           if (index < inputs.length - 1) {
-            // Use requestAnimationFrame for immediate focus change
             requestAnimationFrame(() => {
               inputs[index + 1].focus();
+              inputs[index + 1].select();
             });
           }
           
-          // Check if all digits are filled and redirect
-          checkAndRedirect();
+          // Check if all characters are filled and check in
+          await checkCodeAndCheckIn();
         } else {
           input.classList.remove('filled');
         }
       });
-
-      // Handle paste
-      input.addEventListener('paste', (e) => {
-        e.preventDefault();
-        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
-        const digits = pasteData.replace(/[^0-9]/g, '').slice(0, 6);
-        
-        if (digits.length === 0) return;
-        
-        // Fill inputs starting from current index
-        digits.split('').forEach((char, i) => {
-          const targetIndex = index + i;
-          if (targetIndex < inputs.length) {
-            inputs[targetIndex].value = char;
-            inputs[targetIndex].classList.add('filled');
-          }
-        });
-        
-        // Focus the next empty input or the last input if all filled
-        const nextIndex = Math.min(index + digits.length, inputs.length - 1);
-        setTimeout(() => {
-          inputs[nextIndex].focus();
-          checkAndRedirect();
-        }, 10);
-      });
-
-      // Handle focus - select all text when focused
-      input.addEventListener('focus', () => {
+      
+      // Handle focus to ensure input is ready
+      input.addEventListener('focus', (e) => {
+        e.stopPropagation();
         input.select();
       });
+      
+      // Handle click to ensure input is ready
+      input.addEventListener('click', (e) => {
+        e.stopPropagation();
+        input.focus();
+        input.select();
+      });
+
+      // Handle paste
+      input.addEventListener('paste', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        try {
+          const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+          if (!pasteData) return;
+          
+          // Allow alphanumeric characters (A-Z, 0-9) and convert to uppercase
+          const chars = pasteData.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 6);
+          
+          if (chars.length === 0) return;
+          
+          // Fill inputs starting from current index
+          chars.split('').forEach((char, i) => {
+            const targetIndex = index + i;
+            if (targetIndex < inputs.length) {
+              inputs[targetIndex].value = char;
+              inputs[targetIndex].classList.add('filled');
+            }
+          });
+          
+          // Focus the next empty input or the last input if all filled
+          const nextIndex = Math.min(index + chars.length, inputs.length - 1);
+          requestAnimationFrame(async () => {
+            inputs[nextIndex].focus();
+            await checkCodeAndCheckIn();
+          });
+        } catch (error) {
+          console.error('Error handling paste:', error);
+        }
+      });
+
     });
 
     // Close modal function
@@ -319,7 +484,7 @@
       document.removeEventListener('keydown', handleEscape);
     };
     
-    // Close button click handler - use mousedown for better reliability
+    // Close button click handler
     closeBtn.addEventListener('mousedown', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -331,15 +496,19 @@
       closeModal();
     });
     
-    // Close when clicking overlay background (but not the modal itself)
+    // Close when clicking overlay background
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) {
         closeModal();
       }
     });
 
-    // Prevent modal clicks from closing
+    // Prevent modal clicks from closing, but allow input interactions
     modal.addEventListener('click', (e) => {
+      // Don't close if clicking on inputs or input container
+      if (e.target.closest('.access-code-inputs') || e.target.classList.contains('code-input')) {
+        return;
+      }
       e.stopPropagation();
     });
 
@@ -374,4 +543,3 @@
     init();
   }
 })();
-

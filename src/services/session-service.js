@@ -5,6 +5,21 @@ import { SessionQuestionModel } from '../models/session-question-model.js';
 import { SessionResponseModel } from '../models/session-response-model.js';
 
 /**
+ * Get the active course offering ID (CSE 210 or any active offering)
+ */
+async function getActiveOfferingId() {
+  try {
+    const result = await pool.query(
+      'SELECT id FROM course_offerings WHERE is_active = TRUE ORDER BY created_at DESC LIMIT 1'
+    );
+    return result.rows[0]?.id || null;
+  } catch (error) {
+    console.error('[SessionService] Error getting active course offering:', error);
+    return null;
+  }
+}
+
+/**
  * Session Service - Business logic for session management
  */
 export class SessionService {
@@ -43,9 +58,22 @@ export class SessionService {
    * Create a new session with auto-generated access code
    */
   static async createSession(sessionData, createdBy) {
-    // Authorization: only instructors or team leaders may create sessions for an offering
-    const offeringId = sessionData.offering_id;
-    if (!offeringId) throw new Error('offering_id is required');
+    if (!sessionData || typeof sessionData !== 'object') {
+      throw new Error('Session data is required');
+    }
+    
+    // Get offering_id - use provided one or fallback to active offering (CSE 210)
+    let offeringId = sessionData.offering_id;
+    
+    // If no offering_id provided, automatically use the active offering (CSE 210)
+    if (!offeringId) {
+      offeringId = await getActiveOfferingId();
+      if (!offeringId) {
+        throw new Error('No active course offering found. Please ensure CSE 210 or another offering is marked as active.');
+      }
+      // Set it in sessionData so it's included in the database insert
+      sessionData.offering_id = offeringId;
+    }
 
     const canCreate = await this.userCanCreateSession(createdBy, offeringId);
     if (!canCreate) {
@@ -77,6 +105,85 @@ export class SessionService {
       );
 
       session.questions = questions;
+    }
+
+    // Automatically open attendance if session start time has passed
+    if (session.session_date && session.session_time) {
+      try {
+        // Parse date - handle both Date objects and strings
+        let dateStr;
+        if (session.session_date instanceof Date) {
+          // If it's already a Date object, extract YYYY-MM-DD
+          const year = session.session_date.getFullYear();
+          const month = String(session.session_date.getMonth() + 1).padStart(2, '0');
+          const day = String(session.session_date.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${day}`;
+        } else {
+          // If it's a string, use it directly (should be YYYY-MM-DD)
+          dateStr = String(session.session_date).split('T')[0].split(' ')[0];
+        }
+        
+        // Parse time - handle both Time objects and strings
+        let timeStr = String(session.session_time);
+        // Remove milliseconds if present
+        timeStr = timeStr.split('.')[0];
+        
+        // Ensure time is in HH:MM:SS format
+        let timeParts = timeStr.split(':');
+        if (timeParts.length === 2) {
+          timeStr = `${timeStr}:00`; // Add seconds if missing
+          timeParts = timeStr.split(':');
+        }
+        
+        // Combine date and time
+        // Use local timezone by creating date components
+        // This avoids timezone interpretation issues with ISO strings
+        const [year, month, day] = dateStr.split('-').map(Number);
+        timeParts = timeStr.split(':').map(Number);
+        const [hours, minutes] = timeParts;
+        const seconds = timeParts[2] || 0;
+        
+        // Create date in local timezone (month is 0-indexed in JavaScript)
+        let sessionStart = new Date(year, month - 1, day, hours, minutes, seconds);
+        
+        // Validate the date was parsed correctly
+        if (isNaN(sessionStart.getTime())) {
+          console.error('[SessionService] Invalid date/time for auto-open:', { 
+            dateStr, 
+            timeStr, 
+            session_date: session.session_date,
+            session_time: session.session_time,
+            session_date_type: typeof session.session_date,
+            session_time_type: typeof session.session_time
+          });
+        } else {
+          const now = new Date();
+          
+          console.log('[SessionService] Auto-open check:', {
+            sessionStart: sessionStart.toISOString(),
+            now: now.toISOString(),
+            sessionStartLocal: sessionStart.toLocaleString(),
+            nowLocal: now.toLocaleString(),
+            shouldOpen: sessionStart <= now,
+            alreadyOpened: !!session.attendance_opened_at
+          });
+          
+          // If session start time has passed, automatically open attendance
+          if (sessionStart <= now && !session.attendance_opened_at) {
+            console.log('[SessionService] Auto-opening attendance for session:', session.id);
+            await SessionModel.openAttendance(session.id, createdBy);
+            // Refresh session to get updated attendance_opened_at
+            const updatedSession = await SessionModel.findById(session.id);
+            if (updatedSession) {
+              Object.assign(session, updatedSession);
+              console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at);
+            }
+          }
+        }
+      } catch (error) {
+        // Log error but don't fail session creation if auto-open fails
+        console.error('[SessionService] Error auto-opening attendance:', error);
+      }
     }
 
     return session;

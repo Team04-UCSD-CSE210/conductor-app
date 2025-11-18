@@ -297,9 +297,17 @@
   line-height: 1.6;
 }
 
-.success-panel .btn-primary {
+.success-actions {
+  display: flex;
+  gap: 1rem;
   margin-top: 0.5rem;
-  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.success-actions .btn-primary,
+.success-actions .btn-secondary {
+  flex: 1;
+  min-width: 140px;
 }
 
 @media (width <= 1024px) {
@@ -340,7 +348,12 @@
     padding: 1.25rem 1.5rem;
   }
   
-  .success-panel .btn-primary {
+  .success-actions {
+    flex-direction: column;
+  }
+  
+  .success-actions .btn-primary,
+  .success-actions .btn-secondary {
     width: 100%;
   }
 }

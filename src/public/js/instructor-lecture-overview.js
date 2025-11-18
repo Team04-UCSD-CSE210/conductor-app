@@ -5,20 +5,44 @@
     emptyState: document.getElementById('lectures-empty'),
     chart: document.getElementById('attendance-chart'),
     percent: document.getElementById('last-session-percent'),
-    newLecture: document.getElementById('new-lecture-btn')
+    newLecture: document.getElementById('new-lecture-btn'),
+    sidebar: document.querySelector('.sidebar')
   };
 
+  let offeringId = null;
+  let offeringInfo = null;
+  let isLoading = false;
+
   function formatTimeRange(startIso, endIso) {
+    if (!startIso || !endIso) return '—';
+    try {
     const start = new Date(startIso);
     const end = new Date(endIso);
+      
+      // Validate dates
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return '—';
+      }
+      
     const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const timeFormatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric' });
     return `${dateFormatter.format(start)} ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
+    } catch (e) {
+      console.warn('Error formatting time range:', e, startIso, endIso);
+      return '—';
+    }
   }
 
   function formatDateForChart(dateIso) {
+    if (!dateIso) return '';
+    try {
     const date = new Date(dateIso);
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+      if (isNaN(date.getTime())) return '';
+      return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+    } catch (e) {
+      console.warn('Error formatting chart date:', e, dateIso);
+      return '';
+    }
   }
 
   function renderChart(history) {
@@ -50,10 +74,10 @@
       selectors.chart.appendChild(barWrapper);
       
       // Add date label below chart
-      if (chartDates && entry.date) {
+      if (chartDates && entry.startsAt) {
         const dateLabel = document.createElement('div');
         dateLabel.className = 'date-label';
-        dateLabel.textContent = formatDateForChart(entry.date);
+        dateLabel.textContent = formatDateForChart(entry.startsAt);
         chartDates.appendChild(dateLabel);
       }
     });
@@ -70,11 +94,15 @@
         <path d="M2 4H14M12.6667 4V13.3333C12.6667 14 12 14.6667 11.3333 14.6667H4.66667C4 14.6667 3.33333 14 3.33333 13.3333V4M5.33333 4V2.66667C5.33333 2 6 1.33333 6.66667 1.33333H9.33333C10 1.33333 10.6667 2 10.6667 2.66667V4M6.66667 7.33333V11.3333M9.33333 7.33333V11.3333" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     `;
-    button.addEventListener('click', (e) => {
+    button.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (window.confirm(`Are you sure you want to delete "${lectureLabel}"? This action cannot be undone.`)) {
-        window.LectureService.deleteLecture(lectureId);
-        hydrate();
+        try {
+          await window.LectureService.deleteLecture(lectureId);
+          await hydrate();
+        } catch (error) {
+          alert(`Error deleting lecture: ${error.message}`);
+        }
       }
     });
     return button;
@@ -85,7 +113,7 @@
     button.className = 'primary';
     button.textContent = 'View Responses';
     button.addEventListener('click', () => {
-      window.location.href = `/lectures/${lecture.id}/responses`;
+      window.location.href = `/lecture-responses?sessionId=${lecture.id}`;
     });
     return button;
   }
@@ -136,7 +164,7 @@
     label.textContent = lecture.label;
     if (lecture.id === currentLectureId) label.classList.add('active');
     label.addEventListener('click', () => {
-      window.location.href = `/lectures/${lecture.id}/responses`;
+      window.location.href = `/lecture-responses?sessionId=${lecture.id}`;
     });
     labelWrapper.appendChild(label);
 
@@ -161,8 +189,8 @@
     codeValueWrapper.className = 'code-value-wrapper';
     const codeValue = document.createElement('span');
     codeValue.className = 'code-value';
-    codeValue.textContent = lecture.accessCode || '—';
-    const copyIcon = createCopyCodeIcon(lecture.accessCode);
+    codeValue.textContent = lecture.accessCode || lecture.access_code || '—';
+    const copyIcon = createCopyCodeIcon(lecture.accessCode || lecture.access_code);
     codeValueWrapper.append(codeValue);
     if (copyIcon) codeValueWrapper.append(copyIcon);
     accessCodeCol.append(codeLabel, codeValueWrapper);
@@ -198,10 +226,68 @@
     });
   }
 
-  function hydrate() {
-    if (!window.LectureService || !selectors.container) return;
-    const courseId = selectors.container.getAttribute('data-course-id') || undefined;
-    const { summaryPercent, history, lectures, currentLectureId } = window.LectureService.getInstructorOverview(courseId);
+  function updateNavigationLinks() {
+    if (!offeringInfo || !selectors.sidebar) return;
+
+    const courseCode = offeringInfo.code || 'cse210';
+    const navLinks = selectors.sidebar.querySelectorAll('nav a');
+    
+    navLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      if (href && href.includes('/courses/cse210/')) {
+        // Update hardcoded cse210 references with actual course code
+        const newHref = href.replace('/courses/cse210/', `/courses/${courseCode.toLowerCase()}/`);
+        link.setAttribute('href', newHref);
+      }
+    });
+  }
+
+  function showLoading() {
+    if (selectors.cards) {
+      selectors.cards.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Loading lectures...</p>';
+    }
+    if (selectors.percent) {
+      selectors.percent.textContent = '—';
+    }
+  }
+
+  async function hydrate() {
+    if (!window.LectureService || !selectors.container || isLoading) return;
+    
+    isLoading = true;
+    showLoading();
+
+    try {
+      // Get offering ID and info from data attribute or fetch active offering
+      offeringId = selectors.container.getAttribute('data-offering-id');
+      
+      if (!offeringId) {
+        // Fetch active offering
+        offeringId = await window.LectureService.getActiveOfferingId();
+        if (!offeringId) {
+          throw new Error('No active course offering found');
+        }
+        selectors.container.setAttribute('data-offering-id', offeringId);
+      }
+
+      // Fetch offering details for dynamic navigation
+      try {
+        const response = await fetch(`/api/offerings/${offeringId}`, {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          offeringInfo = await response.json();
+          updateNavigationLinks();
+        }
+      } catch (error) {
+        console.error('Error fetching offering info:', error);
+        // Continue without updating navigation if this fails
+      }
+
+      const { summaryPercent, history, lectures, currentLectureId } = 
+        await window.LectureService.getInstructorOverview(offeringId);
     
     // Last session should be the most recent lecture (first in array)
     const lastLecture = lectures && lectures.length > 0 ? lectures[0] : null;
@@ -210,17 +296,22 @@
     if (selectors.percent) selectors.percent.textContent = `${lastSessionPercent}%`;
     
     // Add dates to history for chart
-    const historyWithDates = history.map((entry, index) => {
-      // Use lecture date if available, otherwise use a calculated date
-      const lecture = lectures[index];
-      return {
+      const historyWithDates = history.map((entry) => ({
         ...entry,
-        date: lecture?.startsAt || new Date(Date.now() - (history.length - index) * 24 * 60 * 60 * 1000).toISOString()
-      };
-    });
+        date: entry.startsAt || null
+      }));
     
     renderChart(historyWithDates);
     renderLectures(lectures, currentLectureId);
+    } catch (error) {
+      console.error('Error hydrating overview:', error);
+      if (selectors.cards) {
+        selectors.cards.innerHTML = `<p style="text-align: center; padding: 2rem; color: var(--red-600);">Error loading lectures: ${error.message}</p>`;
+      }
+      alert(`Error loading lectures: ${error.message}`);
+    } finally {
+      isLoading = false;
+    }
   }
 
   function initNewLectureButton() {
@@ -256,4 +347,3 @@
     init();
   }
 })();
-

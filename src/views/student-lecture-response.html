@@ -6,6 +6,7 @@
   <title>Lecture Response Form</title>
   <link rel="stylesheet" href="/global.css">
   <link rel="stylesheet" href="/dashboard-global.css">
+  <link rel="stylesheet" href="/inactivity-timeout.css">
   <link rel="stylesheet" href="/student-lecture-response.css">
 </head>
 
@@ -23,7 +24,7 @@
     <h1 class="sidebar-title">Conductor</h1>
     <nav aria-label="Dashboard navigation">
       <a href="/courses">Courses</a>
-      <a href="/lectures" class="active">Lectures</a>
+      <a href="/lecture-attendance-student" class="active">Lectures</a>
       <a href="/meetings">Meetings</a>
       <a href="/work-journal">Work Journal</a>
       <a href="/my-team">My Team</a>
@@ -34,7 +35,7 @@
   </header>
 
   <main class="main-container" id="main">
-    <section class="student-response-shell" data-lecture-id="lec-15" data-student-id="student-1">
+    <section class="student-response-shell" data-session-id="">
       <header class="student-response-header">
         <div>
           <p class="eyebrow">Submit to mark your attendance</p>
@@ -48,7 +49,7 @@
         <div id="student-question-list" class="student-question-list"></div>
 
         <footer class="student-form-actions">
-          <button type="submit" class="btn-primary">Submit responses</button>
+          <button type="submit" class="btn-primary">Submit</button>
           <button type="button" class="btn-secondary" id="student-cancel">Reset</button>
         </footer>
       </form>
@@ -56,11 +57,15 @@
       <div class="success-panel" id="student-success" hidden>
         <h3>Thanks for the update!</h3>
         <p>Your attendance has been marked present for this lecture. You can update answers any time while the session is open.</p>
-        <button id="success-close" class="btn-primary">Back to dashboard</button>
+        <div class="success-actions">
+          <button id="update-answers" class="btn-secondary">Update answers</button>
+          <button id="success-close" class="btn-primary">Back to dashboard</button>
+        </div>
       </div>
     </section>
   </main>
 
+  <script src="/js/inactivity-timeout.js" defer></script>
   <script src="/js/lecture-data.service.js" defer></script>
   <script src="/js/student-lecture-response.js" defer></script>
 </body>

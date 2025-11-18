@@ -11,21 +11,38 @@ export class SessionResponseModel {
     const {
       question_id,
       user_id,
+      session_id,
       response_text,
       response_option
     } = responseData;
 
+    // Get session_id from question if not provided
+    let sessionId = session_id;
+    if (!sessionId && question_id) {
+      const questionResult = await pool.query(
+        'SELECT session_id FROM session_questions WHERE id = $1',
+        [question_id]
+      );
+      if (questionResult.rows.length > 0) {
+        sessionId = questionResult.rows[0].session_id;
+      }
+    }
+
+    if (!sessionId) {
+      throw new Error('session_id is required (could not derive from question_id)');
+    }
+
     const result = await pool.query(
       `INSERT INTO session_responses 
-       (question_id, user_id, response_text, response_option)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (question_id, user_id)
+       (session_id, question_id, user_id, response_text, response_option)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (session_id, question_id, user_id)
        DO UPDATE SET
          response_text = EXCLUDED.response_text,
          response_option = EXCLUDED.response_option,
          updated_at = NOW()
        RETURNING *`,
-      [question_id, user_id, response_text, response_option]
+      [sessionId, question_id, user_id, response_text, response_option]
     );
 
     return result.rows[0];
@@ -38,16 +55,33 @@ export class SessionResponseModel {
     const {
       question_id,
       user_id,
+      session_id,
       response_text,
       response_option
     } = responseData;
 
+    // Get session_id from question if not provided
+    let sessionId = session_id;
+    if (!sessionId && question_id) {
+      const questionResult = await pool.query(
+        'SELECT session_id FROM session_questions WHERE id = $1',
+        [question_id]
+      );
+      if (questionResult.rows.length > 0) {
+        sessionId = questionResult.rows[0].session_id;
+      }
+    }
+
+    if (!sessionId) {
+      throw new Error('session_id is required (could not derive from question_id)');
+    }
+
     const result = await pool.query(
       `INSERT INTO session_responses 
-       (question_id, user_id, response_text, response_option)
-       VALUES ($1, $2, $3, $4)
+       (session_id, question_id, user_id, response_text, response_option)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [question_id, user_id, response_text, response_option]
+      [sessionId, question_id, user_id, response_text, response_option]
     );
 
     return result.rows[0];
@@ -57,23 +91,49 @@ export class SessionResponseModel {
    * Submit multiple responses at once
    */
   static async createMany(responses) {
+    if (!responses || responses.length === 0) {
+      return [];
+    }
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
+      // Get session_id for all questions in one query
+      const questionIds = [...new Set(responses.map(r => r.question_id))];
+      const questionSessionMap = {};
+      
+      if (questionIds.length > 0) {
+        const questionResult = await client.query(
+          'SELECT id, session_id FROM session_questions WHERE id = ANY($1)',
+          [questionIds]
+        );
+        
+        questionResult.rows.forEach(row => {
+          questionSessionMap[row.id] = row.session_id;
+        });
+      }
+
       const createdResponses = [];
       for (const response of responses) {
+        const sessionId = response.session_id || questionSessionMap[response.question_id];
+        
+        if (!sessionId) {
+          throw new Error(`session_id is required for question_id: ${response.question_id}`);
+        }
+
         const result = await client.query(
           `INSERT INTO session_responses 
-           (question_id, user_id, response_text, response_option)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT (question_id, user_id)
+           (session_id, question_id, user_id, response_text, response_option)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (session_id, question_id, user_id)
            DO UPDATE SET
              response_text = EXCLUDED.response_text,
              response_option = EXCLUDED.response_option,
              updated_at = NOW()
            RETURNING *`,
           [
+            sessionId,
             response.question_id,
             response.user_id,
             response.response_text,
@@ -134,13 +194,23 @@ export class SessionResponseModel {
 
   /**
    * Get all responses for a question
+   * Includes team information for better student identification
    */
   static async findByQuestionId(questionId) {
     const result = await pool.query(
       `SELECT sr.*,
               u.name as user_name,
               u.email as user_email,
-              u.ucsd_pid
+              u.ucsd_pid,
+              COALESCE(
+                (SELECT t.name 
+                 FROM team_members tm
+                 INNER JOIN team t ON tm.team_id = t.id
+                 WHERE tm.user_id = sr.user_id 
+                   AND tm.left_at IS NULL
+                 LIMIT 1),
+                'No team'
+              ) as team_name
        FROM session_responses sr
        LEFT JOIN users u ON sr.user_id = u.id
        WHERE sr.question_id = $1
@@ -153,6 +223,7 @@ export class SessionResponseModel {
 
   /**
    * Get all responses for a session (join through session_questions)
+   * Includes team information for better student identification
    */
   static async findBySessionId(sessionId) {
     const result = await pool.query(
@@ -162,7 +233,16 @@ export class SessionResponseModel {
               sq.question_order,
               u.name as user_name,
               u.email as user_email,
-              u.ucsd_pid
+              u.ucsd_pid,
+              COALESCE(
+                (SELECT t.name 
+                 FROM team_members tm
+                 INNER JOIN team t ON tm.team_id = t.id
+                 WHERE tm.user_id = sr.user_id 
+                   AND tm.left_at IS NULL
+                 LIMIT 1),
+                'No team'
+              ) as team_name
        FROM session_responses sr
        INNER JOIN session_questions sq ON sr.question_id = sq.id
        LEFT JOIN users u ON sr.user_id = u.id

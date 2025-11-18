@@ -15,7 +15,17 @@ const router = Router();
  */
 router.post('/', ...protect('session.create', 'course'), async (req, res) => {
   try {
-    const session = await SessionService.createSession(req.body, req.currentUser.id);
+    // Ensure req.body exists (bodyParser should have parsed it by now)
+    // If not, it might be an empty body which is still valid - just use empty object
+    const sessionData = req.body || {};
+    
+    // If offering_id is missing, ensure it gets set by middleware or service
+    // The middleware already sets it, but ensure it's in req.body for the service
+    if (!sessionData.offering_id && req.offeringId) {
+      sessionData.offering_id = req.offeringId;
+    }
+    
+    const session = await SessionService.createSession(sessionData, req.currentUser.id);
     res.status(201).json(session);
   } catch (err) {
     res.status(400).json({ error: err.message });

@@ -6,6 +6,7 @@
   <title>Lecture Responses — Instructor View</title>
   <link rel="stylesheet" href="/global.css">
   <link rel="stylesheet" href="/dashboard-global.css">
+  <link rel="stylesheet" href="/inactivity-timeout.css">
   <link rel="stylesheet" href="/lecture-responses.css">
 </head>
 
@@ -24,7 +25,7 @@
     <nav aria-label="Dashboard navigation">
       <a href="/courses">Courses</a>
       <a href="/course-settings">Course Settings</a>
-      <a href="/courses/cse210/lectures" class="active">Lectures</a>
+      <a href="/instructor-lectures" class="active">Attendance</a>
       <a href="/courses/cse210/roster">Roster</a>
     </nav>
     <footer>
@@ -33,7 +34,7 @@
   </header>
 
   <main class="main-container" id="main">
-    <section class="responses-shell" data-lecture-id="lec-15">
+    <section class="responses-shell" data-session-id="">
       <header class="responses-header">
         <button class="back-button" id="back-button" aria-label="Back to lecture list">
           <span aria-hidden="true">←</span>
@@ -64,6 +65,7 @@
     </section>
   </main>
 
+  <script src="/js/inactivity-timeout.js" defer></script>
   <script src="/js/lecture-data.service.js" defer></script>
   <script src="/js/instructor-lecture-detail.js" defer></script>
 </body>
