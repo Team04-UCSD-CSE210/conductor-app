@@ -19,18 +19,14 @@ The pipeline ensures code quality and consistency across all contributions.
 
 ### CD Pipeline
 
-This project includes automated deployment to Vercel:
+Automated deployment to AWS using ECS Fargate that runs on all branches:
 
-- **Preview Deployments**: Automatically created for pull requests
-- **Production Deployment**: Triggered on pushes to `main` branch
-- **Health Monitoring**: Automated status updates to team Slack channel
-
-**Quick Deploy to Vercel:**
-
-```bash
-npm run setup:vercel
-vercel dev
-```
+- **Infrastructure**: CloudFormation template deploys ECS cluster, ECR repository, and networking
+- **Containerization**: Docker image built and pushed to ECR
+- **Deployment**: ECS service created/updated with health checks and rollback capability
+- **Branch Isolation**: Each branch gets its own service instance for testing
+- **Health Verification**: Automated health checks with retry logic
+- **Notifications**: PR comments with deployment status and URLs
 
 ## Team Standards & Deployment Policies
 

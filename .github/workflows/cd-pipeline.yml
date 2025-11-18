@@ -1,0 +1,303 @@
+name: Deploy to AWS (CDK)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set environment variables
+        run: |
+          BRANCH_NAME=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          CLEAN_BRANCH=$(echo $BRANCH_NAME | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "CLEAN_BRANCH=$CLEAN_BRANCH" >> $GITHUB_ENV
+          echo "IS_MAIN=${{ github.ref == 'refs/heads/main' }}" >> $GITHUB_ENV
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy infrastructure
+        run: |
+          if [ "${{ env.IS_MAIN }}" == "true" ]; then
+            # Deploy full CloudFormation stack with CloudFront for main branch only
+            aws cloudformation deploy \
+              --template-file aws-infrastructure-simple.yml \
+              --stack-name conductor-app-infrastructure \
+              --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+              --parameter-overrides \
+                DBPassword=TempPassword123! \
+              --region us-east-1
+            
+            # Get CloudFront URL from stack outputs
+            CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
+              --stack-name conductor-app-infrastructure \
+              --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
+              --output text)
+            
+            echo "HTTPS URL: $CLOUDFRONT_URL" >> $GITHUB_STEP_SUMMARY
+            echo "CLOUDFRONT_URL=$CLOUDFRONT_URL" >> $GITHUB_ENV
+          else
+            # For feature branches, skip infrastructure deployment - use existing
+            echo "Feature branch deployment - using existing infrastructure" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Get stack outputs
+        id: stack-outputs
+        run: |
+          # Debug: Show all stack outputs
+          aws cloudformation describe-stacks --stack-name conductor-app-infrastructure --query 'Stacks[0].Outputs' --output table
+          
+          REPOSITORY_URI=$(aws cloudformation describe-stacks \
+            --stack-name conductor-app-infrastructure \
+            --query 'Stacks[0].Outputs[?OutputKey==`ECRRepository`].OutputValue' \
+            --output text)
+          
+          CLUSTER_NAME=$(aws cloudformation describe-stacks \
+            --stack-name conductor-app-infrastructure \
+            --query 'Stacks[0].Outputs[?OutputKey==`ECSCluster`].OutputValue' \
+            --output text)
+          
+          SUBNET1=$(aws cloudformation describe-stacks \
+            --stack-name conductor-app-infrastructure \
+            --query 'Stacks[0].Outputs[?OutputKey==`PublicSubnet1`].OutputValue' \
+            --output text)
+          
+          SUBNET2=$(aws cloudformation describe-stacks \
+            --stack-name conductor-app-infrastructure \
+            --query 'Stacks[0].Outputs[?OutputKey==`PublicSubnet2`].OutputValue' \
+            --output text)
+          
+          SECURITY_GROUP=$(aws cloudformation describe-stacks \
+            --stack-name conductor-app-infrastructure \
+            --query 'Stacks[0].Outputs[?OutputKey==`ECSSecurityGroup`].OutputValue' \
+            --output text)
+          
+          echo "REPOSITORY_URI=$REPOSITORY_URI"
+          echo "CLUSTER_NAME=$CLUSTER_NAME"
+          echo "SUBNET1=$SUBNET1"
+          echo "SUBNET2=$SUBNET2"
+          echo "SECURITY_GROUP=$SECURITY_GROUP"
+          
+          echo "repository-uri=$REPOSITORY_URI" >> $GITHUB_OUTPUT
+          echo "cluster-name=$CLUSTER_NAME" >> $GITHUB_OUTPUT
+          echo "subnets=$SUBNET1,$SUBNET2" >> $GITHUB_OUTPUT
+          echo "security-group=$SECURITY_GROUP" >> $GITHUB_OUTPUT
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: conductor-app
+          IMAGE_TAG: ${{ env.CLEAN_BRANCH }}-${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Deploy to ECS
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          IMAGE_TAG: ${{ env.CLEAN_BRANCH }}-${{ github.sha }}
+          SERVICE_NAME: ${{ env.IS_MAIN == 'true' && 'conductor-service' || format('conductor-{0}', env.CLEAN_BRANCH) }}
+          CLUSTER_NAME: ${{ steps.stack-outputs.outputs.cluster-name }}
+          SUBNETS: ${{ steps.stack-outputs.outputs.subnets }}
+          SECURITY_GROUP: ${{ steps.stack-outputs.outputs.security-group }}
+        run: |
+          # Create task definition for this branch
+          # Replace family and container name but keep ECR repository as conductor-app
+          # Use CloudFront URL for callback
+          CALLBACK_URL="https://dfbhtda4vdu81.cloudfront.net/auth/google/callback"
+          
+          sed "s/ACCOUNT_ID/$AWS_ACCOUNT_ID/g; s/REGION/us-east-1/g; s/:latest/:$IMAGE_TAG/g; s/\"family\": \"conductor-app\"/\"family\": \"$SERVICE_NAME\"/g; s/\"name\": \"conductor-app\"/\"name\": \"$SERVICE_NAME\"/g; s/GOOGLE_CLIENT_ID_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_ID }}/g; s/GOOGLE_CLIENT_SECRET_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_SECRET }}/g; s/SESSION_SECRET_PLACEHOLDER/${{ secrets.SESSION_SECRET }}/g; s|GOOGLE_CALLBACK_URL_PLACEHOLDER|$CALLBACK_URL|g" aws-task-definition.json > task-def.json
+          
+          # Register task definition
+          TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://task-def.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          
+          # Check if service exists
+          if aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'services[0].serviceName' --output text 2>/dev/null | grep -q $SERVICE_NAME; then
+            # Update existing service
+            aws ecs update-service \
+              --cluster $CLUSTER_NAME \
+              --service $SERVICE_NAME \
+              --task-definition $TASK_DEF_ARN
+            echo "Updated existing service: $SERVICE_NAME"
+          else
+            # Create new service for branch
+            aws ecs create-service \
+              --cluster $CLUSTER_NAME \
+              --service-name $SERVICE_NAME \
+              --task-definition $TASK_DEF_ARN \
+              --desired-count 1 \
+              --launch-type FARGATE \
+              --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUP],assignPublicIp=ENABLED}"
+            echo "Created new service: $SERVICE_NAME"
+          fi
+
+      - name: Wait for deployment to stabilize
+        env:
+          SERVICE_NAME: ${{ env.IS_MAIN == 'true' && 'conductor-service' || format('conductor-{0}', env.CLEAN_BRANCH) }}
+          CLUSTER_NAME: ${{ steps.stack-outputs.outputs.cluster-name }}
+        run: |
+          echo "⏳ Waiting for deployment to stabilize..."
+          aws ecs wait services-stable --cluster $CLUSTER_NAME --services $SERVICE_NAME --cli-read-timeout 600 --cli-connect-timeout 60
+
+      - name: Get ECS task IP for feature branch
+        if: env.IS_MAIN != 'true'
+        run: |
+          SERVICE_NAME="conductor-${{ env.CLEAN_BRANCH }}"
+          CLUSTER_NAME="${{ steps.stack-outputs.outputs.cluster-name }}"
+          
+          # Wait a moment for service to be created
+          sleep 10
+          
+          # Get task ARN and public IP
+          TASK_ARN=$(aws ecs list-tasks --cluster $CLUSTER_NAME --service-name $SERVICE_NAME --query 'taskArns[0]' --output text 2>/dev/null || echo "")
+          
+          if [ "$TASK_ARN" != "None" ] && [ "$TASK_ARN" != "" ]; then
+            PUBLIC_IP=$(aws ecs describe-tasks --cluster $CLUSTER_NAME --tasks $TASK_ARN --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text | xargs -I {} aws ec2 describe-network-interfaces --network-interface-ids {} --query 'NetworkInterfaces[0].Association.PublicIp' --output text 2>/dev/null || echo "")
+            
+            if [ "$PUBLIC_IP" != "" ] && [ "$PUBLIC_IP" != "None" ]; then
+              echo "ECS Task URL: http://$PUBLIC_IP:3001" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "ECS Task IP not yet available" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "ECS Task not yet running" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Verify deployment health
+        id: health-check
+        env:
+          SERVICE_NAME: ${{ env.IS_MAIN == 'true' && 'conductor-service' || format('conductor-{0}', env.CLEAN_BRANCH) }}
+          CLUSTER_NAME: ${{ steps.stack-outputs.outputs.cluster-name }}
+        run: |
+          # Get task ARN and public IP
+          TASK_ARN=$(aws ecs list-tasks --cluster $CLUSTER_NAME --service-name $SERVICE_NAME --query 'taskArns[0]' --output text)
+          
+          if [ "$TASK_ARN" != "None" ] && [ "$TASK_ARN" != "" ]; then
+            PUBLIC_IP=$(aws ecs describe-tasks --cluster $CLUSTER_NAME --tasks $TASK_ARN --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text | xargs -I {} aws ec2 describe-network-interfaces --network-interface-ids {} --query 'NetworkInterfaces[0].Association.PublicIp' --output text)
+            
+            echo "🔍 Testing application health at http://$PUBLIC_IP:3001/health"
+            
+            # Health check with retries
+            for i in {1..10}; do
+              if curl -f -s http://$PUBLIC_IP:3001/health; then
+                echo "✅ Application is healthy!"
+                echo "healthy=true" >> $GITHUB_OUTPUT
+                echo "url=http://$PUBLIC_IP:3001" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+              echo "⏳ Waiting for application... ($i/10)"
+              sleep 30
+            done
+            
+            echo "❌ Application health check failed"
+            echo "healthy=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "❌ No running tasks found"
+            echo "healthy=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Rollback on deployment failure
+        if: failure() && steps.health-check.outputs.healthy == 'false'
+        env:
+          SERVICE_NAME: ${{ env.IS_MAIN == 'true' && 'conductor-service' || format('conductor-{0}', env.CLEAN_BRANCH) }}
+          CLUSTER_NAME: ${{ steps.stack-outputs.outputs.cluster-name }}
+        run: |
+          echo "🔄 Rolling back deployment due to health check failure"
+          
+          # Get previous task definition
+          PREVIOUS_TASK_DEF=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' --output text)
+          
+          if [ "$PREVIOUS_TASK_DEF" != "" ]; then
+            echo "Rolling back to: $PREVIOUS_TASK_DEF"
+            aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $PREVIOUS_TASK_DEF
+          else
+            echo "No previous deployment found, stopping service"
+            aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --desired-count 0
+          fi
+
+      - name: Get service URL
+        id: get-url
+        run: |
+          SERVICE_NAME=${{ env.IS_MAIN == 'true' && 'conductor-service' || format('conductor-{0}', env.CLEAN_BRANCH) }}
+          
+          if [ "${{ steps.health-check.outputs.healthy }}" == "true" ]; then
+            # Always use CloudFront URL - try to get from stack, fallback to hardcoded
+            CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
+              --stack-name conductor-app-infrastructure \
+              --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
+              --output text 2>/dev/null || echo "")
+            
+            if [ -z "$CLOUDFRONT_URL" ] || [ "$CLOUDFRONT_URL" == "None" ]; then
+              URL="https://dfbhtda4vdu81.cloudfront.net"
+            else
+              URL="$CLOUDFRONT_URL"
+            fi
+            STATUS="Healthy"
+          else
+            URL="Deployment failed"
+            STATUS="Failed health check"
+          fi
+          
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "service=$SERVICE_NAME" >> $GITHUB_OUTPUT
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with deployment URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = "${{ steps.get-url.outputs.status }}";
+            const url = "${{ steps.get-url.outputs.url }}";
+            const service = "${{ steps.get-url.outputs.service }}";
+            
+            let body;
+            if (status.includes("Healthy")) {
+              body = `**Deployment Successful!**\n\n**Status:** ${status}\n**URL:** ${url}\n**Branch:** \`${{ env.BRANCH_NAME }}\`\n**Service:** \`${service}\``;
+            } else {
+              body = `**Deployment Failed**\n\n**Status:** ${status}\n**Branch:** \`${{ env.BRANCH_NAME }}\`\n**Service:** \`${service}\`\n\nCheck the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            })
