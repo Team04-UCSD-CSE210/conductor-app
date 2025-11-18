@@ -56,8 +56,14 @@ jobs:
                 DBPassword=TempPassword123! \
               --region us-east-1
             
-            # Output CloudFront URL for main branch
-            echo "🚀 HTTPS URL: https://dfbhtda4vdu81.cloudfront.net" >> $GITHUB_STEP_SUMMARY
+            # Get CloudFront URL from stack outputs
+            CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
+              --stack-name conductor-app-infrastructure \
+              --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
+              --output text)
+            
+            echo "🚀 HTTPS URL: $CLOUDFRONT_URL" >> $GITHUB_STEP_SUMMARY
+            echo "CLOUDFRONT_URL=$CLOUDFRONT_URL" >> $GITHUB_ENV
           else
             # For feature branches, only deploy ECS infrastructure (no CloudFront)
             aws cloudformation deploy \
@@ -68,7 +74,19 @@ jobs:
                 DBPassword=TempPassword123! \
               --region us-east-1
             
-            echo "🚀 Feature branch deployment - ECS only" >> $GITHUB_STEP_SUMMARY
+            # Get ECS IP for feature branch testing
+            SERVICE_NAME="conductor-${{ env.CLEAN_BRANCH }}"
+            TASK_ARN=$(aws ecs list-tasks --cluster conductor-cluster --service-name $SERVICE_NAME --query 'taskArns[0]' --output text 2>/dev/null || echo "")
+            if [ "$TASK_ARN" != "None" ] && [ "$TASK_ARN" != "" ]; then
+              PUBLIC_IP=$(aws ecs describe-tasks --cluster conductor-cluster --tasks $TASK_ARN --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text | xargs -I {} aws ec2 describe-network-interfaces --network-interface-ids {} --query 'NetworkInterfaces[0].Association.PublicIp' --output text 2>/dev/null || echo "")
+              if [ "$PUBLIC_IP" != "" ] && [ "$PUBLIC_IP" != "None" ]; then
+                echo "🚀 Feature branch deployment - ECS only: http://$PUBLIC_IP:3001" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "🚀 Feature branch deployment - ECS only" >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              echo "🚀 Feature branch deployment - ECS only" >> $GITHUB_STEP_SUMMARY
+            fi
           fi
 
       - name: Get stack outputs
@@ -235,7 +253,7 @@ jobs:
           if [ "${{ steps.health-check.outputs.healthy }}" == "true" ]; then
             # Use CloudFront URL for main branch, ECS IP for feature branches
             if [ "${{ env.IS_MAIN }}" == "true" ]; then
-              URL="https://dfbhtda4vdu81.cloudfront.net"
+              URL="${{ env.CLOUDFRONT_URL }}"
             else
               URL="${{ steps.health-check.outputs.url }}"
             fi
@@ -260,7 +278,8 @@ jobs:
             
             let body;
             if (status.includes("✅")) {
-              body = `🚀 **Deployment Successful!**\n\n✅ **Status:** ${status}\n📍 **URL:** ${url}\n🔗 **Branch:** \`${{ env.BRANCH_NAME }}\`\n📦 **Service:** \`${service}\`\n\n🔍 **Health Check:** [${url}/health](${url}/health)`;
+              const healthCheckUrl = "${{ env.IS_MAIN }}" === "true" ? `${{ env.CLOUDFRONT_URL }}/health` : `${url}/health`;
+              body = `🚀 **Deployment Successful!**\n\n✅ **Status:** ${status}\n📍 **URL:** ${url}\n🔗 **Branch:** \`${{ env.BRANCH_NAME }}\`\n📦 **Service:** \`${service}\`\n\n🔍 **Health Check:** [${healthCheckUrl}](${healthCheckUrl})`;
             } else {
               body = `❌ **Deployment Failed**\n\n❌ **Status:** ${status}\n🔗 **Branch:** \`${{ env.BRANCH_NAME }}\`\n📦 **Service:** \`${service}\`\n\n🔍 Check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`;
             }

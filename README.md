@@ -28,7 +28,6 @@ Automated deployment to AWS using ECS Fargate that runs on all branches:
 - **Health Verification**: Automated health checks with retry logic
 - **Notifications**: PR comments with deployment status and URLs
 
-
 ## Team Standards & Deployment Policies
 
 ## On-Call Rotation
