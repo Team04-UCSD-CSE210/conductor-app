@@ -1,4 +1,18 @@
 services:
+  app:
+    build: .
+    container_name: conductor-app
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://app:app_pw@db:5432/conductor
+    depends_on:
+      - db
+    volumes:
+      - ./data:/app/data
+
   db:
     image: postgres:15
     container_name: conductor-db

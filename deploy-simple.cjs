@@ -1,0 +1,21 @@
+const { execSync } = require('child_process');
+const fs = require('fs');
+
+console.log('🚀 Simple AWS deployment script');
+console.log('Your current AWS user has limited permissions.');
+console.log('');
+console.log('To get a public URL, you need an AWS user with more permissions or:');
+console.log('');
+console.log('1. Use Vercel (free): npx vercel --prod');
+console.log('2. Use Netlify (free): npm install -g netlify-cli && netlify deploy --prod');
+console.log('3. Use Railway (free): npm install -g @railway/cli && railway deploy');
+console.log('4. Use Render (free): Connect your GitHub repo at render.com');
+console.log('');
+console.log('For AWS deployment, ask your admin to grant these permissions:');
+console.log('- elasticbeanstalk:*');
+console.log('- apprunner:*');
+console.log('- ecs:*');
+console.log('- ec2:*');
+console.log('- iam:PassRole');
+console.log('');
+console.log('Current app is running locally at: http://localhost:3001');

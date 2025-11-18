@@ -13,3 +13,6 @@ certs/
 .env
 .vercel
 .env.vercel
+
+# Local Netlify folder
+.netlify
