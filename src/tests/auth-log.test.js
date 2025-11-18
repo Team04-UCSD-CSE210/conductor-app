@@ -135,7 +135,7 @@ describe('Auth Logs (Postgres)', () => {
       expect(result.rows.every(log => log.user_email === 'user1@example.com')).toBe(true);
     });
 
-    it.skip('should query auth logs by IP address', async () => {
+    it('should query auth logs by IP address', async () => {
       const result = await pool.query(`
         SELECT * FROM auth_logs 
         WHERE ip_address = $1
@@ -230,17 +230,21 @@ describe('Auth Logs (Postgres)', () => {
       'PROFILE_UNAUTHORIZED'
     ];
 
-    it.skip('should create logs for all event types', async () => {
-      // Clean up before creating test logs - ensure isolation
-      await pool.query('DELETE FROM auth_logs');
+    it('should create logs for all event types', async () => {
+      // Use unique email to avoid interference from other tests
+      const timestamp = Date.now();
+      const uniqueEmail = `test-${timestamp}@example.com`;
       
-      // Create logs in a transaction to ensure atomicity
+      // Clean up before creating test logs - ensure isolation
+      await pool.query('DELETE FROM auth_logs WHERE user_email = $1', [uniqueEmail]);
+      
+      // Create logs for all event types
       for (const eventType of eventTypes) {
         const result = await pool.query(`
           INSERT INTO auth_logs (event_type, message, user_email)
           VALUES ($1, $2, $3)
           RETURNING *
-        `, [eventType, `Test ${eventType}`, 'test@example.com']);
+        `, [eventType, `Test ${eventType}`, uniqueEmail]);
 
         expect(result.rows[0].event_type).toBe(eventType);
       }
@@ -248,8 +252,8 @@ describe('Auth Logs (Postgres)', () => {
       // Verify all were created - count only logs we just created
       const count = await pool.query(`
         SELECT COUNT(*) as count FROM auth_logs
-        WHERE user_email = 'test@example.com'
-      `);
+        WHERE user_email = $1
+      `, [uniqueEmail]);
       expect(parseInt(count.rows[0].count)).toBe(eventTypes.length);
     });
   });

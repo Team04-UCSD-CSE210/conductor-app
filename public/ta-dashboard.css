@@ -1,1 +1,20 @@
-/* TA Dashboard specific overrides (none yet). */
+/* TA Dashboard specific overrides */
+
+/* Sidebar footer styles */
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--gray-200);
+  padding-top: 1rem;
+}
+
+.sidebar-logout {
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+/* Recent updates list styles */
+.recent-updates-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--gray-700);
+}
