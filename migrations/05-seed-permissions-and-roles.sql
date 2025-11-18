@@ -4,6 +4,7 @@
 
 -- 1) Insert permissions
 INSERT INTO permissions (scope, resource, action, code, description) VALUES
+  ('global', 'user',       'manage',   'user.manage',      'Create, update, delete users (global)'),
   ('course', 'roster',     'view',     'roster.view',      'View roster and enrollment lists'),
   ('course', 'roster',     'import',   'roster.import',    'Import roster from JSON/CSV'),
   ('global', 'roster',     'export',   'roster.export',    'Export roster as JSON/CSV'),
@@ -13,14 +14,6 @@ INSERT INTO permissions (scope, resource, action, code, description) VALUES
   ('course', 'interaction','create',   'interaction.create','Create interaction reports'),
   ('course', 'team',       'view_all', 'team.view_all',    'View all teams and members in a course'),
   ('course', 'team',       'manage',   'team.manage',      'Create, update, delete teams and team members')
-ON CONFLICT (code) DO NOTHING;
-
--- Session & Attendance permissions
-INSERT INTO permissions (scope, resource, action, code, description) VALUES
-  ('course', 'session',    'create',   'session.create',   'Create class sessions'),
-  ('course', 'session',    'manage',   'session.manage',   'Manage sessions (open/close/modify, questions)'),
-  ('course', 'attendance', 'view',     'attendance.view',  'View attendance and related responses'),
-  ('course', 'attendance', 'mark',     'attendance.mark',  'Mark, update, and delete attendance records')
 ON CONFLICT (code) DO NOTHING;
 
 
@@ -44,11 +37,7 @@ WHERE p.code IN (
   'interaction.view',
   'interaction.create',
   'team.view_all',
-  'team.manage',
-  'session.create',
-  'session.manage',
-  'attendance.view',
-  'attendance.mark'
+  'team.manage'
 )
 ON CONFLICT (user_role, permission_id) DO NOTHING;
 
@@ -72,9 +61,7 @@ WHERE p.code IN (
   'interaction.view',
   'interaction.create',
   'team.view_all',
-  'team.manage',
-  'attendance.view',
-  'attendance.mark'
+  'team.manage'
 )
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 
@@ -89,7 +76,7 @@ ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 INSERT INTO team_role_permissions (team_role, permission_id)
 SELECT 'leader'::team_member_role_enum, p.id
 FROM permissions p
-WHERE p.code IN ('team.manage', 'session.create', 'session.manage')
+WHERE p.code = 'team.manage'
 ON CONFLICT (team_role, permission_id) DO NOTHING;
 
 -- Team member: no special permissions

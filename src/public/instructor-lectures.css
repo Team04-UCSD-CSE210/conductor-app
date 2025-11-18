@@ -252,6 +252,20 @@
   text-align: left;
 }
 
+.lecture-actions button {
+  border-radius: 0.5rem;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .lecture-label button:hover {
   border-color: var(--teal-500, #14b8a6);
   color: var(--teal-600, #0d9488);
@@ -305,7 +319,7 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--gray-900, #111827);
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: Monaco, Menlo, 'Courier New', monospace;
   letter-spacing: 0.05em;
 }
 
@@ -370,20 +384,6 @@
   align-items: center;
 }
 
-.lecture-actions button {
-  border-radius: 0.5rem;
-  border: none;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .lecture-actions button.primary {
   background: var(--teal-600, #0d9488);
   color: white;
@@ -427,7 +427,7 @@
 .delete-button svg {
   width: 18px;
   height: 18px;
-  stroke: currentColor;
+  stroke: currentcolor;
 }
 
 .empty-state {

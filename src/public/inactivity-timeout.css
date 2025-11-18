@@ -2,11 +2,8 @@
 
 .inactivity-warning-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+  inset: 0;
+  background: rgb(0 0 0 / 75%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,7 +24,7 @@
   padding: 2rem;
   max-width: 480px;
   width: 90%;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 10px 10px -5px rgb(0 0 0 / 4%);
   transform: scale(0.95);
   transition: transform 0.3s ease;
 }
@@ -52,7 +49,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: #111827;
-  margin: 0 0 1rem 0;
+  margin: 0 0 1rem;
   text-align: center;
 }
 
@@ -60,7 +57,7 @@
   font-size: 1rem;
   color: #4b5563;
   line-height: 1.6;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1.5rem;
   text-align: center;
 }
 
@@ -69,6 +66,8 @@
   font-size: 1.25rem;
   font-weight: 700;
   font-family: 'Courier New', monospace;
+  display: inline-block;
+  transition: color 0.3s ease;
 }
 
 .inactivity-warning-actions {
@@ -99,21 +98,19 @@
 }
 
 /* Animation for countdown number changes */
+
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.1);
   }
 }
 
-.inactivity-countdown {
-  display: inline-block;
-  transition: color 0.3s ease;
-}
-
 /* Warning when countdown is low (less than 30 seconds) */
+
 .inactivity-warning-modal.active .inactivity-countdown {
   animation: pulse 1s ease-in-out infinite;
 }

@@ -90,7 +90,7 @@ All instructor routes require authentication and appropriate permissions:
    - **View**: `src/views/instructor-lectures.html`
    - **JavaScript**: `src/public/js/instructor-lecture-overview.js`, `src/public/js/instructor-lecture-detail.js`
    - **CSS**: `src/public/instructor-lectures.css`
-   - **Features**: 
+   - **Features**:
      - View all lecture sessions
      - See attendance statistics
      - Access individual lecture details
@@ -125,7 +125,7 @@ All instructor routes require authentication and appropriate permissions:
 
 All student routes require authentication:
 
-4. **`GET /lecture-attendance-student`**
+1. **`GET /lecture-attendance-student`**
    - **Purpose**: Students check in to lectures using access codes
    - **Permissions**: Authentication required (student role)
    - **Access**: Students, Instructors (for testing), Admins
@@ -138,7 +138,7 @@ All student routes require authentication:
      - View attendance status
      - See lecture information
 
-5. **`GET /student-lecture-response`**
+2. **`GET /student-lecture-response`**
    - **Purpose**: Students respond to lecture questions after checking in
    - **Permissions**: Authentication required (student role)
    - **Access**: Students, Instructors (for testing), Admins
@@ -271,14 +271,16 @@ Comprehensive test coverage includes:
 
 ## 🚀 Navigation Flow
 
-### For Instructors:
+### For Instructors
+
 1. Login → `/faculty-dashboard` (auto-routed from `/dashboard`)
 2. Navigate to `/instructor-lectures` to view all lectures
 3. Click "New Lecture Attendance" → `/lecture-builder` to create a session
 4. View responses at `/lecture-responses` (accessible from lecture detail view)
 5. Manage attendance: open/close sessions, view statistics, mark manually
 
-### For Students:
+### For Students
+
 1. Login → `/student-dashboard` (auto-routed from `/dashboard`)
 2. Navigate to `/lecture-attendance-student` to check in with access code
 3. After check-in, go to `/student-lecture-response` to answer questions
@@ -289,6 +291,7 @@ Comprehensive test coverage includes:
 The application uses a permission-based access control system:
 
 ### Permission Types
+
 - **Global Permissions**: Apply system-wide (e.g., `user.manage`)
 - **Course Permissions**: Apply to specific course offerings (e.g., `attendance.view`, `session.manage`)
 
@@ -301,6 +304,7 @@ The application uses a permission-based access control system:
 - `course.manage` - Full course management (includes all above)
 
 ### Role-Based Access
+
 - **Admin**: Has all permissions globally
 - **Instructor**: Has course-level permissions for their courses
 - **TA/Tutor**: Has limited course-level permissions (view attendance, view responses)
@@ -323,6 +327,7 @@ npm start
 ```
 
 Access the application:
+
 - **HTTPS** (if SSL certificates are available): `https://localhost:8443`
 - **HTTP** (fallback): `http://localhost:8080`
 
@@ -338,8 +343,9 @@ Verify all functionality:
 ### 4. Configure Permissions
 
 Configure in permission system:
-   - Add `session.create`, `session.manage`, `attendance.view`, `attendance.mark`
-   - Assign to appropriate roles (professor, TA, student)
+
+- Add `session.create`, `session.manage`, `attendance.view`, `attendance.mark`
+- Assign to appropriate roles (professor, TA, student)
 
 ### 5. Access Routes
 
@@ -349,6 +355,7 @@ Configure in permission system:
 ## 🎨 Frontend Features
 
 ### Instructor Features
+
 - ✅ Create lecture sessions with multiple question types
 - ✅ View all lecture sessions with statistics
 - ✅ Open/close attendance windows
@@ -360,6 +367,7 @@ Configure in permission system:
 - ✅ Auto-save lecture forms
 
 ### Student Features
+
 - ✅ Check in with 6-digit access code
 - ✅ Answer multiple question types (text, multiple choice, pulse check)
 - ✅ Submit responses
@@ -370,11 +378,11 @@ Configure in permission system:
 
 ## 🚀 Optional Enhancements
 
-   - WebSocket for real-time attendance updates
-   - QR code generation for access codes
-   - Email notifications for missed attendance
-   - Export attendance to CSV
-   - Attendance trends and analytics dashboard
+- WebSocket for real-time attendance updates
+- QR code generation for access codes
+- Email notifications for missed attendance
+- Export attendance to CSV
+- Attendance trends and analytics dashboard
 - Mobile-responsive improvements
 
 ## 📝 Example Usage
@@ -438,6 +446,7 @@ GET /api/attendance/sessions/:sessionId/report
 ## ✅ Implementation Status
 
 ### Backend: ✅ Complete
+
 - ✅ Database schema
 - ✅ Models (4 files)
 - ✅ Services (2 files)
@@ -446,6 +455,7 @@ GET /api/attendance/sessions/:sessionId/report
 - ✅ Comprehensive tests
 
 ### Frontend: ✅ Complete
+
 - ✅ HTML Views (5 pages)
 - ✅ JavaScript (6 files)
 - ✅ CSS Styling (5 files)
@@ -453,6 +463,7 @@ GET /api/attendance/sessions/:sessionId/report
 - ✅ UI/UX polished and consistent
 
 ### Features: ✅ Complete
+
 - ✅ Access code system
 - ✅ Session management
 - ✅ Attendance tracking

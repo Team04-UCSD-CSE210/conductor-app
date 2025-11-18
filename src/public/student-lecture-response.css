@@ -208,16 +208,6 @@
   box-shadow: 0 2px 8px rgb(13 148 136 / 25%);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: var(--teal-700, #0f766e);
-  box-shadow: 0 4px 12px rgb(13 148 136 / 30%);
-  transform: translateY(-1px);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
 .btn-primary:focus {
   outline: 2px solid var(--teal-500, #14b8a6);
   outline-offset: 2px;
@@ -227,6 +217,21 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+.success-actions .btn-primary {
+  flex: 1;
+  min-width: 140px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--teal-700, #0f766e);
+  box-shadow: 0 4px 12px rgb(13 148 136 / 30%);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn-secondary {
@@ -269,14 +274,15 @@
   flex-direction: column;
   gap: 1rem;
   box-shadow: 0 4px 12px rgb(16 185 129 / 15%);
-  animation: slideIn 0.3s ease-out;
+  animation: slide-in 0.3s ease-out;
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -304,7 +310,6 @@
   flex-wrap: wrap;
 }
 
-.success-actions .btn-primary,
 .success-actions .btn-secondary {
   flex: 1;
   min-width: 140px;

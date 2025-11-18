@@ -220,7 +220,7 @@
       throw new Error('Session data is required and must be an object');
     }
 
-    const { startsAt, endsAt, label, questions, courseId, ...rest } = sessionData;
+    const { startsAt, label, questions, ...rest } = sessionData;
 
     // Ensure offering_id is present - check multiple possible locations with strict validation
     let offering_id = sessionData.offering_id;
@@ -245,7 +245,6 @@
 
     // Extract date and time from ISO strings
     const startDate = startsAt ? new Date(startsAt) : null;
-    const endDate = endsAt ? new Date(endsAt) : null;
 
     const session_date = startDate ? startDate.toISOString().split('T')[0] : null;
     const session_time = startDate ? startDate.toTimeString().split(' ')[0].substring(0, 5) : null;
@@ -324,7 +323,7 @@
             if (!b.startsAt) return -1;
             try {
               return new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime();
-            } catch (e) {
+            } catch {
               return 0;
             }
           }); // Most recent first
@@ -404,7 +403,7 @@
             if (activeOfferingId) {
               sessionData.offering_id = activeOfferingId;
             }
-          } catch (err) {
+          } catch {
             // Backend will handle fallback to active offering
             console.warn('Could not fetch active offering in frontend, backend will handle it');
           }
@@ -550,7 +549,7 @@
           if (!b.startsAt) return -1;
           try {
             return new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime();
-          } catch (e) {
+          } catch {
             return 0;
           }
         });

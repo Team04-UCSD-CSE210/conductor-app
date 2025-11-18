@@ -1519,21 +1519,16 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
 // All routes must be defined BEFORE starting the server
 const startServer = async () => {
   try {
-    // Reset and seed database on every start
-    // This drops all tables and re-runs all migrations with seed data
-    const shouldSeed = process.env.SEED_ON_START !== 'false';
+    // Check if database is empty and initialize with seed data if needed
+    const schemaExists = await DatabaseInitializer.verifySchema();
     
-    if (shouldSeed) {
-      console.log("[database] Resetting database and seeding data...\n");
-      await DatabaseInitializer.reset(true);
+    if (!schemaExists) {
+      console.log("[database] Database is empty. Initializing with seed data...\n");
+      await DatabaseInitializer.initialize({ seed: true, force: false });
+      console.log("✅ Database initialized and seeded successfully");
     } else {
-      console.log("[database] Resetting database (no seed data)...\n");
-      await DatabaseInitializer.reset(false);
-    }
-    
-    console.log("✅ Database connection established");
-    if (shouldSeed) {
-      console.log("✅ Database reset and all seed data loaded");
+      console.log("[database] Database schema already exists. Skipping initialization.\n");
+      console.log("✅ Database connection established");
     }
   } catch (error) {
     console.error("Failed to connect to the database", error);

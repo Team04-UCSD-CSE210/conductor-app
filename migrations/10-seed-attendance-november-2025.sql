@@ -1,4 +1,4 @@
--- 08-seed-attendance-november-2025.sql
+-- 10-seed-attendance-november-2025.sql
 -- Populates attendance-related tables with November 2025 data
 -- Creates 8 sessions, questions, attendance records, and responses
 -- Every student has either present or absent status for each session

@@ -9,7 +9,6 @@
   const toastClose = document.getElementById('toast-close');
   const emptyState = document.getElementById('empty-questions');
   const saveStatus = document.getElementById('save-status');
-  const autoSaveIndicator = document.getElementById('auto-save-indicator');
   const submitBtn = document.getElementById('submit-btn');
   const cancelBtn = document.getElementById('cancel-btn');
   const saveDraftBtn = document.getElementById('save-draft-btn');
@@ -64,7 +63,6 @@
     const startTime = document.getElementById('lecture-start')?.value;
     const endTime = document.getElementById('lecture-end')?.value;
     const date = document.getElementById('lecture-date')?.value;
-    const startError = document.getElementById('start-error');
     const endError = document.getElementById('end-error');
 
     if (!startTime || !endTime || !date) return true;
@@ -238,7 +236,7 @@
       }
     });
 
-    questionList.addEventListener('dragend', (e) => {
+    questionList.addEventListener('dragend', () => {
       if (draggedElement) {
         draggedElement.classList.remove('dragging');
         draggedElement = null;

@@ -12,15 +12,14 @@
   // Configuration
   const WARNING_TIME_MS = 3 * 60 * 1000; // 3 minutes in milliseconds
   const COUNTDOWN_TIME_MS = 2 * 60 * 1000; // 2 minutes (120 seconds) in milliseconds
-  const TOTAL_TIMEOUT_MS = WARNING_TIME_MS + COUNTDOWN_TIME_MS; // 5 minutes total
-
-  let lastActivityTime = Date.now();
+  // const TOTAL_TIMEOUT_MS = WARNING_TIME_MS + COUNTDOWN_TIME_MS; // 5 minutes total (reserved for future use)
   let warningTimeout = null;
   let logoutTimeout = null;
   let countdownInterval = null;
   let warningModal = null;
   let countdownDisplay = null;
   let isWarningShown = false;
+  // let lastActivityTime = null; // Reserved for future use
 
   /**
    * Reset all timers
@@ -45,8 +44,8 @@
       hideWarning();
     }
 
-    // Update last activity time
-    lastActivityTime = Date.now();
+    // Update last activity time (reserved for future use)
+    // lastActivityTime = Date.now();
 
     // Set warning timeout (3 minutes)
     warningTimeout = setTimeout(() => {
