@@ -46,17 +46,30 @@ jobs:
 
       - name: Deploy infrastructure
         run: |
-          # Deploy simple CloudFormation stack instead of CDK
-          aws cloudformation deploy \
-            --template-file aws-infrastructure-simple.yml \
-            --stack-name conductor-app-infrastructure \
-            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-            --parameter-overrides \
-              DBPassword=TempPassword123! \
-            --region us-east-1
-          
-          # Output CloudFront URL
-          echo "🚀 HTTPS URL: https://dfbhtda4vdu81.cloudfront.net" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ env.IS_MAIN }}" == "true" ]; then
+            # Deploy full CloudFormation stack with CloudFront for main branch only
+            aws cloudformation deploy \
+              --template-file aws-infrastructure-simple.yml \
+              --stack-name conductor-app-infrastructure \
+              --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+              --parameter-overrides \
+                DBPassword=TempPassword123! \
+              --region us-east-1
+            
+            # Output CloudFront URL for main branch
+            echo "🚀 HTTPS URL: https://dfbhtda4vdu81.cloudfront.net" >> $GITHUB_STEP_SUMMARY
+          else
+            # For feature branches, only deploy ECS infrastructure (no CloudFront)
+            aws cloudformation deploy \
+              --template-file aws-infrastructure-simple.yml \
+              --stack-name conductor-app-infrastructure \
+              --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+              --parameter-overrides \
+                DBPassword=TempPassword123! \
+              --region us-east-1
+            
+            echo "🚀 Feature branch deployment - ECS only" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Get stack outputs
         id: stack-outputs
@@ -220,7 +233,12 @@ jobs:
           SERVICE_NAME=${{ env.IS_MAIN == 'true' && 'conductor-service' || format('conductor-{0}', env.CLEAN_BRANCH) }}
           
           if [ "${{ steps.health-check.outputs.healthy }}" == "true" ]; then
-            URL="${{ steps.health-check.outputs.url }}"
+            # Use CloudFront URL for main branch, ECS IP for feature branches
+            if [ "${{ env.IS_MAIN }}" == "true" ]; then
+              URL="https://dfbhtda4vdu81.cloudfront.net"
+            else
+              URL="${{ steps.health-check.outputs.url }}"
+            fi
             STATUS="✅ Healthy"
           else
             URL="❌ Deployment failed"
