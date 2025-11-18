@@ -231,12 +231,17 @@ jobs:
           SERVICE_NAME=${{ env.IS_MAIN == 'true' && 'conductor-service' || format('conductor-{0}', env.CLEAN_BRANCH) }}
           
           if [ "${{ steps.health-check.outputs.healthy }}" == "true" ]; then
-            # Always use CloudFront URL
+            # Always use CloudFront URL - try to get from stack, fallback to hardcoded
             CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
               --stack-name conductor-app-infrastructure \
               --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
-              --output text 2>/dev/null || echo "https://dfbhtda4vdu81.cloudfront.net")
-            URL="$CLOUDFRONT_URL"
+              --output text 2>/dev/null || echo "")
+            
+            if [ -z "$CLOUDFRONT_URL" ] || [ "$CLOUDFRONT_URL" == "None" ]; then
+              URL="https://dfbhtda4vdu81.cloudfront.net"
+            else
+              URL="$CLOUDFRONT_URL"
+            fi
             STATUS="Healthy"
           else
             URL="Deployment failed"
