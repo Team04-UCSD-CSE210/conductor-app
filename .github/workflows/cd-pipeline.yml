@@ -46,6 +46,9 @@ jobs:
 
       - name: Deploy infrastructure
         run: |
+          # Clean up any obsolete changesets first
+          aws cloudformation list-change-sets --stack-name conductor-app-infrastructure --query 'Summaries[?Status==`OBSOLETE`].ChangeSetName' --output text | xargs -r -n1 aws cloudformation delete-change-set --stack-name conductor-app-infrastructure --change-set-name || true
+          
           if [ "${{ env.IS_MAIN }}" == "true" ]; then
             # Deploy full CloudFormation stack with CloudFront for main branch only
             aws cloudformation deploy \
