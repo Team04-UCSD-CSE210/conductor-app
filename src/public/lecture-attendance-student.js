@@ -85,12 +85,12 @@
     actionButton.className = 'btn-link';
     actionButton.type = 'button';
     actionButton.textContent = lecture.sessionState === 'open'
-      ? (lecture.status === 'present' ? 'View submission' : 'Record attendance')
+      ? (lecture.status === 'present' ? 'View responses' : 'Record attendance')
       : 'View responses';
     actionButton.addEventListener('click', () => {
       if (lecture.sessionState === 'open') {
         if (lecture.status === 'present') {
-          // Already marked present, go to view submission
+          // Already marked present, go to view responses
           window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
         } else {
           // Need to record attendance - show modal
