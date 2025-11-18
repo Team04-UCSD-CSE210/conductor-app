@@ -1,5 +1,11 @@
 /* Lecture Builder - Professional Design Matching Instructor Lectures */
 
+/* Page-specific scroll fix for lecture builder */
+body.lecture-builder-page .main-container {
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 .builder-shell {
   display: flex;
   flex-direction: column;
