@@ -62,11 +62,11 @@ jobs:
               --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
               --output text)
             
-            echo "🚀 HTTPS URL: $CLOUDFRONT_URL" >> $GITHUB_STEP_SUMMARY
+            echo "HTTPS URL: $CLOUDFRONT_URL" >> $GITHUB_STEP_SUMMARY
             echo "CLOUDFRONT_URL=$CLOUDFRONT_URL" >> $GITHUB_ENV
           else
             # For feature branches, skip infrastructure deployment - use existing
-            echo "🚀 Feature branch deployment - using existing infrastructure" >> $GITHUB_STEP_SUMMARY
+            echo "Feature branch deployment - using existing infrastructure" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Get stack outputs
@@ -170,6 +170,30 @@ jobs:
         run: |
           echo "⏳ Waiting for deployment to stabilize..."
           aws ecs wait services-stable --cluster $CLUSTER_NAME --services $SERVICE_NAME --cli-read-timeout 600 --cli-connect-timeout 60
+
+      - name: Get ECS task IP for feature branch
+        if: env.IS_MAIN != 'true'
+        run: |
+          SERVICE_NAME="conductor-${{ env.CLEAN_BRANCH }}"
+          CLUSTER_NAME="${{ steps.stack-outputs.outputs.cluster-name }}"
+          
+          # Wait a moment for service to be created
+          sleep 10
+          
+          # Get task ARN and public IP
+          TASK_ARN=$(aws ecs list-tasks --cluster $CLUSTER_NAME --service-name $SERVICE_NAME --query 'taskArns[0]' --output text 2>/dev/null || echo "")
+          
+          if [ "$TASK_ARN" != "None" ] && [ "$TASK_ARN" != "" ]; then
+            PUBLIC_IP=$(aws ecs describe-tasks --cluster $CLUSTER_NAME --tasks $TASK_ARN --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text | xargs -I {} aws ec2 describe-network-interfaces --network-interface-ids {} --query 'NetworkInterfaces[0].Association.PublicIp' --output text 2>/dev/null || echo "")
+            
+            if [ "$PUBLIC_IP" != "" ] && [ "$PUBLIC_IP" != "None" ]; then
+              echo "ECS Task URL: http://$PUBLIC_IP:3001" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "ECS Task IP not yet available" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "ECS Task not yet running" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Verify deployment health
         id: health-check
