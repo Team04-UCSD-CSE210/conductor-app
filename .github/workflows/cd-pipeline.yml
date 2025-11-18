@@ -231,16 +231,16 @@ jobs:
           SERVICE_NAME=${{ env.IS_MAIN == 'true' && 'conductor-service' || format('conductor-{0}', env.CLEAN_BRANCH) }}
           
           if [ "${{ steps.health-check.outputs.healthy }}" == "true" ]; then
-            # Use CloudFront URL for main branch, ECS IP for feature branches
-            if [ "${{ env.IS_MAIN }}" == "true" ]; then
-              URL="${{ env.CLOUDFRONT_URL }}"
-            else
-              URL="${{ steps.health-check.outputs.url }}"
-            fi
-            STATUS="✅ Healthy"
+            # Always use CloudFront URL
+            CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
+              --stack-name conductor-app-infrastructure \
+              --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
+              --output text 2>/dev/null || echo "https://dfbhtda4vdu81.cloudfront.net")
+            URL="$CLOUDFRONT_URL"
+            STATUS="Healthy"
           else
-            URL="❌ Deployment failed"
-            STATUS="❌ Failed health check"
+            URL="Deployment failed"
+            STATUS="Failed health check"
           fi
           
           echo "url=$URL" >> $GITHUB_OUTPUT
@@ -257,11 +257,10 @@ jobs:
             const service = "${{ steps.get-url.outputs.service }}";
             
             let body;
-            if (status.includes("✅")) {
-              const healthCheckUrl = "${{ env.IS_MAIN }}" === "true" ? `${{ env.CLOUDFRONT_URL }}/health` : `${url}/health`;
-              body = `🚀 **Deployment Successful!**\n\n✅ **Status:** ${status}\n📍 **URL:** ${url}\n🔗 **Branch:** \`${{ env.BRANCH_NAME }}\`\n📦 **Service:** \`${service}\`\n\n🔍 **Health Check:** [${healthCheckUrl}](${healthCheckUrl})`;
+            if (status.includes("Healthy")) {
+              body = `**Deployment Successful!**\n\n**Status:** ${status}\n**URL:** ${url}\n**Branch:** \`${{ env.BRANCH_NAME }}\`\n**Service:** \`${service}\``;
             } else {
-              body = `❌ **Deployment Failed**\n\n❌ **Status:** ${status}\n🔗 **Branch:** \`${{ env.BRANCH_NAME }}\`\n📦 **Service:** \`${service}\`\n\n🔍 Check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`;
+              body = `**Deployment Failed**\n\n**Status:** ${status}\n**Branch:** \`${{ env.BRANCH_NAME }}\`\n**Service:** \`${service}\`\n\nCheck the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`;
             }
             
             github.rest.issues.createComment({
