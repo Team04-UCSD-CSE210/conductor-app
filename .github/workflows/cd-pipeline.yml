@@ -46,14 +46,11 @@ jobs:
 
       - name: Deploy infrastructure
         run: |
-          # Use unique stack name to avoid changeset conflicts
-          STACK_NAME="conductor-app-infrastructure-${{ github.run_id }}"
-          
           if [ "${{ env.IS_MAIN }}" == "true" ]; then
             # Deploy full CloudFormation stack with CloudFront for main branch only
             aws cloudformation deploy \
               --template-file aws-infrastructure-simple.yml \
-              --stack-name $STACK_NAME \
+              --stack-name conductor-app-infrastructure \
               --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
               --parameter-overrides \
                 DBPassword=TempPassword123! \
@@ -61,55 +58,45 @@ jobs:
             
             # Get CloudFront URL from stack outputs
             CLOUDFRONT_URL=$(aws cloudformation describe-stacks \
-              --stack-name $STACK_NAME \
+              --stack-name conductor-app-infrastructure \
               --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontURL`].OutputValue' \
               --output text)
             
             echo "🚀 HTTPS URL: $CLOUDFRONT_URL" >> $GITHUB_STEP_SUMMARY
             echo "CLOUDFRONT_URL=$CLOUDFRONT_URL" >> $GITHUB_ENV
-            echo "STACK_NAME=$STACK_NAME" >> $GITHUB_ENV
           else
-            # For feature branches, only deploy ECS infrastructure (no CloudFront)
-            aws cloudformation deploy \
-              --template-file aws-infrastructure-simple.yml \
-              --stack-name $STACK_NAME \
-              --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-              --parameter-overrides \
-                DBPassword=TempPassword123! \
-              --region us-east-1
-            
-            echo "STACK_NAME=$STACK_NAME" >> $GITHUB_ENV
-            echo "🚀 Feature branch deployment - ECS only" >> $GITHUB_STEP_SUMMARY
+            # For feature branches, skip infrastructure deployment - use existing
+            echo "🚀 Feature branch deployment - using existing infrastructure" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Get stack outputs
         id: stack-outputs
         run: |
           # Debug: Show all stack outputs
-          aws cloudformation describe-stacks --stack-name ${{ env.STACK_NAME }} --query 'Stacks[0].Outputs' --output table
+          aws cloudformation describe-stacks --stack-name conductor-app-infrastructure --query 'Stacks[0].Outputs' --output table
           
           REPOSITORY_URI=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.STACK_NAME }} \
+            --stack-name conductor-app-infrastructure \
             --query 'Stacks[0].Outputs[?OutputKey==`ECRRepository`].OutputValue' \
             --output text)
           
           CLUSTER_NAME=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.STACK_NAME }} \
+            --stack-name conductor-app-infrastructure \
             --query 'Stacks[0].Outputs[?OutputKey==`ECSCluster`].OutputValue' \
             --output text)
           
           SUBNET1=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.STACK_NAME }} \
+            --stack-name conductor-app-infrastructure \
             --query 'Stacks[0].Outputs[?OutputKey==`PublicSubnet1`].OutputValue' \
             --output text)
           
           SUBNET2=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.STACK_NAME }} \
+            --stack-name conductor-app-infrastructure \
             --query 'Stacks[0].Outputs[?OutputKey==`PublicSubnet2`].OutputValue' \
             --output text)
           
           SECURITY_GROUP=$(aws cloudformation describe-stacks \
-            --stack-name ${{ env.STACK_NAME }} \
+            --stack-name conductor-app-infrastructure \
             --query 'Stacks[0].Outputs[?OutputKey==`ECSSecurityGroup`].OutputValue' \
             --output text)
           
