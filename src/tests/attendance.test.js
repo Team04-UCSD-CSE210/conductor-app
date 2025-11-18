@@ -284,7 +284,7 @@ describe('Attendance Management Tests', () => {
     it('should reject check-in with invalid code', async () => {
       await assert.rejects(
         async () => {
-          await AttendanceService.checkIn('INVALID', testStudent1.id);
+          await AttendanceService.checkIn(`INVALID-${Date.now()}`, testStudent1.id);
         },
         { message: 'Invalid access code' }
       );
