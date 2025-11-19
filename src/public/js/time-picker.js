@@ -100,7 +100,7 @@
       `;
       this.picker.appendChild(header);
       
-      // Controls
+      // Controls - horizontal layout with 3 columns
       const controls = document.createElement('div');
       controls.className = 'time-picker-controls';
       
@@ -126,6 +126,27 @@
       `;
       controls.appendChild(hoursSection);
       
+      // Minutes section
+      const minutesSection = document.createElement('div');
+      minutesSection.className = 'time-picker-section';
+      minutesSection.innerHTML = `
+        <label class="time-picker-label">Minutes</label>
+        <div class="time-picker-buttons minutes-scrollable">
+          ${[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(min => {
+            const isSelected = min === this.minutes;
+            return `
+              <button type="button" 
+                class="time-picker-btn ${isSelected ? 'selected' : ''}" 
+                data-minute="${min}"
+                aria-label="${min} minutes">
+                ${String(min).padStart(2, '0')}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      `;
+      controls.appendChild(minutesSection);
+      
       // AM/PM section
       const ampmSection = document.createElement('div');
       ampmSection.className = 'time-picker-section ampm-section';
@@ -147,27 +168,6 @@
         </div>
       `;
       controls.appendChild(ampmSection);
-      
-      // Minutes section
-      const minutesSection = document.createElement('div');
-      minutesSection.className = 'time-picker-section';
-      minutesSection.innerHTML = `
-        <label class="time-picker-label">Minutes</label>
-        <div class="time-picker-buttons minutes-scrollable">
-          ${[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(min => {
-            const isSelected = min === this.minutes;
-            return `
-              <button type="button" 
-                class="time-picker-btn ${isSelected ? 'selected' : ''}" 
-                data-minute="${min}"
-                aria-label="${min} minutes">
-                ${String(min).padStart(2, '0')}
-              </button>
-            `;
-          }).join('')}
-        </div>
-      `;
-      controls.appendChild(minutesSection);
       
       this.picker.appendChild(controls);
       
