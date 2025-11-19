@@ -36,7 +36,7 @@ jobs:
         if: env.BRANCH_NAME == 'main'
         run: |
           aws cloudformation deploy \
-            --template-file aws-infrastructure-simple.yml \
+            --template-file .github/aws-infrastructure-simple.yml \
             --stack-name conductor-app-infrastructure \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --parameter-overrides DBPassword=TempPassword123! \
@@ -98,7 +98,7 @@ jobs:
           fi
           
           # Create task definition
-          sed "s/ACCOUNT_ID/$AWS_ACCOUNT_ID/g; s/REGION/us-east-1/g; s/:latest/:$IMAGE_TAG/g; s/\"family\": \"conductor-app\"/\"family\": \"$SERVICE_NAME\"/g; s/\"name\": \"conductor-app\"/\"name\": \"$SERVICE_NAME\"/g; s/GOOGLE_CLIENT_ID_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_ID }}/g; s/GOOGLE_CLIENT_SECRET_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_SECRET }}/g; s/SESSION_SECRET_PLACEHOLDER/${{ secrets.SESSION_SECRET }}/g; s|GOOGLE_CALLBACK_URL_PLACEHOLDER|$CALLBACK_URL|g" aws-task-definition.json > task-def.json
+          sed "s/ACCOUNT_ID/$AWS_ACCOUNT_ID/g; s/REGION/us-east-1/g; s/:latest/:$IMAGE_TAG/g; s/\"family\": \"conductor-app\"/\"family\": \"$SERVICE_NAME\"/g; s/\"name\": \"conductor-app\"/\"name\": \"$SERVICE_NAME\"/g; s/GOOGLE_CLIENT_ID_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_ID }}/g; s/GOOGLE_CLIENT_SECRET_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_SECRET }}/g; s/SESSION_SECRET_PLACEHOLDER/${{ secrets.SESSION_SECRET }}/g; s|GOOGLE_CALLBACK_URL_PLACEHOLDER|$CALLBACK_URL|g" .github/aws-task-definition.json > task-def.json
           
           # Register task definition
           TASK_DEF_ARN=$(aws ecs register-task-definition \

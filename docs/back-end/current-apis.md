@@ -6,10 +6,12 @@ All endpoints require authentication unless otherwise noted.
 
 ## Permission-Based Access Control (RBAC)
 
-This API uses a **permission-based RBAC system** instead of simple role checks. Permissions are checked at multiple levels:
+This API uses a **permission-based RBAC system** instead of simple role checks.
+Permissions are checked at multiple levels:
 
 - **Global Permissions**: Based on user's `primary_role` (admin, instructor, student, unregistered)
-- **Course Permissions**: Based on enrollment `course_role` (student, ta, tutor) in a specific course offering
+- **Course Permissions**: Based on enrollment `course_role` (student, ta, tutor) in a specific
+  course offering
 - **Team Permissions**: Based on team membership role (leader, member)
 
 ### Permission Hierarchy

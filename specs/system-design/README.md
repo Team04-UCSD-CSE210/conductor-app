@@ -56,7 +56,8 @@ that may interact with external APIs as needed.
 **Implementation:** Node.js with **Express or Hono (TBD)** framework.
 
 The backend serves as the application’s central logic and communication layer.  
-It exposes REST endpoints, enforces authentication, stores persistent data, and manages integration with external APIs.
+It exposes REST endpoints, enforces authentication, stores persistent data, and manages
+integration with external APIs.
 
 ### **5.1 Modules**
 
@@ -88,7 +89,7 @@ The system uses **PostgreSQL** as the main data store for:
 
 **Connection:**  
 
-Backend communicates via **SQL** through PostgreSQL’s native driver or ORM (e.g., Prisma / Sequelize / Knex).
+Backend communicates via **SQL** through PostgreSQL’s native driver or ORM.
 
 ---
 
@@ -113,7 +114,7 @@ Backend communicates via **SQL** through PostgreSQL’s native driver or ORM (e.
    - **PostgreSQL DB** (SQL) for persistent data.
    - **External APIs** (Calendar, Slack, GitHub, LMS) for synchronization and automation.  
 4. **Responses** are returned to the client in **JSON or HTML**.  
-5. **Administrative Automation** tasks periodically trigger backup, notification, or synchronization processes.
+5. **Administrative Automation** tasks periodically trigger backup, notification
 
 ---
 

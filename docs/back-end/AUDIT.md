@@ -942,7 +942,8 @@ All APIs documented in `current-apis.md` are fully implemented and functional.
 **`migrations/01-create-tables.sql`** - Main schema:
 
 - ✅ All 13 ENUM type definitions
-- ✅ All 9 core tables (users, course_offerings, enrollments, assignments, submissions, team, team_members, attendance, activity_logs)
+- ✅ All 9 core tables (users, course_offerings, enrollments, assignments, submissions, team,
+  team_members, attendance, activity_logs)
 - ✅ All indexes for performance
 - ✅ All triggers for auto-updating `updated_at`
 - ✅ All foreign key constraints with CASCADE
@@ -1137,8 +1138,8 @@ The Conductor Application is **~90% complete** with all core features fully func
 ---
 
 **Document Generated:** January 2025  
-**Last Updated:** After comprehensive codebase review, authentication system audit, and API verification  
-**Status:** ✅ Core features complete, authentication implemented, authorization system active,
+**Last Updated:** After comprehensive review, authentication system audit, API verification  
+**Status:** Core features complete, authentication implemented, authorization system active,
 comprehensive test suite, full demo tools, complete documentation
 
 ---
@@ -1252,7 +1253,7 @@ Show "Too many failed attempts" message
 
 ## Appendix: Complete File Inventory
 
-This comprehensive inventory includes all files mentioned throughout the documentation, organized by category.
+This inventory includes all files mentioned throughout the documentation, organized by category.
 
 ### Core Application Files (3 files)
 
@@ -1342,7 +1343,7 @@ This comprehensive inventory includes all files mentioned throughout the documen
 1. `migrations/01-create-tables.sql` - Main database schema (all tables, ENUMs, indexes, triggers)
 2. `migrations/02-seed-demo-users.sql` - Demo user data (9 demo users)
 3. `migrations/03-seed-course-offerings-teams.sql` - Course offering and teams seed data
-4. `migrations/04-create-permission-tables.sql` - Permission system tables (permissions, user_role_permissions, enrollment_role_permissions)
+4. `migrations/04-create-permission-tables.sql` - Permission system tables
 5. `migrations/05-permissions-and-roles.sql` - Permissions and roles seed data
 6. `migrations/test.sql` - Comprehensive SQL test suite
 7. `migrations/simple-test.sql` - Quick test data generator
