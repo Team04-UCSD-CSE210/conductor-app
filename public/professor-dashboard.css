@@ -17,3 +17,22 @@
   padding: 0 0.5rem; /* Slight extra horizontal breathing room */
 }
 
+/* Sidebar footer styles */
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--gray-200);
+  padding-top: 1rem;
+}
+
+.sidebar-logout {
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+/* Recent updates list styles */
+.recent-updates-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--gray-700);
+}
+
