@@ -1,3 +1,10 @@
+/* Instructor Lectures - Overview Page */
+
+/* Ensure scrolling works on this page */
+body.dashboard-page .main-container {
+  overflow-y: auto !important;
+}
+
 .overview-shell {
   display: flex;
   flex-direction: column;
