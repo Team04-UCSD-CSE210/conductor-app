@@ -6,7 +6,8 @@
 
 ## Context
 
-[Describe the situation that led to this decision. What problem are we trying to solve? What are the constraints and requirements?]
+[Describe the situation that led to this decision. What problem are we trying to solve?
+What are the constraints and requirements?]
 
 ## Decision
 

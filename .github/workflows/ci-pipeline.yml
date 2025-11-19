@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build -t conductor-app:ci .
+        run: docker build -f .github/docker/Dockerfile -t conductor-app:ci .
 
   docs:
     runs-on: ubuntu-latest
