@@ -52,16 +52,11 @@ export const getCurrentUser = async (req) => {
     return null;
   }
 
-  try {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-    return result.rows[0] || null;
-  } catch (error) {
-    console.error('Database error in getCurrentUser:', error.message);
-    return null;
-  }
+  const result = await pool.query(
+    'SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL',
+    [email]
+  );
+  return result.rows[0] || null;
 };
 
 /**
