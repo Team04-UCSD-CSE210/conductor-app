@@ -106,48 +106,21 @@ jobs:
             --query 'taskDefinition.taskDefinitionArn' \
             --output text)
           
-          # Get target group ARN for main branch
-          if [ "${{ env.BRANCH_NAME }}" == "main" ]; then
-            TARGET_GROUP_ARN=$(aws cloudformation describe-stacks \
-              --stack-name conductor-app-infrastructure \
-              --query 'Stacks[0].Outputs[?OutputKey==`TargetGroup`].OutputValue' \
-              --output text)
-          fi
-          
           # Create or update service
           SERVICE_EXISTS=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'length(services[?serviceName==`'$SERVICE_NAME'`])' --output text 2>/dev/null)
           if [ "$SERVICE_EXISTS" -gt 0 ]; then
-            if [ "${{ env.BRANCH_NAME }}" == "main" ]; then
-              aws ecs update-service \
-                --cluster $CLUSTER_NAME \
-                --service $SERVICE_NAME \
-                --task-definition $TASK_DEF_ARN \
-                --load-balancers targetGroupArn=$TARGET_GROUP_ARN,containerName=$SERVICE_NAME,containerPort=3001
-            else
-              aws ecs update-service \
-                --cluster $CLUSTER_NAME \
-                --service $SERVICE_NAME \
-                --task-definition $TASK_DEF_ARN
-            fi
+            aws ecs update-service \
+              --cluster $CLUSTER_NAME \
+              --service $SERVICE_NAME \
+              --task-definition $TASK_DEF_ARN
           else
-            if [ "${{ env.BRANCH_NAME }}" == "main" ]; then
-              aws ecs create-service \
-                --cluster $CLUSTER_NAME \
-                --service-name $SERVICE_NAME \
-                --task-definition $TASK_DEF_ARN \
-                --desired-count 1 \
-                --launch-type FARGATE \
-                --load-balancers targetGroupArn=$TARGET_GROUP_ARN,containerName=$SERVICE_NAME,containerPort=3001 \
-                --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUP],assignPublicIp=ENABLED}"
-            else
-              aws ecs create-service \
-                --cluster $CLUSTER_NAME \
-                --service-name $SERVICE_NAME \
-                --task-definition $TASK_DEF_ARN \
-                --desired-count 1 \
-                --launch-type FARGATE \
-                --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUP],assignPublicIp=ENABLED}"
-            fi
+            aws ecs create-service \
+              --cluster $CLUSTER_NAME \
+              --service-name $SERVICE_NAME \
+              --task-definition $TASK_DEF_ARN \
+              --desired-count 1 \
+              --launch-type FARGATE \
+              --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUP],assignPublicIp=ENABLED}"
           fi
 
       - name: Get feature branch IP

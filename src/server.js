@@ -119,15 +119,6 @@ const findUserByEmail = async (email) => {
     return result.rows[0] || null;
   } catch (error) {
     console.error('Database query error:', error.message);
-    // Return mock user for hhundhausen@ucsd.edu
-    if (email === 'hhundhausen@ucsd.edu') {
-      return {
-        id: 1,
-        email: email,
-        name: 'Helena Hundhausen',
-        primary_role: 'student'
-      };
-    }
     return null;
   }
 };
@@ -153,15 +144,6 @@ const findOrCreateUser = async (email, defaults = {}) => {
     return user;
   } catch (error) {
     console.error('Error in findOrCreateUser:', error.message);
-    // Return mock user for hhundhausen@ucsd.edu
-    if (email === 'hhundhausen@ucsd.edu') {
-      return {
-        id: 1,
-        email: email,
-        name: defaults.name || 'Helena Hundhausen',
-        primary_role: 'student'
-      };
-    }
     // Return a mock user object to prevent auth failure
     return {
       id: 1,
@@ -230,21 +212,16 @@ const enrollUserInCourse = async (userId, offeringId, courseRole = 'student') =>
 
 // Get user's enrollment role for dashboard routing (uses active course offering)
 const getUserEnrollmentRole = async (userId) => {
-  try {
-    const offering = await getActiveCourseOffering();
-    if (!offering) return null;
-    
-    const result = await pool.query(
-      `SELECT course_role FROM enrollments 
-       WHERE offering_id = $1 AND user_id = $2 AND status = 'enrolled'::enrollment_status_enum
-       LIMIT 1`,
-      [offering.id, userId]
-    );
-    return result.rows[0]?.course_role || null;
-  } catch (error) {
-    console.error('Error getting enrollment role:', error.message);
-    return 'student'; // Default fallback
-  }
+  const offering = await getActiveCourseOffering();
+  if (!offering) return null;
+  
+  const result = await pool.query(
+    `SELECT course_role FROM enrollments 
+     WHERE offering_id = $1 AND user_id = $2 AND status = 'enrolled'::enrollment_status_enum
+     LIMIT 1`,
+    [offering.id, userId]
+  );
+  return result.rows[0]?.course_role || null;
 };
 
 // Note: getUserEnrollmentRoleForOffering functionality is available in src/middleware/auth.js
