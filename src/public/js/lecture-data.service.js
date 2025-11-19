@@ -149,10 +149,18 @@
       }
     }
 
-    // Determine status based on attendance_opened_at and attendance_closed_at
+    // Determine status based on attendance_opened_at, attendance_closed_at, and endsAt
     let status = 'closed';
     if (session.attendance_opened_at && !session.attendance_closed_at) {
+      // Check if the session end time has passed
+      const now = new Date();
+      if (endsAt && new Date(endsAt) < now) {
+        // End time has passed, session should be closed
+        status = 'closed';
+      } else {
+        // Session is still within its time window
       status = 'open';
+      }
     }
 
     // Calculate attendance percent from statistics if available

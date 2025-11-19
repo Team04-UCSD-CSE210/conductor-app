@@ -10,7 +10,7 @@
     "local:test": "vitest run",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:md",
     "lint:js": "eslint .",
-    "lint:css": "stylelint \"**/*.css\" || echo 'No CSS files found'",
+    "lint:css": "stylelint \"**/*.css\" --ignore-pattern \"node_modules/**\" --ignore-pattern \"coverage/**\" || echo 'No CSS files found'",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**\" --ignore \"coverage/**\" || echo 'No HTML files found'",
     "lint:md": "markdownlint \"**/*.md\" --ignore node_modules",
     "docs": "jsdoc -d docs .",

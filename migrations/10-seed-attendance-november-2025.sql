@@ -4,6 +4,73 @@
 -- Every student has either present or absent status for each session
 -- Run AFTER users, course_offerings, enrollments, and teams are seeded
 
+-- Ensure session_id column exists in session_responses table (for existing databases)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'session_responses' 
+        AND column_name = 'session_id'
+    ) THEN
+        -- Column doesn't exist, add it
+        ALTER TABLE session_responses 
+        ADD COLUMN session_id UUID REFERENCES sessions(id) ON DELETE CASCADE;
+        
+        -- Update existing rows to have a session_id (get it from the question)
+        UPDATE session_responses sr
+        SET session_id = sq.session_id
+        FROM session_questions sq
+        WHERE sr.question_id = sq.id
+        AND sr.session_id IS NULL;
+        
+        -- Now make it NOT NULL after populating existing rows
+        ALTER TABLE session_responses 
+        ALTER COLUMN session_id SET NOT NULL;
+        
+        -- Create index for the new column
+        CREATE INDEX IF NOT EXISTS idx_session_responses_session ON session_responses(session_id);
+        
+        RAISE NOTICE 'Added session_id column to session_responses table';
+    ELSE
+        -- Column exists, but might be nullable - update NULL values and make it NOT NULL
+        UPDATE session_responses sr
+        SET session_id = sq.session_id
+        FROM session_questions sq
+        WHERE sr.question_id = sq.id
+        AND sr.session_id IS NULL;
+        
+        -- Make it NOT NULL if it isn't already
+        IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'session_responses' 
+            AND column_name = 'session_id'
+            AND is_nullable = 'YES'
+        ) THEN
+            ALTER TABLE session_responses 
+            ALTER COLUMN session_id SET NOT NULL;
+        END IF;
+        
+        -- Ensure index exists
+        CREATE INDEX IF NOT EXISTS idx_session_responses_session ON session_responses(session_id);
+    END IF;
+    
+    -- Ensure unique constraint exists (question_id, user_id)
+    -- Try to add it, ignore if it already exists
+    BEGIN
+        ALTER TABLE session_responses 
+        ADD CONSTRAINT session_responses_question_user_unique 
+        UNIQUE (question_id, user_id);
+        
+        RAISE NOTICE 'Added unique constraint (question_id, user_id) to session_responses table';
+    EXCEPTION 
+        WHEN duplicate_object THEN
+            RAISE NOTICE 'Unique constraint (question_id, user_id) already exists on session_responses';
+        WHEN OTHERS THEN
+            -- If constraint exists with different name or structure, that's okay
+            RAISE NOTICE 'Could not add unique constraint (may already exist): %', SQLERRM;
+    END;
+END $$;
+
 DO $$
 DECLARE
     offering_id_var UUID;
@@ -378,19 +445,21 @@ BEGIN
                             END INTO text_response_val;
                             
                             -- Insert or update response
-                            IF EXISTS (SELECT 1 FROM session_responses WHERE question_id = q3_id AND user_id = present_students[student_idx]) THEN
+                            IF EXISTS (SELECT 1 FROM session_responses WHERE question_id = q1_id AND user_id = present_students[student_idx]) THEN
                                 UPDATE session_responses SET
                                     response_text = text_response_val,
                                     submitted_at = student_response_time
-                                WHERE question_id = q3_id AND user_id = present_students[student_idx];
+                                WHERE question_id = q1_id AND user_id = present_students[student_idx];
                             ELSE
                                 INSERT INTO session_responses (
+                                    session_id,
                                     question_id,
                                     user_id,
                                     response_text,
                                     response_option,
                                     submitted_at
                                 ) VALUES (
+                                    session_id_var,
                                     q1_id,
                                     present_students[student_idx],
                                     text_response_val,
@@ -407,19 +476,21 @@ BEGIN
                             ] INTO option_response_val;
                             
                             -- Insert or update response
-                            IF EXISTS (SELECT 1 FROM session_responses WHERE question_id = q3_id AND user_id = present_students[student_idx]) THEN
+                            IF EXISTS (SELECT 1 FROM session_responses WHERE question_id = q2_id AND user_id = present_students[student_idx]) THEN
                                 UPDATE session_responses SET
                                     response_option = option_response_val,
                                     submitted_at = student_response_time + INTERVAL '60 seconds'
-                                WHERE question_id = q3_id AND user_id = present_students[student_idx];
+                                WHERE question_id = q2_id AND user_id = present_students[student_idx];
                             ELSE
                                 INSERT INTO session_responses (
+                                    session_id,
                                     question_id,
                                     user_id,
                                     response_text,
                                     response_option,
                                     submitted_at
                                 ) VALUES (
+                                    session_id_var,
                                     q2_id,
                                     present_students[student_idx],
                                     NULL,
@@ -443,12 +514,14 @@ BEGIN
                                 WHERE question_id = q3_id AND user_id = present_students[student_idx];
                             ELSE
                                 INSERT INTO session_responses (
+                                    session_id,
                                     question_id,
                                     user_id,
                                     response_text,
                                     response_option,
                                     submitted_at
                                 ) VALUES (
+                                    session_id_var,
                                     q3_id,
                                     present_students[student_idx],
                                     NULL,

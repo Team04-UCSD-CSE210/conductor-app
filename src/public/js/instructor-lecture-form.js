@@ -22,7 +22,7 @@
   let isSubmitting = false;
   let draggedElement = null;
 
-  // Format date for display
+  // Format date for display (Month Day, Year format, e.g., Nov 18, 2025)
   function formatDateDisplay(dateInput) {
     if (!dateInput || !dateInput.value) return '';
     const date = new Date(dateInput.value + 'T00:00:00');
@@ -34,7 +34,14 @@
     const dateInput = document.getElementById('lecture-date');
     if (dateInput) {
       const formatted = formatDateDisplay(dateInput);
+      // Store formatted value for display
       dateInput.setAttribute('data-formatted', formatted);
+      
+      // Update placeholder/display if there's a display element
+      const displayElement = dateInput.nextElementSibling;
+      if (displayElement && displayElement.classList.contains('date-display')) {
+        displayElement.textContent = formatted || 'Select date';
+      }
     }
   }
 
@@ -772,47 +779,108 @@
     }
     
     if (dateInput) {
-      dateInput.addEventListener('change', updateDateDisplay);
+      dateInput.addEventListener('change', () => {
+        updateDateDisplay();
+        // Trigger date picker update if it exists
+        if (window.DatePicker && dateInput.dataset.datePickerInitialized) {
+          const datePickerWrapper = dateInput.closest('.date-picker-wrapper');
+          if (datePickerWrapper) {
+            const displayBtn = datePickerWrapper.querySelector('.date-picker-display');
+            if (displayBtn && dateInput.value) {
+              const date = new Date(dateInput.value + 'T00:00:00');
+              if (!isNaN(date.getTime())) {
+                displayBtn.textContent = formatDateDisplay(dateInput);
+              }
+            }
+          }
+        }
+        triggerAutoSave();
+      });
     }
     
-    // Pre-fill start time with current time
+    // Pre-fill start time with current time (rounded to nearest 5 minutes)
     if (startTimeInput && !startTimeInput.value) {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      startTimeInput.value = `${hours}:${minutes}`;
-    }
-    
-    // Pre-fill end time as 30 minutes after start time
-    if (endTimeInput && !endTimeInput.value && startTimeInput) {
-      // Calculate end time based on start time (either already set or just set above)
-      const startValue = startTimeInput.value;
-      if (startValue) {
-        const [startHours, startMinutes] = startValue.split(':').map(Number);
-        const startDate = new Date();
-        startDate.setHours(startHours, startMinutes, 0, 0);
-        startDate.setMinutes(startDate.getMinutes() + 30);
-        
-        const endHours = String(startDate.getHours()).padStart(2, '0');
-        const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
-        endTimeInput.value = `${endHours}:${endMinutes}`;
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      // Round to nearest 5 minutes
+      minutes = Math.round(minutes / 5) * 5;
+      if (minutes === 60) {
+        minutes = 0;
+        hours = (hours + 1) % 24;
       }
+      startTimeInput.value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      
+      // Update time picker display if it exists
+      setTimeout(() => {
+        if (window.TimePicker && startTimeInput.dataset.timePickerInitialized) {
+          const startPicker = startTimeInput.closest('.time-picker-wrapper');
+          if (startPicker) {
+            const displayBtn = startPicker.querySelector('.time-picker-display');
+            if (displayBtn) {
+              const [h, m] = startTimeInput.value.split(':').map(Number);
+              const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+              const ampm = h >= 12 ? ' PM' : ' AM';
+              displayBtn.textContent = `${String(hour12).padStart(2, '0')}:${String(m).padStart(2, '0')}${ampm}`;
+            }
+          }
+        }
+      }, 100);
     }
     
-    // Update end time when start time changes
+    // Helper function to update end time to 30 minutes after start time
+    function updateEndTimeFromStart() {
+      if (!startTimeInput || !endTimeInput) return;
+      
+      const startValue = startTimeInput.value;
+      if (!startValue) return;
+      
+      const [startHours, startMinutes] = startValue.split(':').map(Number);
+      const startDate = new Date();
+      startDate.setHours(startHours, startMinutes, 0, 0);
+      startDate.setMinutes(startDate.getMinutes() + 30);
+      
+      const endHours = String(startDate.getHours()).padStart(2, '0');
+      const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
+      endTimeInput.value = `${endHours}:${endMinutes}`;
+      
+      // Update time picker display if it exists
+      setTimeout(() => {
+        if (window.TimePicker && endTimeInput.dataset.timePickerInitialized) {
+          const endPicker = endTimeInput.closest('.time-picker-wrapper');
+          if (endPicker) {
+            const displayBtn = endPicker.querySelector('.time-picker-display');
+            if (displayBtn) {
+              const [h, m] = endTimeInput.value.split(':').map(Number);
+              const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+              const ampm = h >= 12 ? ' PM' : ' AM';
+              displayBtn.textContent = `${String(hour12).padStart(2, '0')}:${String(m).padStart(2, '0')}${ampm}`;
+            }
+          }
+        }
+      }, 100);
+    }
+    
+    // Pre-fill end time as 30 minutes after start time (default)
+    if (endTimeInput && !endTimeInput.value && startTimeInput && startTimeInput.value) {
+      updateEndTimeFromStart();
+    }
+    
+    // Update end time when start time changes (always set to 30 minutes after as default)
+    // User can still manually change it afterward
     if (startTimeInput && endTimeInput) {
       startTimeInput.addEventListener('change', () => {
-        if (!endTimeInput.value) {
-          // Auto-update end time when start time changes (if end time is empty)
-          const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
-          const startDate = new Date();
-          startDate.setHours(startHours, startMinutes, 0, 0);
-          startDate.setMinutes(startDate.getMinutes() + 30);
-          
-          const endHours = String(startDate.getHours()).padStart(2, '0');
-          const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
-          endTimeInput.value = `${endHours}:${endMinutes}`;
-        }
+        // Always update end time to 30 minutes after start time when start time changes
+        // This provides a good default, but user can manually change end time if needed
+        updateEndTimeFromStart();
+        validateTimeRange();
+        triggerAutoSave();
+      });
+    }
+    
+    // Also validate when end time changes
+    if (endTimeInput) {
+      endTimeInput.addEventListener('change', () => {
         validateTimeRange();
         triggerAutoSave();
       });

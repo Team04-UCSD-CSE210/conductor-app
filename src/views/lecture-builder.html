@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="/dashboard-global.css">
   <link rel="stylesheet" href="/inactivity-timeout.css">
   <link rel="stylesheet" href="/lecture-builder.css">
+  <link rel="stylesheet" href="/time-picker.css">
+  <link rel="stylesheet" href="/date-picker.css">
 </head>
 
 <body class="dashboard-page lecture-builder-page">
@@ -83,6 +85,7 @@
                 type="date" 
                 id="lecture-date" 
                 name="lecture-date"
+                class="date-picker"
                 required
                 aria-required="true"
                 aria-describedby="date-helper"
@@ -100,6 +103,7 @@
                 type="time" 
                 id="lecture-start" 
                 name="lecture-start"
+                class="time-picker"
                 required
                 aria-required="true"
                 aria-describedby="start-helper"
@@ -117,6 +121,7 @@
                 type="time" 
                 id="lecture-end" 
                 name="lecture-end"
+                class="time-picker"
                 required
                 aria-required="true"
                 aria-describedby="end-helper"
@@ -189,6 +194,8 @@
 
   <script src="/js/inactivity-timeout.js" defer></script>
   <script src="/js/lecture-data.service.js" defer></script>
+  <script src="/js/time-picker.js" defer></script>
+  <script src="/js/date-picker.js" defer></script>
   <script src="/js/instructor-lecture-form.js" defer></script>
 </body>
 </html>

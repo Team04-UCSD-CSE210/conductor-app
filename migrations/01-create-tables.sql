@@ -426,15 +426,17 @@ COMMENT ON TABLE session_questions IS 'Questions and prompts for class sessions'
 -- =====================================================
 CREATE TABLE IF NOT EXISTS session_responses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     question_id UUID NOT NULL REFERENCES session_questions(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     response_text TEXT,
     response_option TEXT, -- For multiple choice
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE(question_id, user_id)
+    CONSTRAINT session_responses_question_user_unique UNIQUE(question_id, user_id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_session_responses_session ON session_responses(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_responses_question ON session_responses(question_id);
 CREATE INDEX IF NOT EXISTS idx_session_responses_user ON session_responses(user_id);
 CREATE INDEX IF NOT EXISTS idx_session_responses_submitted ON session_responses(submitted_at);

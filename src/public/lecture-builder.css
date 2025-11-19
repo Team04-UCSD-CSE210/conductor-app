@@ -285,22 +285,7 @@ body.lecture-builder-page .main-container {
   display: block;
 }
 
-/* Date Display Enhancement */
-#lecture-date {
-  position: relative;
-}
-
-#lecture-date::after {
-  content: attr(data-formatted);
-  position: absolute;
-  padding-right: 2rem;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: var(--gray-400, #9ca3af);
-  font-size: 0.85rem;
-}
+/* Date Display Enhancement - removed as date picker handles display */
 
 /* Question Stack */
 .question-stack {

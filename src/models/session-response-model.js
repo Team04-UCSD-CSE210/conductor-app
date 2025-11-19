@@ -12,24 +12,38 @@ export class SessionResponseModel {
       question_id,
       user_id,
       response_text,
-      response_option
+      response_option,
+      session_id
     } = responseData;
 
     if (!question_id || !user_id) {
       throw new Error('question_id and user_id are required');
     }
 
+    // Get session_id from question if not provided
+    let finalSessionId = session_id;
+    if (!finalSessionId) {
+      const questionResult = await pool.query(
+        'SELECT session_id FROM session_questions WHERE id = $1',
+        [question_id]
+      );
+      if (questionResult.rows.length === 0) {
+        throw new Error(`Question ${question_id} not found`);
+      }
+      finalSessionId = questionResult.rows[0].session_id;
+    }
+
     const result = await pool.query(
       `INSERT INTO session_responses 
-       (question_id, user_id, response_text, response_option)
-       VALUES ($1, $2, $3, $4)
+       (session_id, question_id, user_id, response_text, response_option)
+       VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (question_id, user_id)
        DO UPDATE SET
          response_text = EXCLUDED.response_text,
          response_option = EXCLUDED.response_option,
          updated_at = NOW()
        RETURNING *`,
-      [question_id, user_id, response_text, response_option]
+      [finalSessionId, question_id, user_id, response_text, response_option]
     );
 
     return result.rows[0];
@@ -43,19 +57,33 @@ export class SessionResponseModel {
       question_id,
       user_id,
       response_text,
-      response_option
+      response_option,
+      session_id
     } = responseData;
 
     if (!question_id || !user_id) {
       throw new Error('question_id and user_id are required');
     }
 
+    // Get session_id from question if not provided
+    let finalSessionId = session_id;
+    if (!finalSessionId) {
+      const questionResult = await pool.query(
+        'SELECT session_id FROM session_questions WHERE id = $1',
+        [question_id]
+      );
+      if (questionResult.rows.length === 0) {
+        throw new Error(`Question ${question_id} not found`);
+      }
+      finalSessionId = questionResult.rows[0].session_id;
+    }
+
     const result = await pool.query(
       `INSERT INTO session_responses 
-       (question_id, user_id, response_text, response_option)
-       VALUES ($1, $2, $3, $4)
+       (session_id, question_id, user_id, response_text, response_option)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [question_id, user_id, response_text, response_option]
+      [finalSessionId, question_id, user_id, response_text, response_option]
     );
 
     return result.rows[0];
@@ -79,10 +107,23 @@ export class SessionResponseModel {
           throw new Error('question_id and user_id are required for all responses');
         }
 
+        // Get session_id from question if not provided
+        let sessionId = response.session_id;
+        if (!sessionId) {
+          const questionResult = await client.query(
+            'SELECT session_id FROM session_questions WHERE id = $1',
+            [response.question_id]
+          );
+          if (questionResult.rows.length === 0) {
+            throw new Error(`Question ${response.question_id} not found`);
+          }
+          sessionId = questionResult.rows[0].session_id;
+        }
+
         const result = await client.query(
           `INSERT INTO session_responses 
-           (question_id, user_id, response_text, response_option)
-           VALUES ($1, $2, $3, $4)
+           (session_id, question_id, user_id, response_text, response_option)
+           VALUES ($1, $2, $3, $4, $5)
            ON CONFLICT (question_id, user_id)
            DO UPDATE SET
              response_text = EXCLUDED.response_text,
@@ -90,6 +131,7 @@ export class SessionResponseModel {
              updated_at = NOW()
            RETURNING *`,
           [
+            sessionId,
             response.question_id,
             response.user_id,
             response.response_text,
