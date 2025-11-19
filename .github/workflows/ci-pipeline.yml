@@ -75,9 +75,26 @@ jobs:
       - run: npm install
       - run: npx commitlint --from HEAD~1 --to HEAD --verbose
 
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Run security audit
+        run: npm audit --audit-level high
+      - name: Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
   notify:
-    needs: [lint, test, docker-build, docs, commit-lint]
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    needs: [lint, test, docker-build, docs, commit-lint, security]
+    if: github.event_name == 'pull_request' || github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
       - uses: 8398a7/action-slack@v3
