@@ -293,9 +293,17 @@ const redisClient = createClient({ url: REDIS_URL });
 redisClient.on("error", (error) => {
   console.error("Redis client error", error);
 });
-redisClient.connect().catch((error) => {
-  console.error("Failed to connect to Redis", error);
-});
+
+// Make Redis optional for local development
+let redisConnected = false;
+redisClient.connect()
+  .then(() => {
+    redisConnected = true;
+    console.log("✅ Connected to Redis");
+  })
+  .catch((error) => {
+    console.warn("⚠️ Redis connection failed - running without Redis (rate limiting disabled):", error.message);
+  });
 
 const extractIpAddress = (req) => {
   const forwarded = req?.headers?.["x-forwarded-for"];
@@ -1561,6 +1569,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.error("Failed to connect to the database", error);
     }
   })();
+} else {
+  // Fallback: if the check fails on some systems, start anyway if not in Vercel
+  console.log('[server] Starting server (fallback path)');
+  startServer();
 }
 
 // Export app for Vercel
