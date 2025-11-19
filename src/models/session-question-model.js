@@ -41,25 +41,67 @@ export class SessionQuestionModel {
 
       const createdQuestions = [];
       for (const question of questions) {
-        const result = await client.query(
-          `INSERT INTO session_questions 
-           (session_id, question_text, question_type, question_order, 
-            options, is_required, created_by, updated_by)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
-           RETURNING *`,
-          [
-            question.session_id,
-            question.question_text,
-            question.question_type,
-            question.question_order,
-            question.options,
-            question.is_required ?? false,
-            createdBy
-          ]
-        );
-        createdQuestions.push(result.rows[0]);
+        try {
+          // Handle options: if it's a string, parse it; if it's already an array/object, use as-is
+          let options = question.options;
+          
+          if (typeof options === 'string') {
+            try {
+              options = JSON.parse(options);
+              console.log('[SessionQuestionModel] Parsed string options to:', options);
+            } catch (parseErr) {
+              console.error('[SessionQuestionModel] Failed to parse options string:', options, parseErr);
+              options = []; // Fallback to empty array if parsing fails
+            }
+          }
+          
+          // For text questions, options should be null
+          if (question.question_type === 'text' && options) {
+            options = null;
+          }
+          
+          // Ensure options is a proper JSON value for JSONB column
+          // node-postgres expects null, array, or object - not undefined
+          if (options === undefined) {
+            options = null;
+          }
+          
+          // For JSONB columns, we need to pass it as a properly formatted JSON string
+          // node-postgres will handle the conversion, but we need to ensure it's valid
+          let optionsParam = options;
+          if (options !== null) {
+            optionsParam = JSON.stringify(options);
+          }
+          
+          const result = await client.query(
+            `INSERT INTO session_questions 
+             (session_id, question_text, question_type, question_order, 
+              options, is_required, created_by, updated_by)
+             VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $7)
+             RETURNING *`,
+            [
+              question.session_id,
+              question.question_text,
+              question.question_type,
+              question.question_order,
+              optionsParam,
+              question.is_required ?? false,
+              createdBy
+            ]
+          );
+          createdQuestions.push(result.rows[0]);
+        } catch (err) {
+          console.error('[SessionQuestionModel.createMany] Error inserting question:', {
+            question_text: question.question_text,
+            question_type: question.question_type,
+            options: question.options,
+            error: err.message,
+            error_detail: err.detail,
+            error_hint: err.hint
+          });
+          throw new Error(`Failed to insert question "${question.question_text}": ${err.message}`);
+        }
       }
-
       await client.query('COMMIT');
       return createdQuestions;
     } catch (error) {
