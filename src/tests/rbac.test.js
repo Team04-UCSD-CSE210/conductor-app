@@ -5,7 +5,6 @@
  * Uses mock data instead of database connections.
  */
 
-import assert from 'assert';
 import { authenticate, requireRole } from '../middleware/permission-middleware.js';
 
 // Mock user data for testing
@@ -148,8 +147,8 @@ export async function testAuthentication() {
 
       await authenticate(req, res, next);
 
-      assert.strictEqual(res.statusCode, 401, 'Should return 401 for no auth');
-      assert.strictEqual(res.jsonData.error, 'Unauthorized', 'Should return unauthorized error');
+      expect(res.statusCode).toBe(401, 'Should return 401 for no auth');
+      expect(res.jsonData.error).toBe('Unauthorized', 'Should return unauthorized error');
       console.log('PASS: No auth headers rejected');
     }
 
@@ -161,7 +160,7 @@ export async function testAuthentication() {
 
       await authenticate(req, res, next);
 
-      assert.strictEqual(res.statusCode, 401, 'Should return 401 for invalid user');
+      expect(res.statusCode).toBe(401, 'Should return 401 for invalid user');
       console.log('PASS: Invalid email rejected');
     }
 
@@ -173,9 +172,9 @@ export async function testAuthentication() {
 
       await authenticate(req, res, next);
 
-      assert.strictEqual(next.wasCalled(), true, 'Should call next() for valid user');
-      assert.strictEqual(req.user.email, 'admin@ucsd.edu', 'Should set correct user email');
-      assert.strictEqual(req.user.role, 'admin', 'Should set correct user role');
+      expect(next.wasCalled()).toBe(true, 'Should call next() for valid user');
+      expect(req.user.email).toBe('admin@ucsd.edu', 'Should set correct user email');
+      expect(req.user.role).toBe('admin', 'Should set correct user role');
       console.log('PASS: Admin authentication works');
     }
 
@@ -187,8 +186,8 @@ export async function testAuthentication() {
 
       await authenticate(req, res, next);
 
-      assert.strictEqual(next.wasCalled(), true, 'Should call next() for valid instructor');
-      assert.strictEqual(req.user.role, 'instructor', 'Should set correct instructor role');
+      expect(next.wasCalled()).toBe(true, 'Should call next() for valid instructor');
+      expect(req.user.role).toBe('instructor', 'Should set correct instructor role');
       console.log('PASS: Instructor authentication works');
     }
 
@@ -200,8 +199,8 @@ export async function testAuthentication() {
 
       await authenticate(req, res, next);
 
-      assert.strictEqual(next.wasCalled(), true, 'Should call next() for valid student');
-      assert.strictEqual(req.user.role, 'student', 'Should set correct student role');
+      expect(next.wasCalled()).toBe(true, 'Should call next() for valid student');
+      expect(req.user.role).toBe('student', 'Should set correct student role');
       console.log('PASS: Student authentication works');
     }
 
@@ -213,7 +212,7 @@ export async function testAuthentication() {
 
       await authenticate(req, res, next);
 
-      assert.strictEqual(res.statusCode, 401, 'Should return 401 for inactive user');
+      expect(res.statusCode).toBe(401, 'Should return 401 for inactive user');
       assert(res.jsonData.message.includes('busy'), 'Should mention user status');
       console.log('PASS: Inactive user rejected');
     }
@@ -226,7 +225,7 @@ export async function testAuthentication() {
 
       await authenticate(req, res, next);
 
-      assert.strictEqual(res.statusCode, 401, 'Should return 401 for deleted user');
+      expect(res.statusCode).toBe(401, 'Should return 401 for deleted user');
       console.log('PASS: Deleted user rejected');
     }
 
@@ -238,8 +237,8 @@ export async function testAuthentication() {
 
       await authenticate(req, res, next);
 
-      assert.strictEqual(next.wasCalled(), true, 'Should call next() for valid user ID');
-      assert.strictEqual(req.user.email, 'admin@ucsd.edu', 'Should set correct user from ID');
+      expect(next.wasCalled()).toBe(true, 'Should call next() for valid user ID');
+      expect(req.user.email).toBe('admin@ucsd.edu', 'Should set correct user from ID');
       console.log('PASS: User ID authentication works');
     }
 
@@ -270,7 +269,7 @@ export async function testRoleAuthorization() {
 
       await middleware(req, res, next);
 
-      assert.strictEqual(res.statusCode, 401, 'Should return 401 for no user');
+      expect(res.statusCode).toBe(401, 'Should return 401 for no user');
       console.log('PASS: Unauthenticated user rejected');
     }
 
@@ -285,8 +284,8 @@ export async function testRoleAuthorization() {
 
       await middleware(req, res, next);
 
-      assert.strictEqual(next.wasCalled(), true, 'Should call next() for admin role');
-      assert.strictEqual(req.userRole, 'admin', 'Should set userRole');
+      expect(next.wasCalled()).toBe(true, 'Should call next() for admin role');
+      expect(req.userRole).toBe('admin', 'Should set userRole');
       console.log('PASS: Admin role authorization works');
     }
 
@@ -301,7 +300,7 @@ export async function testRoleAuthorization() {
 
       await middleware(req, res, next);
 
-      assert.strictEqual(next.wasCalled(), true, 'Should call next() for admin in multi-role');
+      expect(next.wasCalled()).toBe(true, 'Should call next() for admin in multi-role');
       console.log('PASS: Multiple role authorization works (admin)');
     }
 
@@ -316,7 +315,7 @@ export async function testRoleAuthorization() {
 
       await middleware(req, res, next);
 
-      assert.strictEqual(next.wasCalled(), true, 'Should call next() for instructor in multi-role');
+      expect(next.wasCalled()).toBe(true, 'Should call next() for instructor in multi-role');
       console.log('PASS: Multiple role authorization works (instructor)');
     }
 
@@ -331,7 +330,7 @@ export async function testRoleAuthorization() {
 
       await middleware(req, res, next);
 
-      assert.strictEqual(res.statusCode, 403, 'Should return 403 for insufficient role');
+      expect(res.statusCode).toBe(403, 'Should return 403 for insufficient role');
       assert(res.jsonData.message.includes('admin'), 'Should mention required role');
       console.log('PASS: Insufficient role rejected');
     }
@@ -347,7 +346,7 @@ export async function testRoleAuthorization() {
 
       await middleware(req, res, next);
 
-      assert.strictEqual(res.statusCode, 403, 'Should return 403 for student accessing admin/instructor');
+      expect(res.statusCode).toBe(403, 'Should return 403 for student accessing admin/instructor');
       console.log('PASS: Student blocked from admin/instructor actions');
     }
 
@@ -362,7 +361,7 @@ export async function testRoleAuthorization() {
 
       await middleware(req, res, next);
 
-      assert.strictEqual(res.statusCode, 401, 'Should return 401 for non-existent user');
+      expect(res.statusCode).toBe(401, 'Should return 401 for non-existent user');
       console.log('PASS: Non-existent user rejected');
     }
 

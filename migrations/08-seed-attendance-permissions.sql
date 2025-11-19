@@ -33,7 +33,7 @@ ON CONFLICT (user_role, permission_id) DO NOTHING;
 
 -- 4) TA: view and mark attendance, manage sessions
 INSERT INTO enrollment_role_permissions (enrollment_role, permission_id)
-SELECT 'ta'::course_role_enum, p.id
+SELECT 'ta'::enrollment_role_enum, p.id
 FROM permissions p
 WHERE p.code IN (
   'session.manage',
@@ -44,7 +44,7 @@ ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 
 -- 5) Tutor: view attendance only
 INSERT INTO enrollment_role_permissions (enrollment_role, permission_id)
-SELECT 'tutor'::course_role_enum, p.id
+SELECT 'tutor'::enrollment_role_enum, p.id
 FROM permissions p
 WHERE p.code = 'attendance.view'
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;

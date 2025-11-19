@@ -83,7 +83,7 @@ BEGIN
         SELECT DISTINCT user_id
         FROM enrollments
         WHERE offering_id = offering_id_var
-          AND course_role = 'student'::course_role_enum
+          AND course_role = 'student'::enrollment_role_enum
           AND status = 'enrolled'::enrollment_status_enum
     ) sub;
     
@@ -378,21 +378,19 @@ BEGIN
                             END INTO text_response_val;
                             
                             -- Insert or update response
-                            IF EXISTS (SELECT 1 FROM session_responses WHERE session_id = session_id_var AND question_id = q1_id AND user_id = present_students[student_idx]) THEN
+                            IF EXISTS (SELECT 1 FROM session_responses WHERE question_id = q3_id AND user_id = present_students[student_idx]) THEN
                                 UPDATE session_responses SET
                                     response_text = text_response_val,
                                     submitted_at = student_response_time
-                                WHERE session_id = session_id_var AND question_id = q1_id AND user_id = present_students[student_idx];
+                                WHERE question_id = q3_id AND user_id = present_students[student_idx];
                             ELSE
                                 INSERT INTO session_responses (
-                                    session_id,
                                     question_id,
                                     user_id,
                                     response_text,
                                     response_option,
                                     submitted_at
                                 ) VALUES (
-                                    session_id_var,
                                     q1_id,
                                     present_students[student_idx],
                                     text_response_val,
@@ -409,21 +407,19 @@ BEGIN
                             ] INTO option_response_val;
                             
                             -- Insert or update response
-                            IF EXISTS (SELECT 1 FROM session_responses WHERE session_id = session_id_var AND question_id = q2_id AND user_id = present_students[student_idx]) THEN
+                            IF EXISTS (SELECT 1 FROM session_responses WHERE question_id = q3_id AND user_id = present_students[student_idx]) THEN
                                 UPDATE session_responses SET
                                     response_option = option_response_val,
-                                    submitted_at = student_response_time + INTERVAL '30 seconds'
-                                WHERE session_id = session_id_var AND question_id = q2_id AND user_id = present_students[student_idx];
+                                    submitted_at = student_response_time + INTERVAL '60 seconds'
+                                WHERE question_id = q3_id AND user_id = present_students[student_idx];
                             ELSE
                                 INSERT INTO session_responses (
-                                    session_id,
                                     question_id,
                                     user_id,
                                     response_text,
                                     response_option,
                                     submitted_at
                                 ) VALUES (
-                                    session_id_var,
                                     q2_id,
                                     present_students[student_idx],
                                     NULL,
@@ -440,21 +436,19 @@ BEGIN
                             ] INTO option_response_val;
                             
                             -- Insert or update response
-                            IF EXISTS (SELECT 1 FROM session_responses WHERE session_id = session_id_var AND question_id = q3_id AND user_id = present_students[student_idx]) THEN
+                            IF EXISTS (SELECT 1 FROM session_responses WHERE question_id = q3_id AND user_id = present_students[student_idx]) THEN
                                 UPDATE session_responses SET
                                     response_option = option_response_val,
                                     submitted_at = student_response_time + INTERVAL '1 minute'
-                                WHERE session_id = session_id_var AND question_id = q3_id AND user_id = present_students[student_idx];
+                                WHERE question_id = q3_id AND user_id = present_students[student_idx];
                             ELSE
                                 INSERT INTO session_responses (
-                                    session_id,
                                     question_id,
                                     user_id,
                                     response_text,
                                     response_option,
                                     submitted_at
                                 ) VALUES (
-                                    session_id_var,
                                     q3_id,
                                     present_students[student_idx],
                                     NULL,

@@ -6,7 +6,7 @@
  *
  * Role layers supported:
  *   - Global role (users.primary_role)
- *   - Course roles (enrollments.course_role, course_staff.staff_role)
+ *   - Course roles (enrollments.course_role)
  *   - Team roles (team_members.role)
  *
  * Permission tables used:
@@ -48,7 +48,7 @@ export class PermissionService {
     // ------------------------------------------------------------
     // Single SQL that checks:
     //   - global role
-    //   - course roles (enrollments + course_staff)
+    //   - course roles (enrollments)
     //   - team roles
     //
     // Using EXISTS and UNION avoids multiple round-trips.
@@ -74,16 +74,10 @@ export class PermissionService {
         LIMIT 1
       ),
 
-      -- Combine enrollment + course_staff roles
+      -- Course enrollment roles
       course_roles AS (
         SELECT course_role AS role_name
         FROM enrollments
-        WHERE offering_id = $3::uuid AND user_id = $2::uuid
-
-        UNION ALL
-
-        SELECT staff_role AS role_name
-        FROM course_staff
         WHERE offering_id = $3::uuid AND user_id = $2::uuid
       ),
 
@@ -162,14 +156,12 @@ export class PermissionService {
         WHERE $2::uuid IS NOT NULL
           AND EXISTS (
             SELECT 1
-            FROM (
-              SELECT course_role AS role FROM enrollments WHERE offering_id = $2::uuid AND user_id = $1::uuid
-              UNION ALL
-              SELECT staff_role AS role FROM course_staff WHERE offering_id = $2::uuid AND user_id = $1::uuid
-            ) cr
+            FROM enrollments e
             JOIN enrollment_role_permissions erp
-              ON erp.enrollment_role::text = cr.role::text
-            WHERE erp.permission_id = p.id
+              ON erp.enrollment_role::text = e.course_role::text
+            WHERE e.offering_id = $2::uuid 
+              AND e.user_id = $1::uuid
+              AND erp.permission_id = p.id
           )
       ),
 

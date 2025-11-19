@@ -9,7 +9,7 @@
  * - Audit logging
  */
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll , expect} from 'vitest';
 import assert from 'node:assert';
 import { pool } from '../db.js';
 import { EnrollmentService } from '../services/enrollment-service.js';
@@ -20,16 +20,32 @@ describe('EnrollmentService', () => {
   let createdEnrollmentIds = [];
   let adminId;
 
-  before(async () => {
-    // Get admin ID from seed data
-    const { rows } = await pool.query(
+  beforeAll(async () => {
+    // Get or create admin user
+    let adminResult = await pool.query(
       "SELECT id FROM users WHERE email = 'admin@ucsd.edu' AND deleted_at IS NULL LIMIT 1"
     );
-    adminId = rows[0].id;
-    // Create test offering
+    
+    if (adminResult.rows.length === 0) {
+      // Create admin if doesn't exist
+      adminResult = await pool.query(
+        `INSERT INTO users (email, name, primary_role, status)
+         VALUES ('admin@ucsd.edu', 'Test Admin', 'admin', 'active')
+         RETURNING id`
+      );
+    }
+    adminId = adminResult.rows[0].id;
+    
+    // Clean up any existing test data first - be more thorough
+    // First delete enrollments, then users, then offering
+    await pool.query(`DELETE FROM enrollments WHERE offering_id IN (SELECT id FROM course_offerings WHERE code = 'TEST101')`);
+    await pool.query(`DELETE FROM users WHERE email LIKE 'enrollment-test-%@test.edu' OR email LIKE 'enrollment-invalid%@test.edu'`);
+    await pool.query(`DELETE FROM course_offerings WHERE code = 'TEST101'`);
+    
+    // Create test offering (set is_active=FALSE to prevent auto-enrollment trigger)
     const offeringResult = await pool.query(
-      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5)
+      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5, FALSE)
        RETURNING *`,
       ['Test Course', 'TEST101', 'Fall', 2025, adminId, '2025-09-01', '2025-12-15']
     );
@@ -53,7 +69,7 @@ describe('EnrollmentService', () => {
     }
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Clean up enrollments
     if (createdEnrollmentIds.length > 0) {
       await pool.query(
@@ -83,9 +99,9 @@ describe('EnrollmentService', () => {
       user_id: testUsers[0].id,
     }, adminId);
 
-    assert.ok(enrollment.id, 'Should return enrollment ID');
-    assert.strictEqual(enrollment.course_role, 'student', 'Should default to student role');
-    assert.strictEqual(enrollment.status, 'enrolled', 'Should default to enrolled status');
+    expect(enrollment.id).toBeTruthy();
+    expect(enrollment.course_role).toBe('student', 'Should default to student role');
+    expect(enrollment.status).toBe('enrolled', 'Should default to enrolled status');
     
     createdEnrollmentIds.push(enrollment.id);
   });
@@ -97,7 +113,7 @@ describe('EnrollmentService', () => {
       course_role: 'ta',
     }, adminId);
 
-    assert.strictEqual(enrollment.course_role, 'ta', 'Should set TA role');
+    expect(enrollment.course_role).toBe('ta', 'Should set TA role');
     createdEnrollmentIds.push(enrollment.id);
   });
 
@@ -108,7 +124,7 @@ describe('EnrollmentService', () => {
       course_role: 'tutor',
     }, adminId);
 
-    assert.strictEqual(enrollment.course_role, 'tutor', 'Should set tutor role');
+    expect(enrollment.course_role).toBe('tutor', 'Should set tutor role');
     createdEnrollmentIds.push(enrollment.id);
   });
 
@@ -201,9 +217,9 @@ describe('EnrollmentService', () => {
       testUsers[0].id
     );
 
-    assert.ok(enrollment, 'Should find enrollment');
-    assert.strictEqual(enrollment.user_id, testUsers[0].id, 'Should match user ID');
-    assert.strictEqual(enrollment.offering_id, testOffering.id, 'Should match offering ID');
+    expect(enrollment).toBeTruthy();
+    expect(enrollment.user_id).toBe(testUsers[0].id, 'Should match user ID');
+    expect(enrollment.offering_id).toBe(testOffering.id, 'Should match offering ID');
   });
 
   it('should return null for non-existent enrollment', async () => {
@@ -212,48 +228,48 @@ describe('EnrollmentService', () => {
       '00000000-0000-0000-0000-000000000000'
     );
 
-    assert.strictEqual(enrollment, null, 'Should return null for non-existent enrollment');
+    expect(enrollment).toBe(null, 'Should return null for non-existent enrollment');
   });
 
   it('should get all enrollments for offering', async () => {
     const enrollments = await EnrollmentService.getEnrollmentsByOffering(testOffering.id);
 
-    assert.ok(Array.isArray(enrollments), 'Should return array');
-    assert.strictEqual(enrollments.length, 3, 'Should have 3 enrollments');
+    expect(Array.isArray(enrollments)).toBeTruthy();
+    expect(enrollments.length).toBe(3, 'Should have 3 enrollments');
   });
 
   it('should get TAs for offering', async () => {
     const tas = await EnrollmentService.getTAs(testOffering.id);
 
-    assert.ok(Array.isArray(tas), 'Should return array');
-    assert.strictEqual(tas.length, 1, 'Should have 1 TA');
-    assert.strictEqual(tas[0].course_role, 'ta', 'Should be TA role');
+    expect(Array.isArray(tas)).toBeTruthy();
+    expect(tas.length).toBe(1, 'Should have 1 TA');
+    expect(tas[0].course_role).toBe('ta', 'Should be TA role');
   });
 
   it('should get tutors for offering', async () => {
     const tutors = await EnrollmentService.getTutors(testOffering.id);
 
-    assert.ok(Array.isArray(tutors), 'Should return array');
-    assert.strictEqual(tutors.length, 1, 'Should have 1 tutor');
-    assert.strictEqual(tutors[0].course_role, 'tutor', 'Should be tutor role');
+    expect(Array.isArray(tutors)).toBeTruthy();
+    expect(tutors.length).toBe(1, 'Should have 1 tutor');
+    expect(tutors[0].course_role).toBe('tutor', 'Should be tutor role');
   });
 
   it('should get students for offering', async () => {
     const students = await EnrollmentService.getStudents(testOffering.id);
 
-    assert.ok(Array.isArray(students), 'Should return array');
-    assert.strictEqual(students.length, 1, 'Should have 1 student');
-    assert.strictEqual(students[0].course_role, 'student', 'Should be student role');
+    expect(Array.isArray(students)).toBeTruthy();
+    expect(students.length).toBe(1, 'Should have 1 student');
+    expect(students[0].course_role).toBe('student', 'Should be student role');
   });
 
   it('should get course staff (TAs and tutors)', async () => {
     const staff = await EnrollmentService.getCourseStaff(testOffering.id);
 
-    assert.ok(Array.isArray(staff), 'Should return array');
-    assert.strictEqual(staff.length, 2, 'Should have 2 staff members (TA + tutor)');
+    expect(Array.isArray(staff)).toBeTruthy();
+    expect(staff.length).toBe(2, 'Should have 2 staff members (TA + tutor)');
     
     const roles = staff.map(s => s.course_role).sort();
-    assert.deepStrictEqual(roles, ['ta', 'tutor'], 'Should include TA and tutor');
+    expect(roles).toEqual(['ta', 'tutor'], 'Should include TA and tutor');
   });
 
   it('should update course role', async () => {
@@ -264,17 +280,17 @@ describe('EnrollmentService', () => {
       adminId
     );
 
-    assert.strictEqual(enrollment.course_role, 'ta', 'Should update to TA role');
+    expect(enrollment.course_role).toBe('ta', 'Should update to TA role');
   });
 
   it('should get enrollment statistics', async () => {
     const stats = await EnrollmentService.getEnrollmentStats(testOffering.id);
 
-    assert.ok(stats, 'Should return stats');
-    assert.strictEqual(stats.total, 3, 'Should have 3 total enrollments');
-    assert.strictEqual(stats.by_role.tas, 2, 'Should have 2 TAs (after role update)');
-    assert.strictEqual(stats.by_role.tutors, 1, 'Should have 1 tutor');
-    assert.strictEqual(stats.by_status.enrolled, 3, 'Should have 3 enrolled');
+    expect(stats).toBeTruthy();
+    expect(stats.total).toBe(3, 'Should have 3 total enrollments');
+    expect(stats.by_role.tas).toBe(2, 'Should have 2 TAs (after role update)');
+    expect(stats.by_role.tutors).toBe(1, 'Should have 1 tutor');
+    expect(stats.by_status.enrolled).toBe(3, 'Should have 3 enrolled');
   });
 
   it('should drop enrollment', async () => {
@@ -284,7 +300,7 @@ describe('EnrollmentService', () => {
       adminId
     );
 
-    assert.strictEqual(dropped.status, 'dropped', 'Should set status to dropped');
-    assert.ok(dropped.dropped_at, 'Should set dropped_at date');
+    expect(dropped.status).toBe('dropped', 'Should set status to dropped');
+    expect(dropped.dropped_at).toBeTruthy();
   });
 });

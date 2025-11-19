@@ -7,7 +7,7 @@
  * - Team leader authorization checks
  */
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll , expect} from 'vitest';
 import assert from 'node:assert';
 import { pool } from '../db.js';
 import { SessionService } from '../services/session-service.js';
@@ -22,16 +22,25 @@ describe('Session Ownership and Authorization', () => {
   let sessionByTeamLeader;
   let adminId;
 
-  before(async () => {
-    // Get admin ID from seed data
-    const { rows } = await pool.query(
+  beforeAll(async () => {
+    // Get or create admin user
+    let adminResult = await pool.query(
       "SELECT id FROM users WHERE email = 'admin@ucsd.edu' AND deleted_at IS NULL LIMIT 1"
     );
-    adminId = rows[0].id;
+    
+    if (adminResult.rows.length === 0) {
+      // Create admin if doesn't exist
+      adminResult = await pool.query(
+        `INSERT INTO users (email, name, primary_role, status)
+         VALUES ('admin@ucsd.edu', 'Test Admin', 'admin', 'active')
+         RETURNING id`
+      );
+    }
+    adminId = adminResult.rows[0].id;
     // Create test offering
     const offeringResult = await pool.query(
-      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5)
+      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5, FALSE)
        RETURNING *`,
       ['Session Ownership Test Course', 'SESH101', 'Fall', 2025, adminId, '2025-09-01', '2025-12-15']
     );
@@ -104,7 +113,7 @@ describe('Session Ownership and Authorization', () => {
     );
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Clean up sessions
     if (sessionByInstructor) {
       await pool.query('DELETE FROM sessions WHERE id = $1', [sessionByInstructor.id]);
@@ -140,9 +149,9 @@ describe('Session Ownership and Authorization', () => {
       session_time: '14:00:00',
     }, instructor.id);
 
-    assert.ok(sessionByInstructor.id, 'Should create session');
-    assert.strictEqual(sessionByInstructor.created_by, instructor.id, 'Should set instructor as creator');
-    assert.ok(sessionByInstructor.access_code, 'Should generate access code');
+    expect(sessionByInstructor.id).toBeTruthy();
+    expect(sessionByInstructor.created_by).toBe(instructor.id, 'Should set instructor as creator');
+    expect(sessionByInstructor.access_code).toBeTruthy();
   });
 
   it('should allow team leader to create session', async () => {
@@ -154,8 +163,8 @@ describe('Session Ownership and Authorization', () => {
       session_time: '15:00:00',
     }, teamLeader.id);
 
-    assert.ok(sessionByTeamLeader.id, 'Should create session');
-    assert.strictEqual(sessionByTeamLeader.created_by, teamLeader.id, 'Should set team leader as creator');
+    expect(sessionByTeamLeader.id).toBeTruthy();
+    expect(sessionByTeamLeader.created_by).toBe(teamLeader.id, 'Should set team leader as creator');
   });
 
   it('should reject student creating session', async () => {
@@ -181,7 +190,7 @@ describe('Session Ownership and Authorization', () => {
       instructor.id
     );
 
-    assert.strictEqual(updated.title, 'Updated Instructor Session', 'Should update title');
+    expect(updated.title).toBe('Updated Instructor Session', 'Should update title');
   });
 
   it('should reject non-creator updating session', async () => {
@@ -210,7 +219,7 @@ describe('Session Ownership and Authorization', () => {
 
     const deleted = await SessionService.deleteSession(tempSession.id, instructor.id);
 
-    assert.ok(deleted, 'Should delete session');
+    expect(deleted).toBeTruthy();
   });
 
   it('should reject non-creator deleting session', async () => {
@@ -226,7 +235,7 @@ describe('Session Ownership and Authorization', () => {
   it('should allow creator to open attendance', async () => {
     const updated = await SessionService.openAttendance(sessionByInstructor.id, instructor.id);
 
-    assert.ok(updated.attendance_opened_at, 'Should set attendance_opened_at');
+    expect(updated.attendance_opened_at).toBeTruthy();
   });
 
   it('should reject non-creator opening attendance', async () => {
@@ -242,7 +251,7 @@ describe('Session Ownership and Authorization', () => {
   it('should allow creator to close attendance', async () => {
     const updated = await SessionService.closeAttendance(sessionByInstructor.id, instructor.id);
 
-    assert.ok(updated.attendance_closed_at, 'Should set attendance_closed_at');
+    expect(updated.attendance_closed_at).toBeTruthy();
   });
 
   it('should reject non-creator closing attendance', async () => {
@@ -268,8 +277,8 @@ describe('Session Ownership and Authorization', () => {
       instructor.id
     );
 
-    assert.ok(Array.isArray(questions), 'Should return questions array');
-    assert.strictEqual(questions.length, 1, 'Should create 1 question');
+    expect(Array.isArray(questions)).toBeTruthy();
+    expect(questions.length).toBe(1, 'Should create 1 question');
   });
 
   it('should reject non-creator adding questions', async () => {
@@ -294,19 +303,19 @@ describe('Session Ownership and Authorization', () => {
   it('should verify userCanCreateSession returns true for instructor', async () => {
     const canCreate = await SessionService.userCanCreateSession(instructor.id, testOffering.id);
 
-    assert.strictEqual(canCreate, true, 'Instructor should be able to create sessions');
+    expect(canCreate).toBe(true, 'Instructor should be able to create sessions');
   });
 
   it('should verify userCanCreateSession returns true for team leader', async () => {
     const canCreate = await SessionService.userCanCreateSession(teamLeader.id, testOffering.id);
 
-    assert.strictEqual(canCreate, true, 'Team leader should be able to create sessions');
+    expect(canCreate).toBe(true, 'Team leader should be able to create sessions');
   });
 
   it('should verify userCanCreateSession returns false for student', async () => {
     const canCreate = await SessionService.userCanCreateSession(student.id, testOffering.id);
 
-    assert.strictEqual(canCreate, false, 'Regular student should not be able to create sessions');
+    expect(canCreate).toBe(false, 'Regular student should not be able to create sessions');
   });
 
   it('should verify userCanCreateSession returns false for non-existent user', async () => {
@@ -315,6 +324,6 @@ describe('Session Ownership and Authorization', () => {
       testOffering.id
     );
 
-    assert.strictEqual(canCreate, false, 'Non-existent user should not be able to create sessions');
+    expect(canCreate).toBe(false, 'Non-existent user should not be able to create sessions');
   });
 });

@@ -7,7 +7,7 @@
  * - Permission resolution via team_role_permissions
  */
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll , expect} from 'vitest';
 import assert from 'node:assert';
 import { pool } from '../db.js';
 import { PermissionService } from '../services/permission-service.js';
@@ -20,16 +20,25 @@ describe('Team Leader Permissions', () => {
   let nonTeamStudent;
   let adminId;
 
-  before(async () => {
-    // Get admin ID from seed data
-    const { rows } = await pool.query(
+  beforeAll(async () => {
+    // Get or create admin user
+    let adminResult = await pool.query(
       "SELECT id FROM users WHERE email = 'admin@ucsd.edu' AND deleted_at IS NULL LIMIT 1"
     );
-    adminId = rows[0].id;
+    
+    if (adminResult.rows.length === 0) {
+      // Create admin if doesn't exist
+      adminResult = await pool.query(
+        `INSERT INTO users (email, name, primary_role, status)
+         VALUES ('admin@ucsd.edu', 'Test Admin', 'admin', 'active')
+         RETURNING id`
+      );
+    }
+    adminId = adminResult.rows[0].id;
     // Create test offering
     const offeringResult = await pool.query(
-      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5)
+      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5, FALSE)
        RETURNING *`,
       ['Team Permission Test Course', 'TEAM101', 'Fall', 2025, adminId, '2025-09-01', '2025-12-15']
     );
@@ -109,7 +118,7 @@ describe('Team Leader Permissions', () => {
     );
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Clean up team members and team
     if (team) {
       await pool.query('DELETE FROM team_members WHERE team_id = $1', [team.id]);
@@ -136,7 +145,7 @@ describe('Team Leader Permissions', () => {
       team.id
     );
 
-    assert.strictEqual(hasPermission, true, 'Team leader should have session.create permission');
+    expect(hasPermission).toBe(true, 'Team leader should have session.create permission');
   });
 
   it('should grant team leader session.manage permission', async () => {
@@ -147,7 +156,7 @@ describe('Team Leader Permissions', () => {
       team.id
     );
 
-    assert.strictEqual(hasPermission, true, 'Team leader should have session.manage permission');
+    expect(hasPermission).toBe(true, 'Team leader should have session.manage permission');
   });
 
   it('should grant team leader team.manage permission', async () => {
@@ -158,7 +167,7 @@ describe('Team Leader Permissions', () => {
       team.id
     );
 
-    assert.strictEqual(hasPermission, true, 'Team leader should have team.manage permission');
+    expect(hasPermission).toBe(true, 'Team leader should have team.manage permission');
   });
 
   it('should not grant team member session.create permission', async () => {
@@ -169,7 +178,7 @@ describe('Team Leader Permissions', () => {
       team.id
     );
 
-    assert.strictEqual(hasPermission, false, 'Regular team member should not have session.create permission');
+    expect(hasPermission).toBe(false, 'Regular team member should not have session.create permission');
   });
 
   it('should not grant team member session.manage permission', async () => {
@@ -180,7 +189,7 @@ describe('Team Leader Permissions', () => {
       team.id
     );
 
-    assert.strictEqual(hasPermission, false, 'Regular team member should not have session.manage permission');
+    expect(hasPermission).toBe(false, 'Regular team member should not have session.manage permission');
   });
 
   it('should not grant team member team.manage permission', async () => {
@@ -191,7 +200,7 @@ describe('Team Leader Permissions', () => {
       team.id
     );
 
-    assert.strictEqual(hasPermission, false, 'Regular team member should not have team.manage permission');
+    expect(hasPermission).toBe(false, 'Regular team member should not have team.manage permission');
   });
 
   it('should not grant non-team student session.create permission', async () => {
@@ -202,7 +211,7 @@ describe('Team Leader Permissions', () => {
       null
     );
 
-    assert.strictEqual(hasPermission, false, 'Non-team student should not have session.create permission');
+    expect(hasPermission).toBe(false, 'Non-team student should not have session.create permission');
   });
 
   it('should list all team leader permissions', async () => {
@@ -212,10 +221,10 @@ describe('Team Leader Permissions', () => {
       team.id
     );
 
-    assert.ok(Array.isArray(permissions), 'Should return permissions array');
-    assert.ok(permissions.includes('session.create'), 'Should include session.create');
-    assert.ok(permissions.includes('session.manage'), 'Should include session.manage');
-    assert.ok(permissions.includes('team.manage'), 'Should include team.manage');
+    expect(Array.isArray(permissions)).toBeTruthy();
+    expect(permissions.includes('session.create')).toBeTruthy();
+    expect(permissions.includes('session.manage')).toBeTruthy();
+    expect(permissions.includes('team.manage')).toBeTruthy();
   });
 
   it('should verify team leader has more permissions than team member', async () => {
@@ -231,10 +240,7 @@ describe('Team Leader Permissions', () => {
       team.id
     );
 
-    assert.ok(
-      leaderPermissions.length > memberPermissions.length,
-      'Team leader should have more permissions than regular member'
-    );
+    expect(leaderPermissions.length > memberPermissions.length).toBeTruthy();
   });
 
   it('should verify team role permissions exist in database', async () => {
@@ -248,9 +254,9 @@ describe('Team Leader Permissions', () => {
 
     const permissionCodes = result.rows.map(r => r.code);
 
-    assert.ok(permissionCodes.includes('session.create'), 'Database should have session.create for team leaders');
-    assert.ok(permissionCodes.includes('session.manage'), 'Database should have session.manage for team leaders');
-    assert.ok(permissionCodes.includes('team.manage'), 'Database should have team.manage for team leaders');
+    expect(permissionCodes.includes('session.create')).toBeTruthy();
+    expect(permissionCodes.includes('session.manage')).toBeTruthy();
+    expect(permissionCodes.includes('team.manage')).toBeTruthy();
   });
 
   it('should verify team member role has no permissions in database', async () => {
@@ -262,6 +268,6 @@ describe('Team Leader Permissions', () => {
 
     const count = parseInt(result.rows[0].count, 10);
 
-    assert.strictEqual(count, 0, 'Team member role should have no special permissions in database');
+    expect(count).toBe(0, 'Team member role should have no special permissions in database');
   });
 });

@@ -255,7 +255,6 @@ export class DatabaseInitializer {
         DROP TABLE IF EXISTS users CASCADE;
         
         -- Drop permission tables (from migration 04)
-        DROP TABLE IF EXISTS course_staff CASCADE;
         DROP TABLE IF EXISTS team_role_permissions CASCADE;
         DROP TABLE IF EXISTS enrollment_role_permissions CASCADE;
         DROP TABLE IF EXISTS user_role_permissions CASCADE;
@@ -265,7 +264,7 @@ export class DatabaseInitializer {
         DROP TYPE IF EXISTS user_role_enum CASCADE;
         DROP TYPE IF EXISTS user_status_enum CASCADE;
         DROP TYPE IF EXISTS institution_type_enum CASCADE;
-        DROP TYPE IF EXISTS course_role_enum CASCADE;
+        DROP TYPE IF EXISTS enrollment_role_enum CASCADE;
         DROP TYPE IF EXISTS enrollment_status_enum CASCADE;
         DROP TYPE IF EXISTS course_offering_status_enum CASCADE;
         DROP TYPE IF EXISTS assignment_type_enum CASCADE;

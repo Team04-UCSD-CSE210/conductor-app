@@ -8,7 +8,7 @@
  * - Permission middleware integration
  */
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll , expect} from 'vitest';
 import assert from 'node:assert';
 import { pool } from '../db.js';
 
@@ -21,17 +21,26 @@ describe('Session Routes Integration', () => {
   let createdSessionIds = [];
   let adminId;
 
-  before(async () => {
-    // Get admin ID from seed data
-    const { rows } = await pool.query(
+  beforeAll(async () => {
+    // Get or create admin user
+    let adminResult = await pool.query(
       "SELECT id FROM users WHERE email = 'admin@ucsd.edu' AND deleted_at IS NULL LIMIT 1"
     );
-    adminId = rows[0].id;
+    
+    if (adminResult.rows.length === 0) {
+      // Create admin if doesn't exist
+      adminResult = await pool.query(
+        `INSERT INTO users (email, name, primary_role, status)
+         VALUES ('admin@ucsd.edu', 'Test Admin', 'admin', 'active')
+         RETURNING id`
+      );
+    }
+    adminId = adminResult.rows[0].id;
 
     // Create test offering
     const offeringResult = await pool.query(
-      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5)
+      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5, FALSE)
        RETURNING *`,
       ['Session Routes Test Course', 'SESROUTE101', 'Fall', 2025, adminId, '2025-09-01', '2025-12-15']
     );
@@ -104,7 +113,7 @@ describe('Session Routes Integration', () => {
     );
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Clean up sessions
     if (createdSessionIds.length > 0) {
       await pool.query(
@@ -143,9 +152,9 @@ describe('Session Routes Integration', () => {
       session_time: '14:00:00',
     }, instructor.id);
 
-    assert.ok(session.id, 'Should create session');
-    assert.strictEqual(session.title, 'Route Test Session', 'Should set title');
-    assert.ok(session.access_code, 'Should generate access code');
+    expect(session.id).toBeTruthy();
+    expect(session.title).toBe('Route Test Session', 'Should set title');
+    expect(session.access_code).toBeTruthy();
     
     createdSessionIds.push(session.id);
   });
@@ -161,7 +170,7 @@ describe('Session Routes Integration', () => {
       session_time: '15:00:00',
     }, teamLeader.id);
 
-    assert.ok(session.id, 'Team leader should create session');
+    expect(session.id).toBeTruthy();
     
     createdSessionIds.push(session.id);
   });
@@ -205,8 +214,8 @@ describe('Session Routes Integration', () => {
 
     const sessions = await SessionService.getSessionsByOffering(testOffering.id);
 
-    assert.ok(Array.isArray(sessions), 'Should return array');
-    assert.ok(sessions.length >= 2, 'Should have at least 2 sessions');
+    expect(Array.isArray(sessions)).toBeTruthy();
+    expect(sessions.length >= 2).toBeTruthy();
   });
 
   it('should get session by ID (GET /api/sessions/:sessionId)', async () => {
@@ -215,8 +224,8 @@ describe('Session Routes Integration', () => {
     const sessionId = createdSessionIds[0];
     const session = await SessionService.getSession(sessionId);
 
-    assert.ok(session, 'Should find session');
-    assert.strictEqual(session.id, sessionId, 'Should match ID');
+    expect(session).toBeTruthy();
+    expect(session.id).toBe(sessionId, 'Should match ID');
   });
 
   it('should return 404 for non-existent session', async () => {
@@ -241,7 +250,7 @@ describe('Session Routes Integration', () => {
       instructor.id
     );
 
-    assert.strictEqual(updated.title, 'Updated Title', 'Should update title');
+    expect(updated.title).toBe('Updated Title', 'Should update title');
   });
 
   it('should reject non-creator updating session', async () => {
@@ -276,7 +285,7 @@ describe('Session Routes Integration', () => {
 
     const deleted = await SessionService.deleteSession(tempSession.id, instructor.id);
 
-    assert.ok(deleted, 'Should delete session');
+    expect(deleted).toBeTruthy();
   });
 
   it('should reject non-creator deleting session', async () => {
@@ -299,7 +308,7 @@ describe('Session Routes Integration', () => {
     const sessionId = createdSessionIds[0];
     const session = await SessionService.openAttendance(sessionId, instructor.id);
 
-    assert.ok(session.attendance_opened_at, 'Should open attendance');
+    expect(session.attendance_opened_at).toBeTruthy();
   });
 
   it('should close attendance (POST /api/sessions/:sessionId/close-attendance)', async () => {
@@ -308,7 +317,7 @@ describe('Session Routes Integration', () => {
     const sessionId = createdSessionIds[0];
     const session = await SessionService.closeAttendance(sessionId, instructor.id);
 
-    assert.ok(session.attendance_closed_at, 'Should close attendance');
+    expect(session.attendance_closed_at).toBeTruthy();
   });
 
   it('should regenerate access code (POST /api/sessions/:sessionId/regenerate-code)', async () => {
@@ -338,8 +347,8 @@ describe('Session Routes Integration', () => {
       instructor.id
     );
 
-    assert.ok(Array.isArray(questions), 'Should return questions array');
-    assert.strictEqual(questions.length, 1, 'Should add 1 question');
+    expect(Array.isArray(questions)).toBeTruthy();
+    expect(questions.length).toBe(1, 'Should add 1 question');
   });
 
   // TODO: Fix - SessionService.verifyAccessCode attendance check logic issue
@@ -351,8 +360,8 @@ describe('Session Routes Integration', () => {
 
   //   const verification = await SessionService.verifyAccessCode(session.access_code);
 
-  //   assert.ok(verification, 'Should return verification result');
-  //   assert.strictEqual(verification.valid, true, 'Should be valid (attendance is open)');
+  //   expect(verification).toBeTruthy();
+  //   expect(verification.valid).toBe(true, 'Should be valid (attendance is open)');
   // });
 
   it('should return invalid for non-existent access code', async () => {
@@ -360,7 +369,7 @@ describe('Session Routes Integration', () => {
 
     const verification = await SessionService.verifyAccessCode('INVALID');
 
-    assert.strictEqual(verification.valid, false, 'Should be invalid');
+    expect(verification.valid).toBe(false, 'Should be invalid');
   });
 
   // TODO: Fix - SessionResponseModel.getSessionStatistics has 'field name must not be null' error
@@ -370,8 +379,8 @@ describe('Session Routes Integration', () => {
   //   const sessionId = createdSessionIds[0];
   //   const stats = await SessionService.getSessionStatistics(sessionId);
 
-  //   assert.ok(stats, 'Should return statistics');
-  //   assert.ok('present_count' in stats, 'Should include attendance stats');
+  //   expect(stats).toBeTruthy();
+  //   expect('present_count' in stats).toBeTruthy();
   // });
 
   it('should enforce ownership on open attendance', async () => {

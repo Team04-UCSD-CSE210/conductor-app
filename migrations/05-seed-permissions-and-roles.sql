@@ -43,14 +43,14 @@ ON CONFLICT (user_role, permission_id) DO NOTHING;
 
 -- Student: roster.view only
 INSERT INTO enrollment_role_permissions (enrollment_role, permission_id)
-SELECT 'student'::course_role_enum, p.id
+SELECT 'student'::enrollment_role_enum, p.id
 FROM permissions p
 WHERE p.code = 'roster.view'
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 
 -- TA
 INSERT INTO enrollment_role_permissions (enrollment_role, permission_id)
-SELECT 'ta'::course_role_enum, p.id
+SELECT 'ta'::enrollment_role_enum, p.id
 FROM permissions p
 WHERE p.code IN (
   'roster.view',
@@ -67,7 +67,7 @@ ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
 
 -- Tutor: roster.view only
 INSERT INTO enrollment_role_permissions (enrollment_role, permission_id)
-SELECT 'tutor'::course_role_enum, p.id
+SELECT 'tutor'::enrollment_role_enum, p.id
 FROM permissions p
 WHERE p.code IN ('roster.view', 'team.view_all')
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;

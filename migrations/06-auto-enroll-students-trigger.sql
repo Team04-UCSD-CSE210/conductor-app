@@ -26,7 +26,7 @@ BEGIN
             VALUES (
                 active_offering_id,
                 NEW.id,
-                'student'::course_role_enum,
+                'student'::enrollment_role_enum,
                 'enrolled'::enrollment_status_enum,
                 CURRENT_DATE
             )

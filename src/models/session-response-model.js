@@ -11,38 +11,25 @@ export class SessionResponseModel {
     const {
       question_id,
       user_id,
-      session_id,
       response_text,
       response_option
     } = responseData;
 
-    // Get session_id from question if not provided
-    let sessionId = session_id;
-    if (!sessionId && question_id) {
-      const questionResult = await pool.query(
-        'SELECT session_id FROM session_questions WHERE id = $1',
-        [question_id]
-      );
-      if (questionResult.rows.length > 0) {
-        sessionId = questionResult.rows[0].session_id;
-      }
-    }
-
-    if (!sessionId) {
-      throw new Error('session_id is required (could not derive from question_id)');
+    if (!question_id || !user_id) {
+      throw new Error('question_id and user_id are required');
     }
 
     const result = await pool.query(
       `INSERT INTO session_responses 
-       (session_id, question_id, user_id, response_text, response_option)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (session_id, question_id, user_id)
+       (question_id, user_id, response_text, response_option)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (question_id, user_id)
        DO UPDATE SET
          response_text = EXCLUDED.response_text,
          response_option = EXCLUDED.response_option,
          updated_at = NOW()
        RETURNING *`,
-      [sessionId, question_id, user_id, response_text, response_option]
+      [question_id, user_id, response_text, response_option]
     );
 
     return result.rows[0];
@@ -55,33 +42,20 @@ export class SessionResponseModel {
     const {
       question_id,
       user_id,
-      session_id,
       response_text,
       response_option
     } = responseData;
 
-    // Get session_id from question if not provided
-    let sessionId = session_id;
-    if (!sessionId && question_id) {
-      const questionResult = await pool.query(
-        'SELECT session_id FROM session_questions WHERE id = $1',
-        [question_id]
-      );
-      if (questionResult.rows.length > 0) {
-        sessionId = questionResult.rows[0].session_id;
-      }
-    }
-
-    if (!sessionId) {
-      throw new Error('session_id is required (could not derive from question_id)');
+    if (!question_id || !user_id) {
+      throw new Error('question_id and user_id are required');
     }
 
     const result = await pool.query(
       `INSERT INTO session_responses 
-       (session_id, question_id, user_id, response_text, response_option)
-       VALUES ($1, $2, $3, $4, $5)
+       (question_id, user_id, response_text, response_option)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [sessionId, question_id, user_id, response_text, response_option]
+      [question_id, user_id, response_text, response_option]
     );
 
     return result.rows[0];
@@ -99,41 +73,23 @@ export class SessionResponseModel {
     try {
       await client.query('BEGIN');
 
-      // Get session_id for all questions in one query
-      const questionIds = [...new Set(responses.map(r => r.question_id))];
-      const questionSessionMap = {};
-      
-      if (questionIds.length > 0) {
-        const questionResult = await client.query(
-          'SELECT id, session_id FROM session_questions WHERE id = ANY($1)',
-          [questionIds]
-        );
-        
-        questionResult.rows.forEach(row => {
-          questionSessionMap[row.id] = row.session_id;
-        });
-      }
-
       const createdResponses = [];
       for (const response of responses) {
-        const sessionId = response.session_id || questionSessionMap[response.question_id];
-        
-        if (!sessionId) {
-          throw new Error(`session_id is required for question_id: ${response.question_id}`);
+        if (!response.question_id || !response.user_id) {
+          throw new Error('question_id and user_id are required for all responses');
         }
 
         const result = await client.query(
           `INSERT INTO session_responses 
-           (session_id, question_id, user_id, response_text, response_option)
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (session_id, question_id, user_id)
+           (question_id, user_id, response_text, response_option)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (question_id, user_id)
            DO UPDATE SET
              response_text = EXCLUDED.response_text,
              response_option = EXCLUDED.response_option,
              updated_at = NOW()
            RETURNING *`,
           [
-            sessionId,
             response.question_id,
             response.user_id,
             response.response_text,

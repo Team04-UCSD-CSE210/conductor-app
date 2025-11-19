@@ -1,5 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, beforeEach , expect} from 'vitest';
 import { pool } from '../db.js';
 import { AttendanceModel } from '../models/attendance-model.js';
 import { AttendanceService } from '../services/attendance-service.js';
@@ -9,7 +8,13 @@ import { SessionQuestionModel } from '../models/session-question-model.js';
 describe('Attendance Management Tests', () => {
   let testOffering, testUser, testStudent1, testStudent2, testSession;
 
-  before(async () => {
+  beforeAll(async () => {
+    // Clean up any existing test data first
+    await pool.query(`DELETE FROM enrollments WHERE offering_id IN (SELECT id FROM course_offerings WHERE code = 'ATT101')`);
+    await pool.query(`DELETE FROM sessions WHERE offering_id IN (SELECT id FROM course_offerings WHERE code = 'ATT101')`);
+    await pool.query(`DELETE FROM course_offerings WHERE code = 'ATT101'`);
+    await pool.query(`DELETE FROM users WHERE email IN ('test-prof2@test.com', 'student1@test.com', 'student2@test.com')`);
+    
     // Create test data
     const userResult = await pool.query(
       `INSERT INTO users (email, name, primary_role, status)
@@ -34,8 +39,8 @@ describe('Attendance Management Tests', () => {
 
     const offeringResult = await pool.query(
       `INSERT INTO course_offerings 
-       (code, name, instructor_id, start_date, end_date)
-       VALUES ('ATT101', 'Attendance Course', $1, '2025-01-01', '2025-06-01')
+       (code, name, instructor_id, start_date, end_date, is_active)
+       VALUES ('ATT101', 'Attendance Course', $1, '2025-01-01', '2025-06-01', FALSE)
        RETURNING *`,
       [testUser.id]
     );
@@ -49,7 +54,7 @@ describe('Attendance Management Tests', () => {
     );
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Cleanup
     await pool.query('DELETE FROM enrollments WHERE offering_id = $1', [testOffering.id]);
     await pool.query('DELETE FROM sessions WHERE offering_id = $1', [testOffering.id]);
@@ -81,9 +86,9 @@ describe('Attendance Management Tests', () => {
         access_code_used: 'ATT123'
       });
 
-      assert.ok(attendance.id);
-      assert.equal(attendance.status, 'present');
-      assert.equal(attendance.access_code_used, 'ATT123');
+      expect(attendance.id).toBeTruthy();
+      expect(attendance.status).toBe('present');
+      expect(attendance.access_code_used).toBe('ATT123');
     });
 
     it('should upsert attendance (create or update)', async () => {
@@ -94,7 +99,7 @@ describe('Attendance Management Tests', () => {
         status: 'absent'
       });
 
-      assert.equal(attendance1.status, 'absent');
+      expect(attendance1.status).toBe('absent');
 
       // Update
       const attendance2 = await AttendanceModel.upsert({
@@ -104,8 +109,8 @@ describe('Attendance Management Tests', () => {
         access_code_used: 'ATT123'
       });
 
-      assert.equal(attendance2.status, 'present');
-      assert.equal(attendance2.id, attendance1.id);
+      expect(attendance2.status).toBe('present');
+      expect(attendance2.id).toBe(attendance1.id);
     });
 
     it('should find attendance by session and user', async () => {
@@ -120,8 +125,8 @@ describe('Attendance Management Tests', () => {
         testStudent1.id
       );
 
-      assert.ok(found);
-      assert.equal(found.status, 'present');
+      expect(found).toBeTruthy();
+      expect(found.status).toBe('present');
     });
 
     it('should find all attendance for a session', async () => {
@@ -138,7 +143,7 @@ describe('Attendance Management Tests', () => {
       });
 
       const attendance = await AttendanceModel.findBySessionId(testSession.id);
-      assert.equal(attendance.length, 2);
+      expect(attendance.length).toBe(2);
     });
 
     it('should filter attendance by status', async () => {
@@ -158,8 +163,8 @@ describe('Attendance Management Tests', () => {
         status: 'present'
       });
 
-      assert.equal(presentOnly.length, 1);
-      assert.equal(presentOnly[0].status, 'present');
+      expect(presentOnly.length).toBe(1);
+      expect(presentOnly[0].status).toBe('present');
     });
 
     it('should get session statistics', async () => {
@@ -177,10 +182,10 @@ describe('Attendance Management Tests', () => {
 
       const stats = await AttendanceModel.getSessionStatistics(testSession.id);
       
-      assert.ok(stats);
-      assert.equal(stats.present_count, 1);
-      assert.equal(stats.absent_count, 1);
-      assert.equal(stats.total_enrolled, 2);
+      expect(stats).toBeTruthy();
+      expect(stats.present_count).toBe(1);
+      expect(stats.absent_count).toBe(1);
+      expect(stats.total_enrolled).toBe(2);
     });
 
     it('should get user statistics', async () => {
@@ -210,9 +215,9 @@ describe('Attendance Management Tests', () => {
         testOffering.id
       );
 
-      assert.ok(stats);
-      assert.equal(stats.sessions_present, 2);
-      assert.equal(stats.attendance_percentage, 100);
+      expect(stats).toBeTruthy();
+      expect(stats.sessions_present).toBe(2);
+      expect(stats.attendance_percentage).toBe(100);
     });
 
     it('should get course attendance summary', async () => {
@@ -230,9 +235,9 @@ describe('Attendance Management Tests', () => {
 
       const summary = await AttendanceModel.getCourseAttendanceSummary(testOffering.id);
       
-      assert.equal(summary.length, 2);
-      assert.ok(summary.find(s => s.user_id === testStudent1.id));
-      assert.ok(summary.find(s => s.user_id === testStudent2.id));
+      expect(summary.length).toBe(2);
+      expect(summary.find(s => s.user_id === testStudent1.id)).toBeTruthy();
+      expect(summary.find(s => s.user_id === testStudent2.id)).toBeTruthy();
     });
 
     it('should mark absent students', async () => {
@@ -246,9 +251,9 @@ describe('Attendance Management Tests', () => {
       // Mark remaining as absent
       const absentStudents = await AttendanceModel.markAbsentStudents(testSession.id);
       
-      assert.equal(absentStudents.length, 1);
-      assert.equal(absentStudents[0].user_id, testStudent2.id);
-      assert.equal(absentStudents[0].status, 'absent');
+      expect(absentStudents.length).toBe(1);
+      expect(absentStudents[0].user_id).toBe(testStudent2.id);
+      expect(absentStudents[0].status).toBe('absent');
     });
   });
 
@@ -276,34 +281,29 @@ describe('Attendance Management Tests', () => {
     it('should check in student with valid code', async () => {
       const attendance = await AttendanceService.checkIn('SVC123', testStudent1.id);
       
-      assert.ok(attendance);
-      assert.equal(attendance.status, 'present');
-      assert.equal(attendance.user_id, testStudent1.id);
+      expect(attendance).toBeTruthy();
+      expect(attendance.status).toBe('present');
+      expect(attendance.user_id).toBe(testStudent1.id);
     });
 
     it('should reject check-in with invalid code', async () => {
-      await assert.rejects(
-        async () => {
-          await AttendanceService.checkIn(`INVALID-${Date.now()}`, testStudent1.id);
-        },
-        { message: 'Invalid access code' }
-      );
+      await expect(async () => {
+        await AttendanceService.checkIn(`INVALID-${Date.now()}`, testStudent1.id);
+      }).rejects.toThrow('Invalid access code');
     });
 
     it('should reject check-in for non-enrolled student', async () => {
-      // Create a non-enrolled user
+      // Create a non-enrolled user with unique email
       const nonEnrolled = await pool.query(
         `INSERT INTO users (email, name, primary_role, status)
-         VALUES ('nonenrolled@test.com', 'Not Enrolled', 'student', 'active')
-         RETURNING *`
+         VALUES ($1, 'Not Enrolled', 'student', 'active')
+         RETURNING *`,
+        [`nonenrolled-${Date.now()}@test.com`]
       );
 
-      await assert.rejects(
-        async () => {
-          await AttendanceService.checkIn('SVC123', nonEnrolled.rows[0].id);
-        },
-        { message: 'You are not enrolled in this course' }
-      );
+      await expect(async () => {
+        await AttendanceService.checkIn('SVC123', nonEnrolled.rows[0].id);
+      }).rejects.toThrow('You are not enrolled in this course');
 
       await pool.query('DELETE FROM users WHERE id = $1', [nonEnrolled.rows[0].id]);
     });
@@ -335,7 +335,7 @@ describe('Attendance Management Tests', () => {
         ]
       );
 
-      assert.equal(responses.length, 2);
+      expect(responses.length).toBe(2);
     });
 
     it('should get student attendance', async () => {
@@ -350,7 +350,7 @@ describe('Attendance Management Tests', () => {
         testOffering.id
       );
 
-      assert.ok(attendance.length > 0);
+      expect(attendance.length > 0).toBeTruthy();
     });
 
     it('should mark attendance manually', async () => {
@@ -360,7 +360,7 @@ describe('Attendance Management Tests', () => {
         'present'
       );
 
-      assert.equal(attendance.status, 'present');
+      expect(attendance.status).toBe('present');
     });
 
     it('should update attendance status', async () => {
@@ -375,7 +375,7 @@ describe('Attendance Management Tests', () => {
         'present'
       );
 
-      assert.equal(updated.status, 'present');
+      expect(updated.status).toBe('present');
     });
 
     it('should close session and mark absent', async () => {
@@ -391,8 +391,8 @@ describe('Attendance Management Tests', () => {
         testUser.id
       );
 
-      assert.equal(result.markedAbsent, 1);
-      assert.ok(result.session.attendance_closed_at);
+      expect(result.markedAbsent).toBe(1);
+      expect(result.session.attendance_closed_at).toBeTruthy();
     });
 
     it('should get attendance report', async () => {
@@ -404,9 +404,9 @@ describe('Attendance Management Tests', () => {
 
       const report = await AttendanceService.getAttendanceReport(testSession.id);
       
-      assert.ok(report.session);
-      assert.equal(report.report.length, 2); // Both enrolled students
-      assert.ok(report.statistics);
+      expect(report.session).toBeTruthy();
+      expect(report.report.length).toBe(2); // Both enrolled students
+      expect(report.statistics).toBeTruthy();
     });
 
     it('should get course attendance summary', async () => {
@@ -418,7 +418,7 @@ describe('Attendance Management Tests', () => {
 
       const summary = await AttendanceService.getCourseAttendanceSummary(testOffering.id);
       
-      assert.equal(summary.length, 2);
+      expect(summary.length).toBe(2);
     });
 
     it('should bulk import attendance', async () => {
@@ -439,9 +439,9 @@ describe('Attendance Management Tests', () => {
         testUser.id
       );
 
-      assert.equal(results.length, 2);
-      assert.equal(results[0].status, 'success');
-      assert.equal(results[1].status, 'success');
+      expect(results.length).toBe(2);
+      expect(results[0].status).toBe('success');
+      expect(results[1].status).toBe('success');
     });
   });
 });

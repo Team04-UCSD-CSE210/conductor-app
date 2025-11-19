@@ -9,7 +9,7 @@
  * - Session statistics
  */
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it, beforeAll, afterAll , expect} from 'vitest';
 import assert from 'node:assert';
 import { pool } from '../db.js';
 import { SessionModel } from '../models/session-model.js';
@@ -20,16 +20,25 @@ describe('SessionModel', () => {
   let createdSessionIds = [];
   let adminId;
 
-  before(async () => {
-    // Get admin ID from seed data
-    const { rows } = await pool.query(
+  beforeAll(async () => {
+    // Get or create admin user
+    let adminResult = await pool.query(
       "SELECT id FROM users WHERE email = 'admin@ucsd.edu' AND deleted_at IS NULL LIMIT 1"
     );
-    adminId = rows[0].id;
+    
+    if (adminResult.rows.length === 0) {
+      // Create admin if doesn't exist
+      adminResult = await pool.query(
+        `INSERT INTO users (email, name, primary_role, status)
+         VALUES ('admin@ucsd.edu', 'Test Admin', 'admin', 'active')
+         RETURNING id`
+      );
+    }
+    adminId = adminResult.rows[0].id;
     // Create test offering
     const offeringResult = await pool.query(
-      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5)
+      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5, FALSE)
        RETURNING *`,
       ['SessionModel Test Course', 'SESMOD101', 'Fall', 2025, adminId, '2025-09-01', '2025-12-15']
     );
@@ -51,7 +60,7 @@ describe('SessionModel', () => {
     testUser = userResult.rows[0];
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Clean up sessions
     if (createdSessionIds.length > 0) {
       await pool.query(
@@ -83,10 +92,10 @@ describe('SessionModel', () => {
       created_by: testUser.id,
     });
 
-    assert.ok(session.id, 'Should return session ID');
-    assert.strictEqual(session.title, 'Test Session 1', 'Should set title');
-    assert.strictEqual(session.access_code, 'TEST01', 'Should set access code');
-    assert.strictEqual(session.is_active, true, 'Should default to active');
+    expect(session.id).toBeTruthy();
+    expect(session.title).toBe('Test Session 1', 'Should set title');
+    expect(session.access_code).toBe('TEST01', 'Should set access code');
+    expect(session.is_active).toBe(true, 'Should default to active');
     
     createdSessionIds.push(session.id);
   });
@@ -95,40 +104,40 @@ describe('SessionModel', () => {
     const sessionId = createdSessionIds[0];
     const session = await SessionModel.findById(sessionId);
 
-    assert.ok(session, 'Should find session');
-    assert.strictEqual(session.id, sessionId, 'Should match ID');
-    assert.ok(session.course_name, 'Should include course name from join');
+    expect(session).toBeTruthy();
+    expect(session.id).toBe(sessionId, 'Should match ID');
+    expect(session.course_name).toBeTruthy();
   });
 
   it('should find session by access code', async () => {
     const session = await SessionModel.findByAccessCode('TEST01');
 
-    assert.ok(session, 'Should find session by access code');
-    assert.strictEqual(session.access_code, 'TEST01', 'Should match access code');
-    assert.ok(session.course_name, 'Should include course name from join');
+    expect(session).toBeTruthy();
+    expect(session.access_code).toBe('TEST01', 'Should match access code');
+    expect(session.course_name).toBeTruthy();
   });
 
   it('should return null for non-existent access code', async () => {
     const session = await SessionModel.findByAccessCode('NONEXISTENT');
 
-    assert.strictEqual(session, null, 'Should return null for non-existent code');
+    expect(session).toBe(null, 'Should return null for non-existent code');
   });
 
   it('should check access code uniqueness', async () => {
     const isUnique = await SessionModel.isAccessCodeUnique('TEST01');
 
-    assert.strictEqual(isUnique, false, 'Should return false for existing code');
+    expect(isUnique).toBe(false, 'Should return false for existing code');
 
     const isUniqueNew = await SessionModel.isAccessCodeUnique('NEWCODE');
 
-    assert.strictEqual(isUniqueNew, true, 'Should return true for new code');
+    expect(isUniqueNew).toBe(true, 'Should return true for new code');
   });
 
   it('should exclude session from uniqueness check', async () => {
     const sessionId = createdSessionIds[0];
     const isUnique = await SessionModel.isAccessCodeUnique('TEST01', sessionId);
 
-    assert.strictEqual(isUnique, true, 'Should return true when excluding current session');
+    expect(isUnique).toBe(true, 'Should return true when excluding current session');
   });
 
   it('should create multiple sessions with different access codes', async () => {
@@ -158,15 +167,15 @@ describe('SessionModel', () => {
 
     createdSessionIds.push(session3.id);
 
-    assert.ok(session2.id, 'Should create second session');
-    assert.ok(session3.id, 'Should create third session');
+    expect(session2.id).toBeTruthy();
+    expect(session3.id).toBeTruthy();
   });
 
   it('should find sessions by offering ID', async () => {
     const sessions = await SessionModel.findByOfferingId(testOffering.id);
 
-    assert.ok(Array.isArray(sessions), 'Should return array');
-    assert.ok(sessions.length >= 3, 'Should have at least 3 sessions');
+    expect(Array.isArray(sessions)).toBeTruthy();
+    expect(sessions.length >= 3).toBeTruthy();
   });
 
   it('should filter sessions by is_active', async () => {
@@ -174,8 +183,8 @@ describe('SessionModel', () => {
       is_active: true,
     });
 
-    assert.ok(Array.isArray(activeSessions), 'Should return array');
-    assert.ok(activeSessions.every(s => s.is_active === true), 'All sessions should be active');
+    expect(Array.isArray(activeSessions)).toBeTruthy();
+    expect(activeSessions.every(s => s.is_active === true)).toBeTruthy();
   });
 
   it('should update session fields', async () => {
@@ -186,8 +195,8 @@ describe('SessionModel', () => {
       description: 'Updated description',
     }, testUser.id);
 
-    assert.strictEqual(updated.title, 'Updated Session Title', 'Should update title');
-    assert.strictEqual(updated.description, 'Updated description', 'Should update description');
+    expect(updated.title).toBe('Updated Session Title', 'Should update title');
+    expect(updated.description).toBe('Updated description', 'Should update description');
   });
 
   it('should update session access code', async () => {
@@ -197,7 +206,7 @@ describe('SessionModel', () => {
       access_code: 'NEWCODE',
     }, testUser.id);
 
-    assert.strictEqual(updated.access_code, 'NEWCODE', 'Should update access code');
+    expect(updated.access_code).toBe('NEWCODE', 'Should update access code');
   });
 
   it('should deactivate session', async () => {
@@ -207,7 +216,7 @@ describe('SessionModel', () => {
       is_active: false,
     }, testUser.id);
 
-    assert.strictEqual(updated.is_active, false, 'Should deactivate session');
+    expect(updated.is_active).toBe(false, 'Should deactivate session');
   });
 
   it('should open attendance', async () => {
@@ -215,9 +224,9 @@ describe('SessionModel', () => {
     
     const updated = await SessionModel.openAttendance(sessionId, testUser.id);
 
-    assert.ok(updated.attendance_opened_at, 'Should set attendance_opened_at');
-    assert.strictEqual(updated.attendance_closed_at, null, 'Should clear attendance_closed_at');
-    assert.strictEqual(updated.is_active, true, 'Should activate session');
+    expect(updated.attendance_opened_at).toBeTruthy();
+    expect(updated.attendance_closed_at).toBe(null, 'Should clear attendance_closed_at');
+    expect(updated.is_active).toBe(true, 'Should activate session');
   });
 
   it('should close attendance', async () => {
@@ -225,7 +234,7 @@ describe('SessionModel', () => {
     
     const updated = await SessionModel.closeAttendance(sessionId, testUser.id);
 
-    assert.ok(updated.attendance_closed_at, 'Should set attendance_closed_at');
+    expect(updated.attendance_closed_at).toBeTruthy();
   });
 
   it('should get session statistics', async () => {
@@ -233,14 +242,14 @@ describe('SessionModel', () => {
     
     const stats = await SessionModel.getStatistics(sessionId);
 
-    assert.ok(stats, 'Should return statistics');
-    assert.ok(stats.id, 'Should include session ID');
-    assert.ok(stats.title, 'Should include session title');
-    assert.ok('present_count' in stats, 'Should include present_count');
-    assert.ok('absent_count' in stats, 'Should include absent_count');
-    assert.ok('question_count' in stats, 'Should include question_count');
-    assert.ok('response_count' in stats, 'Should include response_count');
-    assert.ok('enrolled_students' in stats, 'Should include enrolled_students');
+    expect(stats).toBeTruthy();
+    expect(stats.id).toBeTruthy();
+    expect(stats.title).toBeTruthy();
+    expect('present_count' in stats).toBeTruthy();
+    expect('absent_count' in stats).toBeTruthy();
+    expect('question_count' in stats).toBeTruthy();
+    expect('response_count' in stats).toBeTruthy();
+    expect('enrolled_students' in stats).toBeTruthy();
   });
 
   it('should delete session', async () => {
@@ -258,11 +267,11 @@ describe('SessionModel', () => {
 
     const deleted = await SessionModel.delete(tempSession.id);
 
-    assert.ok(deleted, 'Should return deleted session');
-    assert.strictEqual(deleted.id, tempSession.id, 'Should match session ID');
+    expect(deleted).toBeTruthy();
+    expect(deleted.id).toBe(tempSession.id, 'Should match session ID');
 
     const found = await SessionModel.findById(tempSession.id);
-    assert.strictEqual(found, null, 'Session should no longer exist');
+    expect(found).toBe(null, 'Session should no longer exist');
   });
 
   it('should return null when updating non-existent session', async () => {
@@ -272,7 +281,7 @@ describe('SessionModel', () => {
       testUser.id
     );
 
-    assert.strictEqual(updated, null, 'Should return null for non-existent session');
+    expect(updated).toBe(null, 'Should return null for non-existent session');
   });
 
   it('should reject update with no valid fields', async () => {
@@ -300,7 +309,7 @@ describe('SessionModel', () => {
       offset: 1,
     });
 
-    assert.strictEqual(sessions1.length, 1, 'Should return 1 session with limit=1');
+    expect(sessions1.length).toBe(1, 'Should return 1 session with limit=1');
     
     if (sessions2.length > 0) {
       assert.notStrictEqual(
@@ -318,7 +327,7 @@ describe('SessionModel', () => {
       const date1 = new Date(sessions[0].session_date);
       const date2 = new Date(sessions[1].session_date);
 
-      assert.ok(date1 >= date2, 'Sessions should be ordered by date descending');
+      expect(date1 >= date2).toBeTruthy();
     }
   });
 

@@ -1,5 +1,4 @@
-import { describe, it, before, after, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, beforeEach , expect} from 'vitest';
 import { pool } from '../db.js';
 import { SessionModel } from '../models/session-model.js';
 import { SessionQuestionModel } from '../models/session-question-model.js';
@@ -9,7 +8,7 @@ import { SessionService } from '../services/session-service.js';
 describe('Session Management Tests', () => {
   let testOffering, testUser, testStudent, testSession;
 
-  before(async () => {
+  beforeAll(async () => {
     // Create test data
     const userResult = await pool.query(
       `INSERT INTO users (email, name, primary_role, status)
@@ -27,8 +26,8 @@ describe('Session Management Tests', () => {
 
     const offeringResult = await pool.query(
       `INSERT INTO course_offerings 
-       (code, name, instructor_id, start_date, end_date)
-       VALUES ('TEST101', 'Test Course', $1, '2025-01-01', '2025-06-01')
+       (code, name, instructor_id, start_date, end_date, is_active)
+       VALUES ('TEST101', 'Test Course', $1, '2025-01-01', '2025-06-01', FALSE)
        RETURNING *`,
       [testUser.id]
     );
@@ -42,7 +41,7 @@ describe('Session Management Tests', () => {
     );
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Cleanup
     await pool.query('DELETE FROM enrollments WHERE offering_id = $1', [testOffering.id]);
     await pool.query('DELETE FROM course_offerings WHERE id = $1', [testOffering.id]);
@@ -67,9 +66,9 @@ describe('Session Management Tests', () => {
         created_by: testUser.id
       });
 
-      assert.ok(session.id);
-      assert.equal(session.title, 'Test Session');
-      assert.equal(session.access_code, 'TEST123');
+      expect(session.id).toBeTruthy();
+      expect(session.title).toBe('Test Session');
+      expect(session.access_code).toBe('TEST123');
     });
 
     it('should find session by ID', async () => {
@@ -82,8 +81,8 @@ describe('Session Management Tests', () => {
       });
 
       const found = await SessionModel.findById(created.id);
-      assert.equal(found.id, created.id);
-      assert.equal(found.title, 'Find Test');
+      expect(found.id).toBe(created.id);
+      expect(found.title).toBe('Find Test');
     });
 
     it('should find session by access code', async () => {
@@ -96,8 +95,8 @@ describe('Session Management Tests', () => {
       });
 
       const found = await SessionModel.findByAccessCode('CODE123');
-      assert.ok(found);
-      assert.equal(found.access_code, 'CODE123');
+      expect(found).toBeTruthy();
+      expect(found.access_code).toBe('CODE123');
     });
 
     it('should update session', async () => {
@@ -115,7 +114,7 @@ describe('Session Management Tests', () => {
         testUser.id
       );
 
-      assert.equal(updated.title, 'Updated Title');
+      expect(updated.title).toBe('Updated Title');
     });
 
     it('should delete session', async () => {
@@ -128,10 +127,10 @@ describe('Session Management Tests', () => {
       });
 
       const deleted = await SessionModel.delete(session.id);
-      assert.ok(deleted);
+      expect(deleted).toBeTruthy();
 
       const found = await SessionModel.findById(session.id);
-      assert.equal(found, null);
+      expect(found).toBe(null);
     });
   });
 
@@ -157,8 +156,8 @@ describe('Session Management Tests', () => {
         created_by: testUser.id
       });
 
-      assert.ok(question.id);
-      assert.equal(question.question_text, 'What is 2+2?');
+      expect(question.id).toBeTruthy();
+      expect(question.question_text).toBe('What is 2+2?');
     });
 
     it('should find questions by session', async () => {
@@ -180,8 +179,8 @@ describe('Session Management Tests', () => {
       });
 
       const questions = await SessionQuestionModel.findBySessionId(testSession.id);
-      assert.equal(questions.length, 2);
-      assert.equal(questions[0].question_order, 1);
+      expect(questions.length).toBe(2);
+      expect(questions[0].question_order).toBe(1);
     });
 
     it('should delete question', async () => {
@@ -195,7 +194,7 @@ describe('Session Management Tests', () => {
 
       await SessionQuestionModel.delete(question.id);
       const found = await SessionQuestionModel.findById(question.id);
-      assert.equal(found, null);
+      expect(found).toBe(null);
     });
   });
 
@@ -229,8 +228,8 @@ describe('Session Management Tests', () => {
         response_text: '4'
       });
 
-      assert.ok(response.id);
-      assert.equal(response.response_text, '4');
+      expect(response.id).toBeTruthy();
+      expect(response.response_text).toBe('4');
     });
 
     it('should upsert response (create if not exists)', async () => {
@@ -240,7 +239,7 @@ describe('Session Management Tests', () => {
         response_text: 'First answer'
       });
 
-      assert.equal(response1.response_text, 'First answer');
+      expect(response1.response_text).toBe('First answer');
 
       const response2 = await SessionResponseModel.upsert({
         question_id: testQuestion.id,
@@ -248,8 +247,8 @@ describe('Session Management Tests', () => {
         response_text: 'Updated answer'
       });
 
-      assert.equal(response2.response_text, 'Updated answer');
-      assert.equal(response2.id, response1.id);
+      expect(response2.response_text).toBe('Updated answer');
+      expect(response2.id).toBe(response1.id);
     });
 
     it('should find responses by question', async () => {
@@ -260,7 +259,7 @@ describe('Session Management Tests', () => {
       });
 
       const responses = await SessionResponseModel.findByQuestionId(testQuestion.id);
-      assert.equal(responses.length, 1);
+      expect(responses.length).toBe(1);
     });
 
     it('should find responses by session', async () => {
@@ -271,7 +270,7 @@ describe('Session Management Tests', () => {
       });
 
       const responses = await SessionResponseModel.findBySessionId(testSession.id);
-      assert.equal(responses.length, 1);
+      expect(responses.length).toBe(1);
     });
   });
 
@@ -284,8 +283,8 @@ describe('Session Management Tests', () => {
       const code1 = SessionService.generateAccessCode();
       const code2 = SessionService.generateAccessCode();
 
-      assert.equal(code1.length, 6);
-      assert.notEqual(code1, code2);
+      expect(code1.length).toBe(6);
+      expect(code1).not.toBe(code2);
     });
 
     it('should create session with auto-generated code', async () => {
@@ -296,8 +295,8 @@ describe('Session Management Tests', () => {
         session_date: '2025-02-01'
       }, testUser.id);
 
-      assert.ok(session.access_code);
-      assert.equal(session.access_code.length, 6);
+      expect(session.access_code).toBeTruthy();
+      expect(session.access_code.length).toBe(6);
     });
 
     it('should verify valid access code', async () => {
@@ -315,13 +314,13 @@ describe('Session Management Tests', () => {
       await SessionService.openAttendance(session.id, testUser.id);
 
       const verification = await SessionService.verifyAccessCode(session.access_code);
-      assert.equal(verification.valid, true);
-      assert.ok(verification.session);
+      expect(verification.valid).toBe(true);
+      expect(verification.session).toBeTruthy();
     });
 
     it('should reject invalid access code', async () => {
       const verification = await SessionService.verifyAccessCode('INVALID');
-      assert.equal(verification.valid, false);
+      expect(verification.valid).toBe(false);
     });
 
     it('should open and close attendance', async () => {
@@ -332,10 +331,10 @@ describe('Session Management Tests', () => {
       }, testUser.id);
 
       const opened = await SessionService.openAttendance(session.id, testUser.id);
-      assert.ok(opened.attendance_opened_at);
+      expect(opened.attendance_opened_at).toBeTruthy();
 
       const closed = await SessionService.closeAttendance(session.id, testUser.id);
-      assert.ok(closed.attendance_closed_at);
+      expect(closed.attendance_closed_at).toBeTruthy();
     });
   });
 });

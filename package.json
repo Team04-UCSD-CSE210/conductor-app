@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "test": "node scripts/run-tests-with-coverage.js",
-    "local:test": "node scripts/run-tests.js",
+    "test": "vitest run --coverage",
+    "local:test": "vitest run",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:md",
     "lint:js": "eslint .",
     "lint:css": "stylelint \"**/*.css\" || echo 'No CSS files found'",

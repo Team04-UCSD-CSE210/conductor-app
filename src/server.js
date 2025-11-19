@@ -210,7 +210,7 @@ const enrollUserInCourse = async (userId, offeringId, courseRole = 'student') =>
   try {
     await pool.query(
       `INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-       VALUES ($1, $2, $3::course_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
+       VALUES ($1, $2, $3::enrollment_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
        ON CONFLICT (offering_id, user_id) DO NOTHING`,
       [offeringId, userId, courseRole]
     );
@@ -1423,7 +1423,7 @@ app.get('/enroll/:token', ensureAuthenticated, async (req, res) => {
       await pool.query(
         `UPDATE enrollments 
          SET status = 'enrolled'::enrollment_status_enum, 
-             course_role = $1::course_role_enum,
+             course_role = $1::enrollment_role_enum,
              enrolled_at = CURRENT_DATE,
              dropped_at = NULL
          WHERE id = $2::uuid`,

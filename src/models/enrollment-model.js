@@ -67,7 +67,7 @@ export class EnrollmentModel {
       VALUES (
         $1::uuid,
         $2::uuid,
-        CAST(COALESCE($3::text, 'student') AS course_role_enum),
+        CAST(COALESCE($3::text, 'student') AS enrollment_role_enum),
         CAST(COALESCE($4::text, 'enrolled') AS enrollment_status_enum),
         $5,
         $6,
@@ -176,7 +176,7 @@ export class EnrollmentModel {
     
     if (options.course_role) {
       const paramIndex = params.length + 1;
-      whereClause += ` AND course_role = $${paramIndex}::course_role_enum`;
+      whereClause += ` AND course_role = $${paramIndex}::enrollment_role_enum`;
       params.push(options.course_role);
     }
     
@@ -269,7 +269,7 @@ export class EnrollmentModel {
         created_by,
         updated_by
       FROM enrollments
-      WHERE offering_id = $1::uuid AND course_role = $2::course_role_enum
+      WHERE offering_id = $1::uuid AND course_role = $2::enrollment_role_enum
       ORDER BY enrolled_at DESC
       LIMIT $3 OFFSET $4
       `,
@@ -312,7 +312,7 @@ export class EnrollmentModel {
     }
     
     if (merged.course_role !== undefined && merged.course_role !== null) {
-      setClauses.push(`course_role = $${paramIndex++}::text::course_role_enum`);
+      setClauses.push(`course_role = $${paramIndex++}::text::enrollment_role_enum`);
       params.push(merged.course_role);
     }
     

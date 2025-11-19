@@ -6,6 +6,7 @@
  * export default async function setup() { ... }
  */
 import { DatabaseInitializer } from './src/database/init.js';
+import { TestSeeder } from './src/tests/test-seeder.js';
 
 export default async function setup() {
   try {
@@ -21,6 +22,10 @@ export default async function setup() {
     } else {
       console.log('[test setup] Database schema already exists');
     }
+
+    // Seed minimal test data (admin user)
+    await TestSeeder.seedMinimalData();
+    console.log('[test setup] Minimal test data seeded');
   } catch (error) {
     console.error('[test setup] Failed to initialize database schema:', error);
     throw error;

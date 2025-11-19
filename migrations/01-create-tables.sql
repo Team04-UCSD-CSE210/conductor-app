@@ -27,8 +27,8 @@ DO $$ BEGIN
 END $$;
 
 DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'course_role_enum') THEN
-        CREATE TYPE course_role_enum AS ENUM ('student', 'ta', 'tutor');
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enrollment_role_enum') THEN
+        CREATE TYPE enrollment_role_enum AS ENUM ('student', 'ta', 'tutor');
     END IF;
 END $$;
 
@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    course_role course_role_enum NOT NULL,
+    course_role enrollment_role_enum NOT NULL,
     status enrollment_status_enum NOT NULL,
     enrolled_at DATE,
     dropped_at DATE,

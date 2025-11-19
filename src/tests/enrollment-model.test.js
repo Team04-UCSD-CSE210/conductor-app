@@ -8,8 +8,7 @@
  * - Constraint validation
  */
 
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeAll, afterAll , expect} from 'vitest';
 import { pool } from '../db.js';
 import { EnrollmentModel } from '../models/enrollment-model.js';
 
@@ -19,16 +18,31 @@ describe('EnrollmentModel', () => {
   let createdEnrollmentIds = [];
   let adminId;
 
-  before(async () => {
-    // Get admin ID from seed data
-    const { rows } = await pool.query(
+  beforeAll(async () => {
+    // Get or create admin user
+    let adminResult = await pool.query(
       "SELECT id FROM users WHERE email = 'admin@ucsd.edu' AND deleted_at IS NULL LIMIT 1"
     );
-    adminId = rows[0].id;
+    
+    if (adminResult.rows.length === 0) {
+      // Create admin if doesn't exist
+      adminResult = await pool.query(
+        `INSERT INTO users (email, name, primary_role, status)
+         VALUES ('admin@ucsd.edu', 'Test Admin', 'admin', 'active')
+         RETURNING id`
+      );
+    }
+    adminId = adminResult.rows[0].id;
+    
+    // Clean up any existing test data first
+    await pool.query(`DELETE FROM enrollments WHERE offering_id IN (SELECT id FROM course_offerings WHERE code = 'ENRMOD101')`);
+    await pool.query(`DELETE FROM course_offerings WHERE code = 'ENRMOD101'`);
+    await pool.query(`DELETE FROM users WHERE email LIKE 'enrollment-model-test-%@test.edu' OR email LIKE 'enrollment-temp-%@test.edu'`);
+    
     // Create test offering
     const offeringResult = await pool.query(
-      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5)
+      `INSERT INTO course_offerings (name, code, term, year, instructor_id, start_date, end_date, created_by, updated_by, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $5, $5, FALSE)
        RETURNING *`,
       ['EnrollmentModel Test Course', 'ENRMOD101', 'Fall', 2025, adminId, '2025-09-01', '2025-12-15']
     );
@@ -50,7 +64,7 @@ describe('EnrollmentModel', () => {
     testUser = userResult.rows[0];
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Clean up enrollments
     if (createdEnrollmentIds.length > 0) {
       await pool.query(
@@ -73,9 +87,9 @@ describe('EnrollmentModel', () => {
   it('should validate required fields on create', async () => {
     const errors = EnrollmentModel.validate({});
 
-    assert.ok(errors.length > 0, 'Should have validation errors');
-    assert.ok(errors.some(e => e.includes('offering_id')), 'Should require offering_id');
-    assert.ok(errors.some(e => e.includes('user_id')), 'Should require user_id');
+    expect(errors.length > 0).toBeTruthy();
+    expect(errors.some(e => e.includes('offering_id'))).toBeTruthy();
+    expect(errors.some(e => e.includes('user_id'))).toBeTruthy();
   });
 
   it('should validate course_role enum', async () => {
@@ -85,8 +99,8 @@ describe('EnrollmentModel', () => {
       course_role: 'invalid_role',
     });
 
-    assert.ok(errors.length > 0, 'Should have validation errors');
-    assert.ok(errors.some(e => e.includes('Invalid course_role')), 'Should reject invalid course_role');
+    expect(errors.length > 0).toBeTruthy();
+    expect(errors.some(e => e.includes('Invalid course_role'))).toBeTruthy();
   });
 
   it('should validate status enum', async () => {
@@ -96,8 +110,8 @@ describe('EnrollmentModel', () => {
       status: 'invalid_status',
     });
 
-    assert.ok(errors.length > 0, 'Should have validation errors');
-    assert.ok(errors.some(e => e.includes('Invalid status')), 'Should reject invalid status');
+    expect(errors.length > 0).toBeTruthy();
+    expect(errors.some(e => e.includes('Invalid status'))).toBeTruthy();
   });
 
   it('should accept valid course_role values', async () => {
@@ -110,7 +124,7 @@ describe('EnrollmentModel', () => {
         course_role: role,
       });
 
-      assert.strictEqual(errors.length, 0, `Should accept valid role: ${role}`);
+      expect(errors.length).toBe(0);
     }
   });
 
@@ -123,9 +137,9 @@ describe('EnrollmentModel', () => {
       updated_by: adminId,
     });
 
-    assert.ok(enrollment.id, 'Should return enrollment ID');
-    assert.strictEqual(enrollment.course_role, 'student', 'Should set student role');
-    assert.strictEqual(enrollment.status, 'enrolled', 'Should default to enrolled status');
+    expect(enrollment.id).toBeTruthy();
+    expect(enrollment.course_role).toBe('student');
+    expect(enrollment.status).toBe('enrolled');
     
     createdEnrollmentIds.push(enrollment.id);
   });
@@ -134,8 +148,8 @@ describe('EnrollmentModel', () => {
     const enrollmentId = createdEnrollmentIds[0];
     const enrollment = await EnrollmentModel.findById(enrollmentId);
 
-    assert.ok(enrollment, 'Should find enrollment');
-    assert.strictEqual(enrollment.id, enrollmentId, 'Should match ID');
+    expect(enrollment).toBeTruthy();
+    expect(enrollment.id).toBe(enrollmentId);
   });
 
   it('should find enrollment by offering and user', async () => {
@@ -144,15 +158,15 @@ describe('EnrollmentModel', () => {
       testUser.id
     );
 
-    assert.ok(enrollment, 'Should find enrollment');
-    assert.strictEqual(enrollment.offering_id, testOffering.id, 'Should match offering ID');
-    assert.strictEqual(enrollment.user_id, testUser.id, 'Should match user ID');
+    expect(enrollment).toBeTruthy();
+    expect(enrollment.offering_id).toBe(testOffering.id);
+    expect(enrollment.user_id).toBe(testUser.id);
   });
 
   it('should return null for non-existent enrollment', async () => {
     const enrollment = await EnrollmentModel.findById('00000000-0000-0000-0000-000000000000');
 
-    assert.strictEqual(enrollment, null, 'Should return null for non-existent ID');
+    expect(enrollment).toBe(null);
   });
 
   it('should update enrollment course_role', async () => {
@@ -163,8 +177,8 @@ describe('EnrollmentModel', () => {
       updated_by: adminId,
     });
 
-    assert.strictEqual(updated.course_role, 'ta', 'Should update to TA role');
-    assert.strictEqual(updated.id, enrollmentId, 'Should maintain same ID');
+    expect(updated.course_role).toBe('ta');
+    expect(updated.id).toBe(enrollmentId);
   });
 
   it('should update enrollment status', async () => {
@@ -176,8 +190,8 @@ describe('EnrollmentModel', () => {
       updated_by: adminId,
     });
 
-    assert.strictEqual(updated.status, 'dropped', 'Should update to dropped status');
-    assert.ok(updated.dropped_at, 'Should set dropped_at date');
+    expect(updated.status).toBe('dropped', 'Should update to dropped status');
+    expect(updated.dropped_at).toBeTruthy();
   });
 
   it('should find enrollments by offering', async () => {
@@ -207,8 +221,8 @@ describe('EnrollmentModel', () => {
 
     const enrollments = await EnrollmentModel.findByOffering(testOffering.id);
 
-    assert.ok(Array.isArray(enrollments), 'Should return array');
-    assert.ok(enrollments.length >= 2, 'Should have at least 2 enrollments');
+    expect(Array.isArray(enrollments)).toBeTruthy();
+    expect(enrollments.length >= 2).toBeTruthy();
 
     // Clean up user2
     await pool.query('DELETE FROM users WHERE id = $1', [user2.id]);
@@ -219,8 +233,8 @@ describe('EnrollmentModel', () => {
       course_role: 'ta',
     });
 
-    assert.ok(Array.isArray(enrollments), 'Should return array');
-    assert.ok(enrollments.every(e => e.course_role === 'ta'), 'All enrollments should be TAs');
+    expect(Array.isArray(enrollments)).toBeTruthy();
+    expect(enrollments.every(e => e.course_role === 'ta')).toBeTruthy();
   });
 
   it('should filter enrollments by status', async () => {
@@ -228,22 +242,22 @@ describe('EnrollmentModel', () => {
       status: 'dropped',
     });
 
-    assert.ok(Array.isArray(enrollments), 'Should return array');
-    assert.ok(enrollments.every(e => e.status === 'dropped'), 'All enrollments should be dropped');
+    expect(Array.isArray(enrollments)).toBeTruthy();
+    expect(enrollments.every(e => e.status === 'dropped')).toBeTruthy();
   });
 
   it('should find enrollments by course role', async () => {
     const tas = await EnrollmentModel.findByCourseRole(testOffering.id, 'ta');
 
-    assert.ok(Array.isArray(tas), 'Should return array');
-    assert.ok(tas.every(e => e.course_role === 'ta'), 'All results should be TAs');
+    expect(Array.isArray(tas)).toBeTruthy();
+    expect(tas.every(e => e.course_role === 'ta')).toBeTruthy();
   });
 
   it('should count enrollments by offering', async () => {
     const count = await EnrollmentModel.countByOffering(testOffering.id);
 
-    assert.ok(count >= 1, 'Should have at least 1 enrollment');
-    assert.strictEqual(typeof count, 'number', 'Should return number');
+    expect(count >= 1).toBeTruthy();
+    expect(typeof count).toBe('number');
   });
 
   it('should count enrollments by role', async () => {
@@ -251,7 +265,7 @@ describe('EnrollmentModel', () => {
       course_role: 'ta',
     });
 
-    assert.strictEqual(typeof taCount, 'number', 'Should return number');
+    expect(typeof taCount).toBe('number');
   });
 
   it('should count enrollments by status', async () => {
@@ -259,7 +273,7 @@ describe('EnrollmentModel', () => {
       status: 'dropped',
     });
 
-    assert.strictEqual(typeof droppedCount, 'number', 'Should return number');
+    expect(typeof droppedCount).toBe('number');
   });
 
   it('should delete enrollment', async () => {
@@ -287,27 +301,23 @@ describe('EnrollmentModel', () => {
 
     const deleted = await EnrollmentModel.delete(tempEnrollment.id);
 
-    assert.strictEqual(deleted, true, 'Should return true for successful deletion');
+    expect(deleted).toBe(true);
 
     const found = await EnrollmentModel.findById(tempEnrollment.id);
-    assert.strictEqual(found, null, 'Enrollment should no longer exist');
+    expect(found).toBe(null);
 
     // Clean up temp user
     await pool.query('DELETE FROM users WHERE id = $1', [tempUser.id]);
   });
 
   it('should enforce enrollment_role_enum constraint', async () => {
-    await assert.rejects(
-      async () => {
-        await pool.query(
-          `INSERT INTO enrollments (offering_id, user_id, course_role, created_by, updated_by)
-           VALUES ($1, $2, $3::enrollment_role_enum, $4, $4)`,
-          [testOffering.id, testUser.id, 'invalid_enum', adminId]
-        );
-      },
-      /invalid input value for enum/,
-      'Should reject invalid enum value at database level'
-    );
+    await expect(async () => {
+      await pool.query(
+        `INSERT INTO enrollments (offering_id, user_id, course_role, created_by, updated_by)
+         VALUES ($1, $2, $3::enrollment_role_enum, $4, $4)`,
+        [testOffering.id, testUser.id, 'invalid_enum', adminId]
+      );
+    }).rejects.toThrow(/invalid input value for enum/);
   });
 
   it('should respect limit and offset options', async () => {
@@ -321,14 +331,10 @@ describe('EnrollmentModel', () => {
       offset: 1,
     });
 
-    assert.strictEqual(enrollments1.length, 1, 'Should return 1 enrollment with limit=1');
+    expect(enrollments1.length).toBe(1);
     
     if (enrollments2.length > 0) {
-      assert.notStrictEqual(
-        enrollments1[0].id,
-        enrollments2[0].id,
-        'Different offsets should return different results'
-      );
+      expect(enrollments1[0].id).not.toBe(enrollments2[0].id);
     }
   });
 });
