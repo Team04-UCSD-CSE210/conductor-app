@@ -211,7 +211,7 @@ jobs:
             })
 
       - name: Notify Slack
-        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        if: github.event_name == 'pull_request' || github.base_ref == 'main'
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
