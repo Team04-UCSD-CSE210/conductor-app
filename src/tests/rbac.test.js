@@ -5,6 +5,8 @@
  * Uses mock data instead of database connections.
  */
 
+import { expect } from 'vitest';
+import assert from 'node:assert';
 import { authenticate, requireRole } from '../middleware/permission-middleware.js';
 
 // Mock user data for testing

@@ -8,7 +8,6 @@
  */
 
 import { describe, it, beforeAll, afterAll , expect} from 'vitest';
-import assert from 'node:assert';
 import { pool } from '../db.js';
 import { PermissionService } from '../services/permission-service.js';
 

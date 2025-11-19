@@ -90,7 +90,7 @@ All instructor routes require authentication and appropriate permissions:
    - **View**: `src/views/instructor-lectures.html`
    - **JavaScript**: `src/public/js/instructor-lecture-overview.js`, `src/public/js/instructor-lecture-detail.js`
    - **CSS**: `src/public/instructor-lectures.css`
-   - **Features**: 
+   - **Features**:
      - View all lecture sessions
      - See attendance statistics
      - Access individual lecture details
@@ -344,8 +344,8 @@ Verify all functionality:
 
 Configure in permission system:
 
-   - Add `session.create`, `session.manage`, `attendance.view`, `attendance.mark`
-   - Assign to appropriate roles (professor, TA, student)
+- Add `session.create`, `session.manage`, `attendance.view`, `attendance.mark`
+- Assign to appropriate roles (professor, TA, student)
 
 ### 5. Access Routes
 
@@ -378,11 +378,11 @@ Configure in permission system:
 
 ## 🚀 Optional Enhancements
 
-   - WebSocket for real-time attendance updates
-   - QR code generation for access codes
-   - Email notifications for missed attendance
-   - Export attendance to CSV
-   - Attendance trends and analytics dashboard
+- WebSocket for real-time attendance updates
+- QR code generation for access codes
+- Email notifications for missed attendance
+- Export attendance to CSV
+- Attendance trends and analytics dashboard
 - Mobile-responsive improvements
 
 ## 📝 Example Usage
