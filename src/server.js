@@ -104,8 +104,10 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-if (!DATABASE_URL || DATABASE_URL.includes("localhost")) {
-  console.log("⚠️ Database not configured or using localhost, running without database features");
+if (!DATABASE_URL || DATABASE_URL.includes("localhost") || DATABASE_URL === "") {
+  console.log("⚠️ Database not configured, running in mock mode");
+  // Mock all database functions
+  global.MOCK_MODE = true;
 } else {
   // Database connection logic would go here when needed
 }
@@ -114,6 +116,12 @@ if (!DATABASE_URL || DATABASE_URL.includes("localhost")) {
 
 // User operations
 const findUserByEmail = async (email) => {
+  if (global.MOCK_MODE) {
+    if (email === 'hhundhausen@ucsd.edu') {
+      return { id: 1, email, name: 'Helena Hundhausen', primary_role: 'student' };
+    }
+    return null;
+  }
   try {
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     return result.rows[0] || null;
