@@ -61,7 +61,7 @@ It exposes REST endpoints, enforces authentication, stores persistent data, and 
 ### **5.1 Modules**
 
 | Module | Description |
-|---------|-------------|
+| --------- | ----------- |
 | **Authentication & Authorization** | Integrates UCSD OAuth (via Auth.js or Passport.js TBD) for SSO login. Manages role-based access control (Instructor, TA, Tutor, Student Leader, Student). |
 | **User Management System** | Handles user profiles, roles, and communication preferences. Supports class roster synchronization and enrollment. |
 | **Attendance Tracking System** | Manages real-time attendance recording, integrates with Calendar API for session data, and stores analytics in PostgreSQL. |
@@ -95,7 +95,7 @@ Backend communicates via **SQL** through PostgreSQL’s native driver or ORM (e.
 ## **7. External Integrations**
 
 | Service | Purpose | Protocol / API |
-|----------|----------|----------------|
+| ---------- | ---------- | -------------- |
 | **UCSD OAuth (Auth.js / Passport.js)** | Handles SSO login for UCSD users. | HTTPS (OAuth 2.0) |
 | **Google Calendar API** | Syncs course schedules, lecture times, and attendance sessions. | HTTPS (REST / JSON API) |
 | **Gmail API / Slack API** | Sends automated notifications, reminders, and updates to users. | HTTPS (REST / JSON API) |

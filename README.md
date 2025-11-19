@@ -90,7 +90,7 @@ for structured commit messages.
 Consistent naming improves code readability and maintainability.
 
 | Type | Convention | Example |
-|------|------------|---------|
+| ------ | ---------- | ------- |
 | **Files** | kebab-case | `user-profile.js`, `api-client.ts` |
 | **Variables** | camelCase | `userName`, `isAuthenticated` |
 | **Constants** | UPPER_SNAKE_CASE | `API_BASE_URL`, `MAX_RETRY_ATTEMPTS` |
