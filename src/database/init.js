@@ -242,7 +242,10 @@ export class DatabaseInitializer {
       // Drop all tables in correct order (respecting foreign keys)
       await pool.query(`
         DROP TABLE IF EXISTS activity_logs CASCADE;
+        DROP TABLE IF EXISTS session_responses CASCADE;
+        DROP TABLE IF EXISTS session_questions CASCADE;
         DROP TABLE IF EXISTS attendance CASCADE;
+        DROP TABLE IF EXISTS sessions CASCADE;
         DROP TABLE IF EXISTS submissions CASCADE;
         DROP TABLE IF EXISTS team_members CASCADE;
         DROP TABLE IF EXISTS team CASCADE;

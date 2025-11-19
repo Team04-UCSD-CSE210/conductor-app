@@ -65,7 +65,7 @@ INSERT INTO users (
 
 ('zhkan@ucsd.edu', 'A10331111', 'Dr. G', 'Gad',
  NULL, NULL, NULL, 'Data Science', NULL,
- 'instructor'::user_role_enum, 'busy'::user_status_enum, 'ucsd'::institution_type_enum,
+ 'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  'https://datascience.ucsd.edu/people/faculty/G-Gad', NULL, '+1-858-534-1331', 'ggag', 'https://linkedin.com/in/ggag'),
 
 -- ============================================
