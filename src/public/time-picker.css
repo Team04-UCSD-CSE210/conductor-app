@@ -153,8 +153,7 @@
   flex-direction: column;
   gap: 0.5rem;
   max-height: 240px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden auto;
   padding: 0.5rem;
   align-items: stretch;
   scroll-behavior: smooth;

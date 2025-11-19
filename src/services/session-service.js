@@ -331,11 +331,11 @@ export class SessionService {
     
     // Check and auto-open each session if start time has passed
     // Use Promise.allSettled to avoid failing all if one fails
-    const updatedSessions = await Promise.allSettled(
+    await Promise.allSettled(
       sessions.map(session => checkAndAutoOpenSession(session))
     );
     
-    // Map results back to sessions array (checkAndAutoOpenSession modifies in place)
+    // Return sessions (checkAndAutoOpenSession modifies in place)
     return sessions;
   }
 
@@ -363,7 +363,7 @@ export class SessionService {
     }
 
     // Handle questions update if provided
-    const { questions, startsAt, endsAt, ...sessionUpdates } = updates;
+    const { questions, endsAt, ...sessionUpdates } = updates;
     
     // Update code_expires_at to the end time (endsAt) if provided
     if (endsAt) {

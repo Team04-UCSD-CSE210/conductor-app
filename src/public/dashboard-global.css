@@ -207,8 +207,7 @@ body.dashboard-page {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
 }
 
 .page-title {
@@ -226,8 +225,7 @@ body.dashboard-page {
   border: none;
   box-shadow: none;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   align-items: stretch;
   display: flex;
   flex-direction: column;
