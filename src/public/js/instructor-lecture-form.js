@@ -21,6 +21,7 @@
   let autoSaveTimer = null;
   let isSubmitting = false;
   let draggedElement = null;
+  let editingSessionId = null;
 
   // Format date for display (Month Day, Year format, e.g., Nov 18, 2025)
   function formatDateDisplay(dateInput) {
@@ -592,7 +593,7 @@
     const btnText = submitBtn.querySelector('.btn-text');
     const btnLoader = submitBtn.querySelector('.btn-loader');
     
-    if (btnText) btnText.textContent = 'Creating...';
+    if (btnText) btnText.textContent = editingSessionId ? 'Updating...' : 'Creating...';
     if (btnLoader) btnLoader.removeAttribute('hidden');
     submitBtn.disabled = true;
 
@@ -645,9 +646,12 @@
       }
 
       // Log for debugging
-      console.log('Creating lecture with offering_id:', finalOfferingId);
+      console.log(editingSessionId ? 'Updating lecture' : 'Creating lecture with offering_id:', finalOfferingId);
 
-      const lecture = await window.LectureService.createLecture({
+      let lecture;
+      if (editingSessionId) {
+        // Update existing session
+        lecture = await window.LectureService.updateLecture(editingSessionId, {
         offering_id: finalOfferingId,
         label,
         startsAt,
@@ -655,8 +659,20 @@
         questions
       });
 
-      // Only show toast after successful creation
-      if (lecture && lecture.id) {
+        if (btnText) btnText.textContent = 'Updating...';
+      } else {
+        // Create new session
+        lecture = await window.LectureService.createLecture({
+          offering_id: finalOfferingId,
+          label,
+          startsAt,
+          endsAt,
+          questions
+        });
+      }
+
+      // Only show toast after successful creation (not for updates)
+      if (lecture && lecture.id && !editingSessionId) {
         // Reset form
         form.reset();
         questionList.innerHTML = '';
@@ -665,27 +681,217 @@
         
         // Show toast notification
         showToast(lecture);
+      } else if (editingSessionId) {
+        // For updates, just show saved message and redirect
+        showSaved();
+        setTimeout(() => {
+          window.location.href = '/instructor-lectures';
+        }, 1000);
+        return;
       }
       
       // Reset button after a delay
       setTimeout(() => {
-        if (btnText) btnText.textContent = 'Create attendance session';
+        if (btnText) btnText.textContent = editingSessionId ? 'Update attendance session' : 'Create attendance session';
         if (btnLoader) btnLoader.setAttribute('hidden', 'true');
         submitBtn.disabled = false;
         isSubmitting = false;
       }, 2000);
     } catch (error) {
-      console.error('Error creating lecture:', error);
-      alert(error.message || 'Failed to create lecture. Please try again.');
-      if (btnText) btnText.textContent = 'Create attendance session';
+      console.error(editingSessionId ? 'Error updating lecture:' : 'Error creating lecture:', error);
+      alert(error.message || (editingSessionId ? 'Failed to update lecture. Please try again.' : 'Failed to create lecture. Please try again.'));
+      if (btnText) btnText.textContent = editingSessionId ? 'Update attendance session' : 'Create attendance session';
       if (btnLoader) btnLoader.setAttribute('hidden', 'true');
       submitBtn.disabled = false;
       isSubmitting = false;
     }
   }
 
+  // Load existing session data for editing
+  async function loadSessionForEditing(sessionId) {
+    try {
+      const lecture = await window.LectureService.getLectureWithQuestions(sessionId);
+      if (!lecture) {
+        throw new Error('Session not found');
+      }
+
+      editingSessionId = sessionId;
+
+      // Pre-fill form fields
+      const labelInput = document.getElementById('lecture-label');
+      if (labelInput && lecture.label) {
+        labelInput.value = lecture.label;
+      }
+
+      // Pre-fill date and time using session_date and session_time directly to avoid timezone issues
+      // Use session_date and session_time if available (from database), otherwise fall back to startsAt
+      let sessionDate = lecture.session_date;
+      let sessionTime = lecture.session_time;
+      
+      if (sessionDate && sessionTime) {
+        // Parse date directly from database format (YYYY-MM-DD)
+        const dateInput = document.getElementById('lecture-date');
+        if (dateInput) {
+          // Extract just the date part if it includes time
+          const dateStr = String(sessionDate).split('T')[0].split(' ')[0];
+          dateInput.value = dateStr;
+          updateDateDisplay();
+        }
+
+        // Parse time directly from database format (HH:MM:SS or HH:MM)
+        const startTimeInput = document.getElementById('lecture-start');
+        if (startTimeInput) {
+          let timeStr = String(sessionTime);
+          // Remove milliseconds if present
+          timeStr = timeStr.split('.')[0];
+          // Extract HH:MM
+          const timeParts = timeStr.split(':');
+          if (timeParts.length >= 2) {
+            const hours = timeParts[0].padStart(2, '0');
+            const minutes = timeParts[1].padStart(2, '0');
+            startTimeInput.value = `${hours}:${minutes}`;
+          }
+        }
+
+        // Pre-fill end time from code_expires_at (which stores the end time)
+        const endTimeInput = document.getElementById('lecture-end');
+        if (lecture.endsAt && endTimeInput) {
+          // Parse endsAt - it's an ISO string, but we need to extract local time
+          // Create a date object and extract local time components
+          const endDate = new Date(lecture.endsAt);
+          
+          // Validate end time is reasonable
+          if (sessionDate && sessionTime) {
+            // Create start date for comparison
+            const startDateStr = String(sessionDate).split('T')[0].split(' ')[0];
+            const startTimeStr = String(sessionTime).split('.')[0];
+            const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+            const startTimeParts = startTimeStr.split(':').map(Number);
+            const startDateObj = new Date(startYear, startMonth - 1, startDay, startTimeParts[0], startTimeParts[1] || 0, startTimeParts[2] || 0);
+            
+            const timeDiff = endDate.getTime() - startDateObj.getTime();
+            const isValidEndTime = !isNaN(endDate.getTime()) && 
+                                   !isNaN(startDateObj.getTime()) && 
+                                   timeDiff > 0 && 
+                                   timeDiff < 24 * 60 * 60 * 1000; // Less than 24 hours
+            
+            if (isValidEndTime) {
+              const hours = String(endDate.getHours()).padStart(2, '0');
+              const minutes = String(endDate.getMinutes()).padStart(2, '0');
+              endTimeInput.value = `${hours}:${minutes}`;
+            } else {
+              // Invalid end time, default to 30 minutes after start
+              if (startTimeInput && startTimeInput.value) {
+                const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
+                const defaultEndDate = new Date(startYear, startMonth - 1, startDay, startHours, startMinutes, 0);
+                defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
+                const hours = String(defaultEndDate.getHours()).padStart(2, '0');
+                const minutes = String(defaultEndDate.getMinutes()).padStart(2, '0');
+                endTimeInput.value = `${hours}:${minutes}`;
+              }
+            }
+          }
+        } else if (endTimeInput && startTimeInput && startTimeInput.value) {
+          // No end time provided, default to 30 minutes after start
+          if (sessionDate) {
+            const dateStr = String(sessionDate).split('T')[0].split(' ')[0];
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
+            const defaultEndDate = new Date(year, month - 1, day, startHours, startMinutes, 0);
+            defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
+            const hours = String(defaultEndDate.getHours()).padStart(2, '0');
+            const minutes = String(defaultEndDate.getMinutes()).padStart(2, '0');
+            endTimeInput.value = `${hours}:${minutes}`;
+          }
+        }
+      } else if (lecture.startsAt) {
+        // Fallback to startsAt if session_date/session_time not available
+        const startDate = new Date(lecture.startsAt);
+        const dateInput = document.getElementById('lecture-date');
+        if (dateInput) {
+          const year = startDate.getFullYear();
+          const month = String(startDate.getMonth() + 1).padStart(2, '0');
+          const day = String(startDate.getDate()).padStart(2, '0');
+          dateInput.value = `${year}-${month}-${day}`;
+          updateDateDisplay();
+        }
+
+        const startTimeInput = document.getElementById('lecture-start');
+        if (startTimeInput) {
+          const hours = String(startDate.getHours()).padStart(2, '0');
+          const minutes = String(startDate.getMinutes()).padStart(2, '0');
+          startTimeInput.value = `${hours}:${minutes}`;
+        }
+
+        const endTimeInput = document.getElementById('lecture-end');
+        if (lecture.endsAt && endTimeInput) {
+          const endDate = new Date(lecture.endsAt);
+          const hours = String(endDate.getHours()).padStart(2, '0');
+          const minutes = String(endDate.getMinutes()).padStart(2, '0');
+          endTimeInput.value = `${hours}:${minutes}`;
+        }
+      }
+
+      // Pre-fill questions
+      if (lecture.questions && lecture.questions.length > 0) {
+        questionList.innerHTML = '';
+        lecture.questions.forEach((q) => {
+          addQuestion({
+            prompt: q.prompt || q.question_text,
+            type: q.type || q.question_type,
+            options: q.options || []
+          });
+        });
+      }
+
+      // Update button text
+      const btnText = submitBtn?.querySelector('.btn-text');
+      if (btnText) {
+        btnText.textContent = 'Update attendance session';
+      }
+
+      // Update page title if there's a title element
+      const pageTitle = document.querySelector('h1, .page-title');
+      if (pageTitle) {
+        pageTitle.textContent = 'Edit Lecture Attendance';
+      }
+    } catch (error) {
+      console.error('Error loading session for editing:', error);
+      alert(`Error loading session: ${error.message}`);
+      // Redirect back to lectures list on error
+      window.location.href = '/instructor-lectures';
+    }
+  }
+
   // Initialize
   function init() {
+    // Check for sessionId in URL params for editing
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('sessionId');
+    if (sessionId) {
+      // Wait for LectureService before loading session
+      const loadSession = async () => {
+        if (!window.LectureService) {
+          await new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+              if (window.LectureService) {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 50);
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              resolve();
+            }, 5000);
+          });
+        }
+        if (window.LectureService) {
+          await loadSessionForEditing(sessionId);
+        }
+      };
+      loadSession();
+    }
+
     // Wait for LectureService to be available
     const initOffering = async () => {
       // Wait for LectureService to load
@@ -835,14 +1041,14 @@
       const startValue = startTimeInput.value;
       if (!startValue) return;
       
-      const [startHours, startMinutes] = startValue.split(':').map(Number);
-      const startDate = new Date();
-      startDate.setHours(startHours, startMinutes, 0, 0);
-      startDate.setMinutes(startDate.getMinutes() + 30);
-      
-      const endHours = String(startDate.getHours()).padStart(2, '0');
-      const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
-      endTimeInput.value = `${endHours}:${endMinutes}`;
+        const [startHours, startMinutes] = startValue.split(':').map(Number);
+        const startDate = new Date();
+        startDate.setHours(startHours, startMinutes, 0, 0);
+        startDate.setMinutes(startDate.getMinutes() + 30);
+        
+        const endHours = String(startDate.getHours()).padStart(2, '0');
+        const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
+        endTimeInput.value = `${endHours}:${endMinutes}`;
       
       // Update time picker display if it exists
       setTimeout(() => {

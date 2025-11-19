@@ -384,6 +384,12 @@ body.dashboard-page .main-container {
   border: 1px solid var(--red-200, #fecaca);
 }
 
+.lecture-status.pending {
+  background: var(--amber-50, #fffbeb);
+  color: var(--amber-700, #b45309);
+  border: 1px solid var(--amber-200, #fde68a);
+}
+
 .lecture-actions {
   display: flex;
   gap: 0.5rem;

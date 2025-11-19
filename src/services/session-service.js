@@ -20,6 +20,85 @@ async function getActiveOfferingId() {
 }
 
 /**
+ * Check if session should be auto-opened and open it if needed
+ * This is called whenever sessions are retrieved to ensure they auto-open when start time arrives
+ */
+async function checkAndAutoOpenSession(session) {
+  if (!session || !session.session_date || !session.session_time || session.attendance_opened_at) {
+    return session; // Already opened or missing required fields
+  }
+
+  try {
+    // Parse date - handle both Date objects and strings
+    let dateStr;
+    if (session.session_date instanceof Date) {
+      const year = session.session_date.getFullYear();
+      const month = String(session.session_date.getMonth() + 1).padStart(2, '0');
+      const day = String(session.session_date.getDate()).padStart(2, '0');
+      dateStr = `${year}-${month}-${day}`;
+    } else {
+      dateStr = String(session.session_date).split('T')[0].split(' ')[0];
+    }
+    
+    // Parse time
+    let timeStr = String(session.session_time);
+    timeStr = timeStr.split('.')[0]; // Remove milliseconds
+    
+    // Ensure time is in HH:MM:SS format
+    let timeParts = timeStr.split(':');
+    if (timeParts.length === 2) {
+      timeStr = `${timeStr}:00`;
+      timeParts = timeStr.split(':');
+    }
+    
+    // Combine date and time
+    const [year, month, day] = dateStr.split('-').map(Number);
+    timeParts = timeStr.split(':').map(Number);
+    const [hours, minutes] = timeParts;
+    const seconds = timeParts[2] || 0;
+    
+    // Create date in local timezone
+    const sessionStart = new Date(year, month - 1, day, hours, minutes, seconds);
+    
+    // Validate the date was parsed correctly
+    if (isNaN(sessionStart.getTime())) {
+      console.warn('[SessionService] Invalid date/time for auto-open check:', {
+        session_id: session.id,
+        session_date: session.session_date,
+        session_time: session.session_time
+      });
+      return session;
+    }
+    
+    const now = new Date();
+    
+    // If session start time has passed, automatically open attendance
+    if (sessionStart <= now) {
+      console.log('[SessionService] Auto-opening attendance for session:', session.id, {
+        sessionStart: sessionStart.toISOString(),
+        now: now.toISOString()
+      });
+      
+      // Use the session creator as the updater, or system if not available
+      const updatedBy = session.created_by || '00000000-0000-0000-0000-000000000000';
+      await SessionModel.openAttendance(session.id, updatedBy);
+      
+      // Refresh session to get updated attendance_opened_at
+      const updatedSession = await SessionModel.findById(session.id);
+      if (updatedSession) {
+        Object.assign(session, updatedSession);
+        console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at);
+      }
+    }
+  } catch (error) {
+    // Log error but don't fail - just return the session as-is
+    console.error('[SessionService] Error checking/auto-opening session:', error);
+  }
+  
+  return session;
+}
+
+/**
  * Session Service - Business logic for session management
  */
 export class SessionService {
@@ -82,9 +161,16 @@ export class SessionService {
 
     const accessCode = await this.generateUniqueAccessCode();
     
-    // Set code expiration (default: 24 hours from session date)
-    const codeExpiresAt = sessionData.code_expires_at || 
-      new Date(new Date(sessionData.session_date).getTime() + 24 * 60 * 60 * 1000);
+    // Set code_expires_at to the end time (endsAt) from the form
+    // If endsAt is provided, use it; otherwise default to 24 hours from session date
+    let codeExpiresAt = sessionData.code_expires_at;
+    if (!codeExpiresAt && sessionData.endsAt) {
+      // Use the endsAt from the form as the code expiration (end time)
+      codeExpiresAt = new Date(sessionData.endsAt);
+    } else if (!codeExpiresAt) {
+      // Fallback: 24 hours from session date if no end time provided
+      codeExpiresAt = new Date(new Date(sessionData.session_date).getTime() + 24 * 60 * 60 * 1000);
+    }
 
     const session = await SessionModel.create({
       ...sessionData,
@@ -223,6 +309,9 @@ export class SessionService {
       throw new Error('Session not found');
     }
 
+    // Check and auto-open if start time has passed
+    await checkAndAutoOpenSession(session);
+
     // Get questions for this session
     const questions = await SessionQuestionModel.findBySessionId(sessionId);
     session.questions = questions;
@@ -238,7 +327,16 @@ export class SessionService {
    * Get sessions for a course offering
    */
   static async getSessionsByOffering(offeringId, options = {}) {
-    return await SessionModel.findByOfferingId(offeringId, options);
+    const sessions = await SessionModel.findByOfferingId(offeringId, options);
+    
+    // Check and auto-open each session if start time has passed
+    // Use Promise.allSettled to avoid failing all if one fails
+    const updatedSessions = await Promise.allSettled(
+      sessions.map(session => checkAndAutoOpenSession(session))
+    );
+    
+    // Map results back to sessions array (checkAndAutoOpenSession modifies in place)
+    return sessions;
   }
 
   /**
@@ -264,7 +362,50 @@ export class SessionService {
       }
     }
 
-    return await SessionModel.update(sessionId, updates, updatedBy);
+    // Handle questions update if provided
+    const { questions, startsAt, endsAt, ...sessionUpdates } = updates;
+    
+    // Update code_expires_at to the end time (endsAt) if provided
+    if (endsAt) {
+      try {
+        const endDate = new Date(endsAt);
+        if (!isNaN(endDate.getTime())) {
+          sessionUpdates.code_expires_at = endDate;
+        }
+      } catch (error) {
+        console.warn('[SessionService] Error setting code_expires_at from endsAt:', error);
+      }
+    }
+    
+    // Update session fields
+    const updatedSession = await SessionModel.update(sessionId, sessionUpdates, updatedBy);
+
+    // Update questions if provided
+    if (questions && Array.isArray(questions)) {
+      // Delete existing questions
+      const existingQuestions = await SessionQuestionModel.findBySessionId(sessionId);
+      for (const question of existingQuestions) {
+        await SessionQuestionModel.delete(question.id);
+      }
+
+      // Create new questions
+      if (questions.length > 0) {
+        await SessionQuestionModel.createMany(
+          questions.map((q, index) => ({
+            ...q,
+            session_id: sessionId,
+            question_order: q.question_order ?? index + 1
+          })),
+          updatedBy
+        );
+      }
+
+      // Reload session with questions
+      const questionsList = await SessionQuestionModel.findBySessionId(sessionId);
+      updatedSession.questions = questionsList;
+    }
+
+    return updatedSession;
   }
 
   /**

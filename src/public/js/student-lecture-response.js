@@ -77,7 +77,13 @@
     selectors.time.textContent = formatTimeRange(lecture.startsAt, lecture.endsAt);
     }
     if (selectors.status) {
-    selectors.status.textContent = lecture.status === 'open' ? 'Open' : 'Closed';
+      if (lecture.status === 'open') {
+        selectors.status.textContent = 'Open';
+      } else if (lecture.status === 'pending') {
+        selectors.status.textContent = 'Not Opened';
+      } else {
+        selectors.status.textContent = 'Closed';
+      }
     }
     
     console.log('Render header - status:', lecture.status);

@@ -206,7 +206,9 @@ BEGIN
             -- Calculate timestamps
             opened_at := (session_dates[session_idx] || ' ' || session_times[session_idx])::TIMESTAMPTZ;
             closed_at := opened_at + INTERVAL '90 minutes';
-            code_expires_at := session_dates[session_idx]::DATE + INTERVAL '24 hours';
+            -- Set code_expires_at to the actual end time (start time + 30 minutes default, or use closed_at if available)
+            -- This represents when the lecture ends, not when the code expires
+            code_expires_at := opened_at + INTERVAL '30 minutes';
             
             -- Create session
             INSERT INTO sessions (

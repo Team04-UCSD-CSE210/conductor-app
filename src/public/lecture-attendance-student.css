@@ -247,6 +247,12 @@
   border: 1px solid var(--gray-300, #d1d5db);
 }
 
+.lecture-status.pending {
+  background: var(--amber-100, #fef3c7);
+  color: var(--amber-700, #b45309);
+  border: 1px solid var(--amber-300, #fcd34d);
+}
+
 .lecture-status.error {
   background: var(--rose-100, #ffe4e6);
   color: var(--rose-700, #be123c);
@@ -549,12 +555,29 @@
 }
 
 .modal-error {
-  text-align: center;
-  color: var(--red-600, #dc2626);
+  display: none;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--red-50, #fef2f2);
+  color: var(--red-700, #b91c1c);
+  border: 1px solid var(--red-200, #fecaca);
+  border-radius: 0.5rem;
   font-size: 0.875rem;
-  margin-top: 0.75rem;
-  min-height: 1.25rem;
+  text-align: center;
   font-weight: 500;
+  min-height: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.modal-error.show {
+  display: block;
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
 }
 
 @media (width <= 768px) {

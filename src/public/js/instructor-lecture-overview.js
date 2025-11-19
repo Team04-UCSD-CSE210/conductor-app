@@ -164,7 +164,8 @@
     label.textContent = lecture.label;
     if (lecture.id === currentLectureId) label.classList.add('active');
     label.addEventListener('click', () => {
-      window.location.href = `/lecture-responses?sessionId=${lecture.id}`;
+      // Navigate to form for editing instead of responses
+      window.location.href = `/lecture-builder?sessionId=${lecture.id}`;
     });
     labelWrapper.appendChild(label);
 
@@ -195,11 +196,19 @@
     if (copyIcon) codeValueWrapper.append(copyIcon);
     accessCodeCol.append(codeLabel, codeValueWrapper);
 
-    // Status column (Open/Closed with colors)
+    // Status column (Open/Closed/Not Opened with colors)
     const statusCol = document.createElement('div');
     statusCol.className = 'lecture-status';
-    statusCol.classList.add(lecture.status === 'open' ? 'open' : 'closed');
-    statusCol.textContent = lecture.status === 'open' ? 'Open' : 'Closed';
+    if (lecture.status === 'open') {
+      statusCol.classList.add('open');
+      statusCol.textContent = 'Open';
+    } else if (lecture.status === 'pending') {
+      statusCol.classList.add('pending');
+      statusCol.textContent = 'Not Opened';
+    } else {
+      statusCol.classList.add('closed');
+      statusCol.textContent = 'Closed';
+    }
 
     // Actions column
     const actions = document.createElement('div');

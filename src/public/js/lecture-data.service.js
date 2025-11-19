@@ -113,15 +113,21 @@
         
         // Ensure we have valid date and time strings
         if (dateStr && timeStr) {
-          // Combine date and time with timezone (use local timezone, then convert to ISO)
-          const dateTimeStr = `${dateStr}T${timeStr}`;
-          const dateObj = new Date(dateTimeStr);
+          // Parse date and time components directly to avoid timezone issues
+          const [year, month, day] = dateStr.split('-').map(Number);
+          const timeParts = timeStr.split(':').map(Number);
+          const [hours, minutes] = timeParts;
+          const seconds = timeParts[2] || 0;
+          
+          // Create date in local timezone (month is 0-indexed in JavaScript)
+          const dateObj = new Date(year, month - 1, day, hours, minutes, seconds);
           
           // Validate the date
           if (!isNaN(dateObj.getTime())) {
+            // Store as ISO string - this will be in UTC, but we'll extract local time when displaying
             startsAt = dateObj.toISOString();
           } else {
-            console.warn('Invalid date parsed:', dateTimeStr, 'from', session.session_date, session.session_time);
+            console.warn('Invalid date parsed:', dateStr, timeStr, 'from', session.session_date, session.session_time);
           }
         }
       } catch (e) {
@@ -137,12 +143,59 @@
       }
     }
     
-    // Calculate endsAt from duration or use default (80 minutes)
+    // Use code_expires_at as the end time (it stores the actual end time from the form)
     let endsAt = null;
+    if (session.code_expires_at) {
+      try {
+        const codeExpiresDate = new Date(session.code_expires_at);
+        const startDate = startsAt ? new Date(startsAt) : null;
+        
+        // Validate code_expires_at is reasonable:
+        // - Must be after start time (if start time exists)
+        // - Must be on the same day as start time (not midnight of next day)
+        // - Must be within 24 hours of start time
+        let isValidEndTime = !isNaN(codeExpiresDate.getTime());
+        
+        if (isValidEndTime && startDate && !isNaN(startDate.getTime())) {
+          const timeDiff = codeExpiresDate.getTime() - startDate.getTime();
+          const isSameDay = codeExpiresDate.getDate() === startDate.getDate() &&
+                           codeExpiresDate.getMonth() === startDate.getMonth() &&
+                           codeExpiresDate.getFullYear() === startDate.getFullYear();
+          
+          // Check if it's clearly wrong (midnight of next day or before start time)
+          const isMidnightNextDay = codeExpiresDate.getHours() === 0 && 
+                                    codeExpiresDate.getMinutes() === 0 &&
+                                    !isSameDay;
+          
+          isValidEndTime = timeDiff > 0 && 
+                          timeDiff < 24 * 60 * 60 * 1000 && // Less than 24 hours
+                          !isMidnightNextDay; // Not midnight of next day
+        }
+        
+        if (isValidEndTime) {
+          endsAt = codeExpiresDate.toISOString();
+        } else {
+          // Invalid end time, calculate from start time + 30 minutes (default)
+          if (startDate && !isNaN(startDate.getTime())) {
+            const defaultEndDate = new Date(startDate);
+            defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
+            endsAt = defaultEndDate.toISOString();
+          }
+        }
+      } catch (e) {
+        console.warn('Error parsing code_expires_at as end time:', e);
+        // Fallback: calculate from start time + 30 minutes if code_expires_at is invalid
     if (startsAt) {
+          const endDate = new Date(startsAt);
+          endDate.setMinutes(endDate.getMinutes() + 30);
+          endsAt = endDate.toISOString();
+        }
+      }
+    } else if (startsAt) {
+      // Fallback: calculate from start time + 30 minutes if no code_expires_at
       try {
         const endDate = new Date(startsAt);
-        endDate.setMinutes(endDate.getMinutes() + 80);
+        endDate.setMinutes(endDate.getMinutes() + 30);
         endsAt = endDate.toISOString();
       } catch (e) {
         console.warn('Error calculating end time:', e);
@@ -151,9 +204,23 @@
 
     // Determine status based on attendance_opened_at, attendance_closed_at, and endsAt
     let status = 'closed';
-    if (session.attendance_opened_at && !session.attendance_closed_at) {
-      // Check if the session end time has passed
-      const now = new Date();
+    const now = new Date();
+    
+    if (!session.attendance_opened_at) {
+      // Session hasn't been explicitly opened yet
+      // Check if start time has passed - if so, it should be open (will be auto-opened on next fetch)
+      if (startsAt && new Date(startsAt) <= now) {
+        // Start time has passed - session should be open (pending auto-open on backend)
+        status = 'open';
+      } else {
+        // Start time hasn't arrived yet - show as pending/not opened
+      status = 'pending';
+      }
+    } else if (session.attendance_closed_at) {
+      // Attendance has been explicitly closed
+      status = 'closed';
+    } else {
+      // Attendance is opened but not closed - check if end time has passed
       if (endsAt && new Date(endsAt) < now) {
         // End time has passed, session should be closed
         status = 'closed';
@@ -425,6 +492,30 @@
         return transformSession(session);
       } catch (error) {
         console.error('Error creating lecture:', error);
+        throw error;
+      }
+    },
+
+    /**
+     * Update an existing lecture session
+     */
+    async updateLecture(sessionId, sessionData) {
+      try {
+        if (!sessionId) {
+          throw new Error('Session ID is required');
+        }
+        if (!sessionData) {
+          throw new Error('Session data is required');
+        }
+        
+        const transformed = transformSessionForCreate(sessionData);
+        const session = await apiFetch(`/sessions/${sessionId}`, {
+          method: 'PUT',
+          body: JSON.stringify(transformed)
+        });
+        return transformSession(session);
+      } catch (error) {
+        console.error('Error updating lecture:', error);
         throw error;
       }
     },

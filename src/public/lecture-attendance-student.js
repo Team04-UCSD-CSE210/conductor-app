@@ -76,17 +76,33 @@
     meta.className = 'lecture-meta';
 
     const sessionStatus = document.createElement('span');
-    sessionStatus.className = `lecture-status ${lecture.sessionState === 'open' ? 'open' : 'closed'}`;
-    sessionStatus.textContent = lecture.sessionState === 'open' ? 'Open' : 'Closed';
+    if (lecture.sessionState === 'open') {
+      sessionStatus.className = 'lecture-status open';
+      sessionStatus.textContent = 'Open';
+    } else if (lecture.sessionState === 'pending') {
+      sessionStatus.className = 'lecture-status pending';
+      sessionStatus.textContent = 'Not Opened';
+    } else {
+      sessionStatus.className = 'lecture-status closed';
+      sessionStatus.textContent = 'Closed';
+    }
 
     const actions = document.createElement('div');
     actions.className = 'lecture-actions';
     const actionButton = document.createElement('button');
     actionButton.className = 'btn-link';
     actionButton.type = 'button';
-    actionButton.textContent = lecture.sessionState === 'open'
-      ? (lecture.status === 'present' ? 'View responses' : 'Record attendance')
-      : 'View responses';
+    if (lecture.sessionState === 'open') {
+      actionButton.textContent = lecture.status === 'present' ? 'View responses' : 'Record attendance';
+    } else if (lecture.sessionState === 'pending') {
+      actionButton.textContent = 'Not available';
+      actionButton.disabled = true;
+      actionButton.style.opacity = '0.6';
+      actionButton.style.cursor = 'not-allowed';
+    } else {
+      actionButton.textContent = 'View responses';
+    }
+    
     actionButton.addEventListener('click', () => {
       if (lecture.sessionState === 'open') {
         if (lecture.status === 'present') {
@@ -96,6 +112,9 @@
           // Need to record attendance - show modal
           showAccessCodeModal(lecture);
         }
+      } else if (lecture.sessionState === 'pending') {
+        // Session not opened yet - do nothing (button is disabled)
+        return;
       } else {
         // Session is closed - navigate directly to view responses
         window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
@@ -298,52 +317,82 @@
     // Function to check code and check in
     const checkCodeAndCheckIn = async () => {
       const code = inputs.map(input => input.value.trim().toUpperCase()).join('');
+      console.log('Checking code:', code, 'Length:', code.length);
+      
       // Validate: 6 alphanumeric characters (A-Z, 0-9)
-      if (code.length === 6 && /^[A-Z0-9]{6}$/.test(code)) {
-        try {
-          // Verify code first
-          const verification = await window.LectureService.verifyAccessCode(code);
-          
-          if (!verification.valid) {
-            // Code is incorrect or session is closed - reset and show error
-            errorDiv.textContent = 'Wrong';
-            errorDiv.style.display = 'block';
-            inputs.forEach(input => {
-              input.value = '';
-              input.classList.remove('filled');
-            });
-            inputs[0]?.focus();
-            return;
-          }
-
-          // Code is correct and session is open - check in with access code
-          try {
-            await window.LectureService.checkIn(code, []);
-            
-            // Successfully checked in - redirect to response page
-            window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
-          } catch (checkInError) {
-            console.error('Error checking in:', checkInError);
-            // Check-in failed - reset and show error
-            errorDiv.textContent = 'Wrong';
-            errorDiv.style.display = 'block';
-            inputs.forEach(input => {
-              input.value = '';
-              input.classList.remove('filled');
-            });
-            inputs[0]?.focus();
-          }
-        } catch (error) {
-          console.error('Error verifying code:', error);
-          // Error occurred - reset and show error
-          errorDiv.textContent = 'Wrong';
+      if (code.length !== 6 || !/^[A-Z0-9]{6}$/.test(code)) {
+        console.log('Code validation failed:', code);
+        return;
+      }
+      
+      // Show loading state
+      errorDiv.style.display = 'none';
+      errorDiv.classList.remove('show');
+      inputs.forEach(input => {
+        input.disabled = true;
+      });
+      
+      try {
+        console.log('Verifying access code...');
+        // Verify code first
+        const verification = await window.LectureService.verifyAccessCode(code);
+        console.log('Verification result:', verification);
+        
+        if (!verification || !verification.valid) {
+          // Code is incorrect or session is closed - reset and show error
+          const errorMsg = verification?.message || 'Incorrect access code. Please try again.';
+          console.log('Code invalid:', errorMsg);
+          errorDiv.textContent = errorMsg;
           errorDiv.style.display = 'block';
+          errorDiv.classList.add('show');
           inputs.forEach(input => {
             input.value = '';
             input.classList.remove('filled');
+            input.disabled = false;
           });
-          inputs[0]?.focus();
+          setTimeout(() => {
+            inputs[0]?.focus();
+          }, 100);
+          return;
         }
+
+        // Code is correct and session is open - check in with access code
+        console.log('Code valid, checking in...');
+        try {
+          await window.LectureService.checkIn(code, []);
+          console.log('Check-in successful, redirecting...');
+          
+          // Successfully checked in - redirect to response page
+          window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
+        } catch (checkInError) {
+          console.error('Error checking in:', checkInError);
+          // Check-in failed - reset and show error
+          errorDiv.textContent = checkInError.message || 'Failed to check in. Please try again.';
+          errorDiv.style.display = 'block';
+          errorDiv.classList.add('show');
+          inputs.forEach(input => {
+            input.value = '';
+            input.classList.remove('filled');
+            input.disabled = false;
+          });
+          setTimeout(() => {
+            inputs[0]?.focus();
+          }, 100);
+        }
+      } catch (error) {
+        console.error('Error verifying code:', error);
+        // Error occurred - reset and show error
+        errorDiv.textContent = error.message || 'Incorrect access code. Please try again.';
+        errorDiv.style.display = 'block';
+        errorDiv.classList.add('show');
+        inputs.forEach(input => {
+          input.value = '';
+          input.classList.remove('filled');
+          input.disabled = false;
+        });
+        setTimeout(() => {
+          inputs[0]?.focus();
+        }, 100);
       }
     };
 
@@ -379,6 +428,7 @@
             inputs[index - 1].classList.remove('filled');
           }
           errorDiv.style.display = 'none';
+          errorDiv.textContent = '';
           return;
         }
 
@@ -387,6 +437,7 @@
           input.value = '';
           input.classList.remove('filled');
           errorDiv.style.display = 'none';
+          errorDiv.textContent = '';
           return;
         }
 
@@ -398,12 +449,11 @@
           return;
         }
 
-        // Set the value (will trigger input event for auto-advance)
-        input.value = key;
+        // Don't set value here - let the input event handle it to avoid double processing
       });
 
       // Handle input event for auto-advance
-      input.addEventListener('input', async (e) => {
+      input.addEventListener('input', (e) => {
         e.stopPropagation();
         // Allow alphanumeric characters (A-Z, 0-9) and convert to uppercase
         let value = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
@@ -413,19 +463,70 @@
           e.target.value = value;
           input.classList.add('filled');
           errorDiv.style.display = 'none';
+          errorDiv.classList.remove('show');
+          errorDiv.textContent = '';
+          
+          // Auto-advance to next input immediately
+          if (index < inputs.length - 1) {
+            setTimeout(() => {
+              inputs[index + 1].focus();
+              inputs[index + 1].select();
+            }, 0);
+          } else {
+            // This is the last input - check code when filled
+            setTimeout(() => {
+              const allFilled = inputs.every(inp => inp.value.trim().length > 0);
+              if (allFilled) {
+                checkCodeAndCheckIn().catch(err => {
+                  console.error('Error in checkCodeAndCheckIn:', err);
+                  errorDiv.textContent = 'An error occurred. Please try again.';
+                  errorDiv.style.display = 'block';
+                  errorDiv.classList.add('show');
+                  inputs.forEach(inp => inp.disabled = false);
+                });
+              }
+            }, 150);
+          }
+        } else {
+          input.classList.remove('filled');
+        }
+      });
+      
+      // Also handle keypress for immediate response
+      input.addEventListener('keypress', (e) => {
+        const key = e.key.toUpperCase();
+        if (/^[A-Z0-9]$/.test(key)) {
+          // Set value immediately for better UX
+          e.target.value = key;
+          e.target.classList.add('filled');
+          errorDiv.style.display = 'none';
+          errorDiv.classList.remove('show');
+          errorDiv.textContent = '';
           
           // Auto-advance to next input
           if (index < inputs.length - 1) {
-            requestAnimationFrame(() => {
+            e.preventDefault();
+            setTimeout(() => {
               inputs[index + 1].focus();
               inputs[index + 1].select();
-            });
+            }, 0);
+          } else {
+            // This is the last input - check code when filled
+            e.preventDefault();
+            // Wait a bit to ensure value is set, then check
+            setTimeout(() => {
+              const allFilled = inputs.every(inp => inp.value.trim().length > 0);
+              if (allFilled) {
+                checkCodeAndCheckIn().catch(err => {
+                  console.error('Error in checkCodeAndCheckIn:', err);
+                  errorDiv.textContent = 'An error occurred. Please try again.';
+                  errorDiv.style.display = 'block';
+                  errorDiv.classList.add('show');
+                  inputs.forEach(inp => inp.disabled = false);
+                });
+              }
+            }, 150);
           }
-          
-          // Check if all characters are filled and check in
-          await checkCodeAndCheckIn();
-        } else {
-          input.classList.remove('filled');
         }
       });
       
