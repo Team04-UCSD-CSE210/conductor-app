@@ -153,8 +153,28 @@ jobs:
           if [ "${{ env.BRANCH_NAME }}" == "main" ]; then
             HEALTH_URL="https://dfbhtda4vdu81.cloudfront.net/health"
           else
-            # Extract IP from FEATURE_URL
-            FEATURE_IP=$(echo "${{ env.FEATURE_URL }}" | sed 's|http://||' | sed 's|:3001||')
+            # Wait for service to be stable
+            echo "Waiting for ECS service to be stable..."
+            aws ecs wait services-stable --cluster $CLUSTER_NAME --services $SERVICE_NAME
+            
+            # Get the actual task IP
+            TASK_ARN=$(aws ecs list-tasks --cluster $CLUSTER_NAME --service-name $SERVICE_NAME --query 'taskArns[0]' --output text)
+            
+            if [ "$TASK_ARN" == "None" ] || [ -z "$TASK_ARN" ]; then
+              echo "No running tasks found"
+              echo "healthy=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            
+            ENI_ID=$(aws ecs describe-tasks --cluster $CLUSTER_NAME --tasks $TASK_ARN --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text)
+            FEATURE_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $ENI_ID --query 'NetworkInterfaces[0].Association.PublicIp' --output text)
+            
+            if [ "$FEATURE_IP" == "None" ] || [ -z "$FEATURE_IP" ]; then
+              echo "Failed to get service IP"
+              echo "healthy=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            
             HEALTH_URL="http://$FEATURE_IP:3001/health"
           fi
           
