@@ -77,16 +77,16 @@ jobs:
 
   notify:
     needs: [lint, test, docker-build, docs, commit-lint]
-    if: always()
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
-      - uses: slackapi/slack-github-action@v1.25.0
+      - uses: 8398a7/action-slack@v3
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          slack-message: |
-            :${{ contains(needs.*.result, 'failure') && 'x' || 'white_check_mark' }}: CI Pipeline for Conductor App ${{ contains(needs.*.result, 'failure') && 'FAILED' || 'PASSED' }}
+          status: ${{ contains(needs.*.result, 'failure') && 'failure' || 'success' }}
+          channel: '#deployments'
+          text: |
+            CI Pipeline ${{ contains(needs.*.result, 'failure') && 'failed' || 'passed' }} for branch `${{ github.head_ref }}`
             Repository: ${{ github.repository }}
             Commit: ${{ github.sha }}
-            URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
