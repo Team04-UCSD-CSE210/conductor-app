@@ -290,6 +290,45 @@
   }
 
   // Create option row
+  function createPulseOptionRow(listEl, value = '', index = 0) {
+    const row = document.createElement('div');
+    row.className = 'pulse-option-row';
+    
+    const emojiDisplay = document.createElement('div');
+    emojiDisplay.className = 'pulse-emoji';
+    
+    // Use SVG images from assets
+    const svgFiles = ['very_happy.svg', 'happy.svg', 'neutral.svg', 'sad.svg', 'angry.svg'];
+    const img = document.createElement('img');
+    img.src = `/assets/${svgFiles[index]}`;
+    img.alt = '';
+    img.setAttribute('aria-hidden', 'true');
+    emojiDisplay.appendChild(img);
+    
+    const inputWrapper = document.createElement('div');
+    inputWrapper.className = 'pulse-input-wrapper';
+    
+    const label = document.createElement('label');
+    const labelNames = ['Very Happy', 'Happy', 'Neutral', 'Sad', 'Very Sad'];
+    label.textContent = labelNames[index] || `Level ${index + 1}`;
+    label.style.fontWeight = '600';
+    label.style.fontSize = '0.9rem';
+    label.style.color = 'var(--gray-700, #374151)';
+    label.style.display = 'block';
+    label.style.marginBottom = '0.25rem';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Customize response text';
+    input.value = value;
+    input.required = true;
+    input.setAttribute('aria-label', labelNames[index] || `Level ${index + 1}`);
+    
+    inputWrapper.append(label, input);
+    row.append(emojiDisplay, inputWrapper);
+    listEl.appendChild(row);
+  }
+
   function createOptionRow(listEl, value = '', index = 0) {
     const row = document.createElement('div');
     row.className = 'option-row';
@@ -349,13 +388,33 @@
       return;
     }
 
+    if (type === 'pulse') {
+      const pulseHeader = document.createElement('div');
+      pulseHeader.className = 'pulse-header';
+      pulseHeader.innerHTML = `
+        <p class="field-helper">Customize the five happiness levels for student responses.</p>
+      `;
+      
+      const optionList = document.createElement('div');
+      optionList.className = 'pulse-option-list';
+      
+      const defaultValues = existing.length === 5
+        ? existing
+        : ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree'];
+      
+      defaultValues.forEach((value, index) => {
+        createPulseOptionRow(optionList, value, index);
+      });
+
+      container.append(pulseHeader, optionList);
+      return;
+    }
+
     const optionList = document.createElement('div');
     optionList.className = 'option-list';
     const seedValues = existing.length
       ? existing
-      : type === 'pulse'
-        ? ['Yes', 'Somewhat', 'Not yet']
-        : ['Option 1', 'Option 2'];
+      : ['Option 1', 'Option 2'];
 
     seedValues.forEach((value, index) => createOptionRow(optionList, value, index));
 
@@ -370,6 +429,15 @@
 
   // Collect options
   function collectOptions(container) {
+    // Check if it's pulse options (different structure)
+    const pulseInputs = container.querySelectorAll('.pulse-option-row input');
+    if (pulseInputs.length > 0) {
+      return [...pulseInputs]
+        .map((input) => input.value.trim())
+        .filter(Boolean);
+    }
+    
+    // Regular option rows
     const inputs = container.querySelectorAll('.option-row input');
     return [...inputs]
       .map((input) => input.value.trim())
