@@ -56,12 +56,13 @@ that may interact with external APIs as needed.
 **Implementation:** Node.js with **Express or Hono (TBD)** framework.
 
 The backend serves as the application’s central logic and communication layer.  
-It exposes REST endpoints, enforces authentication, stores persistent data, and manages integration with external APIs.
+It exposes REST endpoints, enforces authentication, stores persistent data, and manages
+integration with external APIs.
 
 ### **5.1 Modules**
 
 | Module | Description |
-|---------|-------------|
+| --------- | ----------- |
 | **Authentication & Authorization** | Integrates UCSD OAuth (via Auth.js or Passport.js TBD) for SSO login. Manages role-based access control (Instructor, TA, Tutor, Student Leader, Student). |
 | **User Management System** | Handles user profiles, roles, and communication preferences. Supports class roster synchronization and enrollment. |
 | **Attendance Tracking System** | Manages real-time attendance recording, integrates with Calendar API for session data, and stores analytics in PostgreSQL. |
@@ -88,14 +89,14 @@ The system uses **PostgreSQL** as the main data store for:
 
 **Connection:**  
 
-Backend communicates via **SQL** through PostgreSQL’s native driver or ORM (e.g., Prisma / Sequelize / Knex).
+Backend communicates via **SQL** through PostgreSQL’s native driver or ORM.
 
 ---
 
 ## **7. External Integrations**
 
 | Service | Purpose | Protocol / API |
-|----------|----------|----------------|
+| ---------- | ---------- | -------------- |
 | **UCSD OAuth (Auth.js / Passport.js)** | Handles SSO login for UCSD users. | HTTPS (OAuth 2.0) |
 | **Google Calendar API** | Syncs course schedules, lecture times, and attendance sessions. | HTTPS (REST / JSON API) |
 | **Gmail API / Slack API** | Sends automated notifications, reminders, and updates to users. | HTTPS (REST / JSON API) |
@@ -113,7 +114,7 @@ Backend communicates via **SQL** through PostgreSQL’s native driver or ORM (e.
    - **PostgreSQL DB** (SQL) for persistent data.
    - **External APIs** (Calendar, Slack, GitHub, LMS) for synchronization and automation.  
 4. **Responses** are returned to the client in **JSON or HTML**.  
-5. **Administrative Automation** tasks periodically trigger backup, notification, or synchronization processes.
+5. **Administrative Automation** tasks periodically trigger backup, notification
 
 ---
 

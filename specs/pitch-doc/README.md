@@ -2,8 +2,8 @@
 
 ## Problem
 
-Managing and coordinating team workflows and project tasks is complex and fragmented across multiple tools,
-leading to inefficient communication and missed deadlines.
+Managing and coordinating team workflows and project tasks is complex and fragmented across
+multiple tools, leading to inefficient communication and missed deadlines.
 
 ## Solution
 
