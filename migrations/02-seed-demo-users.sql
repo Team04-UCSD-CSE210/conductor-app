@@ -39,11 +39,6 @@ INSERT INTO users (
  'admin'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  NULL, NULL, '+1-858-534-0003', 'Micheal', 'https://linkedin.com/in/janeadmin'),
 
- ('lhardy@ucsd.edu', 'A00000004', 'Liam Administrator', 'Liam',
- NULL, NULL, NULL, 'Academic Affairs', NULL,
- 'admin'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
- NULL, NULL, '+1-858-534-0003', 'Liam', 'https://linkedin.com/in/janeadmin'),
-
 
 -- ============================================
 -- INSTRUCTORS/PROFESSORS (UCSD)
