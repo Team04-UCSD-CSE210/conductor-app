@@ -107,7 +107,8 @@ jobs:
             --output text)
           
           # Create or update service
-          if aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'services[0].serviceName' --output text 2>/dev/null | grep -q $SERVICE_NAME; then
+          SERVICE_EXISTS=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'length(services[?serviceName==`'$SERVICE_NAME'`])' --output text 2>/dev/null)
+          if [ "$SERVICE_EXISTS" -gt 0 ]; then
             aws ecs update-service \
               --cluster $CLUSTER_NAME \
               --service $SERVICE_NAME \
