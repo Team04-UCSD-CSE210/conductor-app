@@ -3,16 +3,16 @@
 
 /* Force the four course stats (Students, Teams, TAs, Tutors) into a single horizontal row.
    This reverts the shared responsive grid to the original single-line layout for professors only. */
-   .card-course-info .course-stats {
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 2rem;
-  }
-  
-  /* Prevent stat items from stretching unexpectedly in flex context */
-  .card-course-info .course-stats .stat-item {
-    flex: 0 0 auto;
-    padding: 0 0.5rem; /* Slight extra horizontal breathing room */
-  }
+.card-course-info .course-stats {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+/* Prevent stat items from stretching unexpectedly in flex context */
+.card-course-info .course-stats .stat-item {
+  flex: 0 0 auto;
+  padding: 0 0.5rem; /* Slight extra horizontal breathing room */
+}

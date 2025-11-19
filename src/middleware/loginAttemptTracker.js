@@ -2,7 +2,7 @@ const failedAttempts = {}; // In-memory cache for demo (Redis recommended for pr
 const MAX_ATTEMPTS = 3;
 const BLOCK_TIME_MS = 5 * 60 * 1000; // 5 minutes
 
-export function trackLoginAttempt(email, success) {
+export function trackLoginAttempt(email, success, _res) {
   const key = email.toLowerCase();
 
   if (!failedAttempts[key]) {

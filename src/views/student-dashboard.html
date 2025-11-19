@@ -2,106 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Dashboard - Conductor</title>
-  <link rel="stylesheet" href="/global.css">
-  <link rel="stylesheet" href="/dashboard-global.css">
+  <title>Student Dashboard</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: #f5f7fa;
-      padding: 2rem;
-    }
-    .dashboard-container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    h1 {
-      color: #17a2b8;
-      margin-bottom: 1rem;
-    }
-    .student-section {
-      background: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
-    }
-    .student-section h2 {
-      color: #333;
-      margin-top: 0;
-    }
-    .student-links {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .student-link {
-      display: block;
-      padding: 1rem;
-      background: #f8f9fa;
-      border: 2px solid #e9ecef;
-      border-radius: 6px;
-      text-decoration: none;
-      color: #333;
-      transition: all 0.3s;
-    }
-    .student-link:hover {
-      background: #e9ecef;
-      border-color: #17a2b8;
-      transform: translateY(-2px);
-    }
-    .logout-btn {
-      display: inline-block;
-      margin-top: 2rem;
-      padding: 10px 20px;
-      background: #6c757d;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-    .logout-btn:hover {
-      background: #5a6268;
-    }
+    body { font-family: sans-serif; background: #e9ffe8; padding: 2rem; }
+    h1 { color: #007700; }
   </style>
 </head>
 <body>
-  <div class="dashboard-container">
-    <h1>📚 Student Dashboard</h1>
-    <p>Welcome! View your courses, assignments, and grades here.</p>
-
-    <div class="student-section">
-      <h2>My Courses</h2>
-      <div class="student-links">
-        <a href="/api/my-courses" class="student-link">
-          <strong>View All Courses</strong>
-          <p>See your enrolled courses</p>
-        </a>
-        <a href="/dashboard" class="student-link">
-          <strong>Main Dashboard</strong>
-          <p>Return to main dashboard</p>
-        </a>
-      </div>
-    </div>
-
-    <div class="student-section">
-      <h2>Quick Actions</h2>
-      <div class="student-links">
-        <a href="/attendance" class="student-link">
-          <strong>View Attendance</strong>
-          <p>Check your attendance record</p>
-        </a>
-        <a href="/assignments" class="student-link">
-          <strong>Assignments</strong>
-          <p>View and submit assignments</p>
-        </a>
-      </div>
-    </div>
-
-    <a href="/logout" class="logout-btn">Logout</a>
-  </div>
+  <h1>Welcome, Student!</h1>
+  <p>View your courses, grades, and announcements here.</p>
+  <a href="/logout">Logout</a>
 </body>
 </html>
 
