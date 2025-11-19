@@ -60,7 +60,7 @@
     "globals": "^16.5.0",
     "htmlhint": "^1.1.4",
     "jsdoc": "^4.0.2",
-    "markdownlint-cli": "^0.45.0",
+    "markdownlint-cli": "^0.46.0",
     "pg-hstore": "^2.3.4",
     "redis": "^5.9.0",
     "source-map-support": "^0.5.21",
