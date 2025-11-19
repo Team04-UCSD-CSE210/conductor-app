@@ -27,7 +27,7 @@
         },
         {
           "name": "DATABASE_URL",
-          "value": "postgresql://conductor_user:SecurePassword123!@localhost:5432/conductor"
+          "value": ""
         },
         {
           "name": "GOOGLE_CLIENT_ID",
