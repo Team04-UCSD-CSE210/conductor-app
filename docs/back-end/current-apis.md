@@ -31,7 +31,7 @@ This API uses a **permission-based RBAC system** instead of simple role checks. 
 ### Permission Mapping by Role
 
 | Role | Global Permissions | Course Permissions (when enrolled) |
-|------|-------------------|-----------------------------------|
+| ------ | ----------------- | --------------------------------- |
 | **Admin** | All permissions | All permissions |
 | **Instructor** | `user.view`, `user.manage`, `roster.export` | `roster.*`, `enrollment.*`, `course.*` |
 | **Student** | `roster.view` | `roster.view` |
