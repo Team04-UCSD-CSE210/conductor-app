@@ -86,6 +86,51 @@
     <button type="submit">Submit</button>
   </form>
   </div>
+  <script>
+    // Intercept form submission to handle redirects and show basic errors
+    (function(){
+      const form = document.querySelector('form[action="/register/submit"]');
+      if (!form) return;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) submitButton.disabled = true;
+
+        const formData = new FormData(form);
+
+        try {
+          const resp = await fetch(form.action, {
+            method: form.method || 'POST',
+            body: formData,
+            credentials: 'same-origin'
+          });
+
+          // If server responded with a redirect, follow it in the browser
+          if (resp.redirected) {
+            window.location.href = resp.url;
+            return;
+          }
+
+          // Some servers return 200 and then redirect via Location header
+          const location = resp.headers.get('Location');
+          if (location) {
+            window.location.href = location;
+            return;
+          }
+
+          // On non-redirect, try to read text and show as alert
+          const text = await resp.text();
+          alert(text || 'Unexpected response from server');
+        } catch (err) {
+          console.error('Failed to submit registration form', err);
+          alert('Failed to submit form. Please try again.');
+        } finally {
+          if (submitButton) submitButton.disabled = false;
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
 
