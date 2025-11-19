@@ -262,11 +262,12 @@ body.lecture-builder-page .main-container {
   font-size: 0.8rem;
   color: var(--gray-500, #6b7280);
   line-height: 1.4;
+  margin-top: 0.25rem;
 }
 
 .char-counter {
   position: absolute;
-  bottom: 0.5rem;
+  top: 3.25rem;
   right: 1rem;
   font-size: 0.75rem;
   color: var(--gray-400, #9ca3af);
@@ -292,6 +293,7 @@ body.lecture-builder-page .main-container {
 #lecture-date::after {
   content: attr(data-formatted);
   position: absolute;
+  padding-right: 2rem;
   right: 1rem;
   top: 50%;
   transform: translateY(-50%);

@@ -47,6 +47,14 @@
     function updateCounter() {
       const length = input.value.length;
       counter.textContent = length;
+      
+      // Show/hide counter based on input
+      if (length === 0) {
+        counter.parentElement.style.display = 'none';
+      } else {
+        counter.parentElement.style.display = 'block';
+      }
+      
       if (length > maxLength * 0.9) {
         counter.parentElement.style.color = 'var(--amber-600, #d97706)';
       } else {
