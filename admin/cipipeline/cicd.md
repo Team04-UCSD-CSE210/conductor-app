@@ -278,6 +278,7 @@ In addition to automated checks, the project includes:
 ### Planned / Future Improvements
 
 (Not required for this submission but aligned with course suggestions.)
+
 - Ensure that all pages work with deployment on AWS
 - External code quality integration (CodeClimate / SonarCloud)
 - Coverage reporting (Codecov / Coveralls)
