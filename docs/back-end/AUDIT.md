@@ -64,7 +64,7 @@ schema and all core features are functional.
 ### User CRUD Operations
 
 | Operation | Endpoint | Status | Implementation |
-|-----------|----------|--------|----------------|
+| ----------- | ---------- | -------- | ---------------- |
 | Create User | `POST /users` | ✅ Complete | `UserService.createUser()` with validation |
 | Get User by ID | `GET /users/:id` | ✅ Complete | `UserService.getUserById()` |
 | List Users | `GET /users` | ✅ Complete | Paginated with filters |
@@ -75,7 +75,7 @@ schema and all core features are functional.
 #### User Filtering
 
 | Feature | Endpoint | Status | Implementation |
-|---------|----------|--------|----------------|
+| --------- | ---------- | -------- | ---------------- |
 | Filter by Role | `GET /users/role/:role` | ✅ Complete | Filters by `primary_role` |
 | Filter by Institution | `GET /users/institution/:type` | ✅ Complete | Filters by `institution_type` (ucsd/extension) |
 | Pagination | Query params | ✅ Complete | `limit`, `offset`, `includeDeleted` |
@@ -121,7 +121,7 @@ schema and all core features are functional.
 ### Enrollment CRUD Operations
 
 | Operation | Endpoint | Status | Implementation |
-|-----------|----------|--------|----------------|
+| ----------- | ---------- | -------- | ---------------- |
 | Create Enrollment | `POST /enrollments` | ✅ Complete | `EnrollmentService.createEnrollment()` |
 | Get Enrollment by ID | `GET /enrollments/:id` | ✅ Complete | `EnrollmentService.getEnrollmentById()` |
 | Get by Offering & User | `GET /enrollments/offering/:offeringId/user/:userId` | ✅ Complete | Finds specific enrollment |
@@ -133,7 +133,7 @@ schema and all core features are functional.
 #### Course Staff Management
 
 | Feature | Endpoint | Status | Implementation |
-|---------|----------|--------|----------------|
+| --------- | ---------- | -------- | ---------------- |
 | Get Course Staff | `GET /enrollments/offering/:offeringId/staff` | ✅ Complete | Returns TAs + Tutors |
 | Get TAs Only | `GET /enrollments/offering/:offeringId/tas` | ✅ Complete | Filters `course_role = 'ta'` |
 | Get Tutors Only | `GET /enrollments/offering/:offeringId/tutors` | ✅ Complete | Filters `course_role = 'tutor'` |
@@ -162,7 +162,7 @@ schema and all core features are functional.
 ### Import Operations
 
 | Format | Endpoint | Status | Features |
-|--------|----------|--------|----------|
+| -------- | ---------- | -------- | ---------- |
 | JSON Import | `POST /users/roster/import/json` | ✅ Complete | Nested JSON support, validation, error reporting |
 | CSV Import | `POST /users/roster/import/csv` | ✅ Complete | Flexible column mapping, file upload, validation |
 
@@ -180,7 +180,7 @@ schema and all core features are functional.
 #### Export Operations
 
 | Format | Endpoint | Status | Features |
-|--------|----------|--------|----------|
+| -------- | ---------- | -------- | ---------- |
 | JSON Export | `GET /users/roster/export/json` | ✅ Complete | Full user data with all fields |
 | CSV Export | `GET /users/roster/export/csv` | ✅ Complete | Headers: name, email, primary_role, status, institution_type, created_at, updated_at |
 | Export Imported | `POST /users/roster/export/imported/csv` | ✅ Complete | Export only successfully imported users |
@@ -208,7 +208,7 @@ schema and all core features are functional.
 ### Activity Logging
 
 | Action | Status | Implementation |
-|--------|--------|----------------|
+| -------- | -------- | ---------------- |
 | User Creation | ✅ Complete | `AuditService.logUserCreate()` → action_type: 'enroll' |
 | User Update | ✅ Complete | `AuditService.logUserUpdate()` → action_type: 'update_assignment' |
 | User Deletion | ✅ Complete | `AuditService.logUserDelete()` → action_type: 'drop' |
@@ -236,7 +236,7 @@ schema and all core features are functional.
 ### Migration Files
 
 | File | Purpose | Status | Notes |
-|------|---------|--------|-------|
+| ------ | --------- | -------- | ------- |
 | `migrations/01-create-tables.sql` | Main schema | ✅ Complete | Creates all tables, ENUMs, indexes, triggers |
 | `migrations/02-seed-demo-users.sql` | Demo data | ✅ Complete | 9 demo users (admin, instructors, students, extension) |
 | `migrations/test.sql` | Schema tests | ✅ Complete | Comprehensive SQL test suite |
@@ -365,7 +365,7 @@ npm run db:reset     # Drop and recreate everything
 #### Test Files
 
 | File | Tests | Status | Coverage |
-|------|-------|--------|----------|
+| ------ | ------- | -------- | ---------- |
 | `src/tests/user-model.test.js` | 11 | ✅ Passing | User model validation, CRUD, soft delete, filtering |
 | `src/tests/user-service.test.js` | 12 | ✅ Passing | Business logic, audit logging, role changes |
 | `src/tests/roster-service.test.js` | 57 | ✅ Passing | Import/export, validation, performance, institution_type |
@@ -618,7 +618,7 @@ conductor-app/
 #### Authentication Routes
 
 | Method | Route | Purpose | Auth Required |
-|--------|-------|---------|----------------|
+| -------- | ------- | --------- | ---------------- |
 | GET | `/` | Root redirect to login | No |
 | GET | `/login` | Login page | No |
 | GET | `/auth/google` | Initiate Google OAuth | No |
@@ -714,13 +714,13 @@ This section verifies all API endpoints documented in `current-apis.md` and thei
 #### Health & Status
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/health` | GET | ✅ Implemented | Returns `{ ok: true, ts: "..." }` |
 
 #### User Management APIs
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/api/users` | GET | ✅ Implemented | Paginated list with filters |
 | `/api/users/:id` | GET | ✅ Implemented | Get user by UUID |
 | `/api/users` | POST | ✅ Implemented | Create user (requires `user.manage`) |
@@ -733,7 +733,7 @@ This section verifies all API endpoints documented in `current-apis.md` and thei
 #### Roster Management APIs
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/api/users/roster/import/json` | POST | ✅ Implemented | Bulk JSON import |
 | `/api/users/roster/import/csv` | POST | ✅ Implemented | Bulk CSV import |
 | `/api/users/roster/export/json` | GET | ✅ Implemented | Export as JSON |
@@ -743,14 +743,14 @@ This section verifies all API endpoints documented in `current-apis.md` and thei
 #### Authentication APIs
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/api/user` | GET | ✅ Implemented | Get current user |
 | `/api/login-attempts` | GET | ✅ Implemented | Get login attempt status |
 
 #### Course Management APIs
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/api/my-courses` | GET | ✅ Implemented | Get user's enrolled courses |
 | `/api/courses/:courseId/invites` | POST | ✅ Implemented | Create enrollment invites |
 | `/enroll/:token` | GET | ✅ Implemented | Enroll via invite token |
@@ -758,14 +758,14 @@ This section verifies all API endpoints documented in `current-apis.md` and thei
 #### Course Offerings APIs
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/api/offerings/:offeringId` | GET | ✅ Implemented | Get offering details with stats |
 | `/api/offerings/:offeringId/stats` | GET | ✅ Implemented | Get detailed statistics |
 
 #### Teams Management APIs
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/api/teams` | GET | ✅ Implemented | Get all teams (requires `offering_id`) |
 | `/api/teams/:teamId` | GET | ✅ Implemented | Get team details with members |
 | `/api/teams` | POST | ✅ Implemented | Create team (requires `course.manage`) |
@@ -778,7 +778,7 @@ This section verifies all API endpoints documented in `current-apis.md` and thei
 #### Interactions APIs
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/api/interactions` | POST | ✅ Implemented | Submit interaction report |
 | `/api/interactions` | GET | ✅ Implemented | Get all interactions (with filters) |
 | `/api/interactions/team/:teamId` | GET | ✅ Implemented | Get team interactions |
@@ -787,7 +787,7 @@ This section verifies all API endpoints documented in `current-apis.md` and thei
 #### Enrollments APIs
 
 | Endpoint | Method | Status | Implementation |
-|----------|--------|--------|----------------|
+| ---------- | ------ | ------ | -------------- |
 | `/api/enrollments` | POST | ✅ Implemented | Create enrollment |
 | `/api/enrollments/:id` | GET | ✅ Implemented | Get enrollment by ID |
 | `/api/enrollments/offering/:offeringId/user/:userId` | GET | ✅ Implemented | Get specific enrollment |
@@ -863,7 +863,7 @@ All APIs documented in `current-apis.md` are fully implemented and functional.
 ### By Feature Category
 
 | Category | Status | Completion % | Notes |
-|----------|--------|--------------|-------|
+| ---------- | -------- | -------------- | ------- |
 | **User Management** | ✅ Complete | 95% | All CRUD, filtering, soft delete working |
 | **Enrollment Management** | ✅ Complete | 100% | Full course staff management system |
 | **Bulk Import/Export** | ✅ Complete | 90% | CSV/JSON working, progress UI missing |
@@ -942,7 +942,8 @@ All APIs documented in `current-apis.md` are fully implemented and functional.
 **`migrations/01-create-tables.sql`** - Main schema:
 
 - ✅ All 13 ENUM type definitions
-- ✅ All 9 core tables (users, course_offerings, enrollments, assignments, submissions, team, team_members, attendance, activity_logs)
+- ✅ All 9 core tables (users, course_offerings, enrollments, assignments, submissions, team,
+  team_members, attendance, activity_logs)
 - ✅ All indexes for performance
 - ✅ All triggers for auto-updating `updated_at`
 - ✅ All foreign key constraints with CASCADE
@@ -1137,8 +1138,8 @@ The Conductor Application is **~90% complete** with all core features fully func
 ---
 
 **Document Generated:** January 2025  
-**Last Updated:** After comprehensive codebase review, authentication system audit, and API verification  
-**Status:** ✅ Core features complete, authentication implemented, authorization system active,
+**Last Updated:** After comprehensive review, authentication system audit, API verification  
+**Status:** Core features complete, authentication implemented, authorization system active,
 comprehensive test suite, full demo tools, complete documentation
 
 ---
@@ -1252,7 +1253,7 @@ Show "Too many failed attempts" message
 
 ## Appendix: Complete File Inventory
 
-This comprehensive inventory includes all files mentioned throughout the documentation, organized by category.
+This inventory includes all files mentioned throughout the documentation, organized by category.
 
 ### Core Application Files (3 files)
 
@@ -1342,7 +1343,7 @@ This comprehensive inventory includes all files mentioned throughout the documen
 1. `migrations/01-create-tables.sql` - Main database schema (all tables, ENUMs, indexes, triggers)
 2. `migrations/02-seed-demo-users.sql` - Demo user data (9 demo users)
 3. `migrations/03-seed-course-offerings-teams.sql` - Course offering and teams seed data
-4. `migrations/04-create-permission-tables.sql` - Permission system tables (permissions, user_role_permissions, enrollment_role_permissions)
+4. `migrations/04-create-permission-tables.sql` - Permission system tables
 5. `migrations/05-permissions-and-roles.sql` - Permissions and roles seed data
 6. `migrations/test.sql` - Comprehensive SQL test suite
 7. `migrations/simple-test.sql` - Quick test data generator

@@ -1,0 +1,60 @@
+{
+  "family": "conductor-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "conductor-app",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/conductor-app:latest",
+      "portMappings": [
+        {
+          "containerPort": 3001,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3001"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "postgresql://conductor_user:SecurePassword123!@localhost:5432/conductor"
+        },
+        {
+          "name": "GOOGLE_CLIENT_ID",
+          "value": "GOOGLE_CLIENT_ID_PLACEHOLDER"
+        },
+        {
+          "name": "GOOGLE_CLIENT_SECRET",
+          "value": "GOOGLE_CLIENT_SECRET_PLACEHOLDER"
+        },
+        {
+          "name": "SESSION_SECRET",
+          "value": "SESSION_SECRET_PLACEHOLDER"
+        },
+        {
+          "name": "GOOGLE_CALLBACK_URL",
+          "value": "GOOGLE_CALLBACK_URL_PLACEHOLDER"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/conductor-app",
+          "awslogs-region": "REGION",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      }
+    }
+  ]
+}

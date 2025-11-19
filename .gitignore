@@ -10,7 +10,7 @@ SERVER_SETUP.md
 demo/
 certs/
 .envpublic/
+.env
 .vercel
 .env.vercel
-
-.idea
+package-lock.json
