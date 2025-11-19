@@ -293,7 +293,7 @@ const extractIpAddress = (req) => {
   return req?.socket?.remoteAddress || null;
 };
 
-const logAuthEvent = async (eventType, { req, message, userEmail, userId, metadata } = {}) => {
+const logAuthEvent = async (eventType, { req, message, userEmail, metadata } = {}) => {
   try {
     await pool.query(
       `INSERT INTO auth_logs (event_type, message, user_email, ip_address, path, metadata, created_at)
