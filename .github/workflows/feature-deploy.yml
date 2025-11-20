@@ -1,4 +1,4 @@
-name: Feature Branch Deploy
+name: Feature Branch Test
 
 on:
   push:
@@ -6,106 +6,64 @@ on:
   pull_request:
     types: [opened, synchronize]
 
-env:
-  AWS_REGION: us-west-2
-  ECR_REPOSITORY: conductor-app
-
 jobs:
-  deploy-preview:
+  test-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          node-version: '18'
+          cache: 'npm'
       
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Install dependencies
+        run: npm ci
       
-      - name: Get branch name
-        id: branch
-        run: echo "name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} | tr '/' '-' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
-      
-      - name: Build and push Docker image
+      - name: Run tests
+        run: npm test
+        
+      - name: Build Docker image
         run: |
-          BRANCH_NAME="${{ steps.branch.outputs.name }}"
-          IMAGE_TAG="${BRANCH_NAME}-${GITHUB_SHA::8}"
-          
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
-          
-          echo "IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          docker build -t conductor-app:${{ github.sha }} .
+          echo "✅ Docker image built successfully"
       
-      - name: Comment PR with preview info
+      - name: Test Docker container
+        run: |
+          # Start container in background
+          docker run -d -p 3001:3001 --name test-app conductor-app:${{ github.sha }}
+          sleep 15
+          
+          # Test actual app URL
+          curl http://localhost:3001/ || exit 1
+          echo "✅ App is running and responding at http://localhost:3001"
+          
+          # Stop container
+          docker stop test-app
+          docker rm test-app
+      
+      - name: Comment PR with test results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            const branch = "${{ steps.branch.outputs.name }}";
-            const imageUri = process.env.IMAGE_URI;
+            const branch = context.payload.pull_request.head.ref;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 **Docker image built!**\n\n📦 **Image:** ${imageUri}\n\n⚠️ **Manual ECS setup needed** - Image is ready for deployment\n\n💰 **Cost:** $0 (AWS Free Tier)`
+              body: `✅ **Feature branch tested!**\n\n🔧 **Branch:** ${branch}\n🧪 **Tests:** Passed\n🐳 **Docker:** Built and tested successfully\n🌐 **App URL:** http://localhost:3001/ ✅\n\n**Ready to merge to main** → Will deploy to https://conductor-app.onrender.com`
             })
-      
-      - name: Deploy to ECS
-        run: |
-          # Use Render database URL for feature branches (shared database)
-          DATABASE_URL="postgresql://team4:mW8hdzGZU7Zyp0fDBO7s5GCt6kKhu1sf@dpg-d4fmj4fpm1nc73f31qc0-a.oregon-postgres.render.com:5432/conductor_app_postgres?sslmode=require"
-          
-          # Create task definition
-          cat > task-def-${BRANCH_NAME}.json << EOF
-          {
-            "family": "conductor-${BRANCH_NAME}",
-            "networkMode": "awsvpc",
-            "requiresCompatibilities": ["FARGATE"],
-            "cpu": "256",
-            "memory": "512",
-            "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole",
-            "containerDefinitions": [
-              {
-                "name": "conductor-app",
-                "image": "${IMAGE_URI}",
-                "portMappings": [{"containerPort": 3001}],
-                "environment": [
-                  {"name": "DATABASE_URL", "value": "${DATABASE_URL}"},
-                  {"name": "GOOGLE_CLIENT_ID", "value": "${{ secrets.GOOGLE_CLIENT_ID }}"},
-                  {"name": "GOOGLE_CLIENT_SECRET", "value": "${{ secrets.GOOGLE_CLIENT_SECRET }}"},
-                  {"name": "SESSION_SECRET", "value": "${{ secrets.SESSION_SECRET }}"},
-                  {"name": "PORT", "value": "3001"}
-                ]
-              }
-            ]
-          }
-          EOF
-          
-          # Register task definition
-          aws ecs register-task-definition --cli-input-json file://task-def-${BRANCH_NAME}.json
-          
-          # Run one-off task to get public IP
-          TASK_ARN=$(aws ecs run-task \
-            --cluster conductor-cluster \
-            --task-definition "conductor-${BRANCH_NAME}" \
-            --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[subnet-12345],securityGroups=[sg-12345],assignPublicIp=ENABLED}" \
-            --query 'tasks[0].taskArn' --output text)
-          
-          echo "TASK_ARN=${TASK_ARN}" >> $GITHUB_ENV
-          echo "FEATURE_URL=http://$(aws ecs describe-tasks --cluster conductor-cluster --tasks ${TASK_ARN} --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text | xargs aws ec2 describe-network-interfaces --network-interface-ids --query 'NetworkInterfaces[0].Association.PublicIp' --output text):3001" >> $GITHUB_ENV
       
       - name: Add summary
         run: |
-          echo "## 🚀 Feature Branch Deployed!" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Preview URL:** ${FEATURE_URL}" >> $GITHUB_STEP_SUMMARY
-          echo "**Docker Image:** ${IMAGE_URI}" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ✅ Live and ready for merging to main" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Feature Branch Tested!" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${GITHUB_REF#refs/heads/}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tests:** ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Build:** ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "**App Test:** ✅ http://localhost:3001/ responded" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Ready to merge to main" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Production URL:** https://conductor-app.onrender.com" >> $GITHUB_STEP_SUMMARY
