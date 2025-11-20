@@ -268,10 +268,18 @@
           const selectedHour = this.picker.querySelector('[data-hour].selected');
           const selectedMinute = this.picker.querySelector('[data-minute].selected');
           if (selectedHour) {
-            selectedHour.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            const container = selectedHour.parentElement;
+            const containerRect = container.getBoundingClientRect();
+            const buttonRect = selectedHour.getBoundingClientRect();
+            const offset = buttonRect.top - containerRect.top - (containerRect.height / 2) + (buttonRect.height / 2);
+            container.scrollTop += offset;
           }
           if (selectedMinute) {
-            selectedMinute.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            const container = selectedMinute.parentElement;
+            const containerRect = container.getBoundingClientRect();
+            const buttonRect = selectedMinute.getBoundingClientRect();
+            const offset = buttonRect.top - containerRect.top - (containerRect.height / 2) + (buttonRect.height / 2);
+            container.scrollTop += offset;
           }
         }, 50);
       }
@@ -303,10 +311,18 @@
         const selectedHour = this.picker.querySelector('[data-hour].selected');
         const selectedMinute = this.picker.querySelector('[data-minute].selected');
         if (selectedHour) {
-          selectedHour.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          const container = selectedHour.parentElement;
+          const containerRect = container.getBoundingClientRect();
+          const buttonRect = selectedHour.getBoundingClientRect();
+          const offset = buttonRect.top - containerRect.top - (containerRect.height / 2) + (buttonRect.height / 2);
+          container.scrollTop += offset;
         }
         if (selectedMinute) {
-          selectedMinute.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          const container = selectedMinute.parentElement;
+          const containerRect = container.getBoundingClientRect();
+          const buttonRect = selectedMinute.getBoundingClientRect();
+          const offset = buttonRect.top - containerRect.top - (containerRect.height / 2) + (buttonRect.height / 2);
+          container.scrollTop += offset;
         }
       }, 100);
     }
