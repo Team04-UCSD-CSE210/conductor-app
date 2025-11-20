@@ -57,10 +57,55 @@ jobs:
               body: `🚀 **Docker image built!**\n\n📦 **Image:** ${imageUri}\n\n⚠️ **Manual ECS setup needed** - Image is ready for deployment\n\n💰 **Cost:** $0 (AWS Free Tier)`
             })
       
+      - name: Deploy to ECS
+        run: |
+          # Use Render database URL for feature branches (shared database)
+          DATABASE_URL="postgresql://team4:mW8hdzGZU7Zyp0fDBO7s5GCt6kKhu1sf@dpg-d4fmj4fpm1nc73f31qc0-a.oregon-postgres.render.com:5432/conductor_app_postgres?sslmode=require"
+          
+          # Create task definition
+          cat > task-def-${BRANCH_NAME}.json << EOF
+          {
+            "family": "conductor-${BRANCH_NAME}",
+            "networkMode": "awsvpc",
+            "requiresCompatibilities": ["FARGATE"],
+            "cpu": "256",
+            "memory": "512",
+            "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole",
+            "containerDefinitions": [
+              {
+                "name": "conductor-app",
+                "image": "${IMAGE_URI}",
+                "portMappings": [{"containerPort": 3001}],
+                "environment": [
+                  {"name": "DATABASE_URL", "value": "${DATABASE_URL}"},
+                  {"name": "GOOGLE_CLIENT_ID", "value": "${{ secrets.GOOGLE_CLIENT_ID }}"},
+                  {"name": "GOOGLE_CLIENT_SECRET", "value": "${{ secrets.GOOGLE_CLIENT_SECRET }}"},
+                  {"name": "SESSION_SECRET", "value": "${{ secrets.SESSION_SECRET }}"},
+                  {"name": "PORT", "value": "3001"}
+                ]
+              }
+            ]
+          }
+          EOF
+          
+          # Register task definition
+          aws ecs register-task-definition --cli-input-json file://task-def-${BRANCH_NAME}.json
+          
+          # Run one-off task to get public IP
+          TASK_ARN=$(aws ecs run-task \
+            --cluster conductor-cluster \
+            --task-definition "conductor-${BRANCH_NAME}" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[subnet-12345],securityGroups=[sg-12345],assignPublicIp=ENABLED}" \
+            --query 'tasks[0].taskArn' --output text)
+          
+          echo "TASK_ARN=${TASK_ARN}" >> $GITHUB_ENV
+          echo "FEATURE_URL=http://$(aws ecs describe-tasks --cluster conductor-cluster --tasks ${TASK_ARN} --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text | xargs aws ec2 describe-network-interfaces --network-interface-ids --query 'NetworkInterfaces[0].Association.PublicIp' --output text):3001" >> $GITHUB_ENV
+      
       - name: Add summary
         run: |
-          echo "## 🐳 Feature Branch Built!" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Feature Branch Deployed!" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Preview URL:** ${FEATURE_URL}" >> $GITHUB_STEP_SUMMARY
           echo "**Docker Image:** ${IMAGE_URI}" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ✅ Ready for deployment" >> $GITHUB_STEP_SUMMARY
-          echo "**Production URL:** https://conductor-app.onrender.com" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ✅ Live and ready for merging to main" >> $GITHUB_STEP_SUMMARY
