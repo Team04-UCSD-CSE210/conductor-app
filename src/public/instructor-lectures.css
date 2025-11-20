@@ -44,7 +44,7 @@ body.dashboard-page .main-container {
   justify-content: center;
 }
 
-.eyebrow {
+.eyebrow-local {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--gray-500, #6b7280);
@@ -360,35 +360,7 @@ body.dashboard-page .main-container {
   height: 14px;
 }
 
-.lecture-status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.lecture-status.open {
-  background: var(--emerald-50, #ecfdf5);
-  color: var(--emerald-700, #047857);
-  border: 1px solid var(--emerald-200, #a7f3d0);
-}
-
-.lecture-status.closed {
-  background: var(--red-50, #fef2f2);
-  color: var(--red-700, #b91c1c);
-  border: 1px solid var(--red-200, #fecaca);
-}
-
-.lecture-status.pending {
-  background: var(--amber-50, #fffbeb);
-  color: var(--amber-700, #b45309);
-  border: 1px solid var(--amber-200, #fde68a);
-}
+/* Lecture status styles removed - now in lectures-global.css */
 
 .lecture-actions {
   display: flex;
