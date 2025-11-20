@@ -1194,7 +1194,7 @@
 
     // Add initial question
     addQuestion({
-      prompt: 'Summarize your thoughts on Farley chapters 1-2 in 2-3 sentences',
+      prompt: '',
       type: 'text'
     });
 
