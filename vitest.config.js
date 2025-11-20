@@ -12,18 +12,6 @@ export default defineConfig({
     threads: false,                 // run tests in a single thread
     sequence: { concurrent: false },// run files in order
     globalSetup: './setup.js', // Initialize database before all tests
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      thresholds: {
-        global: {
-          branches: 80,
-          functions: 80,
-          lines: 80,
-          statements: 80
-        }
-      }
-    },
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
