@@ -238,7 +238,7 @@
   }
 
   // Create drag handle
-  function createDragHandle() {
+  function _createDragHandle() {
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.setAttribute('aria-label', 'Drag to reorder');

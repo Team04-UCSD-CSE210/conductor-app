@@ -52,6 +52,15 @@ export function skipAuthForPublic(req, res, next) {
 }
 
 /**
+ * Validate if a string is a valid UUID format
+ */
+function isValidUUID(str) {
+  if (!str || typeof str !== 'string') return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * Get the active course offering ID
  */
 async function getActiveCourseOfferingId() {
@@ -81,7 +90,7 @@ async function getAuthContext(req, scope) {
     // Safely extract offeringId with proper null checks
     let offeringId = null;
     if (scope === "course") {
-      offeringId = 
+      const rawOfferingId = 
         params.offeringId ?? 
         params.courseId ?? 
         (body && body.offering_id) ??
@@ -89,9 +98,22 @@ async function getAuthContext(req, scope) {
         (body && body.courseId) ?? 
         query.offering_id ?? 
         null;
+      
+      // Validate that offeringId is a valid UUID
+      if (rawOfferingId) {
+        if (isValidUUID(rawOfferingId)) {
+          offeringId = rawOfferingId;
+        } else {
+          console.error('[PermissionMiddleware] Invalid offeringId format (expected UUID):', rawOfferingId);
+          // If it's not a UUID, try to look it up by code/name
+          // This handles cases where someone might pass "CSE 210" instead of UUID
+          // But for now, we'll just log and return null to trigger active offering lookup
+          offeringId = null;
+        }
+      }
     }
 
-    // If course scope but no offeringId provided, try to get active offering
+    // If course scope but no offeringId provided or invalid, try to get active offering
     if (scope === "course" && !offeringId) {
       offeringId = await getActiveCourseOfferingId();
     }

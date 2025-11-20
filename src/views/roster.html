@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conductor · Course Roster</title>
+  <link rel="stylesheet" href="/global.css">
+  <link rel="stylesheet" href="/dashboard-global.css">
+  <link rel="stylesheet" href="/css/roster.css">
+</head>
+<body class="dashboard-page roster-page">
+  <!-- Hamburger Menu Button (mobile only) -->
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <!-- Sidebar Navigation -->
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/instructor-dashboard">Dashboard</a>
+      <a href="/course-settings">Course Settings</a>
+      <a href="/instructor-lectures">Attendance</a>
+      <a href="/roster" class="active">Roster</a>
+    </nav>
+    <footer class="sidebar-footer">
+      <a href="/logout" class="btn btn-ghost btn-footer">Sign out</a>
+    </footer>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container" id="main">
+    <div class="roster-header-top">
+      <div class="roster-title-section">
+        <h2 class="page-title">Course Roster</h2>
+        <div class="active-offering-display">
+          <span class="offering-label">Active Offering:</span>
+          <span class="offering-name" id="activeOfferingName">Loading...</span>
+          <button class="btn btn-ghost btn-sm" id="btnRefresh">⟳ Refresh</button>
+        </div>
+      </div>
+      <div class="roster-actions">
+        <div class="export-format-toggle">
+          <label class="sr-only" for="exportFormat">Export format</label>
+          <select id="exportFormat" class="search-input">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+        </div>
+        <button class="btn btn-soft" id="btnExport">Export</button>
+        <button class="btn btn-soft" id="btnImportModal">Import</button>
+        <button class="btn btn-primary" id="btnAddPerson">Add Person</button>
+      </div>
+    </div>
+
+    <section class="stats-section">
+      <div class="stats-grid" aria-live="polite">
+        <article class="stat-card">
+          <div class="stat-label">Total People</div>
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-chip" id="statTotalMeta"></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-label">Students</div>
+          <div class="stat-value" id="statStudents">0</div>
+          <div class="stat-chip" id="statStudentsMeta"></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-label">TAs</div>
+          <div class="stat-value" id="statTAs">0</div>
+          <div class="stat-chip" id="statTAsMeta"></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-label">Tutors</div>
+          <div class="stat-value" id="statTutors">0</div>
+          <div class="stat-chip" id="statTutorsMeta"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="roster-controls">
+      <div class="control-group">
+        <input type="search" id="searchInput" class="search-input" placeholder="Search name, email, PID">
+        <div class="chip-group" role="group" aria-label="Role filter">
+          <button class="chip" data-role-filter="all" data-active="true">All roles</button>
+          <button class="chip" data-role-filter="student">Students</button>
+          <button class="chip" data-role-filter="ta">TAs</button>
+          <button class="chip" data-role-filter="tutor">Tutors</button>
+        </div>
+        <div class="chip-group" role="group" aria-label="Status filter">
+          <button class="chip" data-status-filter="all" data-active="true">All statuses</button>
+          <button class="chip" data-status-filter="enrolled">Enrolled</button>
+          <button class="chip" data-status-filter="waitlisted">Waitlist</button>
+          <button class="chip" data-status-filter="dropped">Dropped</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="sr-only" for="sortSelect">Sort roster</label>
+        <select id="sortSelect" class="search-input select-wide">
+          <option value="name">Sort: A → Z</option>
+          <option value="recent">Sort: Recent</option>
+          <option value="role">Sort: Role</option>
+          <option value="status">Sort: Status</option>
+          <option value="email">Sort: Email</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="roster-surface">
+      <div id="tableView" class="table-container">
+        <table aria-describedby="statTotal" class="roster-table">
+          <thead>
+            <tr>
+              <th class="col-person">Person</th>
+              <th class="col-role">Course Role</th>
+              <th class="col-status">Status</th>
+              <th class="col-institution">Institution</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rosterTableBody"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="empty-state" hidden>
+        <p>No people match the current filters.</p>
+        <p class="empty-state-note">
+          Try clearing your search or importing additional records.
+        </p>
+      </div>
+    </section>
+
+    <section class="pagination" aria-label="Pagination controls">
+      <div class="control-group">
+        <button class="btn btn-soft" id="prevPage">← Prev</button>
+        <button class="btn btn-soft" id="nextPage">Next →</button>
+      </div>
+      <div class="control-group">
+        <span>Page <strong id="pageNumber">1</strong> of <strong id="totalPages">1</strong></span>
+        <label>
+          <span class="sr-only">Rows per page</span>
+          <select id="pageSize" class="search-input page-size-select">
+            <option value="10">10 / page</option>
+            <option value="25">25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100" selected>100 / page</option>
+          </select>
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add Person Modal -->
+  <div class="modal-overlay" id="addPersonOverlay" role="dialog" aria-modal="true" aria-labelledby="addPersonTitle">
+    <div class="modal">
+      <header>
+        <h2 id="addPersonTitle">Add a student</h2>
+        <p class="modal-description">Create a student and automatically enroll them in the course.</p>
+      </header>
+      <section>
+        <form id="addPersonForm" class="form-grid">
+          <div>
+            <label for="personName">Full name</label>
+            <input id="personName" name="name" type="text" placeholder="e.g., Aidan Chen" required>
+          </div>
+          <div>
+            <label for="personEmail">Email</label>
+            <input id="personEmail" name="email" type="email" placeholder="aidan@ucsd.edu" required>
+          </div>
+          <div>
+            <label for="courseRole">Course role</label>
+            <select id="courseRole" name="course_role">
+              <option value="student" selected>Student</option>
+              <option value="ta">Teaching Assistant</option>
+              <option value="tutor">Tutor</option>
+            </select>
+          </div>
+          <div>
+            <label for="institutionType">Institution</label>
+            <select id="institutionType" name="institution_type">
+              <option value="ucsd" selected>UC San Diego</option>
+              <option value="extension">Extension / Other</option>
+            </select>
+          </div>
+          <input type="hidden" name="primary_role" value="student">
+        </form>
+      </section>
+      <footer>
+        <button class="btn btn-ghost" data-close-modal="addPersonOverlay">Cancel</button>
+        <button class="btn btn-primary" type="submit" form="addPersonForm">Create &amp; enroll</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div class="modal-overlay" id="importOverlay" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="modal">
+      <header>
+        <h2 id="importTitle">Import roster</h2>
+        <p class="modal-description">Upload CSV or paste JSON to create people in bulk.</p>
+      </header>
+      <section>
+        <div class="chip-group" role="tablist" aria-label="Import type">
+          <button class="chip" type="button" role="tab" data-import-tab="csv" data-active="true">CSV upload</button>
+          <button class="chip" type="button" role="tab" data-import-tab="json">JSON payload</button>
+        </div>
+        <div id="csvPane" data-import-pane="csv" class="import-pane">
+          <label class="form-grid">
+            <span>Upload CSV file</span>
+            <input type="file" id="csvInput" accept=".csv,text/csv">
+          </label>
+          <p class="helper-text">
+            Headers supported: name, email, primary_role, status, institution_type.
+          </p>
+        </div>
+        <div id="jsonPane" data-import-pane="json" class="import-pane" hidden>
+          <label class="form-grid">
+            <span>Paste JSON array</span>
+            <textarea id="jsonInput" rows="6" placeholder="[{&quot;name&quot;:&quot;Ada Lovelace&quot;,&quot;email&quot;:&quot;ada@ucsd.edu&quot;}]"></textarea>
+          </label>
+        </div>
+      </section>
+      <footer>
+        <button class="btn btn-ghost" data-close-modal="importOverlay">Cancel</button>
+        <button class="btn btn-primary" id="btnRunImport">Run import</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Edit Role Modal -->
+  <div class="modal-overlay" id="roleOverlay" role="dialog" aria-modal="true" aria-labelledby="roleModalTitle">
+    <div class="modal">
+      <header>
+        <h2 id="roleModalTitle">Update course role</h2>
+        <p class="modal-description">Switch a student between student, TA, or tutor assignments.</p>
+      </header>
+      <section>
+        <form id="roleForm" class="form-grid role-form-disabled">
+          <div>
+            <label for="roleStudentName">Selected person</label>
+            <input id="roleStudentName" type="text" readonly>
+          </div>
+          <div>
+            <label for="roleSelect">Course role</label>
+            <select id="roleSelect" name="course_role">
+              <option value="student">Student</option>
+              <option value="ta">Teaching Assistant</option>
+              <option value="tutor">Tutor</option>
+            </select>
+          </div>
+        </form>
+      </section>
+      <footer>
+        <button class="btn btn-ghost" data-close-modal="roleOverlay">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveRole" type="submit" form="roleForm">Save role</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="/js/roster.js" defer></script>
+</body>
+</html>

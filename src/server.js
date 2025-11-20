@@ -295,10 +295,10 @@ redisClient.on("error", (error) => {
 });
 
 // Make Redis optional for local development
-let redisConnected = false;
+let _redisConnected = false;
 redisClient.connect()
   .then(() => {
-    redisConnected = true;
+    _redisConnected = true;
     console.log("✅ Connected to Redis");
   })
   .catch((error) => {
@@ -751,6 +751,16 @@ app.get("/lecture-builder", ...protectAny(['session.create', 'session.manage', '
  */
 app.get("/lecture-responses", ...protectAny(['attendance.view', 'session.manage', 'course.manage'], 'course'), (req, res) => {
   res.sendFile(buildFullViewPath("lecture-responses.html"));
+});
+
+const rosterMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
+
+app.get("/roster", ...rosterMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("roster.html"));
+});
+
+app.get("/courses/:courseId/roster", ...rosterMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("roster.html"));
 });
 
 /**

@@ -130,6 +130,13 @@ export class EnrollmentService {
   }
 
   /**
+   * Get detailed roster with user information and summary stats
+   */
+  static async getRosterDetails(offeringId, options = {}) {
+    return EnrollmentModel.findRosterDetails(offeringId, options);
+  }
+
+  /**
    * Update enrollment with audit logging
    */
   static async updateEnrollment(id, updateData, updatedBy = null) {
@@ -193,22 +200,47 @@ export class EnrollmentService {
 
   /**
    * Delete enrollment (hard delete)
+   * Also deletes all attendance records and session responses for the user in this offering
    */
   static async deleteEnrollment(id, deletedBy = null) {
     const enrollment = await EnrollmentModel.findById(id);
     if (!enrollment) throw new Error('Enrollment not found');
 
+    const { offering_id, user_id } = enrollment;
+
+    // Delete all attendance records for this user in this offering
+    // Attendance records are linked through sessions which have offering_id
+    await pool.query(
+      `DELETE FROM attendance 
+       WHERE user_id = $1 
+       AND session_id IN (
+         SELECT id FROM sessions WHERE offering_id = $2
+       )`,
+      [user_id, offering_id]
+    );
+
+    // Delete all session responses for this user in sessions for this offering
+    await pool.query(
+      `DELETE FROM session_responses 
+       WHERE user_id = $1 
+       AND session_id IN (
+         SELECT id FROM sessions WHERE offering_id = $2
+       )`,
+      [user_id, offering_id]
+    );
+
+    // Delete the enrollment
     const deleted = await EnrollmentModel.delete(id);
 
     // Log the deletion
     if (deletedBy) {
       await AuditService.logActivity({
         userId: deletedBy,
-        offeringId: enrollment.offering_id,
+        offeringId: offering_id,
         action: 'drop',
         metadata: {
           enrollment_id: id,
-          user_id: enrollment.user_id,
+          user_id: user_id,
           course_role: enrollment.course_role,
         },
       });
