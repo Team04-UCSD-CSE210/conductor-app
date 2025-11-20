@@ -15,6 +15,7 @@ import bodyParser from "body-parser";
 import crypto from "crypto";
 import { ensureAuthenticated } from "./middleware/auth.js";
 import { protect, protectAny } from "./middleware/permission-middleware.js";
+import { PermissionService } from "./services/permission-service.js";
 import userRoutes from "./routes/user-routes.js";
 import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
@@ -300,9 +301,13 @@ redisClient.connect()
   .then(() => {
     _redisConnected = true;
     console.log("✅ Connected to Redis");
+    // Enable permission caching
+    PermissionService.setRedisClient(redisClient, true);
   })
   .catch((error) => {
     console.warn("⚠️ Redis connection failed - running without Redis (rate limiting disabled):", error.message);
+    // Permission service will work without cache
+    PermissionService.setRedisClient(null, false);
   });
 
 const extractIpAddress = (req) => {
