@@ -48,6 +48,11 @@ INSERT INTO users (
  'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  'https://cse.ucsd.edu/people/faculty/alice-smith', NULL, '+1-858-534-1234', 'alicesmith', 'https://linkedin.com/in/alicesmith'),
 
+('lhardy@ucsd.edu', 'A00011234', 'Dr. Alice Smith', 'Alice',
+NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
+'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+'https://cse.ucsd.edu/people/faculty/alice-smith', NULL, '+1-858-534-1234', 'alicesmith', 'https://linkedin.com/in/alicesmith'),
+
 ('instructor2@ucsd.edu', 'A00004567', 'Dr. Bob Lee', 'Bob',
  NULL, NULL, NULL, 'Electrical & Computer Engineering', NULL,
  'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
@@ -136,6 +141,12 @@ INSERT INTO users (
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',
  'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
  NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+
+('liamhardy2004@gmail.com', NULL, 'Noah Anderson', 'Noah',
+ 'Software Engineering', NULL, 2025, 'Extension', 'Professional',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
+ NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+
 
 ('extension2@gmail.com', NULL, 'Olivia Taylor', 'Olivia',
  'Computer Science', NULL, 2026, 'Extension', 'Professional',
