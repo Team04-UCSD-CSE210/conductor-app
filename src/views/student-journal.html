@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work Journal / Stand-up</title>
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="../public/global.css" />
+  <link rel="stylesheet" href="../public/dashboard-global.css" />
+  <!-- Page-specific -->
+  <link rel="stylesheet" href="../public/student-journal.css" />
+</head>
+
+<body class="dashboard-page">
+
+  <!-- Sidebar Navigation (uses existing dashboard-global.css) -->
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="../assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/attendance">Attendance</a>
+      <a href="/work-journal" class="active">Work Journal</a>
+      <a href="/my-team">My Team</a>
+    </nav>
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </footer>
+  </header>
+
+  <!-- Scrollable center column -->
+  <main class="wj-main" aria-labelledby="page-title">
+    <header class="wj-page-header">
+      <h1 id="page-title">Work Journal/Stand-up</h1>
+    </header>
+
+    <!-- Logging Activity -->
+    <section class="wj-card" aria-label="Logging activity">
+      <h2 class="wj-section-title">Logging Activity:</h2>
+
+      <form class="wj-form">
+        <fieldset class="wj-fieldset">
+          <legend class="wj-legend">
+            What have you done since yesterday?
+          </legend>
+          <textarea
+            id="done-since-yesterday"
+            name="done_since_yesterday"
+            rows="3"
+            aria-describedby="done-since-help"
+            placeholder="Describe what you've accomplished..."
+          ></textarea>
+          <p id="done-since-help" class="wj-help-text">
+            Summarize the work you completed since your last check-in.
+          </p>
+        </fieldset>
+
+        <fieldset class="wj-fieldset">
+          <legend class="wj-legend">
+            What will you work on today?
+          </legend>
+          <textarea
+            id="working-on"
+            name="working_on"
+            rows="3"
+            placeholder="Outline your plans for today..."
+          ></textarea>
+        </fieldset>
+
+        <fieldset class="wj-fieldset">
+          <legend class="wj-legend">
+            Any blockers?
+          </legend>
+          <textarea
+            id="blockers"
+            name="blockers"
+            rows="3"
+            placeholder="Are there any obstacles in your way?"
+          ></textarea>
+        </fieldset>
+
+        <fieldset class="wj-fieldset">
+          <legend class="wj-legend">
+            How are you feeling about yourself, your team, the course?
+          </legend>
+          <textarea
+            id="feelings"
+            name="feelings"
+            rows="3"
+            placeholder="Share your thoughts and feelings..."
+          ></textarea>
+        </fieldset>
+
+        <p class="wj-form-actions">
+          <button type="submit" class="btn btn-primary wj-submit-btn">
+            Submit Activity Log
+          </button>
+        </p>
+      </form>
+    </section>
+
+    <!-- Previous Activity -->
+    <section class="wj-card wj-previous" aria-label="Previous activity">
+      <h2 class="wj-section-title">Previous Activity:</h2>
+
+      <!-- Entry 1 -->
+      <article class="wj-entry">
+        <header class="wj-entry-header">
+          <span class="wj-entry-icon" aria-hidden="true">
+            <!-- Calendar SVG -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <rect x="3" y="4" width="18" height="17" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.6" />
+              <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.6" />
+              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </span>
+          <p class="wj-entry-date">November 15, 2025</p>
+        </header>
+
+        <dl class="wj-entry-details">
+          <dt>Done since yesterday:</dt>
+          <dd>Completed API integration for user authentication, fixed bug in dashboard rendering</dd>
+
+          <dt>Working on:</dt>
+          <dd>Work on team presentation slides, review PR from teammate</dd>
+
+          <dt>Blockers:</dt>
+          <dd>Waiting for design assets from UI team</dd>
+
+          <dt>Feelings:</dt>
+          <dd>Feeling good about progress, team collaboration has been excellent</dd>
+        </dl>
+      </article>
+
+      <!-- Entry 2 -->
+      <article class="wj-entry">
+        <header class="wj-entry-header">
+          <span class="wj-entry-icon" aria-hidden="true">
+            <!-- Calendar SVG -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <rect x="3" y="4" width="18" height="17" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.6" />
+              <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.6" />
+              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </span>
+          <p class="wj-entry-date">November 14, 2025</p>
+        </header>
+
+        <dl class="wj-entry-details">
+          <dt>Done since yesterday:</dt>
+          <dd>Set up project repository, completed initial research on authentication methods</dd>
+
+          <dt>Working on:</dt>
+          <dd>Begin API integration, attend team standup</dd>
+
+          <dt>Blockers:</dt>
+          <dd>None at the moment</dd>
+
+          <dt>Feelings:</dt>
+          <dd>Excited to start the implementation phase</dd>
+        </dl>
+      </article>
+    </section>
+  </main>
+
+  <!-- Fixed right sidebar -->
+  <aside class="wj-right" aria-label="Support options">
+    <section class="wj-right-card">
+      <h2 class="wj-right-title">If you need to reach out:</h2>
+
+      <button type="button" class="wj-right-btn">
+        <span class="wj-right-icon" aria-hidden="true">
+          <!-- Envelope / message SVG -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            role="img"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <rect x="3" y="5" width="18" height="14" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+            <polyline points="4 7 12 12 20 7" fill="none" stroke="currentColor" stroke-width="1.6" />
+          </svg>
+        </span>
+        <span class="wj-right-text">Contact TA</span>
+      </button>
+
+      <button type="button" class="wj-right-btn">
+        <span class="wj-right-icon" aria-hidden="true">
+          <!-- User / person SVG -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            role="img"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+            <path
+              d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </span>
+        <span class="wj-right-text">Contact Professor</span>
+      </button>
+
+      <p class="wj-right-description">
+        Your activity logs help your instructors understand your progress and provide better support.
+      </p>
+    </section>
+  </aside>
+</body>
+</html>
