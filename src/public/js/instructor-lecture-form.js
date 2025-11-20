@@ -449,14 +449,11 @@
     const card = document.createElement('article');
     card.className = 'question-card';
     card.dataset.questionId = `question-${Date.now()}-${questionCounter++}`;
-    card.setAttribute('draggable', 'true');
 
     const header = document.createElement('header');
     const title = document.createElement('h4');
-    const dragHandle = createDragHandle();
     const titleText = document.createElement('span');
     titleText.textContent = 'Question';
-    title.appendChild(dragHandle);
     title.appendChild(titleText);
     
     const removeButton = document.createElement('button');
