@@ -1,6 +1,5 @@
 /* Instructor Lectures - Overview Page */
 
-/* Ensure scrolling works on this page */
 body.dashboard-page .main-container {
   overflow-y: auto !important;
 }
@@ -259,20 +258,6 @@ body.dashboard-page .main-container {
   text-align: left;
 }
 
-.lecture-actions button {
-  border-radius: 0.5rem;
-  border: none;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .lecture-label button:hover {
   border-color: var(--teal-500, #14b8a6);
   color: var(--teal-600, #0d9488);
@@ -359,28 +344,6 @@ body.dashboard-page .main-container {
   width: 14px;
   height: 14px;
 }
-
-/* Lecture status styles removed - now in lectures-global.css */
-
-.lecture-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.lecture-actions button.primary {
-  background: var(--teal-600, #0d9488);
-  color: white;
-  box-shadow: 0 2px 4px rgb(13 148 136 / 20%);
-}
-
-.lecture-actions button.primary:hover {
-  background: var(--teal-700, #0f766e);
-  box-shadow: 0 4px 8px rgb(13 148 136 / 30%);
-  transform: translateY(-1px);
-}
-
 
 .delete-button {
   border-radius: 0.5rem;

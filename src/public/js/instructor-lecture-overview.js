@@ -126,7 +126,7 @@
 
   function createPrimaryButton(lecture) {
     const button = document.createElement('button');
-    button.className = 'primary';
+    button.className = 'btn-link';
     button.textContent = 'View Responses';
     button.addEventListener('click', () => {
       window.location.href = `/lecture-responses?sessionId=${lecture.id}`;

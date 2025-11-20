@@ -197,32 +197,6 @@
   min-width: 200px;
 }
 
-.lecture-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-link {
-  border-radius: 9999px;
-  border: 1.5px solid var(--teal-600, #0d9488);
-  background: transparent;
-  color: var(--teal-600, #0d9488);
-  font-weight: 600;
-  padding: 0.4rem 0.85rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.btn-link:hover {
-  background: var(--teal-600, #0d9488);
-  color: white;
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgb(13 148 136 / 25%);
-}
-
 .empty-state {
   border: 1px dashed var(--gray-300, #d1d5db);
   border-radius: 0.75rem;
