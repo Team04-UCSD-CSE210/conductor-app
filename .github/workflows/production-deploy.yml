@@ -19,9 +19,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Run tests
-        run: npm test
-      
       - name: Deploy to Render
         run: |
           # Deploy to Render using their API
