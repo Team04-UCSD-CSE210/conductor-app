@@ -202,13 +202,6 @@ body.dashboard-page .main-container {
   border-bottom: 1px solid var(--gray-100, #f3f4f6);
 }
 
-.stack-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-900, #111827);
-}
-
 #lecture-cards {
   display: flex;
   flex-direction: column;

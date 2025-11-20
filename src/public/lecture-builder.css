@@ -17,7 +17,7 @@ body.lecture-builder-page .main-container {
 .builder-header {
   display: flex;
   gap: 1.5rem;
-  align-items: flex-start;
+  align-items: center;
   background: white;
   border: 1px solid var(--gray-200, #e5e7eb);
   border-radius: 1rem;
@@ -26,21 +26,9 @@ body.lecture-builder-page .main-container {
   position: relative;
 }
 
-/* Back button styles removed - now in lectures-global.css */
-
 .header-content {
   flex: 1;
   min-width: 0;
-}
-
-/* Eyebrow styles removed - now in lectures-global.css */
-
-.builder-header h1 {
-  margin: 0 0 0.75rem;
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: var(--gray-900, #111827);
-  line-height: 1.3;
 }
 
 .header-description {
@@ -129,8 +117,6 @@ body.lecture-builder-page .main-container {
 .pulse-header {
   margin-bottom: 1rem;
 }
-
-/* Pulse option list and rows removed - now in lectures-global.css */
 
 /* Form Fields */
 .form-field {
@@ -269,8 +255,6 @@ body.lecture-builder-page .main-container {
 .field-error.show {
   display: block;
 }
-
-/* Date Display Enhancement - removed as date picker handles display */
 
 /* Question Stack */
 .question-stack {
