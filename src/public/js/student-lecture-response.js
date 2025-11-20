@@ -11,7 +11,8 @@
     cancel: document.getElementById('student-cancel'),
     successPanel: document.getElementById('student-success'),
     successClose: document.getElementById('success-close'),
-    updateAnswers: document.getElementById('update-answers')
+    updateAnswers: document.getElementById('update-answers'),
+    backButton: document.getElementById('back-button')
   };
 
   let sessionId = null;
@@ -354,6 +355,15 @@
     }
   }
 
+  function initBackButton() {
+    if (!selectors.backButton) return;
+    selectors.backButton.addEventListener('click', () => {
+      if (confirm('Are you sure you want to leave? Unsaved changes will be lost.')) {
+        window.location.href = '/lecture-attendance-student';
+      }
+    });
+  }
+
   async function hydrate() {
     sessionId = getSessionId();
     
@@ -464,6 +474,7 @@
     selectors.form.addEventListener('submit', handleSubmit);
     }
     initActions();
+    initBackButton();
   }
 
   if (document.readyState === 'loading') {

@@ -17,6 +17,28 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
 }
 
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--gray-300, #d1d5db);
+  background: white;
+  border-radius: 0.5rem;
+  color: var(--gray-700, #374151);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.back-button:hover {
+  border-color: var(--teal-500, #14b8a6);
+  color: var(--teal-600, #0d9488);
+  background: var(--teal-50, #f0fdfa);
+}
+
 .student-response-header .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.1em;
