@@ -19,14 +19,6 @@ The pipeline ensures code quality and consistency across all contributions.
 
 ### CD Pipeline
 
-Automated deployment to AWS using ECS Fargate that runs on all branches:
-
-- **Infrastructure**: CloudFormation template deploys ECS cluster, ECR repository, and networking
-- **Containerization**: Docker image built and pushed to ECR
-- **Deployment**: ECS service created/updated with health checks and rollback capability
-- **Branch Isolation**: Each branch gets its own service instance for testing
-- **Notifications**: PR comments with deployment status and URLs
-
 ## Team Standards & Deployment Policies
 
 ## On-Call Rotation

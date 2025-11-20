@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: conductor-app
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: conductor-db
+          property: connectionString
+
+databases:
+  - name: conductor-db
+    databaseName: conductor
+    user: conductor

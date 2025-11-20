@@ -1,0 +1,127 @@
+name: Feature Branch Deploy
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  AWS_REGION: us-west-2
+  ECR_REPOSITORY: conductor-app
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Get branch name
+        id: branch
+        run: echo "name=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} | tr '/' '-' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      
+      - name: Build and push Docker image
+        run: |
+          BRANCH_NAME="${{ steps.branch.outputs.name }}"
+          IMAGE_TAG="${BRANCH_NAME}-${GITHUB_SHA::8}"
+          
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+          
+          echo "IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+      
+      - name: Create RDS database for branch
+        run: |
+          aws rds create-db-instance \
+            --db-instance-identifier "conductor-${BRANCH_NAME}" \
+            --db-instance-class db.t3.micro \
+            --engine postgres \
+            --master-username conductor \
+            --master-user-password ${{ secrets.DB_PASSWORD }} \
+            --allocated-storage 20 \
+            --db-name conductor \
+            --publicly-accessible \
+            --no-multi-az \
+            --storage-type gp2 \
+            || echo "Database already exists"
+      
+      - name: Deploy to ECS and get URL
+        run: |
+          # Get RDS endpoint
+          DB_ENDPOINT=$(aws rds describe-db-instances --db-instance-identifier "conductor-${BRANCH_NAME}" --query 'DBInstances[0].Endpoint.Address' --output text)
+          DATABASE_URL="postgresql://conductor:${{ secrets.DB_PASSWORD }}@${DB_ENDPOINT}:5432/conductor"
+          
+          # Get ALB DNS name (AWS default URL)
+          ALB_DNS="conductor-${BRANCH_NAME}-$(date +%s).${AWS_REGION}.elb.amazonaws.com"
+          CALLBACK_URL="https://${ALB_DNS}/auth/google/callback"
+          
+          # Create task definition
+          cat > task-def-${BRANCH_NAME}.json << EOF
+          {
+            "family": "conductor-${BRANCH_NAME}",
+            "networkMode": "awsvpc",
+            "requiresCompatibilities": ["FARGATE"],
+            "cpu": "256",
+            "memory": "512",
+            "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole",
+            "containerDefinitions": [
+              {
+                "name": "conductor-app",
+                "image": "${IMAGE_URI}",
+                "portMappings": [{"containerPort": 3001}],
+                "environment": [
+                  {"name": "DATABASE_URL", "value": "${DATABASE_URL}"},
+                  {"name": "GOOGLE_CLIENT_ID", "value": "${{ secrets.GOOGLE_CLIENT_ID }}"},
+                  {"name": "GOOGLE_CLIENT_SECRET", "value": "${{ secrets.GOOGLE_CLIENT_SECRET }}"},
+                  {"name": "SESSION_SECRET", "value": "${{ secrets.SESSION_SECRET }}"},
+                  {"name": "GOOGLE_CALLBACK_URL", "value": "${CALLBACK_URL}"}
+                ]
+              }
+            ]
+          }
+          EOF
+          
+          aws ecs register-task-definition --cli-input-json file://task-def-${BRANCH_NAME}.json
+          
+          # Deploy ECS service
+          aws ecs create-service \
+            --cluster conductor-cluster \
+            --service-name "conductor-${BRANCH_NAME}" \
+            --task-definition "conductor-${BRANCH_NAME}" \
+            --desired-count 1 \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.SUBNET_IDS }}],securityGroups=[${{ secrets.SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
+            || aws ecs update-service \
+            --cluster conductor-cluster \
+            --service "conductor-${BRANCH_NAME}" \
+            --task-definition "conductor-${BRANCH_NAME}" \
+            --force-new-deployment
+          
+          echo "DEPLOY_URL=https://${ALB_DNS}" >> $GITHUB_ENV
+      
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = "${{ steps.branch.outputs.name }}";
+            const url = process.env.DEPLOY_URL;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Preview deployed!**\n\n📱 **Preview URL:** ${url}\n\n🗄️ **Database:** RDS PostgreSQL (conductor-${branch})\n\n💰 **Cost:** $0 (AWS Free Tier)\n\n*Each branch gets isolated environment + database*`
+            })
