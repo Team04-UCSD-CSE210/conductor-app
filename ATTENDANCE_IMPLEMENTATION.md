@@ -12,6 +12,7 @@ Updated `migrations/01-create-tables.sql` with new tables:
 - **attendance** - Student attendance tracking per session
 
 **New Migration (Sprint 3):**
+
 - `migrations/11-add-team-id-to-sessions.sql` - Added `team_id` column to sessions table
   - Enables team-specific sessions (team meetings) vs course-wide sessions (lectures)
   - Nullable foreign key to `team` table with CASCADE delete
@@ -93,6 +94,7 @@ Created 4 CSS files for styling:
 **Comprehensive Test Coverage (Sprint 3 Update):**
 
 Existing test suites:
+
 - `src/tests/attendance.test.js` - 20 tests for attendance functionality
 - `src/tests/session-model.test.js` - 20 tests for SessionModel CRUD operations
 - `src/tests/session-routes.test.js` - Tests for HTTP endpoints and authorization
@@ -130,12 +132,14 @@ Existing test suites:
   - Access code edge cases (empty, case sensitivity)
 
 **Test Results:**
+
 - ✅ **17 test files passing**
 - ✅ **338 tests passed, 1 skipped**
 - ✅ **Zero test failures**
 - ⏱️ **Execution time: ~10.45s**
 
 **Removed Redundancies:**
+
 - Deleted `src/tests/session.test.js` (duplicate coverage with session-model.test.js)
 
 ## 📋 Frontend Routes
@@ -289,12 +293,14 @@ All student routes require authentication:
 ### Team-Based Session Isolation (Sprint 3)
 
 **Course-Wide Sessions (Lectures):**
+
 - Created by instructors
 - `team_id = NULL` in database
 - Visible to all students enrolled in the course
 - Examples: Regular lectures, exams, course-wide announcements
 
 **Team-Specific Sessions (Team Meetings):**
+
 - Created by team leaders
 - `team_id` automatically set to team leader's team UUID
 - Visible only to members of that specific team
@@ -302,12 +308,14 @@ All student routes require authentication:
 - Maintains isolation between teams (Team A cannot see Team B's meetings)
 
 **Filtering Logic:**
+
 - Students see: `WHERE team_id IS NULL OR team_id IN (user's team IDs)`
 - Instructors see: All sessions (no filtering)
 - Team leaders see: Course-wide + their team's sessions
 - Supports multiple team memberships per user
 
 **Auto-Detection:**
+
 - When team leader creates session → `team_id` auto-set
 - When instructor creates session → `team_id` stays NULL
 - Can manually override `team_id` during creation or update
@@ -347,19 +355,23 @@ All student routes require authentication:
 Required permissions (implemented via RBAC system):
 
 **Session Permissions:**
+
 - `session.create` - Create sessions (Instructors, Team Leaders via team role)
 - `session.manage` - Manage sessions (Instructors, Team Leaders for their sessions)
 - `session.view` - View session details (All authenticated users)
 
 **Attendance Permissions:**
+
 - `attendance.view` - View attendance records (Instructors, TAs)
 - `attendance.mark` - Mark attendance manually (Instructors, TAs)
 
 **Team Permissions (Sprint 3):**
+
 - `team.manage` - Manage team (Team Leaders)
 - `team.view_all` - View all teams in course (Instructors, Admins)
 
 **Permission Resolution:**
+
 - Team leaders get `session.create` and `session.manage` via `team_role_permissions` table
 - Team-specific sessions enforce ownership (only team leader of that team can manage)
 - Course-wide permissions checked via `course_role_permissions` table
@@ -369,6 +381,7 @@ Required permissions (implemented via RBAC system):
 Comprehensive test coverage (338 passing tests) includes:
 
 **Core Functionality:**
+
 - Model CRUD operations (create, read, update, delete)
 - Service business logic and validation
 - Access code generation and uniqueness validation
@@ -379,6 +392,7 @@ Comprehensive test coverage (338 passing tests) includes:
 - Error handling and edge cases
 
 **Team-Based Features (Sprint 3):**
+
 - Team ID auto-detection for session creation
 - Session visibility filtering based on team membership
 - Team leader authorization checks
@@ -387,6 +401,7 @@ Comprehensive test coverage (338 passing tests) includes:
 - Referential integrity with team deletion
 
 **Edge Cases & Security:**
+
 - SQL injection prevention (parameterized queries)
 - Unicode character support in titles/descriptions
 - Boundary value testing (max lengths, date/time limits)
@@ -399,6 +414,7 @@ Comprehensive test coverage (338 passing tests) includes:
 - Case sensitivity validation
 
 **Performance Testing:**
+
 - Large batch operations (50+ sessions)
 - Query optimization with team filtering
 - Index usage verification
@@ -623,15 +639,18 @@ All backend and frontend components are complete, tested, and production-ready! 
 ### Sprint 3 Enhancements Summary
 
 **Database Layer:**
+
 - Added `team_id` column to sessions table (nullable FK)
 - Indexed for query performance
 
 **Business Logic:**
+
 - Auto-detection: Team leaders → team sessions, Instructors → course-wide
 - Filtering: Users see course-wide + their team's sessions
 - Permission enforcement: Team leaders can only manage their team's sessions
 
 **Testing:**
+
 - 96 new comprehensive tests added
 - Removed 1 redundant test file
 - All edge cases covered (SQL injection, concurrency, boundary values)

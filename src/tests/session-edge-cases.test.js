@@ -405,7 +405,7 @@ describe('Session Edge Cases and Error Handling', () => {
         }, instructor.id)
       );
 
-      const results = await Promise.all(promises);
+      await Promise.all(promises);
       
       // Last update should win
       const final = await SessionModel.findById(session.id);
@@ -484,7 +484,7 @@ describe('Session Edge Cases and Error Handling', () => {
           access_code: null, // This will fail
           created_by: instructor.id
         });
-      } catch (error) {
+      } catch (_error) {
         // Expected to fail
       }
 
@@ -686,9 +686,9 @@ describe('Session Edge Cases and Error Handling', () => {
         // Both should exist
         expect(session1.access_code).toBe('ABC123');
         expect(session2.access_code).toBe('abc123');
-      } catch (error) {
+      } catch (_error) {
         // If case-insensitive, this is expected
-        expect(error).toBeTruthy();
+        expect(_error).toBeTruthy();
       }
     });
   });
