@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TA Dashboard</title>
 
-  <link rel="stylesheet" href="/global.css">
-  <link rel="stylesheet" href="/dashboard-global.css">
-  <link rel="stylesheet" href="/ta-dashboard.css">
+  <link rel="stylesheet" href="../public/global.css">
+  <link rel="stylesheet" href="../public/dashboard-global.css">
+  <link rel="stylesheet" href="../public/ta-dashboard.css">
 </head>
 
 <body class="dashboard-page">
@@ -22,7 +22,7 @@
   <!-- Sidebar Navigation -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
-      <img src="/assets/temp-logo.png" alt="Conductor logo">
+      <img src="../assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     <nav aria-label="Dashboard navigation">
@@ -150,8 +150,8 @@
                     <!-- Add more students as needed -->
                   </select>
                 </section>
-                <button type="button" class="btn btn-positive interaction-btn" id="positive-btn" aria-label="Positive Interaction">😊</button>
-                <button type="button" class="btn btn-negative interaction-btn" id="negative-btn" aria-label="Negative Interaction">😞</button>
+                <button type="button" class="btn btn-positive interaction-btn" id="positive-btn" aria-label="Positive Interaction">+</button>
+                <button type="button" class="btn btn-negative interaction-btn" id="negative-btn" aria-label="Negative Interaction">-</button>
               </fieldset>
               <fieldset class="interaction-details">
                 <legend class="interaction-label">Interaction Details</legend>
@@ -168,7 +168,7 @@
     </section>
   </main>
 
-  <script src="/professor-dashboard.js" defer></script>
+  <script src="../public/professor-dashboard.js" defer></script>
 
 </body>
 </html>
