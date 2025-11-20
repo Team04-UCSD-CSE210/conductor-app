@@ -558,7 +558,7 @@
     return [...questionList.children].map((card, index) => {
       const prompt = card.querySelector('input[type="text"]')?.value.trim();
       const select = card.querySelector('select');
-      const dynamicArea = card.querySelector('.option-list')?.parentElement;
+      const dynamicArea = card.querySelector('.option-list, .pulse-option-list')?.parentElement;
       const type = select?.value || 'text';
       let options = [];
       if (type !== 'text' && dynamicArea) {
