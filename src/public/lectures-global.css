@@ -46,33 +46,38 @@
    LECTURE STATUS BADGES
    ======================================== */
 .lecture-status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
   font-weight: 600;
-  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  min-width: 70px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .lecture-status.open {
-  background: var(--emerald-50, #ecfdf5);
+  background: var(--emerald-100, #d1fae5);
   color: var(--emerald-700, #047857);
-  border: 1px solid var(--emerald-200, #a7f3d0);
+  border: 1px solid var(--emerald-300, #6ee7b7);
 }
 
 .lecture-status.closed {
-  background: var(--red-50, #fef2f2);
-  color: var(--red-700, #b91c1c);
-  border: 1px solid var(--red-200, #fecaca);
+  background: var(--gray-200, #e5e7eb);
+  color: var(--gray-600, #4b5563);
+  border: 1px solid var(--gray-300, #d1d5db);
 }
 
 .lecture-status.pending {
-  background: var(--amber-50, #fffbeb);
+  background: var(--amber-100, #fef3c7);
   color: var(--amber-700, #b45309);
-  border: 1px solid var(--amber-200, #fde68a);
+  border: 1px solid var(--amber-300, #fcd34d);
+}
+
+.lecture-status.error {
+  background: var(--rose-100, #ffe4e6);
+  color: var(--rose-700, #be123c);
 }
 
 /* ========================================

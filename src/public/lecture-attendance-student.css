@@ -223,41 +223,6 @@
   box-shadow: 0 2px 8px rgb(13 148 136 / 25%);
 }
 
-.lecture-status {
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 70px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.lecture-status.open {
-  background: var(--emerald-100, #d1fae5);
-  color: var(--emerald-700, #047857);
-  border: 1px solid var(--emerald-300, #6ee7b7);
-}
-
-.lecture-status.closed {
-  background: var(--gray-200, #e5e7eb);
-  color: var(--gray-600, #4b5563);
-  border: 1px solid var(--gray-300, #d1d5db);
-}
-
-.lecture-status.pending {
-  background: var(--amber-100, #fef3c7);
-  color: var(--amber-700, #b45309);
-  border: 1px solid var(--amber-300, #fcd34d);
-}
-
-.lecture-status.error {
-  background: var(--rose-100, #ffe4e6);
-  color: var(--rose-700, #be123c);
-}
-
 .empty-state {
   border: 1px dashed var(--gray-300, #d1d5db);
   border-radius: 0.75rem;
