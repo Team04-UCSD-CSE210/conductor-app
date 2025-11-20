@@ -15,14 +15,21 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
 }
 
+
 .back-button {
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  border: 1px solid var(--gray-200, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--gray-300, #d1d5db);
   background: white;
-  font-size: 1.5rem;
+  border-radius: 0.5rem;
+  color: var(--gray-700, #374151);
   cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
 }
 
 .lecture-info h2 {
