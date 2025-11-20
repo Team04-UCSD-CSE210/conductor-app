@@ -261,11 +261,17 @@ describe('Attendance Management Tests', () => {
     beforeEach(async () => {
       await pool.query('DELETE FROM sessions WHERE offering_id = $1', [testOffering.id]);
       
+      // Set session time to a recent past time (within 15 minutes) to ensure check-in is marked as 'present'
+      const now = new Date();
+      const sessionTime = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
+      const sessionDate = sessionTime.toISOString().split('T')[0]; // YYYY-MM-DD
+      const sessionTimeStr = sessionTime.toTimeString().split(' ')[0]; // HH:MM:SS
+      
       testSession = await SessionModel.create({
         offering_id: testOffering.id,
         title: 'Service Test Session',
-        session_date: '2025-02-01',
-        session_time: '10:00:00',
+        session_date: sessionDate,
+        session_time: sessionTimeStr,
         access_code: 'SVC123',
         is_active: true,
         created_by: testUser.id

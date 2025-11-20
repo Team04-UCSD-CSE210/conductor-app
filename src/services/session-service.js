@@ -251,10 +251,6 @@ export class SessionService {
         } else {
           const now = new Date();
           
-          // Verify the date components match what was stored
-          const storedDateMatch = dateStr === String(session.session_date).split('T')[0].split(' ')[0];
-          const storedTimeMatch = timeStr === String(session.session_time).split('.')[0].split(' ')[0];
-          
           // Verify the date components are correct - they should match what was stored
           const sessionStartYear = sessionStart.getFullYear();
           const sessionStartMonth = sessionStart.getMonth() + 1;

@@ -7,7 +7,7 @@
     return;
   }
 
-  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo, updateStats } = window.DashboardService;
+  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo } = window.DashboardService;
   
   let offeringId = null;
   let refreshInterval = null;

@@ -52,12 +52,35 @@ export class AttendanceService {
     // Determine status (late if past certain time, otherwise present)
     let status = 'present';
     
-    if (session.session_time) {
-      const sessionDateTime = new Date(`${session.session_date}T${session.session_time}`);
-      const lateThreshold = new Date(sessionDateTime.getTime() + 15 * 60 * 1000); // 15 minutes
-      
-      if (new Date() > lateThreshold) {
-        status = 'late';
+    if (session.session_date && session.session_time) {
+      try {
+        // Parse date and time in local timezone to avoid timezone conversion issues
+        // session_date should be YYYY-MM-DD string, session_time should be HH:MM:SS string
+        let dateStr = String(session.session_date).split('T')[0].split(' ')[0];
+        let timeStr = String(session.session_time).split('.')[0]; // Remove milliseconds if present
+        
+        // Ensure time is in HH:MM:SS format
+        let timeParts = timeStr.split(':');
+        if (timeParts.length === 2) {
+          timeStr = `${timeStr}:00`;
+          timeParts = timeStr.split(':');
+        }
+        
+        // Create date in local timezone using date components
+        const [year, month, day] = dateStr.split('-').map(Number);
+        timeParts = timeStr.split(':').map(Number);
+        const [hours, minutes] = timeParts;
+        const seconds = timeParts[2] || 0;
+        
+        const sessionDateTime = new Date(year, month - 1, day, hours, minutes, seconds);
+        const lateThreshold = new Date(sessionDateTime.getTime() + 15 * 60 * 1000); // 15 minutes
+        
+        if (!isNaN(sessionDateTime.getTime()) && new Date() > lateThreshold) {
+          status = 'late';
+        }
+      } catch (error) {
+        // If parsing fails, default to 'present'
+        console.warn('[AttendanceService] Error parsing session date/time for late check:', error);
       }
     }
 
