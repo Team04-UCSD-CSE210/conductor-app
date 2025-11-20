@@ -1,4 +1,4 @@
-name: Feature Branch Test
+name: Feature Branch CD Pipeline
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
           node-version: '18'
       
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       
       - name: Run tests
         run: npm test
