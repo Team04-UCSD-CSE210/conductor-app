@@ -36,6 +36,7 @@ router.post('/', ...protect('session.create', 'course'), async (req, res) => {
  * Get all sessions for a course offering
  * GET /api/sessions?offering_id=<uuid>&is_active=true
  * Requires: Authentication
+ * Filters sessions by team membership (shows course-wide + user's team sessions)
  */
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
@@ -46,6 +47,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     }
 
     const options = {
+      userId: req.currentUser.id, // Filter by user's team membership
       is_active: is_active !== undefined ? is_active === 'true' : undefined,
       limit: limit ? Number(limit) : 50,
       offset: offset ? Number(offset) : 0

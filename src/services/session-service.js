@@ -165,6 +165,28 @@ export class SessionService {
       throw new Error('Not authorized to create sessions for this offering');
     }
 
+    // Auto-set team_id if creator is a team leader (not instructor)
+    if (!sessionData.team_id) {
+      const userRes = await pool.query('SELECT primary_role FROM users WHERE id = $1', [createdBy]);
+      const primaryRole = userRes.rows[0]?.primary_role;
+      
+      // If not an instructor, check if they're a team leader and set team_id
+      if (primaryRole !== 'instructor' && primaryRole !== 'admin') {
+        const teamRes = await pool.query(
+          `SELECT t.id FROM team t
+           LEFT JOIN team_members tm ON tm.team_id = t.id
+           WHERE t.offering_id = $1 AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
+           LIMIT 1`,
+          [offeringId, createdBy]
+        );
+        
+        if (teamRes.rows.length > 0) {
+          sessionData.team_id = teamRes.rows[0].id;
+        }
+      }
+      // If instructor/admin, team_id stays null (course-wide lecture)
+    }
+
     const accessCode = await this.generateUniqueAccessCode();
     
     // Set code_expires_at to the end time (endsAt) from the form
@@ -359,11 +381,47 @@ export class SessionService {
   }
 
   /**
-   * Get sessions for a course offering
+   * Get sessions for a course offering, filtered by team membership
+   * Shows: 1) Course-wide sessions (team_id = NULL)
+   *        2) Team-specific sessions where user is a member
    */
   static async getSessionsByOffering(offeringId, options = {}) {
-    const sessions = await SessionModel.findByOfferingId(offeringId, options);
+    const { userId, ...modelOptions } = options;
     
+    // If userId provided, filter by team membership
+    if (userId) {
+      // Get user's team(s) in this offering
+      const teamRes = await pool.query(
+        `SELECT DISTINCT t.id 
+         FROM team t
+         LEFT JOIN team_members tm ON tm.team_id = t.id
+         WHERE t.offering_id = $1 AND (t.leader_id = $2 OR tm.user_id = $2)`,
+        [offeringId, userId]
+      );
+      
+      const userTeamIds = teamRes.rows.map(r => r.id);
+      
+      // Get sessions: either course-wide (team_id IS NULL) or user's team sessions
+      const sessions = await SessionModel.findByOfferingIdWithTeamFilter(offeringId, userTeamIds, modelOptions);
+      
+      // Check for auto-open
+      await this._batchAutoOpenSessions(sessions);
+      return sessions;
+    }
+    
+    // No userId provided - return all sessions (admin/instructor view)
+    const sessions = await SessionModel.findByOfferingId(offeringId, modelOptions);
+    
+    // Check for auto-open
+    await this._batchAutoOpenSessions(sessions);
+    return sessions;
+  }
+
+  /**
+   * Helper method to batch auto-open sessions
+   * @private
+   */
+  static async _batchAutoOpenSessions(sessions) {
     // Batch check and auto-open sessions that need it
     // Only check sessions that haven't been opened yet
     const sessionsToCheck = sessions.filter(s => 
@@ -432,8 +490,6 @@ export class SessionService {
         );
       }
     }
-    
-    return sessions;
   }
 
   /**
