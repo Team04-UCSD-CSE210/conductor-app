@@ -121,45 +121,12 @@ const mockEnrollmentRolePermissions = [
 // Mock pool.query implementation
 // ------------------------------
 
-const originalPoolQuery = realPool.query.bind(realPool);
-
 const mockPool = {
   async query(sql, params = []) {
     sql = sql.trim();
 
-    // Handle: SELECT id FROM permissions WHERE code = $1
-    if (sql.includes('SELECT id FROM permissions WHERE code')) {
-      const [code] = params;
-      const perm = mockPermissions.find((p) => p.code === code);
-      if (!perm) {
-        return { rows: [] };
-      }
-      return { rows: [{ id: perm.id }] };
-    }
-
-    // Handle: SELECT primary_role AS role FROM users WHERE id = $2::uuid
-    if (sql.includes('SELECT primary_role') && sql.includes('FROM users')) {
-      const userId = params[1] || params[0];
-      const user = mockUsers.find((u) => u.id === userId && !u.deleted_at);
-      if (!user) {
-        return { rows: [] };
-      }
-      return { rows: [{ role: user.primary_role }] };
-    }
-
-    // Handle: SELECT course_role FROM enrollments WHERE offering_id = $3::uuid AND user_id = $2::uuid
-    if (sql.includes('SELECT course_role') && sql.includes('FROM enrollments')) {
-      const [offeringId, userId] = params.length >= 2 ? [params[0], params[1]] : [null, params[0]];
-      const enrollment = mockEnrollments.find(
-        (e) => e.offering_id === offeringId && e.user_id === userId
-      );
-      if (!enrollment) {
-        return { rows: [] };
-      }
-      return { rows: [{ course_role: enrollment.course_role }] };
-    }
-
     // --- Handle the big CTE used in PermissionService.hasPermission ---
+    // This MUST come FIRST because the CTE contains subqueries that would match other handlers
     if (sql.startsWith('WITH perm AS') || sql.includes('WITH perm AS')) {
       const [permissionCode, userId, offeringId] = params;
 
@@ -214,6 +181,38 @@ const mockPool = {
       return { rows: [{ allowed }] };
     }
 
+    // Handle: SELECT id FROM permissions WHERE code = $1
+    if (sql.includes('SELECT id FROM permissions WHERE code')) {
+      const [code] = params;
+      const perm = mockPermissions.find((p) => p.code === code);
+      if (!perm) {
+        return { rows: [] };
+      }
+      return { rows: [{ id: perm.id }] };
+    }
+
+    // Handle: SELECT primary_role AS role FROM users WHERE id = $2::uuid
+    if (sql.includes('SELECT primary_role') && sql.includes('FROM users')) {
+      const userId = params[1] || params[0];
+      const user = mockUsers.find((u) => u.id === userId && !u.deleted_at);
+      if (!user) {
+        return { rows: [] };
+      }
+      return { rows: [{ role: user.primary_role }] };
+    }
+
+    // Handle: SELECT course_role FROM enrollments WHERE offering_id = $3::uuid AND user_id = $2::uuid
+    if (sql.includes('SELECT course_role') && sql.includes('FROM enrollments')) {
+      const [offeringId, userId] = params.length >= 2 ? [params[0], params[1]] : [null, params[0]];
+      const enrollment = mockEnrollments.find(
+        (e) => e.offering_id === offeringId && e.user_id === userId
+      );
+      if (!enrollment) {
+        return { rows: [] };
+      }
+      return { rows: [{ course_role: enrollment.course_role }] };
+    }
+
     // Anything else: just warn and return no rows
     console.warn('[mockPool] Unhandled SQL query:', sql);
     return { rows: [] };
@@ -225,11 +224,20 @@ const mockPool = {
 // ------------------------------
 
 async function withMockedPool(testFn) {
-  realPool.query = mockPool.query;
+  // Store original pool.query
+  const originalQuery = realPool.query;
+  
+  // Disable Redis caching during tests
+  PermissionService.setRedisClient(null, false);
+  
+  // Replace pool.query with mock
+  realPool.query = mockPool.query.bind(mockPool);
+  
   try {
     await testFn();
   } finally {
-    realPool.query = originalPoolQuery;
+    // Restore original pool.query
+    realPool.query = originalQuery;
   }
 }
 
