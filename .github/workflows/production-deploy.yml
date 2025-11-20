@@ -35,3 +35,9 @@ jobs:
           echo "🚀 Production deployment complete!"
           echo "URL: https://conductor-app.onrender.com"
           echo "Database: Persistent PostgreSQL on Render"
+          
+          # Add to GitHub Actions summary
+          echo "## 🚀 Production Deployed!" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://conductor-app.onrender.com" >> $GITHUB_STEP_SUMMARY
+          echo "**Database:** PostgreSQL on Render" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ✅ Live" >> $GITHUB_STEP_SUMMARY

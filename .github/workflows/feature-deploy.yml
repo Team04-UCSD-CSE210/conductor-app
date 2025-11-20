@@ -56,3 +56,11 @@ jobs:
               repo: context.repo.repo,
               body: `🚀 **Docker image built!**\n\n📦 **Image:** ${imageUri}\n\n⚠️ **Manual ECS setup needed** - Image is ready for deployment\n\n💰 **Cost:** $0 (AWS Free Tier)`
             })
+      
+      - name: Add summary
+        run: |
+          echo "## 🐳 Feature Branch Built!" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Image:** ${IMAGE_URI}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ✅ Ready for deployment" >> $GITHUB_STEP_SUMMARY
+          echo "**Production URL:** https://conductor-app.onrender.com" >> $GITHUB_STEP_SUMMARY
