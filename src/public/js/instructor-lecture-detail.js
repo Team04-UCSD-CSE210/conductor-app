@@ -144,6 +144,81 @@
     return card;
   }
 
+  function createPulseBarGraph(responses, question) {
+    console.log('createPulseBarGraph called with:', { responses, question });
+    
+    const container = document.createElement('div');
+    container.className = 'pulse-results-container';
+
+    // Get question options (the pulse labels)
+    const options = question.options || ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree'];
+    console.log('Pulse options:', options);
+    
+    const emojis = ['very_happy.svg', 'happy.svg', 'neutral.svg', 'sad.svg', 'angry.svg'];
+    
+    // Count responses for each option
+    const counts = {};
+    options.forEach(opt => counts[opt] = 0);
+    
+    responses.forEach(response => {
+      const answer = response.response || response.response_text || response.response_option;
+      console.log('Response answer:', answer);
+      if (answer && counts[answer] !== undefined) {
+        counts[answer]++;
+      }
+    });
+
+    console.log('Counts:', counts);
+    
+    const totalResponses = responses.length;
+    const maxCount = Math.max(...Object.values(counts), 1);
+
+    // Create bar graph rows
+    options.forEach((option, index) => {
+      const count = counts[option] || 0;
+      const percentage = totalResponses > 0 ? Math.round((count / totalResponses) * 100) : 0;
+      const barWidth = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+
+      const row = document.createElement('div');
+      row.className = 'pulse-bar-row';
+
+      // Emoji
+      const emoji = document.createElement('div');
+      emoji.className = 'pulse-bar-emoji';
+      const img = document.createElement('img');
+      img.src = `/assets/${emojis[index]}`;
+      img.alt = '';
+      img.setAttribute('aria-hidden', 'true');
+      emoji.appendChild(img);
+
+      // Label
+      const label = document.createElement('div');
+      label.className = 'pulse-bar-label';
+      label.textContent = option;
+
+      // Bar container
+      const barContainer = document.createElement('div');
+      barContainer.className = 'pulse-bar-container';
+      
+      const bar = document.createElement('div');
+      bar.className = 'pulse-bar';
+      bar.style.width = `${barWidth}%`;
+      bar.setAttribute('data-count', count);
+      
+      barContainer.appendChild(bar);
+
+      // Count display
+      const countDisplay = document.createElement('div');
+      countDisplay.className = 'pulse-bar-count';
+      countDisplay.textContent = `${count} (${percentage}%)`;
+
+      row.append(emoji, label, barContainer, countDisplay);
+      container.appendChild(row);
+    });
+
+    return container;
+  }
+
   async function renderResponses(questionId) {
     if (!selectors.responseList || !questionId) return;
     
@@ -169,9 +244,27 @@
       return;
     }
 
+      // Find the current question to check its type
+      const currentQuestion = lecture.questions.find(q => q.id == questionId);
+      console.log('Current question:', currentQuestion);
+      console.log('Question ID:', questionId);
+      console.log('All questions:', lecture.questions);
+      
+      const questionType = currentQuestion?.type || currentQuestion?.question_type;
+      console.log('Question type:', questionType);
+
+      // If it's a pulse question, show bar graph (check for both 'pulse' and 'pulse_check')
+      if (questionType === 'pulse' || questionType === 'pulse_check') {
+        console.log("Creating pulse graph!", responses);
+        const pulseGraph = createPulseBarGraph(responses, currentQuestion);
+        selectors.responseList.appendChild(pulseGraph);
+      } else {
+        console.log('Not a pulse question, showing response cards');
+        // For text and mcq questions, show response cards
     responses.forEach((response) => {
       selectors.responseList.appendChild(createResponseCard(response));
     });
+      }
     } catch (error) {
       console.error('Error rendering responses:', error);
       selectors.responseList.innerHTML = `<p style="color: var(--red-600); text-align: center; padding: 2rem;">Error loading responses: ${error.message}</p>`;
