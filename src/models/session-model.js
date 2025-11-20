@@ -41,7 +41,9 @@ export class SessionModel {
       `SELECT s.*, 
               co.name as course_name,
               co.code as course_code,
-              u.name as creator_name
+              u.name as creator_name,
+              TO_CHAR(s.session_date, 'YYYY-MM-DD') as session_date_str,
+              TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str
        FROM sessions s
        LEFT JOIN course_offerings co ON s.offering_id = co.id
        LEFT JOIN users u ON s.created_by = u.id
@@ -49,7 +51,17 @@ export class SessionModel {
       [sessionId]
     );
 
-    return result.rows[0] || null;
+    const row = result.rows[0];
+    if (row) {
+      // Use string versions to avoid timezone conversion issues
+      if (row.session_date_str) {
+        row.session_date = row.session_date_str;
+      }
+      if (row.session_time_str) {
+        row.session_time = row.session_time_str;
+      }
+    }
+    return row || null;
   }
 
   /**
@@ -59,14 +71,26 @@ export class SessionModel {
     const result = await pool.query(
       `SELECT s.*,
               co.name as course_name,
-              co.code as course_code
+              co.code as course_code,
+              TO_CHAR(s.session_date, 'YYYY-MM-DD') as session_date_str,
+              TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str
        FROM sessions s
        LEFT JOIN course_offerings co ON s.offering_id = co.id
        WHERE s.access_code = $1`,
       [accessCode]
     );
 
-    return result.rows[0] || null;
+    const row = result.rows[0];
+    if (row) {
+      // Use string versions to avoid timezone conversion issues
+      if (row.session_date_str) {
+        row.session_date = row.session_date_str;
+      }
+      if (row.session_time_str) {
+        row.session_time = row.session_time_str;
+      }
+    }
+    return row || null;
   }
 
   /**
@@ -77,6 +101,8 @@ export class SessionModel {
 
     let query = `
       SELECT s.*,
+             TO_CHAR(s.session_date, 'YYYY-MM-DD') as session_date_str,
+             TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str,
              COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present') as attendance_count,
              COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent') as absent_count,
              COUNT(DISTINCT sr.user_id) as response_count,
@@ -113,6 +139,14 @@ export class SessionModel {
     
     // Calculate attendance_percent for each session
     return result.rows.map(row => {
+      // Use string versions to avoid timezone conversion issues
+      if (row.session_date_str) {
+        row.session_date = row.session_date_str;
+      }
+      if (row.session_time_str) {
+        row.session_time = row.session_time_str;
+      }
+      
       const totalStudents = parseInt(row.total_students) || 0;
       const presentCount = parseInt(row.attendance_count) || 0;
       const attendance_percent = totalStudents > 0 

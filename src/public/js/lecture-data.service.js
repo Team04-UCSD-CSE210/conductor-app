@@ -319,10 +319,25 @@
     }
 
     // Extract date and time from ISO strings
+    // IMPORTANT: Extract date/time components in LOCAL timezone to avoid date shifts
     const startDate = startsAt ? new Date(startsAt) : null;
 
-    const session_date = startDate ? startDate.toISOString().split('T')[0] : null;
-    const session_time = startDate ? startDate.toTimeString().split(' ')[0].substring(0, 5) : null;
+    let session_date = null;
+    let session_time = null;
+    
+    if (startDate && !isNaN(startDate.getTime())) {
+      // Extract date components in LOCAL timezone (not UTC)
+      const year = startDate.getFullYear();
+      const month = String(startDate.getMonth() + 1).padStart(2, '0');
+      const day = String(startDate.getDate()).padStart(2, '0');
+      session_date = `${year}-${month}-${day}`;
+      
+      // Extract time components in LOCAL timezone (not UTC)
+      const hours = String(startDate.getHours()).padStart(2, '0');
+      const minutes = String(startDate.getMinutes()).padStart(2, '0');
+      const seconds = String(startDate.getSeconds()).padStart(2, '0');
+      session_time = `${hours}:${minutes}:${seconds}`;
+    }
 
     // Transform questions
     const transformedQuestions = (questions || []).map((q, index) => ({

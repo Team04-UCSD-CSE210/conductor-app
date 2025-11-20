@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Professor Dashboard</title>
+  <title>Instructor Dashboard</title>
 
   <link rel="stylesheet" href="/global.css">
   <link rel="stylesheet" href="/dashboard-global.css">
-  <link rel="stylesheet" href="/professor-dashboard.css">
+  <link rel="stylesheet" href="/instructor-dashboard.css">
 </head>
 
 <body class="dashboard-page">
@@ -26,10 +26,10 @@
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     <nav aria-label="Dashboard navigation">
-      <a href="/courses">Courses</a>
-      <a href="/settings">Settings</a>
+      <a href="/instructor-dashboard">Dashboard</a>
+      <a href="/course-settings">Course Settings</a>
       <a href="/instructor-lectures">Attendance</a>
-      <a href="/class-directory">Class Directory</a>
+      <a href="/courses/cse210/roster">Roster</a>
     </nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
@@ -177,7 +177,9 @@
     </section>
   </main>
 
-  <script src="/professor-dashboard.js" defer></script>
+  <script src="/js/dashboard.service.js"></script>
+  <script src="/instructor-dashboard.js" defer></script>
 
 </body>
 </html>
+

@@ -26,6 +26,17 @@
   // Format date for display (Month Day, Year format, e.g., Nov 18, 2025)
   function formatDateDisplay(dateInput) {
     if (!dateInput || !dateInput.value) return '';
+    // Parse date string directly to avoid timezone conversion issues
+    // dateInput.value is in format YYYY-MM-DD
+    const dateParts = dateInput.value.split('-');
+    if (dateParts.length === 3) {
+      const year = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10) - 1; // Month is 0-indexed
+      const day = parseInt(dateParts[2], 10);
+      const date = new Date(year, month, day);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    // Fallback to old method if format is unexpected
     const date = new Date(dateInput.value + 'T00:00:00');
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
@@ -480,9 +491,26 @@
   }
 
   // Combine date and time
+  // IMPORTANT: Create Date object using local time components to avoid timezone conversion issues
   function combineDateTime(date, time) {
     if (!date || !time) return null;
-    return new Date(`${date}T${time}`).toISOString();
+    
+    // Parse date string (YYYY-MM-DD) and time string (HH:MM or HH:MM:SS)
+    const [year, month, day] = date.split('-').map(Number);
+    const [hours, minutes] = time.split(':').map(Number);
+    const seconds = 0;
+    
+    // Create Date object in LOCAL timezone (month is 0-indexed)
+    const dateObj = new Date(year, month - 1, day, hours, minutes, seconds);
+    
+    // Validate the date
+    if (isNaN(dateObj.getTime())) {
+      console.error('Invalid date/time combination:', date, time);
+      return null;
+    }
+    
+    // Convert to ISO string for storage (this will be in UTC, but we'll parse it back correctly)
+    return dateObj.toISOString();
   }
 
   // Collect questions
@@ -730,10 +758,20 @@
       
       if (sessionDate && sessionTime) {
         // Parse date directly from database format (YYYY-MM-DD)
+        // Handle both Date objects and strings to avoid timezone conversion
         const dateInput = document.getElementById('lecture-date');
         if (dateInput) {
-          // Extract just the date part if it includes time
-          const dateStr = String(sessionDate).split('T')[0].split(' ')[0];
+          let dateStr;
+          if (sessionDate instanceof Date) {
+            // If it's a Date object, extract date components in local timezone
+            const year = sessionDate.getFullYear();
+            const month = String(sessionDate.getMonth() + 1).padStart(2, '0');
+            const day = String(sessionDate.getDate()).padStart(2, '0');
+            dateStr = `${year}-${month}-${day}`;
+          } else {
+            // If it's a string, extract just the date part (YYYY-MM-DD)
+            dateStr = String(sessionDate).split('T')[0].split(' ')[0];
+          }
           dateInput.value = dateStr;
           updateDateDisplay();
         }
@@ -755,60 +793,79 @@
 
         // Pre-fill end time from code_expires_at (which stores the end time)
         const endTimeInput = document.getElementById('lecture-end');
-        if (lecture.endsAt && endTimeInput) {
-          // Parse endsAt - it's an ISO string, but we need to extract local time
-          // Create a date object and extract local time components
+        if (lecture.endsAt && endTimeInput && sessionDate && sessionTime) {
+          // Parse endsAt - it's an ISO string, extract local time components
           const endDate = new Date(lecture.endsAt);
           
-          // Validate end time is reasonable
-          if (sessionDate && sessionTime) {
-            // Create start date for comparison
+          // Get start date components in local timezone
+          let startYear, startMonth, startDay;
+          if (sessionDate instanceof Date) {
+            startYear = sessionDate.getFullYear();
+            startMonth = sessionDate.getMonth() + 1;
+            startDay = sessionDate.getDate();
+          } else {
             const startDateStr = String(sessionDate).split('T')[0].split(' ')[0];
-            const startTimeStr = String(sessionTime).split('.')[0];
-            const [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
-            const startTimeParts = startTimeStr.split(':').map(Number);
-            const startDateObj = new Date(startYear, startMonth - 1, startDay, startTimeParts[0], startTimeParts[1] || 0, startTimeParts[2] || 0);
-            
-            const timeDiff = endDate.getTime() - startDateObj.getTime();
-            const isValidEndTime = !isNaN(endDate.getTime()) && 
-                                   !isNaN(startDateObj.getTime()) && 
-                                   timeDiff > 0 && 
-                                   timeDiff < 24 * 60 * 60 * 1000; // Less than 24 hours
-            
-            if (isValidEndTime) {
-              const hours = String(endDate.getHours()).padStart(2, '0');
-              const minutes = String(endDate.getMinutes()).padStart(2, '0');
+            [startYear, startMonth, startDay] = startDateStr.split('-').map(Number);
+          }
+          
+          // Get start time components
+          const startTimeStr = String(sessionTime).split('.')[0];
+          const startTimeParts = startTimeStr.split(':').map(Number);
+          const startDateObj = new Date(startYear, startMonth - 1, startDay, startTimeParts[0], startTimeParts[1] || 0, startTimeParts[2] || 0);
+          
+          // Validate end time is reasonable (same day, after start, within 24 hours)
+          const endYear = endDate.getFullYear();
+          const endMonth = endDate.getMonth() + 1;
+          const endDay = endDate.getDate();
+          const isSameDay = endYear === startYear && endMonth === startMonth && endDay === startDay;
+          const timeDiff = endDate.getTime() - startDateObj.getTime();
+          const isValidEndTime = !isNaN(endDate.getTime()) && 
+                                 !isNaN(startDateObj.getTime()) && 
+                                 isSameDay &&
+                                 timeDiff > 0 && 
+                                 timeDiff < 24 * 60 * 60 * 1000; // Less than 24 hours
+          
+          if (isValidEndTime) {
+            // Extract local time components from endDate
+            const hours = String(endDate.getHours()).padStart(2, '0');
+            const minutes = String(endDate.getMinutes()).padStart(2, '0');
+            endTimeInput.value = `${hours}:${minutes}`;
+          } else {
+            // Invalid end time, default to 30 minutes after start
+            if (startTimeInput && startTimeInput.value) {
+              const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
+              const defaultEndDate = new Date(startYear, startMonth - 1, startDay, startHours, startMinutes, 0);
+              defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
+              const hours = String(defaultEndDate.getHours()).padStart(2, '0');
+              const minutes = String(defaultEndDate.getMinutes()).padStart(2, '0');
               endTimeInput.value = `${hours}:${minutes}`;
-            } else {
-              // Invalid end time, default to 30 minutes after start
-              if (startTimeInput && startTimeInput.value) {
-                const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
-                const defaultEndDate = new Date(startYear, startMonth - 1, startDay, startHours, startMinutes, 0);
-                defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
-                const hours = String(defaultEndDate.getHours()).padStart(2, '0');
-                const minutes = String(defaultEndDate.getMinutes()).padStart(2, '0');
-                endTimeInput.value = `${hours}:${minutes}`;
-              }
             }
           }
-        } else if (endTimeInput && startTimeInput && startTimeInput.value) {
+        } else if (endTimeInput && startTimeInput && startTimeInput.value && sessionDate) {
           // No end time provided, default to 30 minutes after start
-          if (sessionDate) {
+          let year, month, day;
+          if (sessionDate instanceof Date) {
+            year = sessionDate.getFullYear();
+            month = sessionDate.getMonth() + 1;
+            day = sessionDate.getDate();
+          } else {
             const dateStr = String(sessionDate).split('T')[0].split(' ')[0];
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
-            const defaultEndDate = new Date(year, month - 1, day, startHours, startMinutes, 0);
-            defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
-            const hours = String(defaultEndDate.getHours()).padStart(2, '0');
-            const minutes = String(defaultEndDate.getMinutes()).padStart(2, '0');
-            endTimeInput.value = `${hours}:${minutes}`;
+            [year, month, day] = dateStr.split('-').map(Number);
           }
+          const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
+          const defaultEndDate = new Date(year, month - 1, day, startHours, startMinutes, 0);
+          defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
+          const hours = String(defaultEndDate.getHours()).padStart(2, '0');
+          const minutes = String(defaultEndDate.getMinutes()).padStart(2, '0');
+          endTimeInput.value = `${hours}:${minutes}`;
         }
       } else if (lecture.startsAt) {
         // Fallback to startsAt if session_date/session_time not available
+        // Parse startsAt ISO string and extract local date/time components
         const startDate = new Date(lecture.startsAt);
         const dateInput = document.getElementById('lecture-date');
         if (dateInput) {
+          // Extract date components in local timezone
           const year = startDate.getFullYear();
           const month = String(startDate.getMonth() + 1).padStart(2, '0');
           const day = String(startDate.getDate()).padStart(2, '0');
@@ -818,6 +875,7 @@
 
         const startTimeInput = document.getElementById('lecture-start');
         if (startTimeInput) {
+          // Extract time components in local timezone
           const hours = String(startDate.getHours()).padStart(2, '0');
           const minutes = String(startDate.getMinutes()).padStart(2, '0');
           startTimeInput.value = `${hours}:${minutes}`;
@@ -825,10 +883,31 @@
 
         const endTimeInput = document.getElementById('lecture-end');
         if (lecture.endsAt && endTimeInput) {
+          // Extract end time components in local timezone
           const endDate = new Date(lecture.endsAt);
-          const hours = String(endDate.getHours()).padStart(2, '0');
-          const minutes = String(endDate.getMinutes()).padStart(2, '0');
-          endTimeInput.value = `${hours}:${minutes}`;
+          // Validate that end date is on the same day as start date
+          const startYear = startDate.getFullYear();
+          const startMonth = startDate.getMonth();
+          const startDay = startDate.getDate();
+          const endYear = endDate.getFullYear();
+          const endMonth = endDate.getMonth();
+          const endDay = endDate.getDate();
+          
+          if (startYear === endYear && startMonth === endMonth && startDay === endDay) {
+            const hours = String(endDate.getHours()).padStart(2, '0');
+            const minutes = String(endDate.getMinutes()).padStart(2, '0');
+            endTimeInput.value = `${hours}:${minutes}`;
+          } else {
+            // End time is on different day, default to 30 minutes after start
+            if (startTimeInput && startTimeInput.value) {
+              const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
+              const defaultEndDate = new Date(startYear, startMonth, startDay, startHours, startMinutes, 0);
+              defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
+              const hours = String(defaultEndDate.getHours()).padStart(2, '0');
+              const minutes = String(defaultEndDate.getMinutes()).padStart(2, '0');
+              endTimeInput.value = `${hours}:${minutes}`;
+            }
+          }
         }
       }
 

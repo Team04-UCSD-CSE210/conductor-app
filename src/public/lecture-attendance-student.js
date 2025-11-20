@@ -26,8 +26,18 @@
         return '—';
       }
       
-    const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const timeFormatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric' });
+    // Always format in local timezone (explicitly use local timezone)
+    const dateFormatter = new Intl.DateTimeFormat('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
+    const timeFormatter = new Intl.DateTimeFormat('en-US', { 
+      hour: 'numeric', 
+      minute: 'numeric',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
     return `${dateFormatter.format(start)} ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
     } catch (e) {
       console.warn('Error formatting time range:', e, startIso, endIso);
@@ -334,62 +344,62 @@
       
       try {
         console.log('Verifying access code...');
-        // Verify code first
-        const verification = await window.LectureService.verifyAccessCode(code);
+          // Verify code first
+          const verification = await window.LectureService.verifyAccessCode(code);
         console.log('Verification result:', verification);
-        
+          
         if (!verification || !verification.valid) {
-          // Code is incorrect or session is closed - reset and show error
+            // Code is incorrect or session is closed - reset and show error
           const errorMsg = verification?.message || 'Incorrect access code. Please try again.';
           console.log('Code invalid:', errorMsg);
           errorDiv.textContent = errorMsg;
-          errorDiv.style.display = 'block';
+            errorDiv.style.display = 'block';
           errorDiv.classList.add('show');
-          inputs.forEach(input => {
-            input.value = '';
-            input.classList.remove('filled');
+            inputs.forEach(input => {
+              input.value = '';
+              input.classList.remove('filled');
             input.disabled = false;
-          });
+            });
           setTimeout(() => {
             inputs[0]?.focus();
           }, 100);
-          return;
-        }
+            return;
+          }
 
-        // Code is correct and session is open - check in with access code
+          // Code is correct and session is open - check in with access code
         console.log('Code valid, checking in...');
-        try {
-          await window.LectureService.checkIn(code, []);
+          try {
+            await window.LectureService.checkIn(code, []);
           console.log('Check-in successful, redirecting...');
-          
-          // Successfully checked in - redirect to response page
-          window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
-        } catch (checkInError) {
-          console.error('Error checking in:', checkInError);
-          // Check-in failed - reset and show error
+            
+            // Successfully checked in - redirect to response page
+            window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
+          } catch (checkInError) {
+            console.error('Error checking in:', checkInError);
+            // Check-in failed - reset and show error
           errorDiv.textContent = checkInError.message || 'Failed to check in. Please try again.';
-          errorDiv.style.display = 'block';
+            errorDiv.style.display = 'block';
           errorDiv.classList.add('show');
-          inputs.forEach(input => {
-            input.value = '';
-            input.classList.remove('filled');
+            inputs.forEach(input => {
+              input.value = '';
+              input.classList.remove('filled');
             input.disabled = false;
-          });
+            });
           setTimeout(() => {
             inputs[0]?.focus();
           }, 100);
-        }
-      } catch (error) {
-        console.error('Error verifying code:', error);
-        // Error occurred - reset and show error
+          }
+        } catch (error) {
+          console.error('Error verifying code:', error);
+          // Error occurred - reset and show error
         errorDiv.textContent = error.message || 'Incorrect access code. Please try again.';
-        errorDiv.style.display = 'block';
+          errorDiv.style.display = 'block';
         errorDiv.classList.add('show');
-        inputs.forEach(input => {
-          input.value = '';
-          input.classList.remove('filled');
+          inputs.forEach(input => {
+            input.value = '';
+            input.classList.remove('filled');
           input.disabled = false;
-        });
+          });
         setTimeout(() => {
           inputs[0]?.focus();
         }, 100);
@@ -624,11 +634,11 @@
 
   function initContactButtons() {
     const contactTA = document.getElementById('contact-ta');
-    const contactProfessor = document.getElementById('contact-professor');
+    const contactInstructor = document.getElementById('contact-instructor');
     const handler = (recipient) => () => window.alert(`Message the ${recipient} through Slack or email.`);
 
     if (contactTA) contactTA.addEventListener('click', handler('TA'));
-    if (contactProfessor) contactProfessor.addEventListener('click', handler('Professor'));
+    if (contactInstructor) contactInstructor.addEventListener('click', handler('Instructor'));
   }
 
   function init() {

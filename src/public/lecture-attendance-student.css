@@ -362,12 +362,6 @@
   text-shadow: 0 2px 4px rgb(5 150 105 / 15%);
 }
 
-.sidebar nav a.active {
-  background: var(--blue-100, #dbeafe);
-  color: var(--blue-600, #2563eb);
-  border: 1px solid var(--blue-500, #3b82f6);
-  border-radius: 0.5rem;
-}
 
 .sidebar footer {
   margin-top: auto;

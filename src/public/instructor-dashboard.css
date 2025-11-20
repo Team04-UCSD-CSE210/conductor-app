@@ -1,8 +1,8 @@
-/* Professor Dashboard specific overrides.
-   This file contains layout tweaks unique to the professor view. */
+/* Instructor Dashboard specific overrides.
+   This file contains layout tweaks unique to the instructor view. */
 
 /* Force the four course stats (Students, Teams, TAs, Tutors) into a single horizontal row.
-   This reverts the shared responsive grid to the original single-line layout for professors only. */
+   This reverts the shared responsive grid to the original single-line layout for instructors only. */
 .card-course-info .course-stats {
   display: flex;
   flex-flow: row nowrap;

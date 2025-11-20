@@ -30,13 +30,19 @@ async function checkAndAutoOpenSession(session) {
 
   try {
     // Parse date - handle both Date objects and strings
+    // IMPORTANT: session_date should be a string from database (YYYY-MM-DD format)
+    // If it's a Date object, extract local date components to avoid timezone issues
     let dateStr;
     if (session.session_date instanceof Date) {
+      // If it's a Date object, extract date components in local timezone
+      // This handles cases where PostgreSQL returns a Date object
       const year = session.session_date.getFullYear();
       const month = String(session.session_date.getMonth() + 1).padStart(2, '0');
       const day = String(session.session_date.getDate()).padStart(2, '0');
       dateStr = `${year}-${month}-${day}`;
     } else {
+      // If it's a string, extract just the date part (YYYY-MM-DD)
+      // This should be the format from TO_CHAR in the database query
       dateStr = String(session.session_date).split('T')[0].split(' ')[0];
     }
     
@@ -245,11 +251,44 @@ export class SessionService {
         } else {
           const now = new Date();
           
+          // Verify the date components match what was stored
+          const storedDateMatch = dateStr === String(session.session_date).split('T')[0].split(' ')[0];
+          const storedTimeMatch = timeStr === String(session.session_time).split('.')[0].split(' ')[0];
+          
+          // Verify the date components are correct - they should match what was stored
+          const sessionStartYear = sessionStart.getFullYear();
+          const sessionStartMonth = sessionStart.getMonth() + 1;
+          const sessionStartDay = sessionStart.getDate();
+          const sessionStartHours = sessionStart.getHours();
+          const sessionStartMinutes = sessionStart.getMinutes();
+          
+          const nowYear = now.getFullYear();
+          const nowMonth = now.getMonth() + 1;
+          const nowDay = now.getDate();
+          const nowHours = now.getHours();
+          const nowMinutes = now.getMinutes();
+          
+          // Check if parsed date matches stored date
+          const dateMatches = sessionStartYear === year && 
+                             sessionStartMonth === month && 
+                             sessionStartDay === day;
+          const timeMatches = sessionStartHours === hours && 
+                             sessionStartMinutes === minutes;
+          
           console.log('[SessionService] Auto-open check:', {
-            sessionStart: sessionStart.toISOString(),
-            now: now.toISOString(),
-            sessionStartLocal: sessionStart.toLocaleString(),
-            nowLocal: now.toLocaleString(),
+            session_date_raw: session.session_date,
+            session_time_raw: session.session_time,
+            session_date_type: typeof session.session_date,
+            session_time_type: typeof session.session_time,
+            stored_date: dateStr,
+            stored_time: timeStr,
+            parsedComponents: { year, month, day, hours, minutes, seconds },
+            dateMatches,
+            timeMatches,
+            sessionStart_UTC: sessionStart.toISOString(),
+            sessionStart_Local: `${sessionStartYear}-${String(sessionStartMonth).padStart(2, '0')}-${String(sessionStartDay).padStart(2, '0')} ${String(sessionStartHours).padStart(2, '0')}:${String(sessionStartMinutes).padStart(2, '0')}`,
+            now_UTC: now.toISOString(),
+            now_Local: `${nowYear}-${String(nowMonth).padStart(2, '0')}-${String(nowDay).padStart(2, '0')} ${String(nowHours).padStart(2, '0')}:${String(nowMinutes).padStart(2, '0')}`,
             shouldOpen: sessionStart <= now,
             alreadyOpened: !!session.attendance_opened_at
           });
@@ -329,13 +368,75 @@ export class SessionService {
   static async getSessionsByOffering(offeringId, options = {}) {
     const sessions = await SessionModel.findByOfferingId(offeringId, options);
     
-    // Check and auto-open each session if start time has passed
-    // Use Promise.allSettled to avoid failing all if one fails
-    await Promise.allSettled(
-      sessions.map(session => checkAndAutoOpenSession(session))
+    // Batch check and auto-open sessions that need it
+    // Only check sessions that haven't been opened yet
+    const sessionsToCheck = sessions.filter(s => 
+      s.session_date && 
+      s.session_time && 
+      !s.attendance_opened_at
     );
     
-    // Return sessions (checkAndAutoOpenSession modifies in place)
+    if (sessionsToCheck.length > 0) {
+      // Check all sessions in parallel, but only update those that need it
+      const now = new Date();
+      const sessionsToOpen = [];
+      
+      for (const session of sessionsToCheck) {
+        try {
+          // Quick check without database call
+          let dateStr;
+          if (session.session_date instanceof Date) {
+            const year = session.session_date.getFullYear();
+            const month = String(session.session_date.getMonth() + 1).padStart(2, '0');
+            const day = String(session.session_date.getDate()).padStart(2, '0');
+            dateStr = `${year}-${month}-${day}`;
+          } else {
+            dateStr = String(session.session_date).split('T')[0].split(' ')[0];
+          }
+          
+          let timeStr = String(session.session_time).split('.')[0];
+          let timeParts = timeStr.split(':');
+          if (timeParts.length === 2) {
+            timeStr = `${timeStr}:00`;
+            timeParts = timeStr.split(':');
+          }
+          
+          const [year, month, day] = dateStr.split('-').map(Number);
+          timeParts = timeStr.split(':').map(Number);
+          const [hours, minutes] = timeParts;
+          const seconds = timeParts[2] || 0;
+          
+          const sessionStart = new Date(year, month - 1, day, hours, minutes, seconds);
+          
+          if (!isNaN(sessionStart.getTime()) && sessionStart <= now) {
+            sessionsToOpen.push(session);
+          }
+        } catch (error) {
+          // Skip this session if parsing fails
+          console.warn('[SessionService] Error checking session for auto-open:', error);
+        }
+      }
+      
+      // Batch open sessions that need it
+      if (sessionsToOpen.length > 0) {
+        await Promise.allSettled(
+          sessionsToOpen.map(async (session) => {
+            try {
+              const updatedBy = session.created_by || '00000000-0000-0000-0000-000000000000';
+              await SessionModel.openAttendance(session.id, updatedBy);
+              // Refresh session data
+              const updatedSession = await SessionModel.findById(session.id);
+              if (updatedSession) {
+                Object.assign(session, updatedSession);
+              }
+            } catch (error) {
+              console.error('[SessionService] Error auto-opening session:', session.id, error);
+            }
+          })
+        );
+      }
+    }
+    
     return sessions;
   }
 

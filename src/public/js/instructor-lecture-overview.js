@@ -16,6 +16,7 @@
   function formatTimeRange(startIso, endIso) {
     if (!startIso || !endIso) return '—';
     try {
+      // Parse ISO strings and ensure we're working with local time
     const start = new Date(startIso);
     const end = new Date(endIso);
       
@@ -24,8 +25,18 @@
         return '—';
       }
       
-    const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const timeFormatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric' });
+      // Always format in local timezone
+      const dateFormatter = new Intl.DateTimeFormat('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
+      const timeFormatter = new Intl.DateTimeFormat('en-US', { 
+        hour: 'numeric', 
+        minute: 'numeric',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
     return `${dateFormatter.format(start)} ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
     } catch (e) {
       console.warn('Error formatting time range:', e, startIso, endIso);
@@ -38,7 +49,12 @@
     try {
     const date = new Date(dateIso);
       if (isNaN(date.getTime())) return '';
-      return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+      // Always format in local timezone
+      return new Intl.DateTimeFormat('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      }).format(date);
     } catch (e) {
       console.warn('Error formatting chart date:', e, dateIso);
       return '';
@@ -164,9 +180,18 @@
     label.textContent = lecture.label;
     if (lecture.id === currentLectureId) label.classList.add('active');
     label.addEventListener('click', () => {
-      // Navigate to form for editing instead of responses
-      window.location.href = `/lecture-builder?sessionId=${lecture.id}`;
+      // Allow navigation/editing for open and pending (not opened) lectures
+      if (lecture.status === 'open' || lecture.status === 'pending') {
+        // Navigate to form for editing
+        window.location.href = `/lecture-builder?sessionId=${lecture.id}`;
+      }
+      // For closed lectures, do nothing
     });
+    // Add visual indicator for non-clickable closed lectures
+    if (lecture.status === 'closed') {
+      label.style.cursor = 'default';
+      label.style.opacity = '0.7';
+    }
     labelWrapper.appendChild(label);
 
     // Attendance and date
@@ -279,24 +304,25 @@
         selectors.container.setAttribute('data-offering-id', offeringId);
       }
 
-      // Fetch offering details for dynamic navigation
-      try {
-        const response = await fetch(`/api/offerings/${offeringId}`, {
+      // Parallelize API calls for better performance
+      const [overviewResult, offeringResponse] = await Promise.all([
+        window.LectureService.getInstructorOverview(offeringId),
+        fetch(`/api/offerings/${offeringId}`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (response.ok) {
-          offeringInfo = await response.json();
-          updateNavigationLinks();
-        }
-      } catch (error) {
-        console.error('Error fetching offering info:', error);
-        // Continue without updating navigation if this fails
+        }).catch(error => {
+          console.error('Error fetching offering info:', error);
+          return null; // Return null if fetch fails
+        })
+      ]);
+
+      // Process offering info if available
+      if (offeringResponse && offeringResponse.ok) {
+        offeringInfo = await offeringResponse.json();
+        updateNavigationLinks();
       }
 
-      const { summaryPercent, history, lectures, currentLectureId } = 
-        await window.LectureService.getInstructorOverview(offeringId);
+      const { summaryPercent, history, lectures, currentLectureId } = overviewResult;
     
     // Last session should be the most recent lecture (first in array)
     const lastLecture = lectures && lectures.length > 0 ? lectures[0] : null;

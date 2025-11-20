@@ -35,6 +35,7 @@
   function formatTimeRange(startIso, endIso) {
     if (!startIso || !endIso) return '—';
     try {
+      // Parse ISO strings - they may be in UTC, but we'll display in local time
     const start = new Date(startIso);
     const end = new Date(endIso);
       
@@ -43,8 +44,18 @@
         return '—';
       }
       
-    const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const timeFormatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric' });
+      // Always format in local timezone (explicitly use local timezone)
+      const dateFormatter = new Intl.DateTimeFormat('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
+      const timeFormatter = new Intl.DateTimeFormat('en-US', { 
+        hour: 'numeric', 
+        minute: 'numeric',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      });
     return `${dateFormatter.format(start)} · ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
     } catch (e) {
       console.warn('Error formatting time range:', e, startIso, endIso);

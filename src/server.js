@@ -617,7 +617,7 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
     }
     
     if (user.primary_role === 'instructor') {
-      return res.redirect("/faculty-dashboard");
+      return res.redirect("/instructor-dashboard");
     }
     
     // TA role comes from enrollments.course_role
@@ -648,9 +648,10 @@ app.get("/admin-dashboard", ...protect('user.manage', 'global'), (req, res) => {
   res.sendFile(buildFullViewPath("admin-dashboard.html"));
 });
 
-app.get("/faculty-dashboard", ...protect('course.manage', 'course'), (req, res) => {
-  res.sendFile(buildFullViewPath("professor-dashboard.html"));
+app.get("/instructor-dashboard", ...protect('course.manage', 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("instructor-dashboard.html"));
 });
+
 
 app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
   try {
@@ -924,7 +925,7 @@ app.get(
       }
       
       if (user.primary_role === 'instructor') {
-        return res.redirect("/faculty-dashboard");
+        return res.redirect("/instructor-dashboard");
       }
       
       // TA role comes from enrollments.course_role
@@ -1156,7 +1157,7 @@ app.post("/register/submit", ensureAuthenticated, async (req, res) => {
     return res.redirect("/student-dashboard");
   }
   
-  // If role is 'instructor', redirect to faculty dashboard
+  // If role is 'instructor', redirect to instructor dashboard
   if (newRole === 'instructor') {
     return res.redirect("/faculty-dashboard");
   }
