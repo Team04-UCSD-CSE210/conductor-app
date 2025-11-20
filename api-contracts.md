@@ -180,10 +180,10 @@
 
 #### Support pagination
 
-| Key     | Description               |
-| ------- |---------------------------|
-| `page`  | page number (default 1)   |
-| `limit` | items per page (default 20)|
+| Key     | Description                 |
+| ------- |-----------------------------|
+| `page`  | page number (default 1)     |
+| `limit` | items per page (default 20) |
 
 #### Response (students list)
 
@@ -238,10 +238,10 @@
 
 #### Pagination params (optional)
 
-| Key     | Description               |
-| ------- |---------------------------|
-| `page`  | page number (default 1)   |
-| `limit` | items per page (default 20)|
+| Key     | Description                 |
+| ------- |-----------------------------|
+| `page`  | page number (default 1)     |
+| `limit` | items per page (default 20) |
 
 #### Response (groups list)
 
