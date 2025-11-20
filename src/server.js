@@ -54,9 +54,10 @@ const app = express();
 
 // Serve static frontend assets
 // Since server.js is in src/, paths are relative to src/ directory
-app.use(express.static(path.join(__dirname, "views")));
-app.use(express.static(path.join(__dirname, "public")));
+// Order matters: more specific routes first, then general static files
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "views")));
 
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -1011,6 +1012,15 @@ app.use((req, res, next) => {
     }
   }
   next();
+});
+
+// Register page routes
+app.get("/register", ensureAuthenticated, (req, res) => {
+  res.sendFile(buildFullViewPath("register.html"));
+});
+
+app.get("/register/", ensureAuthenticated, (req, res) => {
+  res.sendFile(buildFullViewPath("register.html"));
 });
 
 // ADD A Simple POST to register login
