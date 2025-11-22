@@ -484,6 +484,7 @@ describe('Session Edge Cases and Error Handling', () => {
           access_code: null, // This will fail
           created_by: instructor.id
         });
+      // eslint-disable-next-line no-unused-vars
       } catch (_error) {
         // Expected to fail
       }

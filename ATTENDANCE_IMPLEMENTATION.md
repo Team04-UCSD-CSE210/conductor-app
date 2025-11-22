@@ -26,7 +26,8 @@ Created 4 model files with CRUD operations:
 
 - `src/models/session-model.js` - Session management
   - **Updated (Sprint 3)**: Added `team_id` support in `create()` method
-  - **New method**: `findByOfferingIdWithTeamFilter(offeringId, userTeamIds, options)` - Filters sessions based on team membership
+  - **New method**: `findByOfferingIdWithTeamFilter(offeringId, userTeamIds, options)` -
+    Filters sessions based on team membership
   - **Updated**: Added `team_id` to allowed update fields
 - `src/models/session-question-model.js` - Question management
 - `src/models/session-response-model.js` - Response management
@@ -40,7 +41,8 @@ Created 2 service files with business logic:
   - **Updated (Sprint 3)**: Auto-detects and sets `team_id` when team leaders create sessions
   - **Updated**: `getSessionsByOffering()` now accepts `userId` parameter for team-based filtering
   - **New helper**: `_batchAutoOpenSessions()` - Extracted auto-open logic for code reusability
-  - **Logic**: Instructors create course-wide sessions (team_id = NULL), team leaders create team sessions (team_id auto-set)
+  - **Logic**: Instructors create course-wide sessions (team_id = NULL), team leaders create team
+    sessions (team_id auto-set)
 - `src/services/attendance-service.js` - Attendance tracking, statistics, check-in logic
 
 ### 4. Backend - API Routes
@@ -243,13 +245,16 @@ All student routes require authentication:
 - `GET /api/sessions/verify-code/:code` - Verify access code (authenticated)
 - `POST /api/sessions/:sessionId/open-attendance` - Open attendance (requires `session.manage` permission)
 - `POST /api/sessions/:sessionId/close-attendance` - Close attendance (requires `session.manage` permission)
-- `POST /api/sessions/:sessionId/regenerate-code` - Regenerate access code (requires `session.manage` permission)
+- `POST /api/sessions/:sessionId/regenerate-code` - Regenerate access code
+  (requires `session.manage` permission)
 - `POST /api/sessions/:sessionId/questions` - Add questions (requires `session.manage` permission)
 - `GET /api/sessions/:sessionId/questions` - Get questions (authenticated)
 - `PUT /api/sessions/questions/:questionId` - Update question (requires `session.manage` permission)
 - `DELETE /api/sessions/questions/:questionId` - Delete question (requires `session.manage` permission)
-- `GET /api/sessions/:sessionId/responses` - View all responses (requires `session.manage` or `attendance.view` permission)
-- `GET /api/sessions/:sessionId/statistics` - Get statistics (requires `session.manage` or `attendance.view` permission)
+- `GET /api/sessions/:sessionId/responses` - View all responses
+  (requires `session.manage` or `attendance.view` permission)
+- `GET /api/sessions/:sessionId/statistics` - Get statistics
+  (requires `session.manage` or `attendance.view` permission)
 
 **Students:**
 
@@ -269,15 +274,19 @@ All student routes require authentication:
 
 - `GET /api/attendance/sessions/:sessionId` - Get session attendance (requires `attendance.view` permission)
 - `GET /api/attendance/sessions/:sessionId/statistics` - Get statistics (requires `attendance.view` permission)
-- `GET /api/attendance/sessions/:sessionId/report` - Get detailed report (requires `attendance.view` permission)
+- `GET /api/attendance/sessions/:sessionId/report` - Get detailed report
+  (requires `attendance.view` permission)
 - `POST /api/attendance/mark` - Manually mark attendance (requires `attendance.mark` permission)
 - `PUT /api/attendance/:attendanceId` - Update attendance status (requires `attendance.mark` permission)
 - `DELETE /api/attendance/:attendanceId` - Delete attendance record (requires `attendance.mark` permission)
 - `GET /api/attendance/student/:userId` - Get student's attendance (requires `attendance.view` permission)
-- `GET /api/attendance/student/:userId/statistics/:offeringId` - Get student stats (requires `attendance.view` permission)
+- `GET /api/attendance/student/:userId/statistics/:offeringId` - Get student stats
+  (requires `attendance.view` permission)
 - `GET /api/attendance/course/:offeringId/summary` - Get course summary (requires `attendance.view` permission)
-- `POST /api/attendance/sessions/:sessionId/close-and-mark-absent` - Close and mark absent (requires `attendance.mark` permission)
-- `POST /api/attendance/bulk-import/:sessionId` - Bulk import attendance (requires `attendance.mark` permission)
+- `POST /api/attendance/sessions/:sessionId/close-and-mark-absent` - Close and mark absent
+  (requires `attendance.mark` permission)
+- `POST /api/attendance/bulk-import/:sessionId` - Bulk import attendance
+  (requires `attendance.mark` permission)
 
 ## 🔑 Key Features
 

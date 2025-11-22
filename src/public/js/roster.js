@@ -474,6 +474,7 @@ const handleAddPerson = async (event) => {
           status: 'enrolled',
         }),
       });
+    // eslint-disable-next-line no-unused-vars
     } catch (_err) {
       // Enrollment might already exist
       console.log('Enrollment may already exist for user:', newUser.id);
@@ -535,6 +536,7 @@ const handleImport = async () => {
                 status: 'enrolled',
               }),
             });
+          // eslint-disable-next-line no-unused-vars
           } catch (_err) {
             // Enrollment might already exist, which is fine
             console.log('Enrollment for user may already exist:', user.id);
@@ -566,6 +568,7 @@ const handleImport = async () => {
                 status: 'enrolled',
               }),
             });
+          // eslint-disable-next-line no-unused-vars
           } catch (_err) {
             // Enrollment might already exist, which is fine
             console.log('Enrollment for user may already exist:', user.id);

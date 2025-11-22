@@ -237,7 +237,8 @@
     }
   }
 
-  // Create drag handle
+  // Create drag handle (currently unused, reserved for future drag-and-drop functionality)
+  // eslint-disable-next-line no-unused-vars
   function _createDragHandle() {
     const handle = document.createElement('div');
     handle.className = 'drag-handle';

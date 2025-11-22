@@ -22,6 +22,18 @@ export default defineConfig({
     },
     fileParallelism: false,         // Don't run test files in parallel
     globalSetup: './setup.js', // Initialize database before all tests
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80
+        }
+      }
+    },
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

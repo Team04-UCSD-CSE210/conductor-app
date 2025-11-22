@@ -3,13 +3,8 @@ import { spawnSync } from 'node:child_process';
 
 const MIN_COVERAGE = 70;
 
-// Get default test database URL using current user
-const getDefaultTestUrl = () => {
-  const username = process.env.USER || process.env.USERNAME || 'postgres';
-  return `postgresql://${username}@localhost:5432/conductor_test`;
-};
-
 // Set default test environment variables if not already set
+// Set test environment variables
 const testEnv = {
   ...process.env,
   NODE_ENV: process.env.NODE_ENV || 'test',
@@ -79,3 +74,4 @@ if (failures.length > 0) {
 }
 
 console.log('Coverage thresholds met.');
+console.log('\n✅ All tests passed!');

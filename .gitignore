@@ -13,3 +13,4 @@ certs/
 .env
 .vercel
 .env.vercel
+package-lock.json
