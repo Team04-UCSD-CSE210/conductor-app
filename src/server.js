@@ -15,7 +15,6 @@ import bodyParser from "body-parser";
 import crypto from "crypto";
 import { ensureAuthenticated } from "./middleware/auth.js";
 import { protect, protectAny } from "./middleware/permission-middleware.js";
-import { PermissionService } from "./services/permission-service.js";
 import userRoutes from "./routes/user-routes.js";
 import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
@@ -820,16 +819,6 @@ app.get("/blocked", (req, res) => {
 
 
 // -------------------- ROUTES --------------------
-
-// Health check endpoint for ECS deployment verification
-app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "healthy", 
-    timestamp: new Date().toISOString(),
-    redis: redisConnected ? "connected" : "disabled",
-    port: process.env.PORT || 8080
-  });
-});
 
 // Handle Google OAuth errors (e.g., org_internal)
 app.get("/auth/error", (req, res) => {

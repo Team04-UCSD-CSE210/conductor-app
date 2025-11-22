@@ -101,6 +101,7 @@ export class EnrollmentService {
    */
   static async getCourseStaff(offeringId, options = {}) {
     // Get all enrollments for the offering (without course_role filter)
+    // eslint-disable-next-line no-unused-vars
     const { course_role, ...otherOptions } = options;
     const enrollments = await EnrollmentModel.findByOffering(offeringId, otherOptions);
     
