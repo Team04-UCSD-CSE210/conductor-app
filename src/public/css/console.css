@@ -3,7 +3,7 @@
 .console-body {
   background-color: #121212;
   color: #fff;
-  font-family: "Inter", sans-serif;
+  font-family: Inter, sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,7 +16,7 @@
   background: #1e1e1e;
   padding: 2rem 3rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 40%);
   max-width: 600px;
   width: 90%;
 }
@@ -43,7 +43,7 @@
 }
 
 #logout-btn {
-  background: #ff5555;
+  background: #f55;
   color: white;
   border: none;
   border-radius: 8px;
@@ -55,6 +55,6 @@
 }
 
 #logout-btn:hover {
-  background: #ff7777;
+  background: #f77;
 }
 

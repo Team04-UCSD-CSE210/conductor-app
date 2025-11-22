@@ -1,5 +1,5 @@
-coverage/
 node_modules/
+coverage/
 dist/
 build/
-*.min.css
+

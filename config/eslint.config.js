@@ -4,6 +4,12 @@ import globals from 'globals';
 export default [
   js.configs.recommended,
   {
+    ignores: [
+      '**/node_modules/**',
+      '**/coverage/**',
+      '**/dist/**',
+      '**/build/**'
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
