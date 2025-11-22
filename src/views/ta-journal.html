@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work Journal / Stand-up – TA View</title>
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="../public/global.css" />
+  <link rel="stylesheet" href="../public/dashboard-global.css" />
+  <!-- Reuse student journal styles (already includes team overview styles) -->
+  <link rel="stylesheet" href="../public/student-journal.css" />
+  <link rel="stylesheet" href="../public/lead-journal.css" />
+</head>
+
+<body class="dashboard-page">
+
+  <!-- Sidebar Navigation -->
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="../assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/attendance">Attendance</a>
+      <a href="/work-journal" class="active">Work Journal</a>
+      <a href="/my-team">My Team</a>
+    </nav>
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </footer>
+  </header>
+
+  <!-- Scrollable center column -->
+  <main class="wj-main" aria-labelledby="page-title">
+    <header class="wj-page-header">
+      <h1 id="page-title">Work Journal/Stand-up</h1>
+    </header>
+
+    <!-- Teams Overview (matches TA Figma) -->
+    <section class="wj-card wj-team-overview" aria-label="Teams overview">
+      <h2 class="wj-section-title">Teams Overview:</h2>
+
+      <ul class="wj-team-list">
+        <li class="wj-team-item">
+          <span class="wj-team-avatar" aria-hidden="true">
+            <!-- User icon -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path
+                d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <p class="wj-team-text">
+            <span class="wj-team-name">Team 1</span>
+            is working on implementing user authentication and profile management and has blockers
+            waiting for API documentation from backend team.
+          </p>
+        </li>
+
+        <li class="wj-team-item">
+          <span class="wj-team-avatar" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path
+                d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <p class="wj-team-text">
+            <span class="wj-team-name">Team 2</span>
+            is working on database schema design and migration scripts and has blockers:
+            needs clarification on data retention policies.
+          </p>
+        </li>
+
+        <li class="wj-team-item">
+          <span class="wj-team-avatar" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path
+                d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <p class="wj-team-text">
+            <span class="wj-team-name">Team 3</span>
+            is working on front-end component library and design system and has blockers:
+            none at this time.
+          </p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Logging Activity (TA-specific questions) -->
+    <section class="wj-card" aria-label="Logging activity">
+      <h2 class="wj-section-title">Logging Activity:</h2>
+
+      <form class="wj-form">
+        <fieldset class="wj-fieldset">
+          <legend class="wj-legend">
+            What interactions have you had with students/teams?
+          </legend>
+          <textarea
+            id="interactions"
+            name="interactions"
+            rows="3"
+            placeholder="Describe your interactions..."
+          ></textarea>
+        </fieldset>
+
+        <fieldset class="wj-fieldset">
+          <legend class="wj-legend">
+            What groups show the most concerns?
+          </legend>
+          <textarea
+            id="groups-with-concerns"
+            name="groups_with_concerns"
+            rows="3"
+            placeholder="Identify groups with concerns..."
+          ></textarea>
+        </fieldset>
+
+        <fieldset class="wj-fieldset">
+          <legend class="wj-legend">
+            Any student that needs reaching out to?
+          </legend>
+          <textarea
+            id="students-to-reach"
+            name="students_to_reach"
+            rows="3"
+            placeholder="Note students who may need support..."
+          ></textarea>
+        </fieldset>
+
+        <p class="wj-form-actions">
+          <button type="submit" class="btn btn-primary wj-submit-btn">
+            Submit Activity Log
+          </button>
+        </p>
+      </form>
+    </section>
+
+    <!-- Previous Activity (same structure as other journals) -->
+    <section class="wj-card wj-previous" aria-label="Previous activity">
+      <h2 class="wj-section-title">Previous Activity:</h2>
+
+      <article class="wj-entry">
+        <header class="wj-entry-header">
+          <span class="wj-entry-icon" aria-hidden="true">
+            <!-- Calendar SVG -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <rect x="3" y="4" width="18" height="17" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.6" />
+              <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.6" />
+              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </span>
+          <p class="wj-entry-date">November 15, 2025</p>
+        </header>
+
+        <dl class="wj-entry-details">
+          <dt>Done since yesterday:</dt>
+          <dd>Completed API integration for user authentication, fixed bug in dashboard rendering</dd>
+
+          <dt>Working on:</dt>
+          <dd>Work on team presentation slides, review PR from teammate</dd>
+
+          <dt>Blockers:</dt>
+          <dd>Waiting for design assets from UI team</dd>
+
+          <dt>Feelings:</dt>
+          <dd>Feeling good about progress, team collaboration has been excellent</dd>
+        </dl>
+      </article>
+
+      <article class="wj-entry">
+        <header class="wj-entry-header">
+          <span class="wj-entry-icon" aria-hidden="true">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <rect x="3" y="4" width="18" height="17" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.6" />
+              <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.6" />
+              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </span>
+          <p class="wj-entry-date">November 14, 2025</p>
+        </header>
+
+        <dl class="wj-entry-details">
+          <dt>Done since yesterday:</dt>
+          <dd>Set up project repository, completed initial research on authentication methods</dd>
+
+          <dt>Working on:</dt>
+          <dd>Begin API integration, attend team standup</dd>
+
+          <dt>Blockers:</dt>
+          <dd>None at the moment</dd>
+
+          <dt>Feelings:</dt>
+          <dd>Excited to start the implementation phase</dd>
+        </dl>
+      </article>
+    </section>
+  </main>
+
+  <!-- Fixed right sidebar -->
+  <aside class="wj-right" aria-label="Support options">
+    <section class="wj-right-card">
+      <h2 class="wj-right-title">If you need to reach out:</h2>
+
+      <!-- TA can contact professor -->
+      <button type="button" class="wj-right-btn">
+        <span class="wj-right-icon" aria-hidden="true">
+          <!-- Person icon -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            role="img"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+            <path
+              d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </span>
+        <span class="wj-right-text">Contact Professor</span>
+      </button>
+
+      <!-- TA can contact students -->
+      <button type="button" class="wj-right-btn">
+        <span class="wj-right-icon" aria-hidden="true">
+          <!-- Envelope / message SVG -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            role="img"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <rect x="3" y="5" width="18" height="14" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+            <polyline points="4 7 12 12 20 7" fill="none" stroke="currentColor" stroke-width="1.6" />
+          </svg>
+        </span>
+        <span class="wj-right-text">Contact Students</span>
+      </button>
+
+      <p class="wj-right-description">
+        Your activity logs help your instructors understand your progress and provide better support.
+      </p>
+    </section>
+  </aside>
+</body>
+</html>
