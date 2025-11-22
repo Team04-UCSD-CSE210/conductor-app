@@ -1,3 +1,6 @@
+/* Dashboard Global Shared Styles extracted from original instructor-dashboard.css */
+
+/* Interaction report selections */
 .interaction-btn.selected {
   box-shadow: 0 0 0 2px var(--emerald-400, #34d399);
   border-color: var(--emerald-500, #10b981);
@@ -11,7 +14,6 @@
 }
 
 /* Interaction Report Form Styles */
-
 .interaction-form {
   display: flex;
   flex-direction: column;
@@ -117,8 +119,7 @@
   opacity: 0.7;
 }
 
-/* Professor Dashboard Specific Styles */
-
+/* Layout & Container */
 html,
 body {
   height: 100%;
@@ -133,7 +134,7 @@ body.dashboard-page {
   overflow: hidden;
 }
 
-/* SIDEBAR NAVIGATION */
+/* Sidebar Navigation */
 .sidebar {
   width: 180px;
   background: var(--teal-50, #f0fdfa);
@@ -187,7 +188,18 @@ body.dashboard-page {
   padding-left: 1rem;
 }
 
-/* MAIN CONTAINER */
+.sidebar footer {
+  margin-top: auto;
+  border-top: 1px solid var(--gray-200, #e5e7eb);
+  padding-top: 1rem;
+}
+
+.sidebar footer .btn-ghost {
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+/* Main Container */
 .main-container {
   margin-left: 180px;
   padding: 1.25rem;
@@ -195,7 +207,7 @@ body.dashboard-page {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
+  overflow: hidden auto;
 }
 
 .page-title {
@@ -205,7 +217,7 @@ body.dashboard-page {
   margin: 0 0 0.5rem;
 }
 
-/* FRAME & CONTENT LAYOUT */
+/* Frame & Content Layout */
 .frame {
   background: transparent;
   padding: 0;
@@ -213,7 +225,7 @@ body.dashboard-page {
   border: none;
   box-shadow: none;
   flex: 1;
-  overflow: hidden;
+  overflow: hidden auto;
   align-items: stretch;
   display: flex;
   flex-direction: column;
@@ -223,8 +235,9 @@ body.dashboard-page {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  overflow-y: auto;
-  height: 100%;
+  overflow-y: visible;
+  height: auto;
+  min-height: 100%;
   width: 100%;
   padding-bottom: 1rem;
 }
@@ -243,6 +256,7 @@ body.dashboard-page {
   flex: 0 0 auto;
 }
 
+/* Card Base */
 .card {
   background: var(--gray-100, #f3f4f6);
   border: 1px solid var(--gray-200, #e5e7eb);
@@ -270,14 +284,13 @@ body.dashboard-page {
   font-size: 0.8rem;
 }
 
-/* Recent Updates: fit content height, don't stretch */
+/* Recent Updates */
 .card.wide[aria-label="Recent activity"] {
   align-self: start;
   height: 30vh;
   flex: 1 1 250px;
 }
 
-/* Recent Updates color theme only (no sticky-note effects) */
 .card.wide.recent-updates {
   background: #fffbe6; /* light note-like background */
   border-color: #faefb8;
@@ -291,6 +304,7 @@ body.dashboard-page {
   color: var(--gray-800, #1f2937);
 }
 
+/* Reports & Analytics Section */
 .card.reports-analytics {
   display: flex;
   flex-direction: column;
@@ -310,23 +324,7 @@ body.dashboard-page {
   padding: 1.25rem;
 }
 
-/* BUTTON STYLES (specific overrides for dashboard) */
-.add-btn {
-  background: none;
-  border: none;
-  color: var(--teal-600, #0d9488);
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.add-btn:hover {
-  color: var(--teal-700, #0f766e);
-}
-
-/* TEAMS LIST */
+/* Teams List */
 .card-scrollable {
   display: flex;
   flex-direction: column;
@@ -336,108 +334,6 @@ body.dashboard-page {
   min-width: 0;
   height: 30vh;
   align-self: stretch;
-}
-
-/* COURSE INFO CARD */
-.card-course-info {
-  display: grid;
-  grid-template-columns: auto auto auto;
-  grid-template-rows: auto auto;
-  gap: 0 0.5rem;
-  align-items: baseline;
-  width: auto;
-  margin: 0;
-  height: 30vh;
-  place-self: stretch stretch;
-}
-
-.course-code {
-  font-size: 1.3rem;
-  color: var(--teal-600, #0d9488);
-
-  /* background: #ffcccc;  */
-  grid-row: 1;
-  grid-column: 1;
-}
-
-.course-title {
-  margin: 0;
-  font-weight: 600;
-  font-size: 0.95rem;
-
-  /* background: #ccffff; */
-  grid-row: 1;
-  grid-column: 2;
-}
-
-.course-term {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--gray-600, #4b5563);
-
-  /* background: #ccccff; */
-  grid-row: 1;
-  grid-column: 3;
-}
-
-.course-schedule {
-  margin: 0.3rem 0 0;
-  font-size: 0.85rem;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.5rem 0.75rem;
-
-  /* background: #ffffcc; */
-  grid-row: 2;
-  grid-column: 1 / -1;
-}
-
-.course-schedule dt {
-  font-weight: 600;
-  color: var(--gray-600, #4b5563);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.course-schedule dd {
-  margin: 0;
-  font-weight: 500;
-  color: var(--gray-900, #111827);
-}
-
-/* COURSE STATS SECTION (inside course info card) */
-.course-stats {
-  display: grid;
-  grid-template-columns: repeat(4, auto);
-  gap: 1rem;
-  padding-top: 0.75rem;
-  grid-column: 1 / -1;
-  justify-content: space-evenly;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--teal-600, #0d9488);
-  line-height: 1;
-}
-
-/* Stats use uniform teal color per .stat-value base rule */
-
-.stat-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--gray-600, #4b5563);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .teams-list {
@@ -503,7 +399,100 @@ body.dashboard-page {
   white-space: nowrap;
 }
 
-/* HAMBURGER MENU */
+/* COURSE INFO CARD */
+.card-course-info {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-template-rows: auto auto;
+  gap: 0 0.5rem;
+  align-items: baseline;
+  width: auto;
+  margin: 0;
+  height: 30vh;
+  place-self: stretch stretch;
+}
+
+.course-code {
+  font-size: 1.3rem;
+  color: var(--teal-600, #0d9488);
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.course-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.course-term {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--gray-600, #4b5563);
+  grid-row: 1;
+  grid-column: 3;
+}
+
+.course-schedule {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 0.75rem;
+  grid-row: 2;
+  grid-column: 1 / -1;
+}
+
+.course-schedule dt {
+  font-weight: 600;
+  color: var(--gray-600, #4b5563);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.course-schedule dd {
+  margin: 0;
+  font-weight: 500;
+  color: var(--gray-900, #111827);
+}
+
+
+.course-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  padding-top: 0.75rem;
+  grid-column: 1 / -1;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--teal-600, #0d9488);
+  line-height: 1;
+}
+
+/* Stats use uniform teal color per .stat-value base rule */
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-600, #4b5563);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Hamburger Menu */
 .hamburger-menu {
   display: none;
   position: fixed;

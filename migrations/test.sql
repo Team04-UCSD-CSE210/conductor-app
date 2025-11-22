@@ -202,7 +202,7 @@ VALUES (
 );
 \echo '✓ Enrollments created'
 
-\echo '4.2) Test course_role_enum values'
+\echo '4.2) Test enrollment_role_enum values'
 UPDATE enrollments SET course_role = 'tutor' 
 WHERE user_id = (SELECT id FROM users WHERE email = 'extension@test.gmail.com');
 \echo '✓ Valid course roles accepted'
