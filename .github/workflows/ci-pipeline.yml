@@ -40,6 +40,10 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - name: Initialize database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+        run: npm run db:reset
       - name: Run tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test

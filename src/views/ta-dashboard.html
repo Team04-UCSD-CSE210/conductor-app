@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TA Dashboard</title>
 
-  <link rel="stylesheet" href="/global.css">
-  <link rel="stylesheet" href="/dashboard-global.css">
-  <link rel="stylesheet" href="/ta-dashboard.css">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/ta-dashboard.css">
 </head>
 
 <body class="dashboard-page">
@@ -26,8 +26,9 @@
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     <nav aria-label="Dashboard navigation">
-      <a href="/courses">Courses</a>
-      <a href="/attendance">Attendance</a>
+      <a href="/ta-dashboard">Dashboard</a>
+      <a href="/instructor-lectures">Attendance</a>
+      <a href="/roster">Roster</a>
       <a href="/class-directory">Class Directory</a>
     </nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
@@ -168,7 +169,8 @@
     </section>
   </main>
 
-  <script src="/professor-dashboard.js" defer></script>
+  <script src="/js/dashboard.service.js"></script>
+  <script src="/js/ta-dashboard.js" defer></script>
 
 </body>
 </html>

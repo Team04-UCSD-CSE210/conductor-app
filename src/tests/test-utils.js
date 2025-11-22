@@ -96,3 +96,37 @@ export async function retryWithBackoff(fn, maxRetries = 5, initialDelay = 50) {
   throw lastError;
 }
 
+/**
+ * Get admin user ID from the database (from seed data)
+ */
+let cachedAdminId = null;
+export async function getAdminId() {
+  if (cachedAdminId) return cachedAdminId;
+  
+  const { rows } = await pool.query(
+    "SELECT id FROM users WHERE email = 'admin@ucsd.edu' AND deleted_at IS NULL LIMIT 1"
+  );
+  
+  if (rows.length === 0) {
+    throw new Error('Admin user not found in database. Run migrations/seed first.');
+  }
+  
+  cachedAdminId = rows[0].id;
+  return cachedAdminId;
+}
+
+/**
+ * Test utilities object for easier import
+ */
+export const testUtils = {
+  get ADMIN_ID() {
+    // Return a promise-based getter that will be awaited in tests
+    if (cachedAdminId) return cachedAdminId;
+    throw new Error('Call await testUtils.init() before using ADMIN_ID');
+  },
+  async init() {
+    cachedAdminId = await getAdminId();
+    return cachedAdminId;
+  }
+};
+
