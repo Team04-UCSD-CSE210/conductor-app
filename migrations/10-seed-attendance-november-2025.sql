@@ -54,17 +54,18 @@ BEGIN
         CREATE INDEX IF NOT EXISTS idx_session_responses_session ON session_responses(session_id);
     END IF;
     
-    -- Ensure unique constraint exists (question_id, user_id)
+    -- Ensure unique constraint exists (session_id, question_id, user_id)
+    -- This allows the same user to answer the same question in different sessions
     -- Try to add it, ignore if it already exists
     BEGIN
         ALTER TABLE session_responses 
-        ADD CONSTRAINT session_responses_question_user_unique 
-        UNIQUE (question_id, user_id);
+        ADD CONSTRAINT session_responses_session_question_user_unique 
+        UNIQUE (session_id, question_id, user_id);
         
-        RAISE NOTICE 'Added unique constraint (question_id, user_id) to session_responses table';
+        RAISE NOTICE 'Added unique constraint (session_id, question_id, user_id) to session_responses table';
     EXCEPTION 
         WHEN duplicate_object THEN
-            RAISE NOTICE 'Unique constraint (question_id, user_id) already exists on session_responses';
+            RAISE NOTICE 'Unique constraint (session_id, question_id, user_id) already exists on session_responses';
         WHEN OTHERS THEN
             -- If constraint exists with different name or structure, that's okay
             RAISE NOTICE 'Could not add unique constraint (may already exist): %', SQLERRM;

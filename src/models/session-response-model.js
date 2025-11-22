@@ -37,7 +37,7 @@ export class SessionResponseModel {
       `INSERT INTO session_responses 
        (session_id, question_id, user_id, response_text, response_option)
        VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (question_id, user_id)
+       ON CONFLICT (session_id, question_id, user_id)
        DO UPDATE SET
          response_text = EXCLUDED.response_text,
          response_option = EXCLUDED.response_option,
@@ -124,7 +124,7 @@ export class SessionResponseModel {
           `INSERT INTO session_responses 
            (session_id, question_id, user_id, response_text, response_option)
            VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (question_id, user_id)
+           ON CONFLICT (session_id, question_id, user_id)
            DO UPDATE SET
              response_text = EXCLUDED.response_text,
              response_option = EXCLUDED.response_option,

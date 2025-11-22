@@ -433,7 +433,7 @@ CREATE TABLE IF NOT EXISTS session_responses (
     response_option TEXT, -- For multiple choice
     submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT session_responses_question_user_unique UNIQUE(question_id, user_id)
+    CONSTRAINT session_responses_session_question_user_unique UNIQUE(session_id, question_id, user_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_session_responses_session ON session_responses(session_id);
