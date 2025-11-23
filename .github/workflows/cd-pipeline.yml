@@ -17,8 +17,10 @@ jobs:
       
       - name: Build Docker image
         run: |
+          # Sanitize branch name for Docker tag (replace / with -)
+          BRANCH_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
           docker build -f .github/docker/Dockerfile -t conductor-app:${{ github.sha }} .
-          docker tag conductor-app:${{ github.sha }} conductor-app:${{ github.ref_name }}
+          docker tag conductor-app:${{ github.sha }} conductor-app:${BRANCH_TAG}
 
   deploy:
     needs: build
