@@ -93,13 +93,15 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - name: Install Playwright browsers and dependencies
+        run: |
+          npx playwright install --with-deps
       - name: Start test server
         run: |
           npm start &
           sleep 10
       - name: Polypane responsive testing
         run: |
-          npx playwright install
           npx playwright test --config=polypane.config.js
 
   docs:
@@ -153,7 +155,7 @@ jobs:
           node-version: 20
       - run: npm install
       - name: Test & publish code coverage
-        uses: paambaati/codeclimate-action@v5.0.0
+        uses: paambaati/codeclimate-action@v3.4.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE }}
         with:
