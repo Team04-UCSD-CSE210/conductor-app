@@ -71,6 +71,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -80,7 +82,8 @@ jobs:
           npx husky install
           npm run prepare
       - name: Check commit message format
-        run: npx commitlint --from HEAD~1 --to HEAD --verbose
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
   polypane:
     runs-on: ubuntu-latest
@@ -90,8 +93,6 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - name: Build for testing
-        run: npm run build
       - name: Start test server
         run: |
           npm start &

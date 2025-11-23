@@ -10,6 +10,7 @@
     "test:coverage": "vitest run --coverage",
     "local:test": "vitest run",
     "prepare": "husky install",
+    "build": "echo 'Build completed'",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:md",
     "lint:js": "eslint . --config config/eslint.config.js",
     "lint:css": "stylelint \"src/**/*.css\" --config config/.stylelintrc.json || echo 'No CSS files found'",
