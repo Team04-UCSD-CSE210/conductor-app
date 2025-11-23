@@ -1,10 +1,11 @@
 import {Router} from "express";
 import {ensureAuthenticated} from "../middleware/auth.js";
+import {JournalModel} from "../models/journal-model.js";
 
 const router = Router();
 
 // Create or upsert journal entry
-router.post("/journal", ensureAuthenticated, async (req, res) => {
+router.post("/", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser; // authenticated user
     const entry = await JournalModel.upsert({
@@ -13,19 +14,20 @@ router.post("/journal", ensureAuthenticated, async (req, res) => {
     });
     res.json({ success: true, entry });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.log(err)
+    res.status(500).json({ error: "Something went wrong!" });
   }
 });
 
 // Get all journal entries for authenticated user
-router.get("/journal", ensureAuthenticated, async (req, res) => {
+router.get("/", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser;
     const logs = await JournalModel.findByUser(user.id);
     res.json({ success: true, logs });
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    console.log(err)
+    res.status(500).json({ error: "Something went wrong!" });  }
 });
 
 // Serve journal UI
@@ -34,7 +36,7 @@ router.get("/journal-ui", ensureAuthenticated, (req, res) => {
 });
 
 // Update a journal entry (only if belongs to current user)
-router.put("/journal/:id", ensureAuthenticated, async (req, res) => {
+router.put("/:id", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser;
     const entry = await JournalModel.findById(req.params.id);
@@ -44,12 +46,13 @@ router.put("/journal/:id", ensureAuthenticated, async (req, res) => {
     const updated = await JournalModel.update(req.params.id, req.body);
     res.json({ success: true, entry: updated });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.log(err)
+    res.status(500).json({ error: "Something went wrong!" });
   }
 });
 
 // Delete a journal entry (only if belongs to current user)
-router.delete("/journal/:id", ensureAuthenticated, async (req, res) => {
+router.delete("/:id", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser;
     const entry = await JournalModel.findById(req.params.id);
@@ -59,7 +62,8 @@ router.delete("/journal/:id", ensureAuthenticated, async (req, res) => {
     await JournalModel.delete(req.params.id);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.log(err)
+    res.status(500).json({ error: "Something went wrong!" });
   }
 });
 
