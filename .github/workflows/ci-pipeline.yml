@@ -180,11 +180,12 @@ jobs:
           node-version: 20
       - run: npm install
       - name: Test & publish code coverage
-        uses: paambaati/codeclimate-action@v3.2.0
+        uses: paambaati/codeclimate-action@v6.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE }}
         with:
           coverageCommand: npm run test:coverage
+          debug: false
 
   notify:
     needs: [lint, test, github-additionals, git-hooks, polypane, docs, commit-lint, security, code-climate]
