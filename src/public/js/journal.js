@@ -3,19 +3,19 @@
 window.editingId = null;
 window.currentLogs = [];
 
-function toggleMenu(id) {
+window.toggleMenu = function(id) {
   const menu = document.getElementById(`menu-${id}`);
   menu.classList.toggle("hidden");
-}
+};
 
-async function deleteEntry(id) {
+window.deleteEntry = async function(id) {
   if (!confirm("Delete this entry?")) return;
 
   await fetch(`/api/journals/${id}`, { method: "DELETE", credentials: "include" });
   loadEntries();
-}
+};
 
-function editEntry(id) {
+window.editEntry = function(id) {
   const entry = window.currentLogs.find((e) => e.id === id);
   if (!entry) return;
 
@@ -25,7 +25,7 @@ function editEntry(id) {
   document.getElementById("feelings").value = entry.feelings;
 
   window.editingId = id;
-}
+};
 
 function clearForm() {
   document.getElementById("done").value = "";
@@ -34,7 +34,7 @@ function clearForm() {
   document.getElementById("feelings").value = "";
 }
 
-async function submitJournal() {
+window.submitJournal = async function() {
   const payload = {
     date: new Date().toISOString().split("T")[0],
     done_since_yesterday: document.getElementById("done").value,
@@ -69,7 +69,7 @@ async function submitJournal() {
   } else {
     alert("Failed to save entry.");
   }
-}
+};
 
 async function loadEntries() {
   const res = await fetch("/api/journals", { credentials: "include" });
