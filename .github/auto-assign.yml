@@ -1,0 +1,13 @@
+addReviewers: true
+addAssignees: false
+reviewers:
+  - astoriama
+  - yyygrace
+numberOfReviewers: 1
+skipKeywords:
+  - wip
+  - draft
+addMilestone: true
+milestone: "Sprint #4"
+addProject: true
+project: "Conductor App"
