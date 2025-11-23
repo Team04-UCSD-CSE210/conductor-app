@@ -87,6 +87,22 @@ jobs:
 
   polypane:
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conductor_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -96,11 +112,20 @@ jobs:
       - name: Install Playwright browsers and dependencies
         run: |
           npx playwright install --with-deps
+      - name: Initialize database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+        run: npm run db:reset
       - name: Start test server
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+          NODE_ENV: test
         run: |
           npm start &
           sleep 10
       - name: Polypane responsive testing
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
         run: |
           npx playwright test --config=polypane.config.js
 
