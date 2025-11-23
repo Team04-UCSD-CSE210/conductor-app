@@ -61,6 +61,7 @@
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.5.0",
     "htmlhint": "^1.1.4",
+    "husky": "^9.1.7",
     "jsdoc": "^4.0.2",
     "markdownlint-cli": "^0.46.0",
     "pg-hstore": "^2.3.4",
