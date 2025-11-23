@@ -22,6 +22,7 @@ import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
+import journalRoutes from "./routes/journal-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1035,6 +1036,7 @@ app.use("/api/offerings", offeringRoutes);
 app.use("/api/interactions", interactionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/journals", journalRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {
