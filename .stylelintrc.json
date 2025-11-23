@@ -1,5 +1,5 @@
 {
   "extends": ["stylelint-config-standard"],
-  "ignoreFiles": ["**/node_modules/**", "**/coverage/**"]
+  "ignoreFiles": ["**/node_modules/**", "**/coverage/**", "coverage/**"]
 }
 

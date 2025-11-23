@@ -50,12 +50,40 @@ jobs:
           NODE_ENV: test
         run: npm test
 
-  docker-build:
+  github-additionals:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
-        run: docker build -f .github/docker/Dockerfile -t conductor-app:ci .
+      - name: Check PR template compliance
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ -z "${{ github.event.pull_request.body }}" ]]; then
+            echo "::error::PR description is required"
+            exit 1
+          fi
+      - name: Auto-assign reviewers
+        if: github.event_name == 'pull_request'
+        uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/auto-assign.yml'
+
+  git-hooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Validate pre-commit hooks
+        run: |
+          npx husky install
+          npm run prepare
+      - name: Check commit message format
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
   docs:
     runs-on: ubuntu-latest
@@ -100,7 +128,7 @@ jobs:
           head: HEAD
 
   notify:
-    needs: [lint, test, docker-build, docs, commit-lint, security]
+    needs: [lint, test, github-additionals, git-hooks, docs, commit-lint, security]
     if: always()
     runs-on: ubuntu-latest
     steps:
