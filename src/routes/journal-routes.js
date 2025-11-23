@@ -32,7 +32,7 @@ router.get("/", ensureAuthenticated, async (req, res) => {
 
 // Serve journal UI
 router.get("/journal-ui", ensureAuthenticated, (req, res) => {
-  res.sendFile("journal.html", { root: "src/views" });
+  res.sendFile("journal-temp.html", { root: "src/views" });
 });
 
 // Update a journal entry (only if belongs to current user)
