@@ -34,7 +34,8 @@ PostgreSQL provides:
 - Strong **schema enforcement** and support for relational data  
 - Excellent **concurrency handling** for multi-user workloads  
 - Smooth integration with **Node.js** libraries (e.g., `pg`, `Prisma`)  
-- Compatibility with **Docker-based local setup** and **cloud-hosted PostgreSQL services** (Render, Supabase, Railway)
+- Compatibility with **Docker-based local setup** and **cloud-hosted PostgreSQL
+  services** (Render, Supabase, Railway)
 
 ## Consequences
 
