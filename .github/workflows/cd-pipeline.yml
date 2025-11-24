@@ -17,7 +17,6 @@ jobs:
       
       - name: Build Docker image
         run: |
-          # Sanitize branch name for Docker tag (replace / with -)
           BRANCH_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
           docker build -f .github/docker/Dockerfile -t conductor-app:${{ github.sha }} .
           docker tag conductor-app:${{ github.sha }} conductor-app:${BRANCH_TAG}
@@ -29,20 +28,12 @@ jobs:
     steps:
       - name: Deploy to Render
         run: |
-          curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            --data-raw '{"clearCache": false}'
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
       
       - name: Notify team
         run: |
           echo "Production Deployed!"
           echo "URL: https://conductor-app.onrender.com"
-          echo "Docker Image: conductor-app:${{ github.sha }}"
-          
-          echo "## Production Deployed!" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://conductor-app.onrender.com" >> $GITHUB_STEP_SUMMARY
-          echo "**Docker Image:** conductor-app:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
   notify:
     needs: [build, deploy]
