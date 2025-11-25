@@ -9,8 +9,8 @@ const getDefaultTestUrl = () => {
   return `postgresql://${username}@localhost:5432/conductor_test`;
 };
 
-const url = process.env.DATABASE_URL || 
-  (process.env.NODE_ENV === 'test' || process.env.VITEST 
+const url = process.env.DATABASE_URL ||
+  (process.env.NODE_ENV === 'test' || process.env.VITEST
     ? process.env.TEST_DATABASE_URL || getDefaultTestUrl()
     : null);
 
