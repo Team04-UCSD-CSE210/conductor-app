@@ -2,6 +2,10 @@
 
 Final project for CSE 210.
 
+## Wiki
+
+For detailed documentation, guides, and team resources, visit our [project wiki](https://github.com/helenahundhausen/conductor-app/wiki).
+
 ## Pipeline
 
 ### CI Pipeline
@@ -19,13 +23,13 @@ The pipeline ensures code quality and consistency across all contributions.
 
 ### CD Pipeline
 
-Automated deployment to AWS using ECS Fargate that runs on all branches:
+Automated Docker builds for all branches and deployment to Render for main:
 
+- **Docker Build**: All branches get containerized with branch-specific tags
 - **Infrastructure**: CloudFormation template deploys ECS cluster, ECR repository, and networking
-- **Containerization**: Docker image built and pushed to ECR
-- **Deployment**: ECS service created/updated with health checks and rollback capability
-- **Branch Isolation**: Each branch gets its own service instance for testing
-- **Notifications**: PR comments with deployment status and URLs
+- **Production Deployment**: Only `main` branch deploys to Render with health checks
+- **Branch Isolation**: Feature branches get Docker images for testing without deployment
+- **Notifications**: PR comments with build status and deployment URLs (main only)
 
 ## Team Standards & Deployment Policies
 

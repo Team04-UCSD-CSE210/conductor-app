@@ -18,8 +18,20 @@ DECLARE
     j INTEGER;
     team_num INTEGER;
 BEGIN
-    -- Get instructor ID first
-    SELECT id INTO instructor_id FROM users WHERE email = 'instructor1@ucsd.edu' LIMIT 1;
+    -- Get instructor ID first (try multiple possible emails)
+    SELECT id INTO instructor_id 
+    FROM users 
+    WHERE email = 'bhchandna@ucsd.edu' 
+       OR email = 'instructor1@ucsd.edu'
+    LIMIT 1;
+    
+    -- Fallback: get any instructor
+    IF instructor_id IS NULL THEN
+        SELECT id INTO instructor_id 
+        FROM users 
+        WHERE primary_role = 'instructor' 
+        LIMIT 1;
+    END IF;
     
     IF instructor_id IS NULL THEN
         RAISE EXCEPTION 'Instructor not found. Run user seed data first.';
@@ -78,58 +90,57 @@ BEGIN
     -- ============================================
     -- ENROLLMENTS
     -- ============================================
-    
-    -- Enroll instructor
-    IF instructor_id IS NOT NULL THEN
-        INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, instructor_id, 'student'::course_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
-        ON CONFLICT (offering_id, user_id) DO NOTHING;
-    END IF;
+    -- Note: Instructor is NOT enrolled, only added as instructor_id to course_offering
+    -- All students (UCSD and extension) are auto-enrolled below
     
     -- Enroll TAs
     IF ta1_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, ta1_id, 'ta'::course_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::course_role_enum;
+        VALUES (offering_id_var, ta1_id, 'ta'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::enrollment_role_enum;
     END IF;
     
     IF ta2_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, ta2_id, 'ta'::course_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::course_role_enum;
+        VALUES (offering_id_var, ta2_id, 'ta'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::enrollment_role_enum;
     END IF;
     
     IF ta3_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, ta3_id, 'ta'::course_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::course_role_enum;
+        VALUES (offering_id_var, ta3_id, 'ta'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::enrollment_role_enum;
     END IF;
     
     -- Enroll Tutors
     IF tutor1_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, tutor1_id, 'tutor'::course_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'tutor'::course_role_enum;
+        VALUES (offering_id_var, tutor1_id, 'tutor'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'tutor'::enrollment_role_enum;
     END IF;
     
     IF tutor2_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, tutor2_id, 'tutor'::course_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'tutor'::course_role_enum;
+        VALUES (offering_id_var, tutor2_id, 'tutor'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'tutor'::enrollment_role_enum;
     END IF;
     
-    -- Enroll all students (primary_role = 'student')
+    -- Auto-enroll ALL students (primary_role = 'student') - both UCSD and extension
+    -- This ensures every student is automatically enrolled when the course offering exists
     INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
     SELECT 
         offering_id_var,
         id,
-        'student'::course_role_enum,
+        'student'::enrollment_role_enum,
         'enrolled'::enrollment_status_enum,
         CURRENT_DATE
     FROM users
     WHERE primary_role = 'student'::user_role_enum
+        AND deleted_at IS NULL
         AND id NOT IN (SELECT user_id FROM enrollments WHERE offering_id = offering_id_var)
     ON CONFLICT (offering_id, user_id) DO NOTHING;
+    
+    RAISE NOTICE '✅ Auto-enrolled all students in CSE 210';
     
     -- ============================================
     -- TEAMS (10 teams with 7-8 members each)
@@ -139,7 +150,7 @@ BEGIN
     SELECT ARRAY_AGG(user_id) INTO student_ids
     FROM enrollments
     WHERE offering_id = offering_id_var
-        AND course_role = 'student'::course_role_enum
+        AND course_role = 'student'::enrollment_role_enum
         AND status = 'enrolled'::enrollment_status_enum;
     
     IF student_ids IS NULL OR array_length(student_ids, 1) < 10 THEN

@@ -1,0 +1,117 @@
+/* Inactivity Timeout Warning Modal Styles */
+
+.inactivity-warning-modal {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 75%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.inactivity-warning-modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.inactivity-warning-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 10px 10px -5px rgb(0 0 0 / 4%);
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+
+.inactivity-warning-modal.active .inactivity-warning-content {
+  transform: scale(1);
+}
+
+.inactivity-warning-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  color: #f59e0b; /* Amber color for warning */
+}
+
+.inactivity-warning-icon svg {
+  width: 64px;
+  height: 64px;
+}
+
+.inactivity-warning-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.inactivity-warning-message {
+  font-size: 1rem;
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+  text-align: center;
+}
+
+.inactivity-countdown {
+  color: #dc2626; /* Red color for countdown */
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  display: inline-block;
+  transition: color 0.3s ease;
+}
+
+.inactivity-warning-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.inactivity-warning-actions .btn-primary {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #10b981; /* Emerald green */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.inactivity-warning-actions .btn-primary:hover {
+  background: #059669;
+}
+
+.inactivity-warning-actions .btn-primary:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Animation for countdown number changes */
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Warning when countdown is low (less than 30 seconds) */
+
+.inactivity-warning-modal.active .inactivity-countdown {
+  animation: pulse 1s ease-in-out infinite;
+}
+

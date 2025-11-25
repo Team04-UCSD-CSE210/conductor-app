@@ -242,7 +242,10 @@ export class DatabaseInitializer {
       // Drop all tables in correct order (respecting foreign keys)
       await pool.query(`
         DROP TABLE IF EXISTS activity_logs CASCADE;
+        DROP TABLE IF EXISTS session_responses CASCADE;
+        DROP TABLE IF EXISTS session_questions CASCADE;
         DROP TABLE IF EXISTS attendance CASCADE;
+        DROP TABLE IF EXISTS sessions CASCADE;
         DROP TABLE IF EXISTS submissions CASCADE;
         DROP TABLE IF EXISTS team_members CASCADE;
         DROP TABLE IF EXISTS team CASCADE;
@@ -255,7 +258,6 @@ export class DatabaseInitializer {
         DROP TABLE IF EXISTS users CASCADE;
         
         -- Drop permission tables (from migration 04)
-        DROP TABLE IF EXISTS course_staff CASCADE;
         DROP TABLE IF EXISTS team_role_permissions CASCADE;
         DROP TABLE IF EXISTS enrollment_role_permissions CASCADE;
         DROP TABLE IF EXISTS user_role_permissions CASCADE;
@@ -265,7 +267,7 @@ export class DatabaseInitializer {
         DROP TYPE IF EXISTS user_role_enum CASCADE;
         DROP TYPE IF EXISTS user_status_enum CASCADE;
         DROP TYPE IF EXISTS institution_type_enum CASCADE;
-        DROP TYPE IF EXISTS course_role_enum CASCADE;
+        DROP TYPE IF EXISTS enrollment_role_enum CASCADE;
         DROP TYPE IF EXISTS enrollment_status_enum CASCADE;
         DROP TYPE IF EXISTS course_offering_status_enum CASCADE;
         DROP TYPE IF EXISTS assignment_type_enum CASCADE;
