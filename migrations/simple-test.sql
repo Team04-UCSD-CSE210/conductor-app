@@ -39,22 +39,22 @@ VALUES
     (
         (SELECT id FROM course_offerings WHERE code = 'CSE210'),
         (SELECT id FROM users WHERE email = 'alice@ucsd.edu'),
-        'student'::course_role_enum, 'enrolled'::enrollment_status_enum, '2025-09-25'
+        'student'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, '2025-09-25'
     ),
     (
         (SELECT id FROM course_offerings WHERE code = 'CSE210'),
         (SELECT id FROM users WHERE email = 'bob@ucsd.edu'),
-        'student'::course_role_enum, 'enrolled'::enrollment_status_enum, '2025-09-25'
+        'student'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, '2025-09-25'
     ),
     (
         (SELECT id FROM course_offerings WHERE code = 'CSE210'),
         (SELECT id FROM users WHERE email = 'charlie@ucsd.edu'),
-        'student'::course_role_enum, 'enrolled'::enrollment_status_enum, '2025-09-26'
+        'student'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, '2025-09-26'
     ),
     (
         (SELECT id FROM course_offerings WHERE code = 'CSE210'),
         (SELECT id FROM users WHERE email = 'ta.emily@ucsd.edu'),
-        'ta'::course_role_enum, 'enrolled'::enrollment_status_enum, '2025-09-24'
+        'ta'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, '2025-09-24'
     );
 
 \echo '   Created 4 enrollments (3 students, 1 TA)'

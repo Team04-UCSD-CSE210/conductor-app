@@ -1,94 +1,86 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Create mock function using vi.hoisted to ensure it's available during hoisting
+const { mockHasPermission } = vi.hoisted(() => ({
+  mockHasPermission: vi.fn(),
+}));
+
+// Mock PermissionService before any imports that use it
+vi.mock('../services/permission-service.js', () => ({
+  PermissionService: {
+    hasPermission: mockHasPermission,
+  },
+}));
+
 import { requirePermission } from '../middleware/permission-middleware.js';
-import * as PermissionService from '../services/permission-service.js';
 
-// --- Mock helpers ---
-const originalHasPermission = PermissionService.PermissionService.hasPermission;
+describe('RBAC Permission Middleware', () => {
+  beforeEach(() => {
+    mockHasPermission.mockClear();
+  });
+  function makeReq(user = null) {
+    return { user, currentUser: user, params: {}, body: {} };
+  }
 
-function mockHasPermission(val) {
-  PermissionService.PermissionService.hasPermission = async () => val;
-}
+  function makeRes() {
+    const res = {};
+    res.statusCode = 200;
+    res.jsonData = null;
 
-function restoreHasPermission() {
-  PermissionService.PermissionService.hasPermission = originalHasPermission;
-}
+    res.status = function (code) {
+      this.statusCode = code;
+      return this;
+    };
+    res.json = function (data) {
+      this.jsonData = data;
+      return this;
+    };
+    return res;
+  }
 
-// --- Test helpers ---
-function makeReq(user = null) {
-  return { user, params: {}, body: {} };
-}
+  function makeNext() {
+    const fn = vi.fn(() => { fn.called = true; });
+    fn.called = false;
+    return fn;
+  }
 
-function makeRes() {
-  const res = {};
-  res.statusCode = 200;
-  res.jsonData = null;
+  it('should return 401 when no user is authenticated', async () => {
+    const req = makeReq(null);
+    const res = makeRes();
+    const next = makeNext();
 
-  res.status = function (code) {
-    this.statusCode = code;
-    return this;
-  };
-  res.json = function (data) {
-    this.jsonData = data;
-    return this;
-  };
-  return res;
-}
+    const mw = requirePermission('roster.view', 'course');
+    await mw(req, res, next);
 
-function makeNext() {
-  const fn = () => { fn.called = true; };
-  fn.called = false;
-  return fn;
-}
+    expect(res.statusCode).toBe(401);
+    expect(next).not.toHaveBeenCalled();
+  });
 
-// --- Tests ---
-async function test401NoUser() {
-  const req = makeReq(null);
-  const res = makeRes();
-  const next = makeNext();
+  it('should return 403 when user lacks permission', async () => {
+    mockHasPermission.mockResolvedValue(false);
 
-  const mw = requirePermission('roster.view', 'course');
-  await mw(req, res, next);
+    const req = makeReq({ id: 'u1' });
+    const res = makeRes();
+    const next = makeNext();
 
-  console.log('test401NoUser:', res.statusCode === 401 ? 'OK' : 'FAIL');
-}
+    const mw = requirePermission('roster.view', 'course');
+    await mw(req, res, next);
 
-async function test403NoPermission() {
-  mockHasPermission(false);
+    expect(res.statusCode).toBe(403);
+    expect(next).not.toHaveBeenCalled();
+  });
 
-  const req = makeReq({ id: 'u1' });
-  const res = makeRes();
-  const next = makeNext();
+  it('should call next when user has permission', async () => {
+    mockHasPermission.mockResolvedValue(true);
 
-  const mw = requirePermission('roster.view', 'course');
-  await mw(req, res, next);
+    const req = makeReq({ id: 'u1' });
+    const res = makeRes();
+    const next = makeNext();
 
-  console.log('test403NoPermission:', res.statusCode === 403 ? 'OK' : 'FAIL');
+    const mw = requirePermission('roster.view', 'course');
+    await mw(req, res, next);
 
-  restoreHasPermission();
-}
-
-async function test200HasPermission() {
-  mockHasPermission(true);
-
-  const req = makeReq({ id: 'u1' });
-  const res = makeRes();
-  const next = makeNext();
-
-  const mw = requirePermission('roster.view', 'course');
-  await mw(req, res, next);
-
-  const ok = next.called && res.statusCode === 200;
-  console.log('test200HasPermission:', ok ? 'OK' : 'FAIL');
-
-  restoreHasPermission();
-}
-
-// --- Runner ---
-async function run() {
-  await test401NoUser();
-  await test403NoPermission();
-  await test200HasPermission();
-}
-
-if (process.argv[1].includes('rbac-permission.test.js')) {
-  run().catch(console.error);
-}
+    expect(next).toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+  });
+});
