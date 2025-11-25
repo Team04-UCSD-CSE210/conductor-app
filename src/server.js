@@ -630,6 +630,10 @@ app.get("/meeting-attendance", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("meeting-attendance.html"));
 });
 
+app.get("/meeting-attendance-team-lead", ensureAuthenticated, (req, res) => {
+  res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
+});
+
 
 app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
   try {
