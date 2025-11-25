@@ -626,6 +626,10 @@ app.get("/instructor-dashboard", ...protect('course.manage', 'course'), (req, re
   res.sendFile(buildFullViewPath("instructor-dashboard.html"));
 });
 
+app.get("/meeting-attendance", ensureAuthenticated, (req, res) => {
+  res.sendFile(buildFullViewPath("meeting-attendance.html"));
+});
+
 
 app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
   try {
