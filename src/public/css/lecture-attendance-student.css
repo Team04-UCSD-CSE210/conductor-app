@@ -242,6 +242,34 @@
   box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
 }
 
+.stats-box {
+  background: linear-gradient(135deg, white 0%, var(--emerald-50, #ecfdf5) 100%);
+  border: 1px solid var(--emerald-200, #a7f3d0);
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgb(16 185 129 / 10%);
+  text-align: center;
+}
+
+.stats-box > h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700, #374151);
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.modal-header > h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--teal-700, #0f766e);
+}
+
 .help-box.team-lead-card {
   background: linear-gradient(135deg, var(--yellow-50, #fefce8) 0%, var(--amber-50, #fffbeb) 100%);
   border: 2px solid var(--yellow-400, #facc15);
@@ -256,7 +284,7 @@
 }
 
 .help-box.team-lead-card .form-field {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.25rem;
 }
 
 .help-box.team-lead-card label {
@@ -288,7 +316,7 @@
 .help-box.team-lead-card .text-input:focus {
   outline: none;
   border-color: var(--amber-500, #f59e0b);
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 0 3px rgb(245 158 11 / 10%);
 }
 
 .help-box.team-lead-card .text-input:hover {
@@ -345,22 +373,6 @@
 
 .btn-contact:active {
   transform: scale(0.98);
-}
-
-.stats-box {
-  background: linear-gradient(135deg, white 0%, var(--emerald-50, #ecfdf5) 100%);
-  border: 1px solid var(--emerald-200, #a7f3d0);
-  border-radius: 0.75rem;
-  padding: 1.75rem;
-  box-shadow: 0 2px 8px rgb(16 185 129 / 10%);
-  text-align: center;
-}
-
-.stats-box h3 {
-  margin: 0 0 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--gray-700, #374151);
 }
 
 .attendance-percentage {
@@ -433,18 +445,6 @@
   animation: slide-up 0.3s ease;
   position: relative;
   pointer-events: auto;
-}
-
-.modal-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.modal-header h3 {
-  margin: 0 0 0.5rem;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--teal-700, #0f766e);
 }
 
 .modal-header p {
