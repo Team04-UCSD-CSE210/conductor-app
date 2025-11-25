@@ -138,6 +138,34 @@ router.get('/offering/:offeringId/students', ...protectAny(['roster.view', 'cour
 });
 
 /**
+ * Get detailed roster (with user information and summary stats) for an offering
+ * GET /enrollments/offering/:offeringId/roster
+ * Requires: roster.view or course.manage permission
+ */
+router.get('/offering/:offeringId/roster', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+  try {
+    const parseNumber = (value, fallback) => {
+      const parsed = Number.parseInt(value, 10);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const options = {
+      limit: parseNumber(req.query.limit, 50),
+      offset: parseNumber(req.query.offset, 0),
+      course_role: req.query.course_role || undefined,
+      status: req.query.status || undefined,
+      search: req.query.search || undefined,
+      sort: req.query.sort || undefined,
+    };
+
+    const roster = await EnrollmentService.getRosterDetails(req.params.offeringId, options);
+    res.json(roster);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
  * Get all enrollments for a course offering
  * GET /enrollments/offering/:offeringId?limit=50&offset=0&course_role=ta&status=enrolled
  * Requires: roster.view or course.manage permission

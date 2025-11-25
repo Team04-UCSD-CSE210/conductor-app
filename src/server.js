@@ -14,13 +14,16 @@ import { DatabaseInitializer } from "./database/init.js";
 import bodyParser from "body-parser";
 import crypto from "crypto";
 import { ensureAuthenticated } from "./middleware/auth.js";
-import { protect } from "./middleware/permission-middleware.js";
+import { protect, protectAny } from "./middleware/permission-middleware.js";
 import userRoutes from "./routes/user-routes.js";
 import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
 import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
 import courseOfferingRoutes from "./routes/class-routes.js";
+import sessionRoutes from "./routes/session-routes.js";
+import attendanceRoutes from "./routes/attendance-routes.js";
+import journalRoutes from "./routes/journal-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -201,7 +204,7 @@ const enrollUserInCourse = async (userId, offeringId, courseRole = 'student') =>
   try {
     await pool.query(
       `INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-       VALUES ($1, $2, $3::course_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
+       VALUES ($1, $2, $3::enrollment_role_enum, 'enrolled'::enrollment_status_enum, CURRENT_DATE)
        ON CONFLICT (offering_id, user_id) DO NOTHING`,
       [offeringId, userId, courseRole]
     );
@@ -562,6 +565,10 @@ app.get("/", (req, res) => {
   res.send('<h1>Conductor App</h1><a href="/login">Login</a>');
 });
 
+// Parse JSON and URL-encoded request bodies (must be before API routes)
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 // Dashboard routing - redirects to role-specific dashboard
 app.get("/dashboard", ensureAuthenticated, async (req, res) => {
   try {
@@ -584,7 +591,7 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
     }
     
     if (user.primary_role === 'instructor') {
-      return res.redirect("/faculty-dashboard");
+      return res.redirect("/instructor-dashboard");
     }
     
     // TA role comes from enrollments.course_role
@@ -615,9 +622,10 @@ app.get("/admin-dashboard", ...protect('user.manage', 'global'), (req, res) => {
   res.sendFile(buildFullViewPath("admin-dashboard.html"));
 });
 
-app.get("/faculty-dashboard", ...protect('course.manage', 'course'), (req, res) => {
-  res.sendFile(buildFullViewPath("professor-dashboard.html"));
+app.get("/instructor-dashboard", ...protect('course.manage', 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("instructor-dashboard.html"));
 });
+
 
 app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
   try {
@@ -681,6 +689,111 @@ app.get("/student-dashboard", ensureAuthenticated, async (req, res) => {
   }
 });
 
+// -------------------- LECTURE ATTENDANCE ROUTES --------------------
+
+/**
+ * Instructor Lectures Overview
+ * View all lectures and manage attendance sessions
+ * Requires: attendance.view or session.manage permission (course scope) - Instructor/TA
+ */
+app.get("/instructor-lectures", ...protectAny(['attendance.view', 'session.manage', 'course.manage'], 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("instructor-lectures.html"));
+});
+
+/**
+ * Lecture Builder
+ * Create new lecture attendance sessions with questions
+ * Requires: session.create or session.manage permission (course scope) - Instructor
+ */
+app.get("/lecture-builder", ...protectAny(['session.create', 'session.manage', 'course.manage'], 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("lecture-builder.html"));
+});
+
+/**
+ * Lecture Responses
+ * View student responses for a lecture session
+ * Query params: ?sessionId=<uuid> or ?lectureId=<uuid>
+ * Requires: attendance.view or session.manage permission (course scope) - Instructor/TA
+ */
+app.get("/lecture-responses", ...protectAny(['attendance.view', 'session.manage', 'course.manage'], 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("lecture-responses.html"));
+});
+
+const rosterMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
+
+app.get("/roster", ...rosterMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("roster.html"));
+});
+
+app.get("/courses/:courseId/roster", ...rosterMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("roster.html"));
+});
+
+/**
+ * Student Lecture Response
+ * Students can respond to lecture questions after checking in
+ * Query params: ?sessionId=<uuid> or ?lectureId=<uuid>
+ * Requires: Authentication - Students
+ */
+app.get("/student-lecture-response", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow students, admins, and instructors (for testing/viewing)
+    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    if (enrollmentRole === 'student' || user.primary_role === 'student' || 
+        user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("student-lecture-response.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a student to access this page");
+  } catch (error) {
+    console.error("Error accessing student lecture response page:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * Student Lecture Attendance
+ * Students can check in to lectures using access codes
+ * Requires: Authentication - Students
+ */
+app.get("/lecture-attendance-student", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow students, admins, and instructors (for testing/viewing)
+    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    if (enrollmentRole === 'student' || user.primary_role === 'student' || 
+        user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("lecture-attendance-student.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a student to access this page");
+  } catch (error) {
+    console.error("Error accessing lecture attendance page:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
 // serve all your static files (HTML, CSS, JS, etc.) - serve project root for any other static files
 app.use(express.static(path.join(__dirname, "..")));
 
@@ -708,16 +821,6 @@ app.get("/blocked", (req, res) => {
 
 
 // -------------------- ROUTES --------------------
-
-// Health check endpoint for ECS deployment verification
-app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "healthy", 
-    timestamp: new Date().toISOString(),
-    redis: redisConnected ? "connected" : "disabled",
-    port: process.env.PORT || 8080
-  });
-});
 
 // Handle Google OAuth errors (e.g., org_internal)
 app.get("/auth/error", (req, res) => {
@@ -810,7 +913,7 @@ app.get(
       }
       
       if (user.primary_role === 'instructor') {
-        return res.redirect("/faculty-dashboard");
+        return res.redirect("/instructor-dashboard");
       }
       
       // TA role comes from enrollments.course_role
@@ -932,6 +1035,9 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/offerings", offeringRoutes);
 app.use("/api/interactions", interactionRoutes);
+app.use("/api/sessions", sessionRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/journals", journalRoutes);
 app.use("/api/class", courseOfferingRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
@@ -1015,10 +1121,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ADD A Simple POST to register login
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
 app.post("/register/submit", ensureAuthenticated, async (req, res) => {
   const email = req.user?.emails?.[0]?.value;
   const newRole = req.body.role; // Should be: admin, instructor, student, unregistered
@@ -1045,7 +1147,7 @@ app.post("/register/submit", ensureAuthenticated, async (req, res) => {
     return res.redirect("/student-dashboard");
   }
   
-  // If role is 'instructor', redirect to faculty dashboard
+  // If role is 'instructor', redirect to instructor dashboard
   if (newRole === 'instructor') {
     return res.redirect("/faculty-dashboard");
   }
@@ -1312,7 +1414,7 @@ app.get('/enroll/:token', ensureAuthenticated, async (req, res) => {
       await pool.query(
         `UPDATE enrollments 
          SET status = 'enrolled'::enrollment_status_enum, 
-             course_role = $1::course_role_enum,
+             course_role = $1::enrollment_role_enum,
              enrolled_at = CURRENT_DATE,
              dropped_at = NULL
          WHERE id = $2::uuid`,
@@ -1408,17 +1510,16 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
 // All routes must be defined BEFORE starting the server
 const startServer = async () => {
   try {
-    // Skip database initialization for localhost
-    if (!DATABASE_URL || DATABASE_URL.includes("localhost")) {
-      console.log("⚠️ Skipping database initialization for localhost");
+    // Check if database is empty and initialize with seed data if needed
+    const schemaExists = await DatabaseInitializer.verifySchema();
+    
+    if (!schemaExists) {
+      console.log("[database] Database is empty. Initializing with seed data...\n");
+      await DatabaseInitializer.initialize({ seed: true, force: false });
+      console.log("✅ Database initialized and seeded successfully");
     } else {
-      // Initialize database using migrations
-      const shouldSeed = process.env.SEED_ON_START !== 'false';
-      await DatabaseInitializer.initialize({ seed: shouldSeed, force: true });
+      console.log("[database] Database schema already exists. Skipping initialization.\n");
       console.log("✅ Database connection established");
-      if (shouldSeed) {
-        console.log("✅ Demo users and data seeded");
-      }
     }
   } catch (error) {
     console.error("Failed to connect to the database", error);
@@ -1437,4 +1538,25 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start server if this file is run directly, not when imported
+if (import.meta.url === `file://${process.argv[1]}`) {
+  startServer();
+} else if (process.env.VERCEL) {
+  // For Vercel, initialize database on cold start
+  (async () => {
+    try {
+      const { DatabaseInitializer } = await import('./database/init.js');
+      await DatabaseInitializer.initialize();
+      console.log("✅ Database connection established for Vercel");
+    } catch (error) {
+      console.error("Failed to connect to the database", error);
+    }
+  })();
+} else {
+  // Fallback: if the check fails on some systems, start anyway if not in Vercel
+  console.log('[server] Starting server (fallback path)');
+  startServer();
+}
+
+// Export app for Vercel
+export default app;

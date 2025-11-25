@@ -67,7 +67,7 @@ export class EnrollmentModel {
       VALUES (
         $1::uuid,
         $2::uuid,
-        CAST(COALESCE($3::text, 'student') AS course_role_enum),
+        CAST(COALESCE($3::text, 'student') AS enrollment_role_enum),
         CAST(COALESCE($4::text, 'enrolled') AS enrollment_status_enum),
         $5,
         $6,
@@ -176,7 +176,7 @@ export class EnrollmentModel {
     
     if (options.course_role) {
       const paramIndex = params.length + 1;
-      whereClause += ` AND course_role = $${paramIndex}::course_role_enum`;
+      whereClause += ` AND course_role = $${paramIndex}::enrollment_role_enum`;
       params.push(options.course_role);
     }
     
@@ -269,13 +269,166 @@ export class EnrollmentModel {
         created_by,
         updated_by
       FROM enrollments
-      WHERE offering_id = $1::uuid AND course_role = $2::course_role_enum
+      WHERE offering_id = $1::uuid AND course_role = $2::enrollment_role_enum
       ORDER BY enrolled_at DESC
       LIMIT $3 OFFSET $4
       `,
       [offeringId, courseRole, limit, offset]
     );
     return rows;
+  }
+
+  /**
+   * Retrieve roster details for an offering with joined user data and summary stats
+   * Supports filtering by course_role, status, search term, and sorting.
+   */
+  static async findRosterDetails(offeringId, options = {}) {
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 200));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
+
+    const params = [offeringId];
+    let paramIndex = 2;
+    let whereClause = 'WHERE e.offering_id = $1::uuid';
+
+    const validRoles = ['student', 'ta', 'tutor'];
+    if (options.course_role && validRoles.includes(options.course_role)) {
+      whereClause += ` AND e.course_role = $${paramIndex}::enrollment_role_enum`;
+      params.push(options.course_role);
+      paramIndex++;
+    }
+
+    const validStatuses = ['enrolled', 'waitlisted', 'dropped', 'completed'];
+    if (options.status && validStatuses.includes(options.status)) {
+      whereClause += ` AND e.status = $${paramIndex}::enrollment_status_enum`;
+      params.push(options.status);
+      paramIndex++;
+    }
+
+    if (options.search && typeof options.search === 'string' && options.search.trim().length > 0) {
+      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
+      params.push(`%${options.search.trim()}%`);
+      paramIndex++;
+    }
+
+    const sortMap = {
+      name: 'LOWER(u.name) ASC',
+      email: 'LOWER(u.email) ASC',
+      recent: 'e.enrolled_at DESC',
+      role: 'e.course_role ASC',
+      status: 'e.status ASC',
+    };
+    const sortKey = typeof options.sort === 'string' ? options.sort.toLowerCase() : 'name';
+    const sortClause = sortMap[sortKey] ?? sortMap.name;
+    const orderClause = `ORDER BY ${sortClause}, LOWER(u.name) ASC`;
+
+    const query = `
+      SELECT
+        e.id AS enrollment_id,
+        e.offering_id,
+        e.user_id,
+        e.course_role,
+        e.status AS enrollment_status,
+        e.enrolled_at,
+        e.dropped_at,
+        e.updated_at AS enrollment_updated_at,
+        u.name,
+        u.preferred_name,
+        u.email,
+        u.primary_role,
+        u.status AS user_status,
+        u.institution_type,
+        u.ucsd_pid,
+        u.major,
+        u.degree_program,
+        u.academic_year,
+        u.image_url,
+        u.profile_url,
+        u.github_username,
+        u.linkedin_url,
+        u.phone_number,
+        u.created_at AS user_created_at,
+        u.updated_at AS user_updated_at,
+        COUNT(*) OVER()::INTEGER AS total_count,
+        SUM(CASE WHEN e.course_role = 'student' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_students,
+        SUM(CASE WHEN e.course_role = 'ta' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_tas,
+        SUM(CASE WHEN e.course_role = 'tutor' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_tutors,
+        SUM(CASE WHEN e.status = 'enrolled' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_enrolled,
+        SUM(CASE WHEN e.status = 'waitlisted' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_waitlisted,
+        SUM(CASE WHEN e.status = 'dropped' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_dropped,
+        SUM(CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_completed
+      FROM enrollments e
+      JOIN users u ON e.user_id = u.id
+      ${whereClause}
+      ${orderClause}
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const { rows } = await pool.query(query, [...params, limit, offset]);
+
+    const stats = rows.length > 0 ? {
+      total: Number(rows[0].total_count ?? 0),
+      roles: {
+        student: Number(rows[0].total_students ?? 0),
+        ta: Number(rows[0].total_tas ?? 0),
+        tutor: Number(rows[0].total_tutors ?? 0),
+      },
+      statuses: {
+        enrolled: Number(rows[0].total_enrolled ?? 0),
+        waitlisted: Number(rows[0].total_waitlisted ?? 0),
+        dropped: Number(rows[0].total_dropped ?? 0),
+        completed: Number(rows[0].total_completed ?? 0),
+      },
+    } : {
+      total: 0,
+      roles: { student: 0, ta: 0, tutor: 0 },
+      statuses: { enrolled: 0, waitlisted: 0, dropped: 0, completed: 0 },
+    };
+
+    const results = rows.map((row) => ({
+      enrollment_id: row.enrollment_id,
+      offering_id: row.offering_id,
+      user_id: row.user_id,
+      course_role: row.course_role,
+      enrollment_status: row.enrollment_status,
+      enrolled_at: row.enrolled_at,
+      dropped_at: row.dropped_at,
+      enrollment_updated_at: row.enrollment_updated_at,
+      user: {
+        id: row.user_id,
+        name: row.name,
+        preferred_name: row.preferred_name,
+        email: row.email,
+        primary_role: row.primary_role,
+        status: row.user_status,
+        institution_type: row.institution_type,
+        ucsd_pid: row.ucsd_pid,
+        major: row.major,
+        degree_program: row.degree_program,
+        academic_year: row.academic_year,
+        image_url: row.image_url,
+        profile_url: row.profile_url,
+        github_username: row.github_username,
+        linkedin_url: row.linkedin_url,
+        phone_number: row.phone_number,
+        created_at: row.user_created_at,
+        updated_at: row.user_updated_at,
+      },
+    }));
+
+    const totalPages = stats.total === 0 ? 1 : Math.max(1, Math.ceil(stats.total / limit));
+    const page = stats.total === 0 ? 1 : Math.floor(offset / limit) + 1;
+
+    return {
+      results,
+      stats,
+      pagination: {
+        limit,
+        offset,
+        page,
+        totalPages,
+        total: stats.total,
+      },
+    };
   }
 
   /**
@@ -312,7 +465,7 @@ export class EnrollmentModel {
     }
     
     if (merged.course_role !== undefined && merged.course_role !== null) {
-      setClauses.push(`course_role = $${paramIndex++}::text::course_role_enum`);
+      setClauses.push(`course_role = $${paramIndex++}::text::enrollment_role_enum`);
       params.push(merged.course_role);
     }
     

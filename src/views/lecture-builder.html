@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Lecture Attendance</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/inactivity-timeout.css">
+  <link rel="stylesheet" href="/css/lectures-global.css">
+  <link rel="stylesheet" href="/css/lecture-builder.css">
+  <link rel="stylesheet" href="/css/time-picker.css">
+  <link rel="stylesheet" href="/css/date-picker.css">
+</head>
+
+<body class="dashboard-page lecture-builder-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/instructor-dashboard">Dashboard</a>
+      <a href="/course-settings">Course Settings</a>
+      <a href="/instructor-lectures" class="active">Attendance</a>
+      <a href="/courses/cse210/roster">Roster</a>
+    </nav>
+    <footer>
+      <a href="/logout" class="btn btn-ghost">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <section class="builder-shell" data-offering-id="">
+      <header class="builder-header">
+        <button class="back-button" type="button" id="builder-back" aria-label="Go back to lectures">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="header-content">
+          <p class="eyebrow">New Lecture Attendance</p>
+          <h1>Create Lecture Attendance Session</h1>
+        </div>
+        <div class="auto-save-indicator" id="auto-save-indicator" aria-live="polite">
+          <span class="save-status" id="save-status">All changes saved</span>
+        </div>
+      </header>
+
+      <form id="lecture-form" class="builder-form" novalidate>
+        <div class="form-section">
+          <h2 class="section-title">Lecture Details</h2>
+        <div class="form-grid">
+            <div class="form-field">
+              <label for="lecture-label">
+            Lecture label
+                <span class="required-indicator" aria-label="required">*</span>
+          </label>
+              <input 
+                type="text" 
+                id="lecture-label" 
+                name="lecture-label"
+                placeholder="e.g., Lecture 16 — Architecting Feedback" 
+                required
+                aria-required="true"
+                aria-describedby="label-helper"
+                maxlength="100"
+              >
+              <span class="field-helper" id="label-helper">Enter a descriptive name for this lecture session</span>
+              <span class="char-counter"><span id="label-count">0</span>/100</span>
+              <span class="field-error" id="label-error" role="alert"></span>
+            </div>
+            
+            <div class="form-field">
+              <label for="lecture-date">
+                Date
+                <span class="required-indicator" aria-label="required">*</span>
+          </label>
+              <input 
+                type="date" 
+                id="lecture-date" 
+                name="lecture-date"
+                class="date-picker"
+                required
+                aria-required="true"
+                aria-describedby="date-helper"
+              >
+              <span class="field-helper" id="date-helper">Format: Month Day, Year (e.g., Nov 18, 2025)</span>
+              <span class="field-error" id="date-error" role="alert"></span>
+            </div>
+            
+            <div class="form-field">
+              <label for="lecture-start">
+            Start time
+                <span class="required-indicator" aria-label="required">*</span>
+          </label>
+              <input 
+                type="time" 
+                id="lecture-start" 
+                name="lecture-start"
+                class="time-picker"
+                required
+                aria-required="true"
+                aria-describedby="start-helper"
+              >
+              <span class="field-helper" id="start-helper">When the lecture session begins</span>
+              <span class="field-error" id="start-error" role="alert"></span>
+            </div>
+            
+            <div class="form-field">
+              <label for="lecture-end">
+            End time
+                <span class="required-indicator" aria-label="required">*</span>
+          </label>
+              <input 
+                type="time" 
+                id="lecture-end" 
+                name="lecture-end"
+                class="time-picker"
+                required
+                aria-required="true"
+                aria-describedby="end-helper"
+              >
+              <span class="field-helper" id="end-helper">Must be after start time</span>
+              <span class="field-error" id="end-error" role="alert"></span>
+            </div>
+          </div>
+        </div>
+
+        <section class="question-stack">
+          <header class="question-stack-header">
+            <h2 class="section-title">Questions</h2>
+          </header>
+          
+          <div id="question-list" class="question-list" role="list" aria-label="Question list">
+            <!-- Questions will be inserted here -->
+          </div>
+          
+          
+          <button type="button" class="btn-outlined" id="add-question" aria-label="Add another question">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Add question</span>
+          </button>
+        </section>
+
+        <footer class="builder-actions">
+          <div class="action-group">
+            <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
+            <button type="button" class="btn-secondary" id="save-draft-btn">Save draft</button>
+          </div>
+          <button type="submit" class="btn-primary" id="submit-btn">
+            <span class="btn-text">Create attendance session</span>
+            <span class="btn-loader" hidden aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="37.7" stroke-dashoffset="9.4">
+                  <animate attributeName="stroke-dasharray" values="9.4 28.3;18.8 18.8;9.4 28.3" dur="1.5s" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-dashoffset" values="0;-9.4;-18.8" dur="1.5s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+            </span>
+          </button>
+          <p class="helper-text">A 6-digit access code is generated automatically once you submit.</p>
+        </footer>
+      </form>
+
+      <div class="toast" id="builder-toast" role="alert" aria-live="assertive" hidden>
+        <div class="toast-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="toast-content">
+          <h4>Lecture created successfully</h4>
+          <p>Access code <strong id="toast-code"></strong> is live. Share it or copy from the overview page.</p>
+        </div>
+        <div class="toast-actions">
+          <button id="toast-view" class="toast-btn-primary">View lecture</button>
+          <button id="toast-close" class="toast-btn-secondary" aria-label="Close notification">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/inactivity-timeout.js" defer></script>
+  <script src="/js/lecture-data.service.js" defer></script>
+  <script src="/js/time-picker.js" defer></script>
+  <script src="/js/date-picker.js" defer></script>
+  <script src="/js/instructor-lecture-form.js" defer></script>
+</body>
+</html>

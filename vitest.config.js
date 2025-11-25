@@ -1,5 +1,9 @@
 // vitest.config.js
-import {defineConfig} from 'vitest/config';
+import { defineConfig } from 'vitest/config';
+import { config as loadEnv } from 'dotenv';
+
+// Load environment variables from .env file
+loadEnv();
 
 // Get default test database URL using current user
 const getDefaultTestUrl = () => {
@@ -9,8 +13,14 @@ const getDefaultTestUrl = () => {
 
 export default defineConfig({
   test: {
-    threads: false,                 // run tests in a single thread
-    sequence: { concurrent: false },// run files in order
+    environment: 'node',            // Use Node.js environment for server-side testing
+    pool: 'forks',                  // Use separate processes for better isolation
+    poolOptions: {
+      forks: {
+        singleFork: true,           // Run all tests in a single fork sequentially
+      },
+    },
+    fileParallelism: false,         // Don't run test files in parallel
     globalSetup: './setup.js', // Initialize database before all tests
     coverage: {
       provider: 'v8',
@@ -30,8 +40,7 @@ export default defineConfig({
       '**/cypress/**',
       '**/.{idea,git,cache,output,temp}/**',
       '**/rbac.test.js',              // Custom test file, not Vitest format
-      '**/permission-service.test.js', // Custom test file, not Vitest format
-      '**/rbac-permission.test.js',   // Custom test file, not Vitest format
+      '**/permission-service.test.js', // Custom test with complex pool mocking, run separately
     ],
     env: {
       // Set test environment variables if not already set

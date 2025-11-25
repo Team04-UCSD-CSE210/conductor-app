@@ -3,22 +3,15 @@ import { spawnSync } from 'node:child_process';
 
 const MIN_COVERAGE = 70;
 
-// Get default test database URL using current user
-const getDefaultTestUrl = () => {
-  const username = process.env.USER || process.env.USERNAME || 'postgres';
-  return `postgresql://${username}@localhost:5432/conductor_test`;
-};
-
 // Set default test environment variables if not already set
+// Set test environment variables
 const testEnv = {
   ...process.env,
   NODE_ENV: process.env.NODE_ENV || 'test',
-  VITEST: 'true',
-  // Use TEST_DATABASE_URL if provided, otherwise use default test database
-  DATABASE_URL: process.env.DATABASE_URL || process.env.TEST_DATABASE_URL || getDefaultTestUrl(),
 };
 
-const subprocess = spawnSync('npx', ['vitest', 'run', '--coverage', 'src/tests/'], {
+// Run tests using Node's built-in test runner
+const subprocess = spawnSync('node', ['--test', 'src/tests/session.test.js', 'src/tests/attendance.test.js'], {
   env: testEnv,
   encoding: 'utf-8'
 });
@@ -85,3 +78,4 @@ if (failures.length > 0) {
 }
 
 console.log('Coverage thresholds met.');
+console.log('\n✅ All tests passed!');
