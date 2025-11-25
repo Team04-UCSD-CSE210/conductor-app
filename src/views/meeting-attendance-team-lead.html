@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Meetings - Team Lead Dashboard</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/inactivity-timeout.css">
+  <link rel="stylesheet" href="/css/lectures-global.css">
+  <link rel="stylesheet" href="/css/lecture-builder.css">
+  <link rel="stylesheet" href="/css/date-picker.css">
+  <link rel="stylesheet" href="/css/time-picker.css">
+  <link rel="stylesheet" href="/css/lecture-attendance-student.css">
+</head>
+
+<body class="dashboard-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/student-dashboard">Dashboard</a>
+      <a href="/lecture-attendance-student">Lectures</a>
+      <a href="/meeting-attendance-team-lead" class="active">Team Meetings</a>
+      <a href="/work-journal">Work Journal</a>
+      <a href="/my-team">My Team</a>
+    </nav>
+    <footer>
+      <a href="/logout" class="btn btn-ghost">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <div class="attendance-layout">
+      <section class="attendance-content" data-offering-id="">
+        <div class="attendance-title">
+          <div>
+            <p class="eyebrow">Team Lead</p>
+            <h2 id="course-title">Loading...</h2>
+            <p class="subtitle">Create and manage meetings for your team. Track attendance and participation.</p>
+          </div>
+          <div class="attendance-filter">
+            <label for="meeting-filter">Filter</label>
+            <select id="meeting-filter">
+              <option value="all" selected>All</option>
+              <option value="open">Open sessions</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="past">Past</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="lecture-list" id="meeting-list" aria-live="polite"></div>
+        <div class="empty-state" id="meeting-empty" hidden>
+          <p>No meetings scheduled yet. Click "Create Meeting" to schedule your first team meeting.</p>
+        </div>
+      </section>
+
+      <aside class="attendance-sidebar">
+        <div class="stats-box">
+          <h3>Team Attendance</h3>
+          <div class="attendance-percentage" id="team-attendance-percentage">0%</div>
+          <p style="font-size: 0.85rem; color: var(--gray-600); margin-top: 0.5rem;">Average attendance across all team meetings</p>
+        </div>
+
+        <div class="help-box team-lead-card">
+          <h3>Create Team Meeting</h3>
+          <form id="create-meeting-form" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="form-field">
+              <label for="meeting-name">
+                Meeting Name
+                <span class="required-indicator" aria-label="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="meeting-name" 
+                name="meeting-name"
+                placeholder="e.g., Weekly Standup"
+                class="text-input"
+                required
+                aria-required="true"
+              >
+            </div>
+
+            <div class="form-field">
+              <label for="meeting-date">
+                Date
+                <span class="required-indicator" aria-label="required">*</span>
+              </label>
+              <input 
+                type="date" 
+                id="meeting-date" 
+                name="meeting-date"
+                class="date-picker"
+                required
+                aria-required="true"
+              >
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+              <div class="form-field" style="margin: 0;">
+                <label for="meeting-start">
+                  Start Time
+                  <span class="required-indicator" aria-label="required">*</span>
+                </label>
+                <input 
+                  type="time" 
+                  id="meeting-start" 
+                  name="meeting-start"
+                  class="time-picker"
+                  required
+                  aria-required="true"
+                >
+              </div>
+
+              <div class="form-field" style="margin: 0;">
+                <label for="meeting-end">
+                  End Time
+                  <span class="required-indicator" aria-label="required">*</span>
+                </label>
+                <input 
+                  type="time" 
+                  id="meeting-end" 
+                  name="meeting-end"
+                  class="time-picker"
+                  required
+                  aria-required="true"
+                >
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              class="btn-contact btn-primary" 
+              id="create-meeting-btn"
+            >
+              Create Meeting
+            </button>
+          </form>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="/js/inactivity-timeout.js" defer></script>
+  <script src="/js/lecture-data.service.js" defer></script>
+  <script src="/js/student-nav.js"></script>
+  <script src="/js/meeting-attendance-team-lead.js" defer></script>
+</body>
+</html>

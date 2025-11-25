@@ -1,16 +1,17 @@
-(function meetingAttendancePage() {
+(function meetingAttendanceTeamLeadPage() {
   const state = {
     meetings: [],
     filter: 'all',
     offeringId: null,
-    userTeam: null
+    userTeam: null,
+    currentUser: null
   };
 
   const selectors = {
     list: document.getElementById('meeting-list'),
     empty: document.getElementById('meeting-empty'),
     filter: document.getElementById('meeting-filter'),
-    attendancePercentage: document.getElementById('attendance-percentage'),
+    teamAttendancePercentage: document.getElementById('team-attendance-percentage'),
     container: document.querySelector('.attendance-content'),
     courseTitle: document.getElementById('course-title')
   };
@@ -70,18 +71,15 @@
     }
   }
 
-  function buildStatusBadge(status, sessionState) {
+  function buildStatusBadge(sessionState, attendanceCount, totalMembers) {
     const badge = document.createElement('span');
     badge.classList.add('lecture-badge');
     
     if (sessionState === 'open') {
-      badge.textContent = 'Open';
+      badge.textContent = `Open - ${attendanceCount}/${totalMembers}`;
       badge.classList.add('open');
-    } else if (status === 'present') {
-      badge.textContent = 'Checked In';
-      badge.classList.add('present');
-    } else if (sessionState === 'closed' && status !== 'present') {
-      badge.textContent = 'Missed';
+    } else if (sessionState === 'closed') {
+      badge.textContent = `Closed - ${attendanceCount}/${totalMembers}`;
       badge.classList.add('absent');
     } else {
       badge.textContent = 'Upcoming';
@@ -110,10 +108,13 @@
     row.className = 'lecture-item';
     
     const isOpen = isMeetingOpen(meeting);
-    const sessionState = isOpen ? 'open' : (meeting.status === 'closed' ? 'closed' : 'pending');
-    row.dataset.status = meeting.attendanceStatus || (isOpen ? 'open' : 'pending');
+    const isPast = meeting.status === 'closed' || (!isOpen && meeting.end_time && new Date(meeting.end_time) < new Date());
+    const sessionState = isOpen ? 'open' : (isPast ? 'closed' : 'pending');
+    row.dataset.status = sessionState;
 
-    const badge = buildStatusBadge(meeting.attendanceStatus, sessionState);
+    const attendanceCount = meeting.attendance_count || 0;
+    const totalMembers = meeting.team_member_count || 0;
+    const badge = buildStatusBadge(sessionState, attendanceCount, totalMembers);
     row.appendChild(badge);
 
     const info = document.createElement('div');
@@ -144,7 +145,7 @@
     if (isOpen) {
       sessionStatus.className = 'lecture-status open';
       sessionStatus.textContent = 'Open';
-    } else if (meeting.status === 'closed') {
+    } else if (isPast) {
       sessionStatus.className = 'lecture-status closed';
       sessionStatus.textContent = 'Closed';
     } else {
@@ -157,22 +158,11 @@
     const actionButton = document.createElement('button');
     actionButton.className = 'btn-link';
     actionButton.type = 'button';
-    
-    if (isOpen) {
-      actionButton.textContent = meeting.attendanceStatus === 'present' ? 'View responses' : 'Check In';
-    } else if (meeting.status === 'closed') {
-      actionButton.textContent = 'View responses';
-    } else {
-      actionButton.textContent = 'Not available';
-      actionButton.disabled = true;
-      actionButton.style.opacity = '0.6';
-      actionButton.style.cursor = 'not-allowed';
-    }
+    actionButton.textContent = 'Manage';
     
     actionButton.addEventListener('click', () => {
-      if (isOpen || meeting.status === 'closed') {
-        window.location.href = `/student-lecture-response?sessionId=${meeting.id}`;
-      }
+      // Navigate to meeting management page
+      window.location.href = `/manage-session?sessionId=${meeting.id}`;
     });
     
     actions.appendChild(actionButton);
@@ -184,24 +174,33 @@
     return row;
   }
 
-  async function updateOverallAttendance() {
-    if (!selectors.attendancePercentage || !state.meetings.length) {
-      if (selectors.attendancePercentage) {
-        selectors.attendancePercentage.textContent = '0%';
+  async function updateTeamAttendance() {
+    if (!selectors.teamAttendancePercentage || !state.meetings.length) {
+      if (selectors.teamAttendancePercentage) {
+        selectors.teamAttendancePercentage.textContent = '0%';
       }
       return;
     }
     
     try {
-      const totalMeetings = state.meetings.length;
-      const presentCount = state.meetings.filter((meeting) => meeting.attendanceStatus === 'present').length;
-      const percent = totalMeetings > 0
-        ? Math.round((presentCount / totalMeetings) * 100)
+      // Calculate average attendance across all meetings
+      let totalAttendance = 0;
+      let totalPossible = 0;
+      
+      state.meetings.forEach(meeting => {
+        if (meeting.status === 'closed') {
+          totalAttendance += meeting.attendance_count || 0;
+          totalPossible += meeting.team_member_count || 0;
+        }
+      });
+      
+      const percent = totalPossible > 0
+        ? Math.round((totalAttendance / totalPossible) * 100)
         : 0;
-      selectors.attendancePercentage.textContent = `${percent}%`;
+      selectors.teamAttendancePercentage.textContent = `${percent}%`;
     } catch (error) {
-      console.error('Error updating overall attendance:', error);
-      selectors.attendancePercentage.textContent = '0%';
+      console.error('Error updating team attendance:', error);
+      selectors.teamAttendancePercentage.textContent = '0%';
     }
   }
 
@@ -214,13 +213,14 @@
       
       const isOpen = isMeetingOpen(meeting);
       const isPast = meeting.status === 'closed' || (!isOpen && meeting.end_time && new Date(meeting.end_time) < new Date());
+      const isUpcoming = !isOpen && !isPast;
       
       if (state.filter === 'open') {
         return isOpen;
-      } else if (state.filter === 'present') {
-        return meeting.attendanceStatus === 'present';
-      } else if (state.filter === 'absent') {
-        return isPast && meeting.attendanceStatus !== 'present';
+      } else if (state.filter === 'upcoming') {
+        return isUpcoming;
+      } else if (state.filter === 'past') {
+        return isPast;
       }
       
       return false;
@@ -228,11 +228,9 @@
 
     if (!filtered.length) {
       selectors.empty?.removeAttribute('hidden');
-      const emptyMessage = state.userTeam 
-        ? (state.meetings.length === 0 
-            ? 'No team meetings scheduled yet. Your team lead will create meetings when ready.'
-            : 'No meetings match this filter.')
-        : 'You are not currently assigned to a team. Please contact your instructor.';
+      const emptyMessage = state.meetings.length === 0 
+        ? 'No meetings scheduled yet. Click "Create Meeting" to schedule your first team meeting.'
+        : 'No meetings match this filter.';
       if (selectors.empty) {
         const emptyP = selectors.empty.querySelector('p');
         if (emptyP) emptyP.textContent = emptyMessage;
@@ -276,11 +274,9 @@
 
   async function getActiveCourseOffering() {
     try {
-      // Use LectureService if available (same as lecture page)
       if (window.LectureService) {
         const offeringId = await window.LectureService.getActiveOfferingId();
         if (offeringId) {
-          // Fetch full offering details
           const response = await fetch(`/api/offerings/${offeringId}`, {
             credentials: 'include'
           });
@@ -290,7 +286,6 @@
         }
       }
       
-      // Fallback: try direct API call
       const response = await fetch('/api/offerings/active', {
         credentials: 'include'
       });
@@ -330,7 +325,6 @@
     try {
       if (!state.offeringId) return [];
 
-      // Use the same endpoint as lectures - server already filters by team membership
       const response = await fetch(`/api/sessions?offering_id=${state.offeringId}&limit=1000`, {
         credentials: 'include'
       });
@@ -341,8 +335,6 @@
       }
 
       const data = await response.json();
-      // Server returns: course-wide sessions (team_id=null) + user's team sessions
-      // We only want team sessions (meetings), so filter out course-wide lectures
       const sessions = Array.isArray(data) ? data : [];
       const meetings = sessions.filter(session => session.team_id != null);
       
@@ -353,25 +345,25 @@
     }
   }
 
-  async function fetchAttendanceRecords() {
+  async function fetchAttendanceStats() {
     try {
-      if (!state.offeringId) return [];
+      if (!state.offeringId || !state.userTeam) return {};
 
-      // Use the same endpoint as lectures
-      const response = await fetch(`/api/attendance/my-attendance?offering_id=${state.offeringId}`, {
+      // Fetch attendance records for all team meetings
+      const response = await fetch(`/api/attendance/team-stats?team_id=${state.userTeam.id}`, {
         credentials: 'include'
       });
 
       if (!response.ok) {
-        console.error('Failed to fetch attendance records:', response.status);
-        return [];
+        console.log('Team stats endpoint not available, using fallback');
+        return {};
       }
 
       const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      return data || {};
     } catch (error) {
-      console.error('Error fetching attendance records:', error);
-      return [];
+      console.error('Error fetching attendance stats:', error);
+      return {};
     }
   }
 
@@ -385,7 +377,7 @@
       selectors.courseTitle.textContent = `${teamDisplay} Meetings`;
     } catch (error) {
       console.error('Error updating team title:', error);
-      selectors.courseTitle.textContent = 'Meeting Attendance';
+      selectors.courseTitle.textContent = 'Team Meetings';
     }
   }
 
@@ -399,6 +391,8 @@
       if (!user) {
         throw new Error('Failed to get user info');
       }
+      
+      state.currentUser = user;
 
       const offering = await getActiveCourseOffering();
       if (!offering) {
@@ -415,7 +409,7 @@
       if (!state.userTeam) {
         console.log('User is not assigned to a team');
         if (selectors.courseTitle) {
-          selectors.courseTitle.textContent = 'Meeting Attendance - No Team Assigned';
+          selectors.courseTitle.textContent = 'Team Meetings - No Team Assigned';
         }
         isLoading = false;
         if (selectors.list) {
@@ -428,40 +422,32 @@
             emptyP.textContent = 'You are not currently assigned to a team. Please contact your instructor.';
           }
         }
-        if (selectors.attendancePercentage) {
-          selectors.attendancePercentage.textContent = '0%';
-        }
         return;
       }
 
-      // Redirect team leaders to the team lead page
+      // Verify user is team leader
       const isTeamLeader = state.userTeam.user_role === 'leader' || 
                            state.userTeam.leader_id === user.id;
       
-      if (isTeamLeader) {
-        console.log('User is team leader, redirecting to team lead page...');
-        window.location.href = '/meeting-attendance-team-lead';
+      if (!isTeamLeader) {
+        console.log('User is not a team leader, redirecting...');
+        window.location.href = '/meeting-attendance';
         return;
       }
 
       await updateTeamTitle();
 
-      const [meetings, records] = await Promise.all([
-        fetchMeetings(),
-        fetchAttendanceRecords()
-      ]);
-
-      const recordMap = {};
-      records.forEach(record => {
-        recordMap[record.session_id] = record;
-      });
-
+      const meetings = await fetchMeetings();
+      
+      // For each meeting, fetch attendance count
+      // TODO: Optimize this with a batch endpoint
       state.meetings = meetings.map(meeting => ({
         ...meeting,
-        attendanceStatus: recordMap[meeting.id]?.status || null
+        attendance_count: 0, // Will be populated by real data
+        team_member_count: 0 // Will be populated by real data
       }));
 
-      await updateOverallAttendance();
+      await updateTeamAttendance();
       isLoading = false;
       renderMeetings();
     } catch (error) {
@@ -506,19 +492,93 @@
     });
   }
 
-  function initContactButtons() {
-    const contactTA = document.getElementById('contact-ta');
-    const contactInstructor = document.getElementById('contact-instructor');
-    const handler = (recipient) => () => window.alert(`Message the ${recipient} through Slack or email.`);
+  function initButtons() {
+    const createMeetingForm = document.getElementById('create-meeting-form');
+    
+    if (createMeetingForm) {
+      createMeetingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleCreateMeeting(e);
+      });
+    }
+  }
 
-    if (contactTA) contactTA.addEventListener('click', handler('TA'));
-    if (contactInstructor) contactInstructor.addEventListener('click', handler('Instructor'));
+  async function handleCreateMeeting(e) {
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+
+    try {
+      // Disable button and show loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating...';
+
+      const formData = {
+        name: form['meeting-name'].value,
+        date: form['meeting-date'].value,
+        startTime: form['meeting-start'].value,
+        endTime: form['meeting-end'].value
+      };
+
+      // Validate times
+      if (formData.startTime >= formData.endTime) {
+        alert('End time must be after start time');
+        return;
+      }
+
+      // Create ISO datetime strings
+      const startDateTime = new Date(`${formData.date}T${formData.startTime}`).toISOString();
+      const endDateTime = new Date(`${formData.date}T${formData.endTime}`).toISOString();
+
+      // Create the session
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          offering_id: state.offeringId,
+          team_id: state.userTeam.id,
+          name: formData.name,
+          session_date: formData.date,
+          start_time: startDateTime,
+          end_time: endDateTime,
+          status: 'pending'
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create meeting');
+      }
+
+      const newMeeting = await response.json();
+      console.log('Meeting created:', newMeeting);
+
+      // Reset form
+      form.reset();
+
+      // Refresh the meeting list
+      await hydrateMeetingView();
+
+      // Show success message
+      alert('Meeting created successfully!');
+
+    } catch (error) {
+      console.error('Error creating meeting:', error);
+      alert(`Failed to create meeting: ${error.message}`);
+    } finally {
+      // Re-enable button
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
   }
 
   function init() {
     initHamburger();
     initFilter();
-    initContactButtons();
+    initButtons();
     hydrateMeetingView();
   }
 
@@ -528,6 +588,3 @@
     init();
   }
 })();
-
-
-
