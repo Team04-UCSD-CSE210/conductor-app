@@ -64,11 +64,15 @@ const coverageChecks = [
   { label: 'lines', value: linePct }
 ];
 
-const failures = coverageChecks.filter((check) => Number.isFinite(check.value) && check.value < MIN_COVERAGE);
+const failures = coverageChecks.filter(
+  (check) => Number.isFinite(check.value) && check.value < MIN_COVERAGE
+);
 
 if (failures.length > 0) {
   failures.forEach((check) => {
-    console.error(`Coverage for ${check.label} is below ${MIN_COVERAGE}%: ${check.value.toFixed(2)}%`);
+    console.error(
+      `Coverage for ${check.label} is below ${MIN_COVERAGE}%: ${check.value.toFixed(2)}%`
+    );
   });
   process.exit(1);
 }

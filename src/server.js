@@ -20,6 +20,7 @@ import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
 import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
+import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
 import journalRoutes from "./routes/journal-routes.js";
@@ -1037,6 +1038,7 @@ app.use("/api/interactions", interactionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/journals", journalRoutes);
+app.use("/api/class", courseOfferingRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {
