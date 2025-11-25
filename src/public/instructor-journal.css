@@ -1,0 +1,90 @@
+/* Instructor overview grid */
+
+.wj-overview-card {
+  /* uses base .wj-card styles */
+}
+
+.wj-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.wj-overview-group {
+  border-radius: 0.9rem;
+  border: 1px solid var(--gray-100, #e5e7eb);
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* collapsed state: same height + fully green box */
+.wj-overview-group:not(.is-expanded) {
+  min-height: 7.5rem;
+  background: var(--emerald-50, #ecfdf5);
+}
+
+.wj-overview-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wj-overview-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--gray-100, #e5e7eb);
+  background: #fff;
+}
+
+.wj-overview-row:first-child {
+  border-top: none;
+}
+
+/* Team header row (clickable) */
+.wj-overview-row-team {
+  cursor: pointer;
+  align-items: center;
+}
+
+/* collapsed: let card’s green show through header */
+.wj-overview-group:not(.is-expanded) .wj-overview-row-team {
+  background: transparent;
+  border-top: none;
+}
+
+/* expanded: header row gets green background */
+.wj-overview-group.is-expanded .wj-overview-row-team {
+  background: var(--emerald-50, #ecfdf5);
+}
+
+/* student rows hidden by default */
+.wj-overview-row-student {
+  display: none;
+}
+
+/* student rows visible when expanded */
+.wj-overview-group.is-expanded .wj-overview-row-student {
+  display: flex;
+}
+
+/* chevron */
+.wj-overview-chevron {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--gray-500, #6b7280);
+  transition: transform 0.15s ease;
+}
+
+.wj-overview-group.is-expanded .wj-overview-chevron {
+  transform: rotate(180deg);
+}
+
+/* bold name labels */
+.wj-team-name {
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
