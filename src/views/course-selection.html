@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conductor · Select Course</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/course-selection.css">
+</head>
+<body class="course-selection-page">
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <img src="/assets/temp-logo.png" alt="Conductor logo">
+        <h1>Conductor</h1>
+      </div>
+      <a href="/logout" class="btn btn-ghost">Sign out</a>
+    </header>
+
+    <main class="main-content">
+      <div class="welcome-section">
+        <h2>Welcome back!</h2>
+        <p>Select a course to continue:</p>
+      </div>
+
+      <div class="courses-grid" id="coursesGrid">
+        <div class="loading-state">Loading your courses...</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/course-selection.js" defer></script>
+</body>
+</html>
