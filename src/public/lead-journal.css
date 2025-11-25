@@ -1,0 +1,44 @@
+/* Team Overview list – team lead journal */
+.wj-team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wj-team-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.wj-team-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--green-50, #ecfdf3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wj-team-avatar svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  display: block;
+}
+
+.wj-team-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--gray-700, #374151);
+  line-height: 1.5;
+}
+
+.wj-team-name {
+  font-weight: 600;
+  margin-right: 0.25rem;
+}

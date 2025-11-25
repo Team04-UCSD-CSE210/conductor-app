@@ -2,11 +2,11 @@
  * PermissionService
  * ------------------------------------------------------------
  * Unified RBAC permission checker for global, course, and team
- * role layers. Uses a single SQL query per check.
+ * role layers. Uses a single SQL query per check with Redis caching.
  *
  * Role layers supported:
  *   - Global role (users.primary_role)
- *   - Course roles (enrollments.course_role, course_staff.staff_role)
+ *   - Course roles (enrollments.course_role)
  *   - Team roles (team_members.role)
  *
  * Permission tables used:
@@ -17,14 +17,103 @@
  *
  * Pattern:
  *   user → (global / course / team role) → role-permission table → permissions
+ *
+ * Caching:
+ *   - Redis cache with 5-minute TTL
+ *   - Cache key: perm:{userId}:{permissionCode}:{offeringId}:{teamId}
+ *   - Falls back to database if Redis unavailable
  * ------------------------------------------------------------
  */
 
 import { pool } from "../db.js";
 
+// Redis client (optional - will be set by server)
+let redisClient = null;
+let redisConnected = false;
 
+// Cache TTL in seconds (5 minutes)
+const PERMISSION_CACHE_TTL = 300;
 
 export class PermissionService {
+  
+  /**
+   * Set the Redis client for caching (called from server.js)
+   * @param {Object} client - Redis client instance
+   * @param {boolean} connected - Whether Redis is connected
+   */
+  static setRedisClient(client, connected = true) {
+    redisClient = client;
+    redisConnected = connected;
+  }
+
+  /**
+   * Generate cache key for permission check
+   * @private
+   */
+  static _getCacheKey(userId, permissionCode, offeringId, teamId) {
+    return `perm:${userId}:${permissionCode}:${offeringId || 'null'}:${teamId || 'null'}`;
+  }
+
+  /**
+   * Get cached permission result
+   * @private
+   */
+  static async _getCached(cacheKey) {
+    if (!redisConnected || !redisClient) {
+      return null;
+    }
+    
+    try {
+      const cached = await redisClient.get(cacheKey);
+      if (cached !== null) {
+        return cached === 'true';
+      }
+    } catch (error) {
+      console.error('[PermissionService] Redis get error:', error.message);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Set cached permission result
+   * @private
+   */
+  static async _setCached(cacheKey, allowed) {
+    if (!redisConnected || !redisClient) {
+      return;
+    }
+    
+    try {
+      await redisClient.set(cacheKey, allowed ? 'true' : 'false', {
+        EX: PERMISSION_CACHE_TTL
+      });
+    } catch (error) {
+      console.error('[PermissionService] Redis set error:', error.message);
+    }
+  }
+
+  /**
+   * Invalidate cached permissions for a user
+   * Useful when user roles/permissions change
+   */
+  static async invalidateUserCache(userId) {
+    if (!redisConnected || !redisClient) {
+      return;
+    }
+    
+    try {
+      // Delete all keys matching pattern perm:{userId}:*
+      const pattern = `perm:${userId}:*`;
+      const keys = await redisClient.keys(pattern);
+      if (keys && keys.length > 0) {
+        await redisClient.del(keys);
+        console.log(`[PermissionService] Invalidated ${keys.length} cached permissions for user ${userId}`);
+      }
+    } catch (error) {
+      console.error('[PermissionService] Cache invalidation error:', error.message);
+    }
+  }
 
   /**
    * Check whether a user has a specific permission.
@@ -35,6 +124,7 @@ export class PermissionService {
    *   3. Global role
    *
    * All checks use the same permission code (string).
+   * Results are cached in Redis for 5 minutes.
    *
    * @param {string} userId         - UUID of user
    * @param {string} permissionCode - Permission code (e.g. 'roster.import')
@@ -45,10 +135,18 @@ export class PermissionService {
   static async hasPermission(userId, permissionCode, offeringId = null, teamId = null) {
     if (!userId || !permissionCode) return false;
 
+    // Check cache first
+    const cacheKey = this._getCacheKey(userId, permissionCode, offeringId, teamId);
+    const cached = await this._getCached(cacheKey);
+    
+    if (cached !== null) {
+      return cached;
+    }
+
     // ------------------------------------------------------------
     // Single SQL that checks:
     //   - global role
-    //   - course roles (enrollments + course_staff)
+    //   - course roles (enrollments)
     //   - team roles
     //
     // Using EXISTS and UNION avoids multiple round-trips.
@@ -74,16 +172,10 @@ export class PermissionService {
         LIMIT 1
       ),
 
-      -- Combine enrollment + course_staff roles
+      -- Course enrollment roles
       course_roles AS (
         SELECT course_role AS role_name
         FROM enrollments
-        WHERE offering_id = $3::uuid AND user_id = $2::uuid
-
-        UNION ALL
-
-        SELECT staff_role AS role_name
-        FROM course_staff
         WHERE offering_id = $3::uuid AND user_id = $2::uuid
       ),
 
@@ -130,6 +222,9 @@ export class PermissionService {
     const { rows } = await pool.query(sql, [permissionCode, userId, offeringId, teamId]);
     const allowed = rows[0]?.allowed === true;
 
+    // Cache the result
+    await this._setCached(cacheKey, allowed);
+
     return allowed;
   }
 
@@ -162,14 +257,12 @@ export class PermissionService {
         WHERE $2::uuid IS NOT NULL
           AND EXISTS (
             SELECT 1
-            FROM (
-              SELECT course_role AS role FROM enrollments WHERE offering_id = $2::uuid AND user_id = $1::uuid
-              UNION ALL
-              SELECT staff_role AS role FROM course_staff WHERE offering_id = $2::uuid AND user_id = $1::uuid
-            ) cr
+            FROM enrollments e
             JOIN enrollment_role_permissions erp
-              ON erp.enrollment_role::text = cr.role::text
-            WHERE erp.permission_id = p.id
+              ON erp.enrollment_role::text = e.course_role::text
+            WHERE e.offering_id = $2::uuid 
+              AND e.user_id = $1::uuid
+              AND erp.permission_id = p.id
           )
       ),
 

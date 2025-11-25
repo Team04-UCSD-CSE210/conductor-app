@@ -43,10 +43,15 @@ INSERT INTO users (
 -- ============================================
 -- INSTRUCTORS/PROFESSORS (UCSD)
 -- ============================================
-('instructor1@ucsd.edu', 'A00001234', 'Dr. Alice Smith', 'Alice',
+('bhchandna@ucsd.edu', 'A00001234', 'Dr. Alice Smith', 'Alice',
  NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
  'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  'https://cse.ucsd.edu/people/faculty/alice-smith', NULL, '+1-858-534-1234', 'alicesmith', 'https://linkedin.com/in/alicesmith'),
+
+('lhardy@ucsd.edu', 'A00011234', 'Dr. Alice Smith', 'Alice',
+NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
+'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+'https://cse.ucsd.edu/people/faculty/alice-smith', NULL, '+1-858-534-1234', 'alicesmith', 'https://linkedin.com/in/alicesmith'),
 
 ('instructor2@ucsd.edu', 'A00004567', 'Dr. Bob Lee', 'Bob',
  NULL, NULL, NULL, 'Electrical & Computer Engineering', NULL,
@@ -62,6 +67,11 @@ INSERT INTO users (
  NULL, NULL, NULL, 'Data Science', NULL,
  'instructor'::user_role_enum, 'busy'::user_status_enum, 'ucsd'::institution_type_enum,
  'https://datascience.ucsd.edu/people/faculty/david-kim', NULL, '+1-858-534-1111', 'davidkim', 'https://linkedin.com/in/davidkim'),
+
+('zhkan@ucsd.edu', 'A10331111', 'Dr. G', 'Gad',
+ NULL, NULL, NULL, 'Data Science', NULL,
+ 'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ 'https://datascience.ucsd.edu/people/faculty/G-Gad', NULL, '+1-858-534-1331', 'ggag', 'https://linkedin.com/in/ggag'),
 
 -- ============================================
 -- GRADUATE STUDENTS (UCSD) - Potential TAs
@@ -127,10 +137,21 @@ INSERT INTO users (
 -- ============================================
 -- EXTENSION STUDENTS (Non-UCSD emails)
 -- ============================================
-('extension1@gmail.com', NULL, 'Noah Anderson', 'Noah',
+('bhavikchandna@gmail.com', NULL, 'Noah Anderson', 'Noah',
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',
  'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
  NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+
+('liamhardy2004@gmail.com', NULL, 'Noah Anderson', 'Noah',
+ 'Software Engineering', NULL, 2025, 'Extension', 'Professional',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
+ NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+
+('bgyawali@ucsd.edu', NULL, 'Bimal Raj Gyawali', 'Bimal',
+ 'Computer Science', 'PhD', 2025, 'Computer Science & Engineering', 'Graduate',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ NULL, NULL, '+1-858-555-0102', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+
 
 ('extension2@gmail.com', NULL, 'Olivia Taylor', 'Olivia',
  'Computer Science', NULL, 2026, 'Extension', 'Professional',

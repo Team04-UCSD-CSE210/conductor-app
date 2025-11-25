@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture Response Form</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/inactivity-timeout.css">
+  <link rel="stylesheet" href="/css/lectures-global.css">
+  <link rel="stylesheet" href="/css/student-lecture-response.css">
+</head>
+
+<body class="dashboard-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/student-dashboard">Dashboard</a>
+      <a href="/lecture-attendance-student">Lectures</a>
+      <a href="/meetings">Meetings</a>
+      <a href="/work-journal">Work Journal</a>
+      <a href="/my-team">My Team</a>
+    </nav>
+    <footer>
+      <a href="/logout" class="btn btn-ghost">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <section class="student-response-shell" data-session-id="">
+      <header class="student-response-header">
+        <button class="back-button" id="back-button" aria-label="Back to lecture list">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div>
+          <p class="eyebrow">Submit to mark your attendance</p>
+          <h2 id="student-lecture-title">Lecture X</h2>
+          <p id="student-lecture-time">MM/DD/YY · HH:MM–HH:MM</p>
+        </div>
+        <span class="status-pill" id="student-lecture-status">Open</span>
+      </header>
+
+      <form id="student-response-form" class="student-response-form" novalidate>
+        <div id="student-question-list" class="student-question-list"></div>
+
+        <footer class="student-form-actions">
+          <button type="submit" class="btn-primary">Submit</button>
+          <button type="button" class="btn-secondary" id="student-cancel">Reset</button>
+        </footer>
+      </form>
+
+      <div class="success-panel" id="student-success" hidden>
+        <h3>Thanks for the update!</h3>
+        <p>Your attendance has been marked present for this lecture. You can update answers any time while the session is open.</p>
+        <div class="success-actions">
+          <button id="update-answers" class="btn-secondary">Update answers</button>
+          <button id="success-close" class="btn-primary">Back to dashboard</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/student-nav.js"></script>
+  <script src="/js/inactivity-timeout.js" defer></script>
+  <script src="/js/lecture-data.service.js" defer></script>
+  <script src="/js/student-lecture-response.js" defer></script>
+</body>
+</html>
+

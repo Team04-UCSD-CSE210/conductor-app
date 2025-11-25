@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture Attendance — Instructor Overview</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/inactivity-timeout.css">
+  <link rel="stylesheet" href="/css/lectures-global.css">
+  <link rel="stylesheet" href="/css/instructor-lectures.css">
+</head>
+
+<body class="dashboard-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/instructor-dashboard">Dashboard</a>
+      <a href="/course-settings">Course Settings</a>
+      <a href="/instructor-lectures" class="active">Attendance</a>
+      <a href="/courses/cse210/roster">Roster</a>
+    </nav>
+    <footer>
+      <a href="/logout" class="btn btn-ghost">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <section class="overview-shell" data-offering-id="">
+      <header class="overview-header">
+        <div class="stat-and-chart">
+          <div class="stat-card">
+            <p class="eyebrow">Last session</p>
+            <div class="stat-value" id="last-session-percent">0%</div>
+            <p class="stat-caption">attendance in last lecture</p>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <span>Attendance history</span>
+            </div>
+            <div class="bar-chart-wrapper">
+            <div class="bar-chart" id="attendance-chart"></div>
+              <div class="chart-dates" id="chart-dates"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="lecture-stack" aria-live="polite">
+        <header class="stack-header">
+          <h2>Lecture Attendance</h2>
+          <button class="btn-primary" id="new-lecture-btn">
+            <span>New Lecture Attendance</span>
+            <span aria-hidden="true">+</span>
+          </button>
+        </header>
+        <div id="lecture-cards"></div>
+        <div class="empty-state" id="lectures-empty" hidden>
+          <p>No lecture sessions yet. Start by creating one with the button above.</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/js/inactivity-timeout.js" defer></script>
+  <script src="/js/lecture-data.service.js" defer></script>
+  <script src="/js/instructor-lecture-overview.js" defer></script>
+</body>
+</html>
+

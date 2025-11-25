@@ -1,6 +1,7 @@
 // src/middleware/permission-middleware.js
 import { PermissionService } from "../services/permission-service.js";
 import { getCurrentUser } from "./auth.js";
+import { pool } from "../db.js";
 
 /**
  * Authentication middleware using OAuth session
@@ -51,22 +52,84 @@ export function skipAuthForPublic(req, res, next) {
 }
 
 /**
+ * Validate if a string is a valid UUID format
+ */
+function isValidUUID(str) {
+  if (!str || typeof str !== 'string') return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
+ * Get the active course offering ID
+ */
+async function getActiveCourseOfferingId() {
+  try {
+    const result = await pool.query(
+      'SELECT id FROM course_offerings WHERE is_active = TRUE ORDER BY created_at DESC LIMIT 1'
+    );
+    return result.rows[0]?.id || null;
+  } catch (error) {
+    console.error('[PermissionMiddleware] Error getting active course offering:', error);
+    return null;
+  }
+}
+
+/**
  * Extract userId + scope IDs from request in one place.
  */
-function getAuthContext(req, scope) {
+async function getAuthContext(req, scope) {
+  try {
   const userId = req.currentUser?.id;
 
-  const offeringId =
-    scope === "course"
-      ? req.params.offeringId ?? req.params.courseId ?? req.body.offeringId ?? req.body.courseId ?? req.query.offering_id ?? null
-      : null;
+    // Safely extract request properties with defaults
+    const params = req.params || {};
+    const body = req.body || {};
+    const query = req.query || {};
 
+    // Safely extract offeringId with proper null checks
+    let offeringId = null;
+    if (scope === "course") {
+      const rawOfferingId = 
+        params.offeringId ?? 
+        params.courseId ?? 
+        (body && body.offering_id) ??
+        (body && body.offeringId) ?? 
+        (body && body.courseId) ?? 
+        query.offering_id ?? 
+        null;
+      
+      // Validate that offeringId is a valid UUID
+      if (rawOfferingId) {
+        if (isValidUUID(rawOfferingId)) {
+          offeringId = rawOfferingId;
+        } else {
+          console.error('[PermissionMiddleware] Invalid offeringId format (expected UUID):', rawOfferingId);
+          // If it's not a UUID, try to look it up by code/name
+          // This handles cases where someone might pass "CSE 210" instead of UUID
+          // But for now, we'll just log and return null to trigger active offering lookup
+          offeringId = null;
+        }
+      }
+    }
+
+    // If course scope but no offeringId provided or invalid, try to get active offering
+    if (scope === "course" && !offeringId) {
+      offeringId = await getActiveCourseOfferingId();
+    }
+
+    // Safely extract teamId with proper null checks
   const teamId =
     scope === "team"
-      ? req.params.teamId ?? req.body.teamId ?? req.query.team_id ?? null
+        ? params.teamId ?? body.teamId ?? query.team_id ?? null
       : null;
 
-  return { userId, offeringId, teamId };
+    return { userId: userId || null, offeringId, teamId };
+  } catch (error) {
+    console.error('[PermissionMiddleware] Error in getAuthContext:', error);
+    // Return safe defaults on error
+    return { userId: req.currentUser?.id || null, offeringId: null, teamId: null };
+  }
 }
 
 /**
@@ -78,7 +141,7 @@ function getAuthContext(req, scope) {
 export function requirePermission(permissionCode, scope = "global") {
   return async (req, res, next) => {
     try {
-      const { userId, offeringId, teamId } = getAuthContext(req, scope);
+      const { userId, offeringId, teamId } = await getAuthContext(req, scope);
 
       if (!userId) {
         return res.status(401).json({
@@ -100,6 +163,12 @@ export function requirePermission(permissionCode, scope = "global") {
           message: `Permission required: ${permissionCode}`,
         });
       }
+      
+      // Attach offeringId to request for use in routes
+      if (offeringId) {
+        req.offeringId = offeringId;
+      }
+      
       next();
     } catch (err) {
       console.error("[PermissionMiddleware] Error checking permission:", err);
@@ -120,7 +189,7 @@ export function requirePermission(permissionCode, scope = "global") {
 export function requireAnyPermission(permissionCodes, scope = "global") {
   return async (req, res, next) => {
     try {
-      const { userId, offeringId, teamId } = getAuthContext(req, scope);
+      const { userId, offeringId, teamId } = await getAuthContext(req, scope);
 
       if (!userId) {
         return res.status(401).json({
@@ -137,6 +206,10 @@ export function requireAnyPermission(permissionCodes, scope = "global") {
           teamId
         );
         if (allowed) {
+          // Attach offeringId to request for use in routes
+          if (offeringId) {
+            req.offeringId = offeringId;
+          }
           return next();
         }
       }

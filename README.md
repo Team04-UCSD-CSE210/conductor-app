@@ -2,6 +2,10 @@
 
 Final project for CSE 210.
 
+## Wiki
+
+For detailed documentation, guides, and team resources, visit our [project wiki](https://github.com/helenahundhausen/conductor-app/wiki).
+
 ## Pipeline
 
 ### CI Pipeline
@@ -19,18 +23,13 @@ The pipeline ensures code quality and consistency across all contributions.
 
 ### CD Pipeline
 
-This project includes automated deployment to Vercel:
+Automated Docker builds for all branches and deployment to Render for main:
 
-- **Preview Deployments**: Automatically created for pull requests
-- **Production Deployment**: Triggered on pushes to `main` branch
-- **Health Monitoring**: Automated status updates to team Slack channel
-
-**Quick Deploy to Vercel:**
-
-```bash
-npm run setup:vercel
-vercel dev
-```
+- **Docker Build**: All branches get containerized with branch-specific tags
+- **Infrastructure**: CloudFormation template deploys ECS cluster, ECR repository, and networking
+- **Production Deployment**: Only `main` branch deploys to Render with health checks
+- **Branch Isolation**: Feature branches get Docker images for testing without deployment
+- **Notifications**: PR comments with build status and deployment URLs (main only)
 
 ## Team Standards & Deployment Policies
 
@@ -95,7 +94,7 @@ for structured commit messages.
 Consistent naming improves code readability and maintainability.
 
 | Type | Convention | Example |
-|------|------------|---------|
+| ------ | ---------- | ------- |
 | **Files** | kebab-case | `user-profile.js`, `api-client.ts` |
 | **Variables** | camelCase | `userName`, `isAuthenticated` |
 | **Constants** | UPPER_SNAKE_CASE | `API_BASE_URL`, `MAX_RETRY_ATTEMPTS` |
