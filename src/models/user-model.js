@@ -613,4 +613,60 @@ export class UserModel {
     );
     return rows[0].c;
   }
+
+  /**
+   * Get users enrolled in a course offering with specific role
+   * @param {string} offeringId - Course offering ID
+   * @param {string} courseRole - Course role ('ta', 'tutor', 'student')
+   * @param {Object} options - Query options (limit, offset, search)
+   */
+  static async getUsersByOfferingRole(offeringId, courseRole, options = {}) {
+    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+
+    let whereClause = `
+      WHERE e.offering_id = $1::uuid 
+        AND e.course_role = $2
+        AND e.status = 'enrolled'
+        AND u.deleted_at IS NULL
+    `;
+    const params = [offeringId, courseRole];
+
+    // Add search if provided
+    if (options.search) {
+      const searchParam = `%${options.search}%`;
+      const paramIndex = params.length + 1;
+      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.preferred_name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
+      params.push(searchParam);
+    }
+
+    params.push(limit, offset);
+
+    const { rows } = await pool.query(
+      `
+      SELECT
+        u.id,
+        u.email,
+        u.name,
+        u.preferred_name,
+        u.image_url,
+        u.phone_number,
+        u.github_username,
+        u.linkedin_url,
+        u.major,
+        u.class_level,
+        u.primary_role,
+        u.status,
+        e.course_role,
+        e.status as enrollment_status
+      FROM users u
+      JOIN enrollments e ON e.user_id = u.id
+      ${whereClause}
+      ORDER BY u.name ASC
+      LIMIT $${params.length - 1} OFFSET $${params.length}
+      `,
+      params
+    );
+    return rows;
+  }
 }

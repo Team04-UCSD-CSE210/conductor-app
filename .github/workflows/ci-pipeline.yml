@@ -40,6 +40,10 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - name: Initialize database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+        run: npm run db:reset
       - name: Run tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
@@ -69,7 +73,7 @@ jobs:
       - run: npx commitlint --from HEAD~1 --to HEAD --verbose
 
   notify:
-    needs: [lint, test, docs, commit-lint]
+    needs: [lint, test, docs, commit-lint, security]
     if: always()
     runs-on: ubuntu-latest
     steps:

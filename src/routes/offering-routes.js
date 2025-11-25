@@ -1,8 +1,64 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { protectAny } from '../middleware/permission-middleware.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
 
 const router = Router();
+
+/**
+ * Get active course offering
+ * GET /api/offerings/active
+ * Requires: Authentication
+ */
+router.get('/active', ensureAuthenticated, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM course_offerings 
+       WHERE is_active = TRUE 
+       ORDER BY created_at DESC 
+       LIMIT 1`
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No active course offering found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching active offering:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Get all offerings (for query with is_active)
+ * GET /api/offerings?is_active=true
+ * Requires: Authentication
+ */
+router.get('/', ensureAuthenticated, async (req, res) => {
+  try {
+    const { is_active, limit = 50 } = req.query;
+    
+    let query = 'SELECT * FROM course_offerings WHERE 1=1';
+    const params = [];
+    let paramIndex = 1;
+
+    if (is_active !== undefined) {
+      query += ` AND is_active = $${paramIndex}`;
+      params.push(is_active === 'true');
+      paramIndex++;
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT $${paramIndex}`;
+    params.push(parseInt(limit, 10));
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching offerings:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 /**
  * Get offering details

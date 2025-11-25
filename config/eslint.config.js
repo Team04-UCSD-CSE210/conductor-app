@@ -1,22 +1,15 @@
-import js from "@eslint/js";
-import globals from "globals";
-import json from "@eslint/json";
-import markdown from "@eslint/markdown";
-import css from "@eslint/css";
-import { defineConfig } from "eslint/config";
+import js from '@eslint/js';
+import globals from 'globals';
 
-export default defineConfig([
+export default [
+  js.configs.recommended,
   {
     ignores: [
-      "**/*.md",
-      "package-lock.json"
+      '**/node_modules/**',
+      '**/coverage/**',
+      '**/dist/**',
+      '**/build/**'
     ],
-  },
-
-  {
-    files: ["**/*.{js,mjs,cjs,jsx}"],
-    plugins: { js },
-    extends: ["js/recommended"],
     languageOptions: {
       globals: {
         ...globals.browser,
