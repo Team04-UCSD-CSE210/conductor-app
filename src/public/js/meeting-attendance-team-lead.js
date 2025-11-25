@@ -345,28 +345,6 @@
     }
   }
 
-  async function fetchAttendanceStats() {
-    try {
-      if (!state.offeringId || !state.userTeam) return {};
-
-      // Fetch attendance records for all team meetings
-      const response = await fetch(`/api/attendance/team-stats?team_id=${state.userTeam.id}`, {
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        console.log('Team stats endpoint not available, using fallback');
-        return {};
-      }
-
-      const data = await response.json();
-      return data || {};
-    } catch (error) {
-      console.error('Error fetching attendance stats:', error);
-      return {};
-    }
-  }
-
   async function updateTeamTitle() {
     if (!selectors.courseTitle || !state.userTeam) return;
     
