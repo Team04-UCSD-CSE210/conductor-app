@@ -54,12 +54,63 @@ async function fetchMeetings(teamId, offeringId) {
   return await res.json();
 }
 
+function determineMeetingStatus(meeting) {
+  const now = new Date();
+  
+  // First check scheduled time - if meeting hasn't started yet, it's always pending
+  if (meeting.session_date && meeting.session_time) {
+    const sessionDate = new Date(meeting.session_date);
+    const year = sessionDate.getUTCFullYear();
+    const month = sessionDate.getUTCMonth();
+    const day = sessionDate.getUTCDate();
+    const [hours, minutes] = meeting.session_time.split(':').map(Number);
+    const startTime = new Date(year, month, day, hours, minutes);
+    
+    // If scheduled start time is in the future, it's pending regardless of attendance timestamps
+    if (startTime > now) {
+      return 'pending';
+    }
+  }
+  
+  // Now check attendance timestamps for open/closed status
+  if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
+    // Both timestamps are set
+    const openTime = new Date(meeting.attendance_opened_at);
+    const closeTime = new Date(meeting.attendance_closed_at);
+    
+    if (now >= openTime && now < closeTime) {
+      return 'open'; // Meeting is currently open
+    } else if (now >= closeTime) {
+      return 'closed'; // Meeting has ended
+    }
+  } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
+    // Only open time is set
+    const openTime = new Date(meeting.attendance_opened_at);
+    
+    // Check if end time has passed
+    if (meeting.code_expires_at) {
+      const endTime = new Date(meeting.code_expires_at);
+      if (endTime < now) {
+        return 'closed';
+      }
+    }
+    return 'open';
+  } else {
+    // No attendance timestamps - use scheduled time
+    if (meeting.session_date && meeting.session_time) {
+      // We already checked if it's pending above, so if we're here it must be closed
+      return 'closed';
+    }
+  }
+  
+  return 'pending';
+}
+
 async function renderTeams() {
   const container = document.getElementById('team-list');
   container.innerHTML = '<p style="text-align:center; color:#888;">Loading teams...</p>';
   fetchTeams().then(({ teams, offeringId }) => {
     container.innerHTML = '';
-    console.log('There are teams:', teams);
     if (!teams || !Array.isArray(teams)) {
       container.innerHTML = '<p style="color:red;">Error: Could not fetch teams. Check your network and permissions.</p>';
       return;
@@ -78,14 +129,23 @@ async function renderTeams() {
     const teamRowPromises = teams.map(async team => {
       const meetings = await fetchMeetings(team.id, offeringId);
       const teamMeetings = meetings.filter(m => m.team_id === team.id);
+      const teamSize = Number(team.member_count || team.members?.length || 0);
       let totalAttendance = 0;
       let totalPossible = 0;
+      
+      // Only count closed meetings (same logic as team leader view)
       for (const meeting of teamMeetings) {
-        const statsRes = await fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' });
-        if (statsRes.ok) {
-          const stats = await statsRes.json();
-          totalAttendance += stats.present_count || 0;
-          totalPossible += stats.total_marked || 0;
+        const status = determineMeetingStatus(meeting);
+        
+        if (status === 'closed') {
+          const statsRes = await fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' });
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+            totalAttendance += stats.present_count || 0;
+            totalPossible += teamSize;
+          } else {
+            totalPossible += teamSize;
+          }
         }
       }
       const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
