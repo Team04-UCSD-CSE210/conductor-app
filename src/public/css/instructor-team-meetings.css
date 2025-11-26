@@ -118,7 +118,7 @@ body {
 }
 
 .attendance-label {
-  color: var(--primary, #000000);
+  color: var(--primary, #000);
   font-weight: 600;
   margin-left: 0.5em;
 }
