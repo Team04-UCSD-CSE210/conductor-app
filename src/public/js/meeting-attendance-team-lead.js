@@ -90,17 +90,15 @@
   }
 
   function isMeetingOpen(meeting) {
-    if (meeting.status !== 'open') return false;
+    // Check if explicitly marked as open
+    if (meeting.status === 'open') return true;
     
-    const now = new Date();
-    const startTime = meeting.start_time ? new Date(meeting.start_time) : null;
-    const endTime = meeting.end_time ? new Date(meeting.end_time) : null;
+    // If marked as closed, it's not open
+    if (meeting.status === 'closed') return false;
     
-    if (startTime && endTime) {
-      return now >= startTime && now <= endTime;
-    }
-    
-    return meeting.status === 'open';
+    // Otherwise, check if it's currently within the meeting time
+    // For now, without end_time, we can't determine this automatically
+    return false;
   }
 
   function buildMeetingRow(meeting) {
@@ -108,7 +106,19 @@
     row.className = 'lecture-item';
     
     const isOpen = isMeetingOpen(meeting);
-    const isPast = meeting.status === 'closed' || (!isOpen && meeting.end_time && new Date(meeting.end_time) < new Date());
+    
+    // Determine if meeting is past by comparing session_date + session_time with now
+    let isPast = false;
+    if (meeting.status === 'closed') {
+      isPast = true;
+    } else if (meeting.session_date && meeting.session_time) {
+      // Combine session_date and session_time to create a full datetime
+      const meetingDateTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
+      const now = new Date();
+      // If the meeting time is more than 2 hours ago, consider it past
+      isPast = !isOpen && (now - meetingDateTime) > (2 * 60 * 60 * 1000);
+    }
+    
     const sessionState = isOpen ? 'open' : (isPast ? 'closed' : 'pending');
     row.dataset.status = sessionState;
 
@@ -224,7 +234,17 @@
       if (state.filter === 'all') return true;
       
       const isOpen = isMeetingOpen(meeting);
-      const isPast = meeting.status === 'closed' || (!isOpen && meeting.end_time && new Date(meeting.end_time) < new Date());
+      
+      // Determine if past using same logic as buildMeetingRow
+      let isPast = false;
+      if (meeting.status === 'closed') {
+        isPast = true;
+      } else if (meeting.session_date && meeting.session_time) {
+        const meetingDateTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
+        const now = new Date();
+        isPast = !isOpen && (now - meetingDateTime) > (2 * 60 * 60 * 1000);
+      }
+      
       const isUpcoming = !isOpen && !isPast;
       
       if (state.filter === 'open') {
@@ -254,8 +274,13 @@
 
     // Sort by date (most recent first)
     filtered.sort((a, b) => {
-      const dateA = new Date(a.start_time || a.scheduled_date || a.created_at);
-      const dateB = new Date(b.start_time || b.scheduled_date || b.created_at);
+      // Use session_date + session_time for sorting
+      const dateA = a.session_date && a.session_time 
+        ? new Date(`${a.session_date}T${a.session_time}`)
+        : new Date(a.created_at || 0);
+      const dateB = b.session_date && b.session_time
+        ? new Date(`${b.session_date}T${b.session_time}`)
+        : new Date(b.created_at || 0);
       return dateB - dateA;
     });
 
