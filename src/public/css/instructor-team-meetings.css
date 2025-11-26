@@ -101,3 +101,18 @@ body {
   font-size: 0.95rem;
   margin-top: 0.25rem;
 }
+
+.overall-attendance {
+  position: absolute;
+  top: 1.5rem;
+  right: 2.5rem;
+  min-width: 180px;
+  text-align: right;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #2a7a2a;
+  background: #f6fff6;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
