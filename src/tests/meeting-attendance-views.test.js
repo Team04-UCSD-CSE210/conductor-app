@@ -347,8 +347,8 @@ describe('Meeting Attendance Views Integration', () => {
       );
 
       const { total_closed_meetings, attended_meetings } = stats.rows[0];
-      expect(parseInt(total_closed_meetings)).toBe(1); // Only pastSession is closed
-      expect(parseInt(attended_meetings)).toBe(1); // teamMember1 attended
+      expect(Number.parseInt(total_closed_meetings)).toBe(1); // Only pastSession is closed
+      expect(Number.parseInt(attended_meetings)).toBe(1); // teamMember1 attended
       
       const percentage = Math.round((attended_meetings / total_closed_meetings) * 100);
       expect(percentage).toBe(100);
@@ -424,9 +424,9 @@ describe('Meeting Attendance Views Integration', () => {
         [team.id]
       );
 
-      const teamMemberCount = parseInt(teamSize.rows[0].count);
-      const closedMeetings = parseInt(attendanceStats.rows[0].total_closed_meetings);
-      const totalPresent = parseInt(attendanceStats.rows[0].total_present);
+      const teamMemberCount = Number.parseInt(teamSize.rows[0].count);
+      const closedMeetings = Number.parseInt(attendanceStats.rows[0].total_closed_meetings);
+      const totalPresent = Number.parseInt(attendanceStats.rows[0].total_present);
       
       expect(teamMemberCount).toBe(3);
       expect(closedMeetings).toBe(1); // Only pastSession is closed
@@ -449,8 +449,8 @@ describe('Meeting Attendance Views Integration', () => {
       );
 
       const { total_closed, attended } = leaderAttendance.rows[0];
-      expect(parseInt(total_closed)).toBe(1);
-      expect(parseInt(attended)).toBe(1);
+      expect(Number.parseInt(total_closed)).toBe(1);
+      expect(Number.parseInt(attended)).toBe(1);
       
       const percentage = Math.round((attended / total_closed) * 100);
       expect(percentage).toBe(100);
@@ -552,16 +552,16 @@ describe('Meeting Attendance Views Integration', () => {
 
       // Past session: 2 present (teamLeader, teamMember1)
       const pastStats = meetingStats.rows.find(r => r.id === pastSession.id);
-      expect(parseInt(pastStats.present_count)).toBe(2);
-      expect(parseInt(pastStats.team_size)).toBe(3);
+      expect(Number.parseInt(pastStats.present_count)).toBe(2);
+      expect(Number.parseInt(pastStats.team_size)).toBe(3);
 
       // Open session: 2 present (teamMember1 + teamMember2 from check-in test)
       const openStats = meetingStats.rows.find(r => r.id === openSession.id);
-      expect(parseInt(openStats.present_count)).toBeGreaterThanOrEqual(1);
+      expect(Number.parseInt(openStats.present_count)).toBeGreaterThanOrEqual(1);
 
       // Future session: 0 present
       const futureStats = meetingStats.rows.find(r => r.id === futureSession.id);
-      expect(parseInt(futureStats.present_count)).toBe(0);
+      expect(Number.parseInt(futureStats.present_count)).toBe(0);
     });
   });
 
@@ -581,7 +581,7 @@ describe('Meeting Attendance Views Integration', () => {
       expect(teams.rows.length).toBeGreaterThanOrEqual(1);
       const testTeam = teams.rows.find(t => t.id === team.id);
       expect(testTeam).toBeTruthy();
-      expect(parseInt(testTeam.member_count)).toBe(3);
+      expect(Number.parseInt(testTeam.member_count)).toBe(3);
     });
 
     it('should retrieve all sessions for a specific team', async () => {
@@ -613,9 +613,9 @@ describe('Meeting Attendance Views Integration', () => {
       );
 
       const stats = teamStats.rows[0];
-      const teamSize = parseInt(stats.team_size);
-      const closedMeetings = parseInt(stats.closed_meetings);
-      const totalPresent = parseInt(stats.total_present);
+      const teamSize = Number.parseInt(stats.team_size);
+      const closedMeetings = Number.parseInt(stats.closed_meetings);
+      const totalPresent = Number.parseInt(stats.total_present);
 
       expect(teamSize).toBe(3);
       expect(closedMeetings).toBe(1); // Only pastSession is closed
@@ -640,9 +640,9 @@ describe('Meeting Attendance Views Integration', () => {
       );
 
       const stats = meetingStats.rows[0];
-      expect(parseInt(stats.present_count)).toBe(2);
-      expect(parseInt(stats.absent_count)).toBe(0); // No explicit absent records
-      expect(parseInt(stats.team_size)).toBe(3);
+      expect(Number.parseInt(stats.present_count)).toBe(2);
+      expect(Number.parseInt(stats.absent_count)).toBe(0); // No explicit absent records
+      expect(Number.parseInt(stats.team_size)).toBe(3);
     });
 
     it('should list all meetings across all teams for instructor', async () => {
@@ -726,9 +726,9 @@ describe('Meeting Attendance Views Integration', () => {
       );
 
       const stats = overallStats.rows[0];
-      expect(parseInt(stats.total_teams)).toBeGreaterThanOrEqual(1);
-      expect(parseInt(stats.total_closed_meetings)).toBeGreaterThanOrEqual(1);
-      expect(parseInt(stats.total_present)).toBeGreaterThanOrEqual(2);
+      expect(Number.parseInt(stats.total_teams)).toBeGreaterThanOrEqual(1);
+      expect(Number.parseInt(stats.total_closed_meetings)).toBeGreaterThanOrEqual(1);
+      expect(Number.parseInt(stats.total_present)).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -761,9 +761,9 @@ describe('Meeting Attendance Views Integration', () => {
         [testOffering.id, teamMember1.id, pastSession.id]
       );
 
-      expect(parseInt(studentView.rows[0].count)).toBe(1);
-      expect(parseInt(leaderView.rows[0].count)).toBe(1);
-      expect(parseInt(instructorView.rows[0].count)).toBe(1);
+      expect(Number.parseInt(studentView.rows[0].count)).toBe(1);
+      expect(Number.parseInt(leaderView.rows[0].count)).toBe(1);
+      expect(Number.parseInt(instructorView.rows[0].count)).toBe(1);
     });
 
     it('should show same meeting count across views', async () => {
@@ -791,9 +791,9 @@ describe('Meeting Attendance Views Integration', () => {
       );
 
       const expectedCount = 3;
-      expect(parseInt(leaderMeetings.rows[0].count)).toBe(expectedCount);
-      expect(parseInt(instructorMeetings.rows[0].count)).toBe(expectedCount);
-      expect(parseInt(studentMeetings.rows[0].count)).toBe(expectedCount);
+      expect(Number.parseInt(leaderMeetings.rows[0].count)).toBe(expectedCount);
+      expect(Number.parseInt(instructorMeetings.rows[0].count)).toBe(expectedCount);
+      expect(Number.parseInt(studentMeetings.rows[0].count)).toBe(expectedCount);
     });
 
     it('should calculate same team average across team leader and instructor views', async () => {
@@ -826,9 +826,9 @@ describe('Meeting Attendance Views Integration', () => {
       const leaderStats = leaderCalc.rows[0];
       const instructorStats = instructorCalc.rows[0];
 
-      expect(parseInt(leaderStats.closed_meetings)).toBe(parseInt(instructorStats.closed_meetings));
-      expect(parseInt(leaderStats.total_present)).toBe(parseInt(instructorStats.total_present));
-      expect(parseInt(leaderStats.team_size)).toBe(parseInt(instructorStats.team_size));
+      expect(Number.parseInt(leaderStats.closed_meetings)).toBe(Number.parseInt(instructorStats.closed_meetings));
+      expect(Number.parseInt(leaderStats.total_present)).toBe(Number.parseInt(instructorStats.total_present));
+      expect(Number.parseInt(leaderStats.team_size)).toBe(Number.parseInt(instructorStats.team_size));
 
       const leaderPercentage = Math.round(
         (leaderStats.total_present / (leaderStats.team_size * leaderStats.closed_meetings)) * 100

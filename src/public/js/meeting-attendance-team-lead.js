@@ -65,7 +65,7 @@
       const response = await fetch(`/api/attendance/sessions/${meeting.id}/attendance/${state.currentUser.id}`);
       if (response.ok) {
         const attendance = await response.json();
-        if (attendance && attendance.status === 'present') {
+        if (attendance?.status === 'present') {
           badge.textContent = 'Present';
           badge.classList.add('present');
           return badge;
@@ -220,10 +220,10 @@
         const endTimeStr = timeFormatter.format(endTime);
         
         // Show date only if different
-        if (endDateStr !== dateStr) {
-          timeStr = `${dateStr} ${startTimeStr} – ${endDateStr} ${endTimeStr}`;
-        } else {
+        if (endDateStr === dateStr) {
           timeStr = `${dateStr} ${startTimeStr}–${endTimeStr}`;
+        } else {
+          timeStr = `${dateStr} ${startTimeStr} – ${endDateStr} ${endTimeStr}`;
         }
       } else if (meeting.code_expires_at) {
         let endTime = new Date(meeting.code_expires_at);
@@ -245,10 +245,10 @@
         const endTimeStr = timeFormatter.format(endTime);
         
         // Show date only if different
-        if (endDateStr !== dateStr) {
-          timeStr = `${dateStr} ${startTimeStr} – ${endDateStr} ${endTimeStr}`;
-        } else {
+        if (endDateStr === dateStr) {
           timeStr = `${dateStr} ${startTimeStr}–${endTimeStr}`;
+        } else {
+          timeStr = `${dateStr} ${startTimeStr} – ${endDateStr} ${endTimeStr}`;
         }
       } else {
         timeStr = `${dateStr} at ${startTimeStr}`;

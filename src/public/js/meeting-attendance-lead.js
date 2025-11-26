@@ -291,12 +291,12 @@
   }
 
   async function hydrateLeadView() {
-    if (!window.LectureService || !selectors.container) return;
+    if (!globalThis.LectureService || !selectors.container) return;
 
     showLoading();
 
     try {
-      state.offeringId = selectors.container.getAttribute('data-offering-id');
+      state.offeringId = selectors.container.dataset.offeringId;
       if (!state.offeringId) {
         state.offeringId = await window.LectureService.getActiveOfferingId();
         selectors.container.dataset.offeringId = state.offeringId;
@@ -349,8 +349,8 @@
             sessionsArray
               .filter(s => s.team_id === state.teamId)
               .map(async (session) => {
-                const transformed = window.LectureService ? 
-                  window.LectureService.transformSession?.(session) : 
+                const transformed = globalThis.LectureService ? 
+                  globalThis.LectureService.transformSession?.(session) : 
                   { id: session.id, label: session.title, startsAt: null, endsAt: null, status: 'closed', team_id: session.team_id };
                 const attendanceStatus = attendanceMap[session.id] || 'absent';
                 const sessionState = transformed.status;
@@ -502,7 +502,7 @@
     if (!hamburger || !sidebar) return;
 
     hamburger.addEventListener('click', () => {
-      const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
+      const isOpen = hamburger.getAttribute('aria-expanded') === 'true'; // aria-expanded is not in dataset
       hamburger.setAttribute('aria-expanded', String(!isOpen));
       sidebar.classList.toggle('open');
       body.classList.toggle('menu-open');
@@ -569,7 +569,7 @@
       try {
         const verification = await window.LectureService.verifyAccessCode(code);
           
-        if (!verification || !verification.valid) {
+        if (!verification?.valid) {
           const errorMsg = verification?.message || 'Incorrect access code. Please try again.';
           errorDiv.textContent = errorMsg;
           errorDiv.style.display = 'block';
@@ -586,8 +586,8 @@
         }
 
         try {
-          await window.LectureService.checkIn(code, []);
-          window.location.href = `/student-lecture-response?sessionId=${meeting.id}`;
+          await globalThis.LectureService.checkIn(code, []);
+          globalThis.location.href = `/student-lecture-response?sessionId=${meeting.id}`;
         } catch (checkInError) {
           errorDiv.textContent = checkInError.message || 'Failed to check in. Please try again.';
           errorDiv.style.display = 'block';

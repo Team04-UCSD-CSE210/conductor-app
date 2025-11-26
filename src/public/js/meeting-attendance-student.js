@@ -407,8 +407,8 @@
             .map(session => {
               // If a transformSession helper exists, use it. Otherwise fall back to a safe default
               let transformed;
-              if (window.LectureService && typeof window.LectureService.transformSession === 'function') {
-                transformed = window.LectureService.transformSession(session);
+              if (globalThis.LectureService && typeof globalThis.LectureService.transformSession === 'function') {
+                transformed = globalThis.LectureService.transformSession(session);
               } else {
                 transformed = {
                   id: session.id,

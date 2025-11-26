@@ -45,16 +45,16 @@
 
   <script>
     // Get email from session or URL
-    const email = new URLSearchParams(window.location.search).get('email') || 
-                  (window.prefilledEmail || '');
+    const email = new URLSearchParams(globalThis.location.search).get('email') || 
+                  (globalThis.prefilledEmail || '');
     
     if (email) {
       document.getElementById('user-email').textContent = email;
     } else {
       // Try to get from session via server-side rendering
       const emailEl = document.getElementById('user-email');
-      if (emailEl && window.prefilledEmail) {
-        emailEl.textContent = window.prefilledEmail;
+      if (emailEl && globalThis.prefilledEmail) {
+        emailEl.textContent = globalThis.prefilledEmail;
       } else {
         emailEl.textContent = 'Not available';
       }
