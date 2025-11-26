@@ -6,7 +6,6 @@
  */
 
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import assert from 'node:assert';
 import { pool } from '../db.js';
 
 describe('Team Leader Session Delete', () => {
