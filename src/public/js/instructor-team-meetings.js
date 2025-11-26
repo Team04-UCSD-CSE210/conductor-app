@@ -9,13 +9,6 @@ async function getParams() {
   };
 }
 
-async function fetchTeam(teamId, offeringId) {
-  if (!teamId || !offeringId) return null;
-  const res = await fetch(`/api/teams/${teamId}?offering_id=${offeringId}`, { credentials: 'include' });
-  if (!res.ok) return null;
-  return await res.json();
-}
-
 async function fetchMeetings(teamId, offeringId) {
   if (!teamId || !offeringId) return [];
   const res = await fetch(`/api/sessions/team/${teamId}?offering_id=${offeringId}`, { credentials: 'include' });
