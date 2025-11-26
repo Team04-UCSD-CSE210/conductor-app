@@ -68,44 +68,53 @@ async function renderTeams() {
       container.innerHTML = '<p style="text-align:center; color:#888;">No teams found.</p>';
       return;
     }
-    for (const team of teams) {
-      console.log('offering ID is', offeringId);
-      fetchMeetings(team.id, offeringId).then(async meetings => {
-        // Filter out sessions where team_id is null
-        const teamMeetings = meetings.filter(m => m.team_id === team.id);
-        console.log("Number of meetings for team", team.id, "is", teamMeetings.length);
-        let totalAttendance = 0;
-        let totalPossible = 0;
-        for (const meeting of teamMeetings) {
-          const statsRes = await fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' });
-          if (statsRes.ok) {
-            const stats = await statsRes.json();
-            totalAttendance += stats.present_count || 0;
-            totalPossible += stats.total_marked || 0;
-          }
+    // Sort teams by team_number ascending
+    teams.sort((a, b) => {
+      const numA = a.team_number ?? 0;
+      const numB = b.team_number ?? 0;
+      return numA - numB;
+    });
+    // Collect all team row promises
+    const teamRowPromises = teams.map(async team => {
+      const meetings = await fetchMeetings(team.id, offeringId);
+      const teamMeetings = meetings.filter(m => m.team_id === team.id);
+      let totalAttendance = 0;
+      let totalPossible = 0;
+      for (const meeting of teamMeetings) {
+        const statsRes = await fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' });
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          totalAttendance += stats.present_count || 0;
+          totalPossible += stats.total_marked || 0;
         }
-        const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
-        const row = document.createElement('a');
-        row.className = 'team-row';
-        row.href = `/instructor-team-meetings.html?team_id=${encodeURIComponent(team.id)}&offering_id=${encodeURIComponent(offeringId)}`;
-        row.style.textDecoration = 'none';
-        row.style.color = 'inherit';
-        row.innerHTML = `
-          <span class="team-name">${team.name || 'Team ' + team.team_number}</span>
-          <div class="team-meta">
-            <span>Members: ${team.member_count || team.members?.length || 0}</span>
-            <span>Meetings: ${teamMeetings.length}</span>
-            <span style="display:flex;align-items:center;">Attendance:
-              <span class="attendance-bar">
-                <span class="attendance-fill" style="width:${percent}%"></span>
-                <span class="attendance-label">${percent}%</span>
-              </span>
+      }
+      const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
+      const row = document.createElement('a');
+      row.className = 'team-row';
+      row.href = `/instructor-team-meetings.html?team_id=${encodeURIComponent(team.id)}&offering_id=${encodeURIComponent(offeringId)}`;
+      row.style.textDecoration = 'none';
+      row.style.color = 'inherit';
+      row.innerHTML = `
+        <span class="team-name">${team.name || 'Team ' + team.team_number}</span>
+        <div class="team-meta">
+          <span>Members: ${team.member_count || team.members?.length || 0}</span>
+          <span>Meetings: ${teamMeetings.length}</span>
+          <span style="display:flex;align-items:center;">Attendance:
+            <span class="attendance-bar">
+              <span class="attendance-fill" style="width:${percent}%"></span>
+              <span class="attendance-label">${percent}%</span>
             </span>
-          </div>
-        `;
+          </span>
+        </div>
+      `;
+      return row;
+    });
+    Promise.all(teamRowPromises).then(rows => {
+      container.innerHTML = '';
+      for (const row of rows) {
         container.appendChild(row);
-      });
-    }
+      }
+    });
   });
 }
 document.addEventListener('DOMContentLoaded', renderTeams);
