@@ -1,0 +1,90 @@
+/* Team Lead Dashboard specific overrides */
+
+:root {
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --emerald-100: #d1fae5;
+  --gray-700: #374151;
+  --teal-600: #0d9488;
+}
+
+.sidebar-user {
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--gray-700);
+}
+
+.sidebar-user-role {
+  color: var(--teal-600);
+  font-weight: 600;
+}
+
+/* Match professor/student card spacing */
+.student-card-body {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* Placeholder boxes */
+.student-placeholder-box {
+  background: #fff;
+  border: 1px dashed var(--gray-300);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  min-height: 80px;
+}
+
+/* Mid row layout */
+.student-mid-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Calendar */
+.student-calendar {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.student-calendar th {
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--gray-200);
+  font-weight: 600;
+}
+
+.student-calendar td {
+  text-align: center;
+  padding: 0.75rem;
+  border: 1px solid var(--gray-300);
+  background: #fff;
+}
+
+.student-calendar-event {
+  background: var(--emerald-100);
+  font-weight: 600;
+}
+
+/* Allow full-page scrolling on team lead dashboard */
+body.teamlead-page {
+  height: auto;
+  min-height: 100vh;
+  overflow: auto;
+}
+
+body.teamlead-page .main-container {
+  height: auto;
+}
+
+body.teamlead-page .frame {
+  height: auto;
+  overflow: visible;
+}
+
+body.teamlead-page .content {
+  height: auto;
+  overflow: visible;
+}
+

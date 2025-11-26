@@ -106,10 +106,10 @@ CREATE INDEX IF NOT EXISTS idx_user_role_permissions_permission
 
 -- ------------------------------------------------------------
 -- enrollment_role_permissions: course role → permission
--- Uses course_role_enum to match the enrollments table
+-- Uses enrollment_role_enum to match the enrollments table
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS enrollment_role_permissions (
-    enrollment_role course_role_enum NOT NULL,  -- Changed from enrollment_role_enum to course_role_enum
+    enrollment_role enrollment_role_enum NOT NULL,
     permission_id   UUID NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -139,28 +139,3 @@ CREATE INDEX IF NOT EXISTS idx_team_role_permissions_role
 
 CREATE INDEX IF NOT EXISTS idx_team_role_permissions_permission
     ON team_role_permissions(permission_id);
-
--- ------------------------------------------------------------
--- course_staff: Course staff assignments (separate from enrollments)
--- Used by PermissionService to check course-level permissions
--- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS course_staff (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    staff_role course_role_enum NOT NULL,  -- ta, tutor, etc.
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_by UUID REFERENCES users(id),
-    updated_by UUID REFERENCES users(id),
-    UNIQUE(offering_id, user_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_course_staff_offering ON course_staff(offering_id);
-CREATE INDEX IF NOT EXISTS idx_course_staff_user ON course_staff(user_id);
-CREATE INDEX IF NOT EXISTS idx_course_staff_role ON course_staff(staff_role);
-
-CREATE TRIGGER update_course_staff_updated_at BEFORE UPDATE ON course_staff
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-COMMENT ON TABLE course_staff IS 'Course staff assignments (separate from enrollments)';

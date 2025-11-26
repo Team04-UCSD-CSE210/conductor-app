@@ -34,23 +34,42 @@ export class DatabaseInitializer {
       await pool.query(sql);
       console.log(`✓ ${description} executed successfully`);
     } catch (error) {
+      // Log the actual error for debugging
+      console.error(`[executeSql] Error executing ${description}:`, {
+        code: error.code,
+        message: error.message,
+        detail: error.detail,
+        hint: error.hint
+      });
+      
       // 42P01 = relation does not exist (this is an error, don't skip)
       if (error.code === '42P01') {
         throw new Error(`Failed to execute ${description}: ${error.message} (code: ${error.code})`);
       }
       
+      // 42704 = undefined_object (type/object doesn't exist) - this is an error, don't skip
+      if (error.code === '42704') {
+        throw new Error(`Failed to execute ${description}: ${error.message} (code: ${error.code})`);
+      }
+      
       // Check if error is due to object already existing (idempotent operations)
       // 42P07 = duplicate_table, 42710 = duplicate_object
-      // Only skip if it's truly a "already exists" error
+      // Only skip if it's truly a "already exists" error for CREATE statements
       if (error.code === '42P07' || error.code === '42710') {
         // Verify this is actually an "already exists" error by checking the message
+        // AND that it's related to a CREATE statement (not a dependency issue)
         if (error.message && (
           error.message.includes('already exists') || 
-          error.message.includes('duplicate') ||
-          (error.message.includes('relation') && error.message.includes('already'))
+          error.message.includes('duplicate')
         )) {
-          console.log(`⚠ ${description} skipped (already exists)`);
-          return;
+          // Only skip if this is clearly an idempotent CREATE operation
+          // Don't skip if it's a dependency or constraint error
+          if (!error.message.includes('depends on') && 
+              !error.message.includes('constraint') &&
+              !error.message.includes('foreign key')) {
+            console.log(`⚠ ${description} skipped (already exists)`);
+            return;
+          }
         }
       }
       // For other errors, throw them - don't silently skip
@@ -223,7 +242,10 @@ export class DatabaseInitializer {
       // Drop all tables in correct order (respecting foreign keys)
       await pool.query(`
         DROP TABLE IF EXISTS activity_logs CASCADE;
+        DROP TABLE IF EXISTS session_responses CASCADE;
+        DROP TABLE IF EXISTS session_questions CASCADE;
         DROP TABLE IF EXISTS attendance CASCADE;
+        DROP TABLE IF EXISTS sessions CASCADE;
         DROP TABLE IF EXISTS submissions CASCADE;
         DROP TABLE IF EXISTS team_members CASCADE;
         DROP TABLE IF EXISTS team CASCADE;
@@ -236,17 +258,16 @@ export class DatabaseInitializer {
         DROP TABLE IF EXISTS users CASCADE;
         
         -- Drop permission tables (from migration 04)
-        DROP TABLE IF EXISTS course_staff CASCADE;
         DROP TABLE IF EXISTS team_role_permissions CASCADE;
         DROP TABLE IF EXISTS enrollment_role_permissions CASCADE;
-        DROP TABLE IF EXISTS global_role_permissions CASCADE;
+        DROP TABLE IF EXISTS user_role_permissions CASCADE;
         DROP TABLE IF EXISTS permissions CASCADE;
         
         -- Drop all ENUM types
         DROP TYPE IF EXISTS user_role_enum CASCADE;
         DROP TYPE IF EXISTS user_status_enum CASCADE;
         DROP TYPE IF EXISTS institution_type_enum CASCADE;
-        DROP TYPE IF EXISTS course_role_enum CASCADE;
+        DROP TYPE IF EXISTS enrollment_role_enum CASCADE;
         DROP TYPE IF EXISTS enrollment_status_enum CASCADE;
         DROP TYPE IF EXISTS course_offering_status_enum CASCADE;
         DROP TYPE IF EXISTS assignment_type_enum CASCADE;
