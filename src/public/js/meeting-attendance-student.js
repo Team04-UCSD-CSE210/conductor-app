@@ -18,6 +18,51 @@
 
   let isLoading = false;
 
+  function determineMeetingStatus(meeting) {
+    const now = new Date();
+    
+    if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
+      // Both timestamps are set (scheduled start/end times)
+      const openTime = new Date(meeting.attendance_opened_at);
+      const closeTime = new Date(meeting.attendance_closed_at);
+      
+      if (now < openTime) {
+        return 'pending'; // Meeting hasn't started yet
+      } else if (now >= openTime && now < closeTime) {
+        return 'open'; // Meeting is currently open
+      } else {
+        return 'closed'; // Meeting has ended
+      }
+    } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
+      // Only open time is set
+      const openTime = new Date(meeting.attendance_opened_at);
+      
+      if (now < openTime) {
+        return 'pending';
+      }
+      
+      // Check if end time has passed
+      if (meeting.code_expires_at) {
+        const endTime = new Date(meeting.code_expires_at);
+        if (endTime < now) {
+          return 'closed';
+        }
+      }
+      return 'open';
+    } else {
+      // No attendance timestamps - fall back to session_date/session_time
+      if (meeting.session_date && meeting.session_time) {
+        const startTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
+        if (startTime > now) {
+          return 'pending';
+        }
+        return 'closed';
+      }
+    }
+    
+    return 'pending';
+  }
+
   function formatTimeRange(startIso, endIso) {
     // If both are provided, format as range
     if (startIso && endIso) {
@@ -120,16 +165,15 @@
     meta.className = 'lecture-meta';
 
     const sessionStatus = document.createElement('span');
+    // Only show session status for open/closed states (badge already shows 'Upcoming' for pending)
     if (meeting.sessionState === 'open') {
       sessionStatus.className = 'lecture-status open';
       sessionStatus.textContent = 'Open';
-    } else if (meeting.sessionState === 'pending') {
-      sessionStatus.className = 'lecture-status pending';
-      sessionStatus.textContent = 'Upcoming';
-    } else {
+    } else if (meeting.sessionState === 'closed') {
       sessionStatus.className = 'lecture-status closed';
       sessionStatus.textContent = 'Closed';
     }
+    // Don't show sessionStatus for pending state to avoid duplication with badge
 
     const actions = document.createElement('div');
     actions.className = 'lecture-actions';
@@ -150,18 +194,40 @@
       actionButton.style.cursor = 'not-allowed';
     }
     
-    actionButton.addEventListener('click', () => {
+    actionButton.addEventListener('click', async () => {
       if (meeting.sessionState === 'open') {
         if (meeting.status === 'present') {
           window.location.href = `/student-lecture-response?sessionId=${meeting.id}`;
         } else {
-          showAccessCodeModal(meeting);
+          // For team meetings, directly check in using the meeting's access code
+          if (!meeting.accessCode) {
+            alert('Unable to check in: no access code available');
+            return;
+          }
+          
+          actionButton.disabled = true;
+          actionButton.textContent = 'Checking in...';
+          try {
+            await window.LectureService.checkIn(meeting.accessCode, []);
+            // Refresh the page to show updated status
+            window.location.reload();
+          } catch (error) {
+            console.error('Error checking in:', error);
+            alert(`Failed to record attendance: ${error.message}`);
+            actionButton.disabled = false;
+            actionButton.textContent = 'I\'m here';
+          }
         }
       }
     });
     actions.appendChild(actionButton);
 
-    meta.append(sessionStatus, actions);
+    // Only append sessionStatus if it has content (open/closed, not pending)
+    if (meeting.sessionState !== 'pending') {
+      meta.append(sessionStatus, actions);
+    } else {
+      meta.appendChild(actions);
+    }
     info.append(details, meta);
     row.appendChild(info);
 
@@ -172,10 +238,17 @@
     if (!selectors.attendancePercentage || !state.offeringId) return;
     
     try {
-      // Get team-specific attendance statistics
+      // Get team-specific attendance statistics - only count closed meetings
       const teamMeetings = state.meetings.filter(m => m.team_id === state.teamId);
-      const totalMeetings = teamMeetings.length;
-      const presentCount = teamMeetings.filter((m) => m.status === 'present').length;
+      
+      // Only count closed meetings for percentage calculation
+      const closedMeetings = teamMeetings.filter(m => {
+        const sessionState = determineMeetingStatus(m);
+        return sessionState === 'closed';
+      });
+      
+      const totalMeetings = closedMeetings.length;
+      const presentCount = closedMeetings.filter((m) => m.status === 'present').length;
       const percent = totalMeetings > 0
         ? Math.round((presentCount / totalMeetings) * 100)
         : 0;
@@ -226,7 +299,7 @@
       if (!myTeamResponse.ok) {
         return null;
       }
-      }
+      
       const teamData = await myTeamResponse.json();
       
       // Handle both response formats: { team: {...} } or direct object
@@ -328,8 +401,10 @@
                 status = 'pending';
               }
               return {
+                ...session, // Preserve all original fields (timestamps, etc.)
                 id: transformed.id,
                 label: transformed.label || session.title,
+                title: session.title,
                 status,
                 sessionState,
                 startsAt: transformed.startsAt,

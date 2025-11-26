@@ -13,13 +13,10 @@ export class SessionModel {
       SELECT s.*,
              TO_CHAR(s.session_date, 'YYYY-MM-DD') as session_date_str,
              TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str,
-             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present') as attendance_count,
+             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status IN ('present', 'late')) as attendance_count,
              COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent') as absent_count,
              COUNT(DISTINCT sr.user_id) as response_count,
-             (SELECT COUNT(*) FROM enrollments 
-              WHERE offering_id = s.offering_id 
-              AND status = 'enrolled' 
-              AND course_role = 'student') as total_students
+             (SELECT COUNT(*) FROM team_members WHERE team_id = s.team_id) as team_member_count
       FROM sessions s
       LEFT JOIN attendance a ON s.id = a.session_id
       LEFT JOIN session_responses sr ON s.id IN (
@@ -44,15 +41,15 @@ export class SessionModel {
     return result.rows.map(row => {
       if (row.session_date_str) row.session_date = row.session_date_str;
       if (row.session_time_str) row.session_time = row.session_time_str;
-      const totalStudents = parseInt(row.total_students) || 0;
+      const teamMemberCount = parseInt(row.team_member_count) || 0;
       const presentCount = parseInt(row.attendance_count) || 0;
-      const attendance_percent = totalStudents > 0 
-        ? Math.round((presentCount / totalStudents) * 100) 
+      const attendance_percent = teamMemberCount > 0 
+        ? Math.round((presentCount / teamMemberCount) * 100) 
         : 0;
       return {
         ...row,
         attendance_percent,
-        total_students: totalStudents,
+        team_member_count: teamMemberCount,
         attendance_count: presentCount
       };
     });
@@ -231,13 +228,16 @@ export class SessionModel {
       SELECT s.*,
              TO_CHAR(s.session_date, 'YYYY-MM-DD') as session_date_str,
              TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str,
-             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present') as attendance_count,
+             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status IN ('present', 'late')) as attendance_count,
              COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent') as absent_count,
              COUNT(DISTINCT sr.user_id) as response_count,
-             (SELECT COUNT(*) FROM enrollments 
-              WHERE offering_id = s.offering_id 
-              AND status = 'enrolled' 
-              AND course_role = 'student') as total_students
+             CASE 
+               WHEN s.team_id IS NOT NULL THEN (SELECT COUNT(*) FROM team_members WHERE team_id = s.team_id)
+               ELSE (SELECT COUNT(*) FROM enrollments 
+                     WHERE offering_id = s.offering_id 
+                     AND status = 'enrolled' 
+                     AND course_role = 'student')
+             END as total_students
       FROM sessions s
       LEFT JOIN attendance a ON s.id = a.session_id
       LEFT JOIN session_responses sr ON s.id IN (
@@ -294,6 +294,7 @@ export class SessionModel {
         ...row,
         attendance_percent,
         total_students: totalStudents,
+        team_member_count: totalStudents, // For team meetings, this is team member count
         attendance_count: presentCount
       };
     });
@@ -415,7 +416,7 @@ export class SessionModel {
          s.session_date,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present') as present_count,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent') as absent_count,
-         COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'late') as late_count,
+         0 as late_count,
          COUNT(DISTINCT a.user_id) as total_attendance_records,
          COUNT(DISTINCT sq.id) as question_count,
          COUNT(DISTINCT sr.id) as response_count,

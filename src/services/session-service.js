@@ -368,12 +368,23 @@ export class SessionService {
           if (sessionStart <= now && !session.attendance_opened_at) {
             console.log('[SessionService] Auto-opening attendance for session:', session.id);
             await SessionModel.openAttendance(session.id, createdBy);
-            // Refresh session to get updated attendance_opened_at
+            // Refresh session to get updated attendance_opened_at (and ensure attendance_closed_at is NULL)
             const updatedSession = await SessionModel.findById(session.id);
             if (updatedSession) {
               Object.assign(session, updatedSession);
-              console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at);
+              console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at, 'attendance_closed_at:', updatedSession.attendance_closed_at);
             }
+          }
+          
+          // For team meetings, ensure attendance_closed_at is NULL even if auto-open didn't run
+          // Team meetings should only be closed manually by the team leader
+          if (session.team_id && session.attendance_closed_at) {
+            console.log('[SessionService] Removing auto-close for team meeting:', session.id);
+            await pool.query(
+              'UPDATE sessions SET attendance_closed_at = NULL WHERE id = $1',
+              [session.id]
+            );
+            session.attendance_closed_at = null;
           }
         }
       } catch (error) {
@@ -531,10 +542,12 @@ export class SessionService {
             try {
               const updatedBy = session.created_by || '00000000-0000-0000-0000-000000000000';
               await SessionModel.openAttendance(session.id, updatedBy);
-              // Refresh session data
+              // Refresh only the attendance timestamps, not the statistics
               const updatedSession = await SessionModel.findById(session.id);
               if (updatedSession) {
-                Object.assign(session, updatedSession);
+                // Only update attendance-related timestamps, preserve statistics
+                session.attendance_opened_at = updatedSession.attendance_opened_at;
+                session.attendance_closed_at = updatedSession.attendance_closed_at;
               }
             } catch (error) {
               console.error('[SessionService] Error auto-opening session:', session.id, error);

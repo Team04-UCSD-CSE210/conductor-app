@@ -16,7 +16,7 @@ DECLARE
         '2025-11-06'::DATE,  -- Week 1 meeting
         '2025-11-13'::DATE,  -- Week 2 meeting
         '2025-11-20'::DATE,  -- Week 3 meeting
-        '2025-11-27'::DATE   -- Week 4 meeting
+        '2025-11-26'::DATE   -- Week 4 meeting (changed to today for testing)
     ];
     meeting_idx INTEGER;
     session_count INTEGER := 0;
@@ -92,13 +92,16 @@ BEGIN
                     CASE 
                         WHEN meeting_dates[meeting_idx] < CURRENT_DATE THEN 
                             (meeting_dates[meeting_idx] || ' 15:00:00')::TIMESTAMPTZ
+                        WHEN meeting_dates[meeting_idx] = CURRENT_DATE THEN
+                            -- Open attendance for today's meetings
+                            (meeting_dates[meeting_idx] || ' 15:00:00')::TIMESTAMPTZ
                         ELSE NULL 
-                    END, -- Open if in the past
+                    END, -- Open if in the past or today
                     CASE 
                         WHEN meeting_dates[meeting_idx] < CURRENT_DATE THEN 
                             (meeting_dates[meeting_idx] || ' 17:00:00')::TIMESTAMPTZ
                         ELSE NULL 
-                    END, -- Close if in the past
+                    END, -- Close only if in the past
                     team_record.leader_id,
                     team_record.leader_id
                 )
