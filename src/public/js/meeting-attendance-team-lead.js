@@ -505,8 +505,8 @@
 
       // Show the team leader's personal attendance
       memberList.innerHTML = `
-        <div style="text-align: center; padding: 2rem 0;">
-          <div class="attendance-percentage" style="font-size: 3.5rem; font-weight: 700; color: var(--teal-600, #0d9488);">${percentage}%</div>
+        <div style="text-align: center; padding: 1rem 0 2rem 0;">
+          <div class="attendance-percentage" style="font-size: 2.8rem; font-weight: 700; color: var(--teal-600, #0d9488);">${percentage}%</div>
         </div>
       `;
     } catch (error) {
