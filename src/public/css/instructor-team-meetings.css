@@ -1,0 +1,143 @@
+body {
+  background: var(--bg, #f6f7fb);
+  font-family: system-ui, sans-serif;
+  margin: 0;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  background: var(--bg, #f6f7fb);
+}
+
+.sidebar {
+  background: var(--panel, #fff);
+  border-right: 1px solid var(--border, #e6e8ef);
+  padding: 16px;
+  min-height: 100vh;
+}
+
+.sidebar-role {
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+  margin-bottom: 16px;
+}
+.sidebar-role strong {
+  color: var(--text, #0f172a);
+}
+.sidebar-sep {
+  border: 0;
+  border-top: 1px solid var(--border, #e6e8ef);
+  margin: 12px 0 16px;
+}
+.sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text, #0f172a);
+  border: 1px solid transparent;
+}
+.nav-item:hover {
+  background: #fafafa;
+  border-color: var(--border, #e6e8ef);
+}
+
+.team-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 2rem;
+}
+
+#team-title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.team-meta {
+  margin-bottom: 2rem;
+  color: #555;
+}
+
+.meeting-list {
+  margin-top: 2rem;
+}
+
+.meeting-row {
+  background: #f3f6fa;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  box-shadow: 0 1px 4px #0001;
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.meeting-time {
+  color: #888;
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}
+/* instructor-team-meetings.css */
+
+.team-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 2rem;
+}
+
+#team-title {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.team-meta {
+  margin-bottom: 2rem;
+  color: #555;
+}
+
+.meeting-list {
+  margin-top: 2rem;
+}
+
+.meeting-row {
+  background: #f3f6fa;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  box-shadow: 0 1px 4px #0001;
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.meeting-time {
+  color: #888;
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}

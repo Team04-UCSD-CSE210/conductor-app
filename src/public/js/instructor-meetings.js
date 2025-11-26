@@ -85,8 +85,11 @@ async function renderTeams() {
           }
         }
         const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
-        const row = document.createElement('div');
+        const row = document.createElement('a');
         row.className = 'team-row';
+        row.href = `/instructor-team-meetings.html?team_id=${encodeURIComponent(team.id)}&offering_id=${encodeURIComponent(offeringId)}`;
+        row.style.textDecoration = 'none';
+        row.style.color = 'inherit';
         row.innerHTML = `
           <span class="team-name">${team.name || 'Team ' + team.team_number}</span>
           <div class="team-meta">
