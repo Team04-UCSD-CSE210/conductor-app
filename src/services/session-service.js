@@ -168,8 +168,11 @@ export class SessionService {
     const primaryRole = userRes.rows[0].primary_role;
     const isInstructor = primaryRole === 'instructor' || primaryRole === 'admin';
 
+    // Check if team_id was explicitly set to null (trying to create course-wide session)
+    const teamIdExplicitlyNull = 'team_id' in sessionData && sessionData.team_id === null;
+    
     // If team_id not provided and user is not an instructor, auto-detect their team
-    if (!sessionData.team_id && !isInstructor) {
+    if (!sessionData.team_id && !isInstructor && !teamIdExplicitlyNull) {
       const teamRes = await pool.query(
         `SELECT t.id 
          FROM team t
@@ -186,6 +189,11 @@ export class SessionService {
         // User is not an instructor and not a team leader
         throw new Error('Not authorized to create sessions for this offering');
       }
+    }
+    
+    // If still no team_id and not an instructor, they cannot create sessions
+    if (!sessionData.team_id && !isInstructor) {
+      throw new Error('Not authorized to create sessions for this offering');
     }
 
     // Validate team_id if provided (either explicitly or auto-detected)
