@@ -630,8 +630,24 @@ app.get("/meeting-attendance", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("meeting-attendance.html"));
 });
 
-app.get("/meeting-attendance-team-lead", ensureAuthenticated, (req, res) => {
-  res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
+app.get("/instructor-meetings", ensureAuthenticated, (req, res) => {
+  // Only allow instructors to access this route
+  const email = req.user?.emails?.[0]?.value;
+  if (!email) {
+    return res.redirect("/login");
+  }
+  findUserByEmail(email).then(user => {
+    if (!user) {
+      return res.redirect("/login");
+    }
+    if (user.primary_role === 'instructor' || user.primary_role === 'admin') {
+      return res.sendFile(buildFullViewPath("instructor-meetings.html"));
+    }
+    return res.status(403).send("Forbidden: Only instructors can access this page");
+  }).catch(error => {
+    console.error("Error checking instructor role:", error);
+    return res.status(500).send("Internal server error");
+  });
 });
 
 
