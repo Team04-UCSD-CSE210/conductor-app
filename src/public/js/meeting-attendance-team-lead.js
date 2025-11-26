@@ -123,18 +123,30 @@
     const details = document.createElement('div');
     const label = document.createElement('p');
     label.className = 'lecture-number';
-    label.textContent = meeting.name || 'Team Meeting';
+    label.textContent = meeting.title || meeting.name || 'Team Meeting';
     
     const time = document.createElement('p');
     time.className = 'lecture-time';
-    if (meeting.start_time && meeting.end_time) {
-      time.textContent = formatTimeRange(meeting.start_time, meeting.end_time);
-    } else {
-      const displayDate = meeting.scheduled_date || meeting.start_time || meeting.created_at;
-      const dateStr = formatDate(displayDate);
-      const timeStr = meeting.start_time ? formatTime(meeting.start_time) : '';
-      time.textContent = `${dateStr}${timeStr ? ' at ' + timeStr : ''}`;
+    
+    // Format date and time display
+    const displayDate = meeting.session_date || meeting.scheduled_date || meeting.created_at;
+    const dateStr = formatDate(displayDate);
+    
+    // Format time if available
+    let timeStr = '';
+    if (meeting.session_time) {
+      // session_time is stored as HH:MM:SS, format it nicely
+      const timeParts = meeting.session_time.split(':');
+      if (timeParts.length >= 2) {
+        const hour = parseInt(timeParts[0], 10);
+        const minute = timeParts[1];
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        timeStr = `${displayHour}:${minute} ${ampm}`;
+      }
     }
+    
+    time.textContent = timeStr ? `${dateStr} at ${timeStr}` : dateStr;
     
     details.append(label, time);
 
