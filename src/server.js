@@ -132,14 +132,15 @@ const findOrCreateUser = async (email, defaults = {}) => {
     let user = await findUserByEmail(email);
     
     if (!user) {
-      // Simple user creation without complex enum types
+      // Simple user creation with primary_role defaulting to 'unregistered'
       const result = await pool.query(
-        `INSERT INTO users (email, name) VALUES ($1, $2) 
+        `INSERT INTO users (email, name, primary_role) VALUES ($1, $2, $3) 
          ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name 
          RETURNING *`,
         [
           email,
-          defaults.name || email.split('@')[0]
+          defaults.name || email.split('@')[0],
+          defaults.primary_role || 'unregistered'
         ]
       );
       user = result.rows[0];
