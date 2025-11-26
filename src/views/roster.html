@@ -22,11 +22,8 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/instructor-dashboard">Dashboard</a>
-      <a href="/course-settings">Course Settings</a>
-      <a href="/instructor-lectures">Attendance</a>
-      <a href="/roster" class="active">Roster</a>
+    <nav aria-label="Dashboard navigation" id="sidebarNav">
+      <!-- Navigation will be dynamically populated based on user role -->
     </nav>
     <footer class="sidebar-footer">
       <a href="/logout" class="btn btn-ghost btn-footer">Sign out</a>
@@ -84,19 +81,29 @@
     </section>
 
     <section class="roster-controls">
-      <div class="control-group">
+      <div class="control-group roster-filter-bar">
         <input type="search" id="searchInput" class="search-input" placeholder="Search name, email, PID">
+        <span class="filter-divider" aria-hidden="true">|</span>
         <div class="chip-group" role="group" aria-label="Role filter">
           <button class="chip" data-role-filter="all" data-active="true">All roles</button>
           <button class="chip" data-role-filter="student">Students</button>
           <button class="chip" data-role-filter="ta">TAs</button>
           <button class="chip" data-role-filter="tutor">Tutors</button>
         </div>
+        <span class="filter-divider" aria-hidden="true">|</span>
         <div class="chip-group" role="group" aria-label="Status filter">
           <button class="chip" data-status-filter="all" data-active="true">All statuses</button>
           <button class="chip" data-status-filter="enrolled">Enrolled</button>
           <button class="chip" data-status-filter="waitlisted">Waitlist</button>
           <button class="chip" data-status-filter="dropped">Dropped</button>
+        </div>
+        <span class="filter-divider" aria-hidden="true">|</span>
+        <div class="team-filter-group" id="teamFilterWrapper">
+          <label for="teamFilterSelect" class="sr-only">Filter by team</label>
+          <select id="teamFilterSelect" class="search-input team-filter-select">
+            <option value="all" selected>All teams</option>
+            <option value="team-leads">Team Leads</option>
+          </select>
         </div>
       </div>
       <div class="control-group">
@@ -120,6 +127,7 @@
               <th class="col-role">Course Role</th>
               <th class="col-status">Status</th>
               <th class="col-institution">Institution</th>
+              <th class="col-team">Team</th>
               <th class="col-actions">Actions</th>
             </tr>
           </thead>
@@ -263,6 +271,7 @@
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
+  <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/roster.js" defer></script>
 </body>
 </html>

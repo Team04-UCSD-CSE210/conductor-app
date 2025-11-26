@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { EnrollmentService } from '../services/enrollment-service.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
-import { protect, protectAny } from '../middleware/permission-middleware.js';
+import { protect } from '../middleware/permission-middleware.js';
 import { PermissionService } from '../services/permission-service.js';
 
 const router = Router();
@@ -86,9 +86,9 @@ router.get(
 /**
  * Get TAs for an offering
  * GET /enrollments/offering/:offeringId/tas?limit=50&offset=0
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view)
  */
-router.get('/offering/:offeringId/tas', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId/tas', ensureAuthenticated, async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -104,9 +104,9 @@ router.get('/offering/:offeringId/tas', ...protectAny(['roster.view', 'course.ma
 /**
  * Get tutors for an offering
  * GET /enrollments/offering/:offeringId/tutors?limit=50&offset=0
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view)
  */
-router.get('/offering/:offeringId/tutors', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId/tutors', ensureAuthenticated, async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -122,9 +122,9 @@ router.get('/offering/:offeringId/tutors', ...protectAny(['roster.view', 'course
 /**
  * Get students for an offering
  * GET /enrollments/offering/:offeringId/students?limit=50&offset=0
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view)
  */
-router.get('/offering/:offeringId/students', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId/students', ensureAuthenticated, async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -140,9 +140,10 @@ router.get('/offering/:offeringId/students', ...protectAny(['roster.view', 'cour
 /**
  * Get detailed roster (with user information and summary stats) for an offering
  * GET /enrollments/offering/:offeringId/roster
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view roster)
+ * Note: Editing (import/export) is restricted via separate permissions
  */
-router.get('/offering/:offeringId/roster', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId/roster', ensureAuthenticated, async (req, res) => {
   try {
     const parseNumber = (value, fallback) => {
       const parsed = Number.parseInt(value, 10);
@@ -168,9 +169,9 @@ router.get('/offering/:offeringId/roster', ...protectAny(['roster.view', 'course
 /**
  * Get all enrollments for a course offering
  * GET /enrollments/offering/:offeringId?limit=50&offset=0&course_role=ta&status=enrolled
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view enrollments)
  */
-router.get('/offering/:offeringId', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId', ensureAuthenticated, async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
