@@ -955,9 +955,9 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
         user.primary_role === 'admin' || user.primary_role === 'instructor') {
       // Serve team lead view if user is a team lead, otherwise student view
       if (isTeamLead) {
-        return res.sendFile(buildFullViewPath("meeting-attendance-lead.html"));
+        return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
       } else {
-        return res.sendFile(buildFullViewPath("meeting-attendance-student.html"));
+        return res.sendFile(buildFullViewPath("meeting-attendance.html"));
       }
     }
 

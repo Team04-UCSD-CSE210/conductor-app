@@ -279,11 +279,24 @@
           const transformedSessions = sessionsArray
             .filter(s => s.team_id === state.teamId)
             .map(session => {
-              const transformed = window.LectureService ? 
-                window.LectureService.transformSession?.(session) : 
-                { id: session.id, label: session.title, startsAt: null, endsAt: null, status: 'closed', team_id: session.team_id };
+              // If a transformSession helper exists, use it. Otherwise fall back to a safe default
+              // Avoid optional-chaining + conditional that can yield `undefined` for `transformed`
+              let transformed;
+              if (window.LectureService && typeof window.LectureService.transformSession === 'function') {
+                transformed = window.LectureService.transformSession(session);
+              } else {
+                transformed = {
+                  id: session.id,
+                  label: session.title,
+                  startsAt: null,
+                  endsAt: null,
+                  status: 'closed',
+                  team_id: session.team_id,
+                  accessCode: session.access_code
+                };
+              }
               const attendanceStatus = attendanceMap[session.id] || 'absent';
-              const sessionState = transformed.status;
+              const sessionState = transformed?.status || 'closed';
               let status = attendanceStatus;
               if (sessionState === 'open' && attendanceStatus === 'absent') {
                 status = 'open';

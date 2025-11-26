@@ -12,7 +12,7 @@ async function fetchTeams() {
       const meta = document.querySelector('meta[name="offering-id"]');
       if (meta && meta.content) offeringId = meta.content;
     }
-  } catch (e) {
+  } catch {
     // ignore and continue
   }
 
@@ -73,6 +73,7 @@ async function renderTeams() {
       fetchMeetings(team.id, offeringId).then(async meetings => {
         // Filter out sessions where team_id is null
         const teamMeetings = meetings.filter(m => m.team_id === team.id);
+        console.log("Number of meetings for team", team.id, "is", teamMeetings.length);
         let totalAttendance = 0;
         let totalPossible = 0;
         for (const meeting of teamMeetings) {
