@@ -8,29 +8,47 @@
   <link rel="stylesheet" href="/css/dashboard-global.css">
   <link rel="stylesheet" href="/css/inactivity-timeout.css">
   <link rel="stylesheet" href="/css/instructor-team-meetings.css">
+  <link rel="stylesheet" href="/css/instructor-lectures.css">
 </head>
-  <body>
-    <header class="sidebar" role="navigation" aria-label="Primary navigation">
-        <div class="sidebar-logo">
-            <img src="/assets/temp-logo.png" alt="Conductor logo">
-        </div>
-        <h1 class="sidebar-title">Conductor</h1>
-        <nav aria-label="Dashboard navigation">
-            <a href="/instructor-dashboard">Dashboard</a>
-            <a href="/course-settings">Course Settings</a>
-            <a href="/instructor-lectures">Attendance</a>
-            <a href="/roster">Roster</a>
-            <a href="/instructor-meetings">Team Meetings</a>
-        </nav>
-        <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-            <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
-        </footer>
-        </header>
-    <div class="team-container">
-      <h1 id="team-title">Team Meetings</h1>
-      <div class="team-meta" id="team-meta"></div>
-      <div class="meeting-list" id="meeting-list"></div>
+<body class="dashboard-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
-    <script src="/js/instructor-team-meetings.js"></script>
-  </body>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/instructor-dashboard">Dashboard</a>
+      <a href="/course-settings">Course Settings</a>
+      <a href="/instructor-lectures">Attendance</a>
+      <a href="/roster">Roster</a>
+      <a href="/instructor-meetings" class="active">Team Meetings</a>
+    </nav>
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </footer>
+  </header>
+  <main class="main-container" id="main">
+    <div class="attendance-layout">
+      <section class="attendance-content" data-offering-id="">
+        <div class="attendance-title">
+          <div>
+            <p class="eyebrow">Team Meetings Overview</p>
+            <h2 id="team-title">Team Meetings</h2>
+            <p class="subtitle">Review all team meetings and attendance statistics for each team.</p>
+          </div>
+        </div>
+        <div class="lecture-list" id="meeting-list" aria-live="polite"></div>
+        <div class="empty-state" id="meeting-empty" hidden>
+          <p>No meetings found for any team.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="/js/instructor-team-meetings.js"></script>
+</body>
 </html>
