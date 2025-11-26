@@ -357,18 +357,57 @@
       actions.appendChild(checkInButton);
     }
     
-    // Add manage button
-    const manageButton = document.createElement('button');
-    manageButton.className = 'btn-link';
-    manageButton.type = 'button';
-    manageButton.textContent = 'Manage';
+    // Add delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn-link btn-delete';
+    deleteButton.type = 'button';
+    deleteButton.textContent = 'Delete';
     
-    manageButton.addEventListener('click', () => {
-      // Navigate to meeting management page
-      globalThis.location.href = `/manage-session?sessionId=${meeting.id}`;
+    deleteButton.addEventListener('click', async () => {
+      if (!confirm(`Are you sure you want to delete "${meeting.title || meeting.name || 'this meeting'}"?`)) {
+        return;
+      }
+      
+      deleteButton.disabled = true;
+      deleteButton.textContent = 'Deleting...';
+      
+      try {
+        const response = await fetch(`/api/sessions/team/${meeting.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to delete meeting');
+        }
+        
+        // Remove the meeting from the DOM
+        row.remove();
+        
+        // Update the state
+        state.meetings = state.meetings.filter(m => m.id !== meeting.id);
+        
+        // Update attendance percentages
+        await updateTeamAttendance();
+        await updateIndividualAttendance();
+        
+        // Show empty state if no meetings left
+        if (state.meetings.length === 0 && selectors.empty) {
+          selectors.empty.removeAttribute('hidden');
+          selectors.empty.style.display = '';
+        }
+      } catch (error) {
+        console.error('Error deleting meeting:', error);
+        alert('Failed to delete meeting. Please try again.');
+        deleteButton.disabled = false;
+        deleteButton.textContent = 'Delete';
+      }
     });
     
-    actions.appendChild(manageButton);
+    actions.appendChild(deleteButton);
 
     // Only append sessionStatus if it has content (open or closed)
     if (isOpen || isPast) {

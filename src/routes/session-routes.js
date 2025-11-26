@@ -4,6 +4,7 @@ import { SessionQuestionModel } from '../models/session-question-model.js';
 import { SessionResponseModel } from '../models/session-response-model.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import { protect, protectAny } from '../middleware/permission-middleware.js';
+import { pool } from '../db.js';
 
 const router = Router();
 
@@ -129,6 +130,49 @@ router.put('/:sessionId', ...protect('session.manage', 'course'), async (req, re
     }
 
     res.json(session);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Delete session (team leader can delete their own team's sessions)
+ * DELETE /api/sessions/team/:sessionId
+ * Requires: Authentication, must be team leader of the session's team
+ */
+router.delete('/team/:sessionId', ensureAuthenticated, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { id: userId } = req.currentUser;
+    
+    // Get session to verify it's a team session
+    const session = await SessionService.getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    if (!session.team_id) {
+      return res.status(403).json({ error: 'Can only delete team sessions' });
+    }
+    
+    // Verify user is team leader
+    const teamCheck = await pool.query(
+      'SELECT role FROM team_members WHERE team_id = $1 AND user_id = $2',
+      [session.team_id, userId]
+    );
+    
+    if (!teamCheck.rows.length || teamCheck.rows[0].role !== 'leader') {
+      return res.status(403).json({ error: 'Only team leaders can delete team sessions' });
+    }
+    
+    // Delete the session
+    const deleted = await SessionService.deleteSession(sessionId, userId);
+    
+    if (!deleted) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({ deleted: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
