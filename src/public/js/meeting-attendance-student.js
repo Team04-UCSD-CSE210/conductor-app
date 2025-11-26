@@ -400,6 +400,18 @@
               if (sessionState === 'pending') {
                 status = 'pending';
               }
+              
+              // Use attendance timestamps if available, otherwise fall back to transformed times
+              let startsAt = transformed.startsAt;
+              let endsAt = transformed.endsAt;
+              
+              if (session.attendance_opened_at) {
+                startsAt = session.attendance_opened_at;
+              }
+              if (session.code_expires_at) {
+                endsAt = session.code_expires_at;
+              }
+              
               return {
                 ...session, // Preserve all original fields (timestamps, etc.)
                 id: transformed.id,
@@ -407,8 +419,8 @@
                 title: session.title,
                 status,
                 sessionState,
-                startsAt: transformed.startsAt,
-                endsAt: transformed.endsAt,
+                startsAt,
+                endsAt,
                 team_id: session.team_id,
                 accessCode: transformed.accessCode || session.access_code
               };
