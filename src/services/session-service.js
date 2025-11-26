@@ -160,32 +160,68 @@ export class SessionService {
       sessionData.offering_id = offeringId;
     }
 
-    const canCreate = await this.userCanCreateSession(createdBy, offeringId);
-    if (!canCreate) {
-      throw new Error('Not authorized to create sessions for this offering');
+    // Authorization check and team_id handling
+    const userRes = await pool.query('SELECT primary_role FROM users WHERE id = $1', [createdBy]);
+    if (userRes.rows.length === 0) {
+      throw new Error('User not found');
+    }
+    const primaryRole = userRes.rows[0].primary_role;
+    const isInstructor = primaryRole === 'instructor' || primaryRole === 'admin';
+
+    // If team_id not provided and user is not an instructor, auto-detect their team
+    if (!sessionData.team_id && !isInstructor) {
+      const teamRes = await pool.query(
+        `SELECT t.id 
+         FROM team t
+         LEFT JOIN team_members tm ON tm.team_id = t.id
+         WHERE t.offering_id = $1 
+           AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
+         LIMIT 1`,
+        [offeringId, createdBy]
+      );
+      
+      if (teamRes.rows.length > 0) {
+        sessionData.team_id = teamRes.rows[0].id;
+      } else {
+        // User is not an instructor and not a team leader
+        throw new Error('Not authorized to create sessions for this offering');
+      }
     }
 
-    // Auto-set team_id if creator is a team leader (not instructor)
-    if (!sessionData.team_id) {
-      const userRes = await pool.query('SELECT primary_role FROM users WHERE id = $1', [createdBy]);
-      const primaryRole = userRes.rows[0]?.primary_role;
+    // Validate team_id if provided (either explicitly or auto-detected)
+    if (sessionData.team_id) {
+      // Verify team belongs to the offering and user has permission
+      const teamCheck = await pool.query(
+        `SELECT t.id, t.offering_id,
+                EXISTS(
+                  SELECT 1 FROM team_members tm 
+                  WHERE tm.team_id = t.id AND tm.user_id = $2 AND tm.role = 'leader'
+                  UNION
+                  SELECT 1 WHERE t.leader_id = $2
+                ) as is_leader
+         FROM team t
+         WHERE t.id = $1`,
+        [sessionData.team_id, createdBy]
+      );
       
-      // If not an instructor, check if they're a team leader and set team_id
-      if (primaryRole !== 'instructor' && primaryRole !== 'admin') {
-        const teamRes = await pool.query(
-          `SELECT t.id FROM team t
-           LEFT JOIN team_members tm ON tm.team_id = t.id
-           WHERE t.offering_id = $1 AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
-           LIMIT 1`,
-          [offeringId, createdBy]
-        );
-        
-        if (teamRes.rows.length > 0) {
-          sessionData.team_id = teamRes.rows[0].id;
-        }
+      if (teamCheck.rows.length === 0) {
+        throw new Error('Team not found');
       }
-      // If instructor/admin, team_id stays null (course-wide lecture)
+      
+      const team = teamCheck.rows[0];
+      
+      // Verify team belongs to the specified offering
+      if (team.offering_id !== offeringId) {
+        throw new Error('Team does not belong to the specified course offering');
+      }
+      
+      // Team leaders can only create sessions for their own team
+      // Instructors can create sessions for any team
+      if (!isInstructor && !team.is_leader) {
+        throw new Error('You can only create sessions for teams where you are a leader');
+      }
     }
+    // If team_id is null at this point, it's a course-wide session (instructor only)
 
     const accessCode = await this.generateUniqueAccessCode();
     
