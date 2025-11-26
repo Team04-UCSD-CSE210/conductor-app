@@ -66,25 +66,47 @@
     // If both are provided, format as range
     if (startIso && endIso) {
       try {
-        const start = new Date(startIso);
-        const end = new Date(endIso);
+        let start = new Date(startIso);
+        let end = new Date(endIso);
         
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
           return '—';
         }
         
+        // If end time appears to be before start time on same day, it's likely next day
+        if (end <= start) {
+          const startDate = new Date(start);
+          startDate.setHours(0, 0, 0, 0);
+          const endDate = new Date(end);
+          endDate.setHours(0, 0, 0, 0);
+          
+          // If same calendar day but earlier time, add 24 hours
+          if (startDate.getTime() === endDate.getTime()) {
+            end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
+          }
+        }
+        
         const dateFormatter = new Intl.DateTimeFormat('en-US', { 
           month: 'short', 
           day: 'numeric', 
-          year: 'numeric',
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          year: 'numeric'
         });
         const timeFormatter = new Intl.DateTimeFormat('en-US', { 
           hour: 'numeric', 
-          minute: 'numeric',
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          minute: 'numeric'
         });
-        return `${dateFormatter.format(start)} ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
+        
+        const startDateStr = dateFormatter.format(start);
+        const endDateStr = dateFormatter.format(end);
+        const startTimeStr = timeFormatter.format(start);
+        const endTimeStr = timeFormatter.format(end);
+        
+        // Show date only if different (end time goes to next day)
+        if (endDateStr !== startDateStr) {
+          return `${startDateStr} ${startTimeStr} – ${endDateStr} ${endTimeStr}`;
+        } else {
+          return `${startDateStr} ${startTimeStr}–${endTimeStr}`;
+        }
       } catch (e) {
         console.warn('Error formatting time range:', e, startIso, endIso);
         return '—';
@@ -100,13 +122,11 @@
         const dateFormatter = new Intl.DateTimeFormat('en-US', { 
           month: 'short', 
           day: 'numeric', 
-          year: 'numeric',
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          year: 'numeric'
         });
         const timeFormatter = new Intl.DateTimeFormat('en-US', { 
           hour: 'numeric', 
-          minute: 'numeric',
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          minute: 'numeric'
         });
         return `${dateFormatter.format(start)} at ${timeFormatter.format(start)}`;
       } catch (e) {
@@ -414,15 +434,36 @@
                 status = 'pending';
               }
               
-              // Use attendance timestamps if available, otherwise fall back to transformed times
-              let startsAt = transformed.startsAt;
-              let endsAt = transformed.endsAt;
+              // Build proper start/end times from session_date and session_time
+              let startsAt = null;
+              let endsAt = null;
               
-              if (session.attendance_opened_at) {
-                startsAt = session.attendance_opened_at;
+              if (session.session_date && session.session_time) {
+                // Parse the date and time components
+                const sessionDate = new Date(session.session_date);
+                const year = sessionDate.getUTCFullYear();
+                const month = sessionDate.getUTCMonth();
+                const day = sessionDate.getUTCDate();
+                
+                const [hours, minutes] = session.session_time.split(':').map(Number);
+                
+                // Create start time in LOCAL time (not UTC) - matching team leader view
+                startsAt = new Date(year, month, day, hours, minutes);
               }
-              if (session.code_expires_at) {
-                endsAt = session.code_expires_at;
+              
+              // Calculate end time - try session_end_time first, then fallback to attendance timestamps
+              if (startsAt && session.session_end_time) {
+                const sessionDate = new Date(session.session_date);
+                const year = sessionDate.getUTCFullYear();
+                const month = sessionDate.getUTCMonth();
+                const day = sessionDate.getUTCDate();
+                
+                const [hours, minutes] = session.session_end_time.split(':').map(Number);
+                endsAt = new Date(year, month, day, hours, minutes);
+              } else if (session.attendance_closed_at) {
+                endsAt = new Date(session.attendance_closed_at);
+              } else if (session.code_expires_at) {
+                endsAt = new Date(session.code_expires_at);
               }
               
               return {
