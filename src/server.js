@@ -24,6 +24,7 @@ import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
 import journalRoutes from "./routes/journal-routes.js";
+import classDirectoryRoutes from "./routes/class-directory-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -791,6 +792,22 @@ app.get("/courses/:courseId/roster", ...rosterMiddleware, (req, res) => {
   res.sendFile(buildFullViewPath("roster.html"));
 });
 
+// Class Directory route - similar permissions to roster
+const classDirectoryMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
+
+app.get("/class-directory", ...classDirectoryMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("class-directory.html"));
+});
+
+app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("class-directory.html"));
+});
+
+// Course selection page
+app.get("/course-selection", ensureAuthenticated, (req, res) => {
+  res.sendFile(buildFullViewPath("course-selection.html"));
+});
+
 /**
  * Student Lecture Response
  * Students can respond to lecture questions after checking in
@@ -966,35 +983,42 @@ app.get(
         return res.redirect("/register.html");
       }
 
-      // Dashboard routing based on enrollment role (TA comes from enrollments table)
-      let enrollmentRole = null;
+      // Check if user has any enrollments - if so, redirect to course selection
+      let allEnrollments = [];
+      
       try {
-        enrollmentRole = await getUserEnrollmentRole(user.id);
+        // Get all user enrollments to check for courses
+        const enrollmentsResult = await pool.query(
+          `SELECT e.offering_id, e.course_role, co.code, co.name 
+           FROM enrollments e
+           INNER JOIN course_offerings co ON e.offering_id = co.id
+           WHERE e.user_id = $1::uuid AND e.status = 'enrolled'::enrollment_status_enum`,
+          [user.id]
+        );
+        allEnrollments = enrollmentsResult.rows;
       } catch (error) {
-        console.log(`[DEBUG] Database error getting enrollment role (non-critical): ${error.message}`);
+        console.log(`[DEBUG] Database error getting enrollments (non-critical): ${error.message}`);
       }
       
-      // Check primary_role for admin/instructor, enrollment for TA/student
+      // If user has any enrollments, redirect to course selection
+      if (allEnrollments.length > 0) {
+        console.log(`[DEBUG] User ${email} has ${allEnrollments.length} enrollment(s), redirecting to course selection`);
+        return res.redirect("/course-selection");
+      }
+      
+      // If no enrollments, check primary_role for admin/instructor access
       if (user.primary_role === 'admin') {
+        console.log(`[DEBUG] User ${email} is admin with no enrollments, redirecting to admin dashboard`);
         return res.redirect("/admin-dashboard");
       }
       
       if (user.primary_role === 'instructor') {
+        console.log(`[DEBUG] User ${email} is instructor with no enrollments, redirecting to instructor dashboard`);
         return res.redirect("/instructor-dashboard");
       }
       
-      // TA role comes from enrollments.course_role
-      if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
-        return res.redirect("/ta-dashboard");
-      }
-      
-      // Students (only if they have student primary_role, not unregistered)
-      if (enrollmentRole === 'student' || user.primary_role === 'student') {
-        return res.redirect("/student-dashboard");
-      }
-      
-      // Default fallback - should not reach here, but send to register just in case
-      console.log(`[DEBUG] No role match for ${email}, redirecting to register`);
+      // Default fallback - user has no enrollments and no admin/instructor role
+      console.log(`[DEBUG] User ${email} has no enrollments and no admin/instructor role, redirecting to register`);
       return res.redirect("/register.html");
     } catch (error) {
       console.error("Error in /auth/google/callback handler:", error);
@@ -1106,6 +1130,7 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/journals", ensureAuthenticated, journalRoutes);
 app.use("/api/class", courseOfferingRoutes);
+app.use("/api/class-directory", classDirectoryRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {
@@ -1570,6 +1595,47 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user courses:', error);
     res.status(500).json({ error: 'Failed to fetch courses' });
+  }
+});
+
+// Select active course for user session
+app.post('/api/select-course', ensureAuthenticated, express.json(), async (req, res) => {
+  try {
+    const { offering_id } = req.body;
+    const email = req.user?.emails?.[0]?.value;
+    
+    if (!email || !offering_id) {
+      return res.status(400).json({ error: 'Missing email or offering_id' });
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify user is enrolled in this offering
+    const enrollment = await pool.query(
+      `SELECT course_role FROM enrollments 
+       WHERE user_id = $1::uuid AND offering_id = $2::uuid AND status = 'enrolled'::enrollment_status_enum`,
+      [user.id, offering_id]
+    );
+
+    if (enrollment.rows.length === 0) {
+      return res.status(403).json({ error: 'Not enrolled in this course' });
+    }
+
+    // Store selected course in session
+    req.session.selectedOfferingId = offering_id;
+    req.session.selectedRole = enrollment.rows[0].course_role;
+
+    res.json({ 
+      success: true, 
+      offering_id,
+      role: enrollment.rows[0].course_role 
+    });
+  } catch (error) {
+    console.error('Error selecting course:', error);
+    res.status(500).json({ error: 'Failed to select course' });
   }
 });
 
