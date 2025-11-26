@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Instructor Team Meetings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/inactivity-timeout.css">
+  <link rel="stylesheet" href="/css/instructor-team-meetings.css">
+</head>
+  <body>
+    <header class="sidebar" role="navigation" aria-label="Primary navigation">
+        <div class="sidebar-logo">
+            <img src="/assets/temp-logo.png" alt="Conductor logo">
+        </div>
+        <h1 class="sidebar-title">Conductor</h1>
+        <nav aria-label="Dashboard navigation">
+            <a href="/instructor-dashboard">Dashboard</a>
+            <a href="/course-settings">Course Settings</a>
+            <a href="/instructor-lectures">Attendance</a>
+            <a href="/roster">Roster</a>
+            <a href="/instructor-meetings">Team Meetings</a>
+        </nav>
+        <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+            <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+        </footer>
+        </header>
+    <div class="team-container">
+      <h1 id="team-title">Team Meetings</h1>
+      <div class="team-meta" id="team-meta"></div>
+      <div class="meeting-list" id="meeting-list"></div>
+    </div>
+    <script src="/js/instructor-team-meetings.js"></script>
+  </body>
+</html>
