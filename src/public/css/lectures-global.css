@@ -1,0 +1,335 @@
+/* Lectures Global CSS - Shared Styles Across All Lecture Views */
+
+/* ========================================
+   BACK BUTTON
+   ======================================== */
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--gray-300, #d1d5db);
+  background: white;
+  border-radius: 0.5rem;
+  color: var(--gray-700, #374151);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.back-button:hover {
+  border-color: var(--teal-500, #14b8a6);
+  color: var(--teal-600, #0d9488);
+  background: var(--teal-50, #f0fdfa);
+}
+
+.back-button:focus {
+  outline: 2px solid var(--teal-500, #14b8a6);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   EYEBROW TEXT
+   ======================================== */
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray-600, #4b5563);
+  font-size: 0.7rem;
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+/* ========================================
+   LECTURE HEADERS
+   ======================================== */
+.lecture-info h2,
+.stack-header h2,
+.builder-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gray-900, #111827);
+  line-height: 1.3;
+}
+
+.lecture-info p {
+  margin: 0;
+  color: var(--gray-600, #4b5563);
+}
+
+/* ========================================
+   LECTURE STATUS BADGES
+   ======================================== */
+.lecture-status {
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 70px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.lecture-status.open {
+  background: var(--emerald-100, #d1fae5);
+  color: var(--emerald-700, #047857);
+  border: 1px solid var(--emerald-300, #6ee7b7);
+}
+
+.lecture-status.closed {
+  background: var(--gray-200, #e5e7eb);
+  color: var(--gray-600, #4b5563);
+  border: 1px solid var(--gray-300, #d1d5db);
+}
+
+.lecture-status.pending {
+  background: var(--amber-100, #fef3c7);
+  color: var(--amber-700, #b45309);
+  border: 1px solid var(--amber-300, #fcd34d);
+}
+
+.lecture-status.error {
+  background: var(--rose-100, #ffe4e6);
+  color: var(--rose-700, #be123c);
+}
+
+/* ========================================
+   LECTURE ACTION BUTTONS
+   ======================================== */
+.lecture-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-link {
+  border-radius: 9999px;
+  border: 1.5px solid var(--teal-600, #0d9488);
+  background: transparent;
+  color: var(--teal-600, #0d9488);
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.btn-link:hover {
+  background: var(--teal-600, #0d9488);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgb(13 148 136 / 25%);
+}
+
+/* ========================================
+   PULSE CHECK BAR GRAPH
+   ======================================== */
+.pulse-results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.pulse-bar-row {
+  display: grid;
+  grid-template-columns: 64px 140px 1fr 120px;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: var(--gray-50, #f9fafb);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+}
+
+.pulse-bar-row:hover {
+  background: white;
+  border-color: var(--teal-300, #5eead4);
+  box-shadow: 0 2px 8px rgb(20 184 166 / 10%);
+}
+
+.pulse-bar-emoji {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 50%;
+  border: 2px solid var(--gray-200, #e5e7eb);
+  padding: 8px;
+  transition: all 0.2s;
+}
+
+.pulse-bar-row:hover .pulse-bar-emoji {
+  border-color: var(--teal-400, #2dd4bf);
+  transform: scale(1.05);
+}
+
+.pulse-bar-emoji img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pulse-bar-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--gray-700, #374151);
+}
+
+.pulse-bar-container {
+  position: relative;
+  height: 32px;
+  background: var(--gray-100, #f3f4f6);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.pulse-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal-400, #2dd4bf), var(--teal-500, #14b8a6));
+  border-radius: 0.5rem;
+  transition: width 0.5s ease-out;
+  position: relative;
+  min-width: 2px;
+}
+
+.pulse-bar[data-count="0"] {
+  min-width: 0;
+  background: transparent;
+}
+
+.pulse-bar-count {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gray-700, #374151);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ========================================
+   PULSE CHECK OPTIONS (BUILDER)
+   ======================================== */
+.pulse-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pulse-option-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: var(--gray-50, #f9fafb);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+}
+
+.pulse-option-row:hover {
+  background: white;
+  border-color: var(--teal-300, #5eead4);
+  box-shadow: 0 2px 8px rgb(20 184 166 / 10%);
+}
+
+.pulse-emoji {
+  font-size: 3rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 50%;
+  border: 2px solid var(--gray-200, #e5e7eb);
+  transition: all 0.2s;
+  padding: 8px;
+}
+
+.pulse-emoji img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pulse-option-row:hover .pulse-emoji {
+  border-color: var(--teal-400, #2dd4bf);
+  transform: scale(1.1);
+}
+
+.pulse-input-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.pulse-input-wrapper label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gray-700, #374151);
+  margin-bottom: 0.25rem;
+}
+
+.pulse-input-wrapper input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  transition: all 0.15s;
+  background: white;
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+@media (width <= 1024px) {
+  .pulse-bar-row {
+    grid-template-columns: 48px 120px 1fr 100px;
+    gap: 1rem;
+  }
+
+  .pulse-bar-emoji {
+    width: 48px;
+    height: 48px;
+  }
+
+  .pulse-bar-label {
+    font-size: 0.85rem;
+  }
+
+  .pulse-bar-count {
+    font-size: 0.8rem;
+  }
+}
+
+@media (width <= 640px) {
+  .pulse-bar-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .pulse-bar-emoji {
+    margin: 0 auto;
+  }
+
+  .pulse-bar-label {
+    text-align: center;
+  }
+
+  .pulse-bar-count {
+    text-align: center;
+  }
+}

@@ -1,245 +1,54 @@
-name: Deploy to AWS
+name: CD Pipeline
 
 on:
   push:
     branches: ["**"]
-  pull_request:
-    branches: [main]
-
-permissions:
-  contents: read
-  pull-requests: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set environment variables
-        run: |
-          BRANCH_NAME=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
-          CLEAN_BRANCH=$(echo $BRANCH_NAME | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-          echo "CLEAN_BRANCH=$CLEAN_BRANCH" >> $GITHUB_ENV
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Deploy infrastructure
-        if: env.BRANCH_NAME == 'main'
+          node-version: '18'
+      
+      - name: Build Docker image
         run: |
-          aws cloudformation deploy \
-            --template-file .github/aws-infrastructure-simple.yml \
-            --stack-name conductor-app-infrastructure \
-            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-            --parameter-overrides DBPassword=TempPassword123! \
-            --region us-east-1
+          BRANCH_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+          docker build -f .github/docker/Dockerfile -t conductor-app:${{ github.sha }} .
+          docker tag conductor-app:${{ github.sha }} conductor-app:${BRANCH_TAG}
 
-      - name: Get stack outputs
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to Render
         run: |
-          REPOSITORY_URI=$(aws cloudformation describe-stacks \
-            --stack-name conductor-app-infrastructure \
-            --query 'Stacks[0].Outputs[?OutputKey==`ECRRepository`].OutputValue' \
-            --output text)
-          
-          CLUSTER_NAME=$(aws cloudformation describe-stacks \
-            --stack-name conductor-app-infrastructure \
-            --query 'Stacks[0].Outputs[?OutputKey==`ECSCluster`].OutputValue' \
-            --output text)
-          
-          SUBNET1=$(aws cloudformation describe-stacks \
-            --stack-name conductor-app-infrastructure \
-            --query 'Stacks[0].Outputs[?OutputKey==`PublicSubnet1`].OutputValue' \
-            --output text)
-          
-          SUBNET2=$(aws cloudformation describe-stacks \
-            --stack-name conductor-app-infrastructure \
-            --query 'Stacks[0].Outputs[?OutputKey==`PublicSubnet2`].OutputValue' \
-            --output text)
-          
-          SECURITY_GROUP=$(aws cloudformation describe-stacks \
-            --stack-name conductor-app-infrastructure \
-            --query 'Stacks[0].Outputs[?OutputKey==`ECSSecurityGroup`].OutputValue' \
-            --output text)
-          
-          echo "CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
-          echo "SUBNETS=$SUBNET1,$SUBNET2" >> $GITHUB_ENV
-          echo "SECURITY_GROUP=$SECURITY_GROUP" >> $GITHUB_ENV
-
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push Docker image
-        env:
-          ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-          IMAGE_TAG: ${{ env.CLEAN_BRANCH }}-${{ github.sha }}
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      
+      - name: Notify team
         run: |
-          docker build -t $ECR_REGISTRY/conductor-app:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/conductor-app:$IMAGE_TAG
+          echo "Production Deployed!"
+          echo "URL: https://conductor-app.onrender.com"
 
-      - name: Deploy to ECS
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          IMAGE_TAG: ${{ env.CLEAN_BRANCH }}-${{ github.sha }}
-          SERVICE_NAME: conductor-${{ env.CLEAN_BRANCH }}
-        run: |
-          # Set callback URL based on branch
-          if [ "${{ env.BRANCH_NAME }}" == "main" ]; then
-            CALLBACK_URL="https://dfbhtda4vdu81.cloudfront.net/auth/google/callback"
-          else
-            CALLBACK_URL="http://FEATURE_IP_PLACEHOLDER:3001/auth/google/callback"
-          fi
-          
-          # Create task definition
-          sed "s/ACCOUNT_ID/$AWS_ACCOUNT_ID/g; s/REGION/us-east-1/g; s/:latest/:$IMAGE_TAG/g; s/\"family\": \"conductor-app\"/\"family\": \"$SERVICE_NAME\"/g; s/\"name\": \"conductor-app\"/\"name\": \"$SERVICE_NAME\"/g; s/GOOGLE_CLIENT_ID_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_ID }}/g; s/GOOGLE_CLIENT_SECRET_PLACEHOLDER/${{ secrets.GOOGLE_CLIENT_SECRET }}/g; s/SESSION_SECRET_PLACEHOLDER/${{ secrets.SESSION_SECRET }}/g; s|GOOGLE_CALLBACK_URL_PLACEHOLDER|$CALLBACK_URL|g" .github/aws-task-definition.json > task-def.json
-          
-          # Register task definition
-          TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://task-def.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-          
-          # Create or update service
-          SERVICE_EXISTS=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'length(services[?serviceName==`'$SERVICE_NAME'`])' --output text 2>/dev/null)
-          if [ "$SERVICE_EXISTS" -gt 0 ]; then
-            aws ecs update-service \
-              --cluster $CLUSTER_NAME \
-              --service $SERVICE_NAME \
-              --task-definition $TASK_DEF_ARN
-          else
-            aws ecs create-service \
-              --cluster $CLUSTER_NAME \
-              --service-name $SERVICE_NAME \
-              --task-definition $TASK_DEF_ARN \
-              --desired-count 1 \
-              --launch-type FARGATE \
-              --network-configuration "awsvpcConfiguration={subnets=[$SUBNETS],securityGroups=[$SECURITY_GROUP],assignPublicIp=ENABLED}"
-          fi
-
-      - name: Get feature branch IP
-        if: env.BRANCH_NAME != 'main'
-        run: |
-          SERVICE_NAME="conductor-${{ env.CLEAN_BRANCH }}"
-          
-          # Wait for service to start
-          sleep 30
-          
-          # Get task IP
-          TASK_ARN=$(aws ecs list-tasks --cluster $CLUSTER_NAME --service-name $SERVICE_NAME --query 'taskArns[0]' --output text 2>/dev/null || echo "")
-          
-          if [ "$TASK_ARN" != "None" ] && [ "$TASK_ARN" != "" ]; then
-            PUBLIC_IP=$(aws ecs describe-tasks --cluster $CLUSTER_NAME --tasks $TASK_ARN --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text | xargs -I {} aws ec2 describe-network-interfaces --network-interface-ids {} --query 'NetworkInterfaces[0].Association.PublicIp' --output text 2>/dev/null || echo "")
-            
-            if [ "$PUBLIC_IP" != "" ] && [ "$PUBLIC_IP" != "None" ]; then
-              echo "FEATURE_URL=http://$PUBLIC_IP:3001" >> $GITHUB_ENV
-            else
-              echo "FEATURE_URL=IP not ready yet" >> $GITHUB_ENV
-            fi
-          else
-            echo "FEATURE_URL=Task not running yet" >> $GITHUB_ENV
-          fi
-
-      - name: Health check
-        id: health-check
-        run: |
-          SERVICE_NAME="conductor-${{ env.CLEAN_BRANCH }}"
-          
-          if [ "${{ env.BRANCH_NAME }}" == "main" ]; then
-            HEALTH_URL="https://dfbhtda4vdu81.cloudfront.net/health"
-          else
-            # Wait for service to be stable
-            echo "Waiting for ECS service to be stable..."
-            aws ecs wait services-stable --cluster $CLUSTER_NAME --services $SERVICE_NAME
-            
-            # Get the actual task IP
-            TASK_ARN=$(aws ecs list-tasks --cluster $CLUSTER_NAME --service-name $SERVICE_NAME --query 'taskArns[0]' --output text)
-            
-            if [ "$TASK_ARN" == "None" ] || [ -z "$TASK_ARN" ]; then
-              echo "No running tasks found"
-              echo "healthy=false" >> $GITHUB_OUTPUT
-              exit 1
-            fi
-            
-            ENI_ID=$(aws ecs describe-tasks --cluster $CLUSTER_NAME --tasks $TASK_ARN --query 'tasks[0].attachments[0].details[?name==`networkInterfaceId`].value' --output text)
-            FEATURE_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $ENI_ID --query 'NetworkInterfaces[0].Association.PublicIp' --output text)
-            
-            if [ "$FEATURE_IP" == "None" ] || [ -z "$FEATURE_IP" ]; then
-              echo "Failed to get service IP"
-              echo "healthy=false" >> $GITHUB_OUTPUT
-              exit 1
-            fi
-            
-            HEALTH_URL="http://$FEATURE_IP:3001/health"
-          fi
-          
-          echo "Testing health at: $HEALTH_URL"
-          
-          # Health check with retries
-          for i in {1..5}; do
-            if curl -f -s "$HEALTH_URL" > /dev/null 2>&1; then
-              echo "Health check passed!"
-              echo "healthy=true" >> $GITHUB_OUTPUT
-              exit 0
-            fi
-            echo "Health check attempt $i/5 failed retrying..."
-            sleep 30
-          done
-          
-          echo "Health check failed after 5 attempts"
-          echo "healthy=false" >> $GITHUB_OUTPUT
-          exit 1
-
-      - name: Rollback on failure
-        if: failure() && steps.health-check.outputs.healthy == 'false'
-        run: |
-          SERVICE_NAME="conductor-${{ env.CLEAN_BRANCH }}"
-          
-          echo "Rolling back due to health check failure"
-          
-          # Get previous task definition
-          PREVIOUS_TASK_DEF=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' --output text)
-          
-          if [ "$PREVIOUS_TASK_DEF" != "" ] && [ "$PREVIOUS_TASK_DEF" != "None" ]; then
-            echo "Rolling back to: $PREVIOUS_TASK_DEF"
-            aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $PREVIOUS_TASK_DEF
-          else
-            echo "No previous deployment found, stopping service"
-            aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --desired-count 0
-          fi
-
-      - name: Comment PR with deployment info
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const isMain = "${{ env.BRANCH_NAME }}" === "main";
-            const url = isMain ? "https://dfbhtda4vdu81.cloudfront.net" : "${{ env.FEATURE_URL || 'Deploying...' }}";
-            
-            const body = `**Deployment Complete**\n\n**Branch:** \`${{ env.BRANCH_NAME }}\`\n**Service:** \`conductor-${{ env.CLEAN_BRANCH }}\`\n**URL:** ${url}`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            })
-
-      - name: Notify Slack
-        if: always()
+  notify:
+    needs: [build, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack of Pipeline Status
         uses: slackapi/slack-github-action@v1.25.0
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
           slack-message: |
-            :${{ job.status == 'success' && 'white_check_mark' || 'x' }}: Deployment ${{ job.status == 'success' && 'SUCCESSFUL' || 'FAILED' }} for Conductor App
-            Branch: `${{ env.BRANCH_NAME }}`
-            Service: `conductor-${{ env.CLEAN_BRANCH }}`
-            URL: ${{ env.BRANCH_NAME == 'main' && 'https://dfbhtda4vdu81.cloudfront.net' || env.FEATURE_URL || 'Deploying...' }}
+            :${{ contains(needs.*.result, 'failure') && 'x' || 'white_check_mark' }}: CD Pipeline for Conductor App ${{ contains(needs.*.result, 'failure') && 'FAILED' || 'PASSED' }}
+            Branch: ${{ github.ref_name }}
+            Docker Image: conductor-app:${{ github.sha }}
+            ${{ github.ref == 'refs/heads/main' && 'Deployed to: https://conductor-app.onrender.com' || 'Feature branch build completed' }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
