@@ -6,6 +6,7 @@ import defineWorkJournalModel from "./src/models/workJournalLog.js";
 import defineUserModel from "./src/models/user-temp.js"; // we will create temp
 
 const app = express();
+app.disable("x-powered-by");
 app.use(bodyParser.json());
 app.use(express.static("src/public"));
 app.use(express.static("src/views"));
