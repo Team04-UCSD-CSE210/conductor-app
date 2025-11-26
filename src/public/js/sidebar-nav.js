@@ -89,6 +89,60 @@
     return NAV_CONFIG.student;
   };
 
+  const populateUserDisplay = (context) => {
+    const sidebarUserEl = document.getElementById('sidebarUser');
+    if (!sidebarUserEl) {
+      // Element doesn't exist on this page, that's okay
+      return;
+    }
+
+    if (!context) {
+      console.warn('[sidebar-nav] No context provided for user display');
+      return;
+    }
+
+    const nameEl = sidebarUserEl.querySelector('.sidebar-user-name');
+    const roleEl = sidebarUserEl.querySelector('.sidebar-user-role');
+
+    if (!nameEl || !roleEl) {
+      console.warn('[sidebar-nav] User display elements not found');
+      return;
+    }
+
+    // Populate name
+    if (context.name) {
+      nameEl.textContent = context.name;
+    } else if (context.preferred_name) {
+      nameEl.textContent = context.preferred_name;
+    } else {
+      nameEl.textContent = 'User';
+    }
+
+    // Populate role
+    if (context.display_role) {
+      roleEl.textContent = context.display_role;
+    } else if (context.enrollment_role) {
+      // Fallback: format enrollment role
+      const roleMap = {
+        'ta': 'TA',
+        'tutor': 'Tutor',
+        'team-lead': 'Team Lead',
+        'student': 'Student'
+      };
+      roleEl.textContent = roleMap[context.enrollment_role] || context.enrollment_role;
+    } else if (context.primary_role) {
+      // Fallback: format primary role
+      const roleMap = {
+        'admin': 'Admin',
+        'instructor': 'Instructor',
+        'student': 'Student'
+      };
+      roleEl.textContent = roleMap[context.primary_role] || context.primary_role;
+    } else {
+      roleEl.textContent = 'User';
+    }
+  };
+
   const renderNav = (navEl, links) => {
     navEl.innerHTML = links
       .map(
@@ -112,12 +166,32 @@
     if (!navEl) return;
 
     let links = NAV_CONFIG.student;
+    let context = null;
 
     try {
-      const context = await fetchJson("/api/users/navigation-context");
+      context = await fetchJson("/api/users/navigation-context");
       links = determineNavLinks(context);
     } catch (error) {
       console.warn("[sidebar-nav] Falling back to student navigation:", error.message);
+    }
+
+    // Always try to populate user display, even if context fetch failed
+    if (context) {
+      populateUserDisplay(context);
+    } else {
+      // If context fetch failed, try to populate with empty/default values
+      const sidebarUserEl = document.getElementById('sidebarUser');
+      if (sidebarUserEl) {
+        const nameEl = sidebarUserEl.querySelector('.sidebar-user-name');
+        const roleEl = sidebarUserEl.querySelector('.sidebar-user-role');
+        if (nameEl) nameEl.textContent = 'User';
+        if (roleEl) roleEl.textContent = 'Student';
+      }
+    }
+
+    // Debug: Log context to help troubleshoot
+    if (context) {
+      console.log('[sidebar-nav] Context received:', context);
     }
 
     renderNav(navEl, links);
