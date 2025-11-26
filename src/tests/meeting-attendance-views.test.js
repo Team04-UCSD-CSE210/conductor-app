@@ -8,7 +8,6 @@
  */
 
 import { describe, it, beforeAll, afterAll, expect } from 'vitest';
-import assert from 'node:assert';
 import { pool } from '../db.js';
 
 describe('Meeting Attendance Views Integration', () => {
@@ -684,7 +683,6 @@ describe('Meeting Attendance Views Integration', () => {
     });
 
     it('should filter meetings by status (pending/open/closed)', async () => {
-      const now = new Date();
       
       // Get all sessions with calculated status
       const sessions = await pool.query(

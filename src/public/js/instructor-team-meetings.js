@@ -47,7 +47,6 @@ function determineMeetingStatus(meeting) {
     }
   } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
     // Only open time is set
-    const openTime = new Date(meeting.attendance_opened_at);
     
     // Check if end time has passed
     if (meeting.code_expires_at) {
