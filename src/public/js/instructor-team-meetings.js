@@ -43,34 +43,53 @@ function renderMeetings(meetings, teamSize) {
   list.innerHTML = '';
   if (!meetings.length) {
     list.innerHTML = '<p style="color:#888;">No meetings found for this team.</p>';
+    // Set overall attendance to 0%
+    const overallEl = document.getElementById('overall-attendance-value');
+    if (overallEl) overallEl.textContent = '0%';
     return;
   }
+  let totalPresent = 0;
+  let totalPossible = 0;
+  let statsPromises = [];
   for (const meeting of meetings) {
     const row = document.createElement('div');
     row.className = 'meeting-row';
+    // Hard-coded date and time for now
+    const dateStr = '2025-11-26';
+    const timeStr = '10:00 AM–11:00 AM';
     row.innerHTML = `
       <span class="meeting-title">${meeting.title || meeting.label || 'Meeting'}</span>
-      <span class="meeting-time">${formatTimeRange(meeting.startsAt, meeting.endsAt)}</span>
+      <span class="meeting-date">${dateStr}</span>
+      <span class="meeting-time">${timeStr}</span>
       <span class="meeting-attendance" id="attendance-${meeting.id}" style="margin-top:0.5rem;color:#444;font-size:0.98rem;">Loading attendance...</span>
     `;
     list.appendChild(row);
-    // Fetch and display X/Y attended (Y = team size)
-    fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' })
-      .then(res => res.ok ? res.json() : null)
-      .then(stats => {
-        const el = document.getElementById(`attendance-${meeting.id}`);
-        if (el && stats) {
-          const present = stats.present_count || 0;
-          el.textContent = `${present} / ${teamSize} attended`;
-        } else if (el) {
-          el.textContent = 'Attendance unavailable';
-        }
-      })
-      .catch(() => {
-        const el = document.getElementById(`attendance-${meeting.id}`);
-        if (el) el.textContent = 'Attendance unavailable';
-      });
+    // Collect stats promises for overall attendance
+    statsPromises.push(
+      fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' })
+        .then(res => res.ok ? res.json() : null)
+        .then(stats => {
+          const el = document.getElementById(`attendance-${meeting.id}`);
+          let present = 0;
+          if (el && stats) {
+            present = stats.present_count || 0;
+            el.textContent = `${present} / ${teamSize} attended`;
+          } else if (el) {
+            el.textContent = 'Attendance unavailable';
+          }
+          return present;
+        })
+        .catch(() => 0)
+    );
+    totalPossible += teamSize;
   }
+  // After all stats loaded, calculate overall attendance
+  Promise.all(statsPromises).then(presents => {
+    totalPresent = presents.reduce((a, b) => a + b, 0);
+    const percent = totalPossible > 0 ? Math.round((totalPresent / totalPossible) * 100) : 0;
+    const overallEl = document.getElementById('overall-attendance-value');
+    if (overallEl) overallEl.textContent = `${percent}%`;
+  });
 }
 
 async function renderPage() {
