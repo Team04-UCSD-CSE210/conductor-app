@@ -23,6 +23,7 @@ BEGIN
     FROM users 
     WHERE email = 'zhkan@ucsd.edu'
        OR email = 'bhchandna@ucsd.edu' 
+       OR email = 'lhardy@ucsd.edu'
        OR email = 'instructor1@ucsd.edu'
     LIMIT 1;
     
