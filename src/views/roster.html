@@ -49,8 +49,8 @@
             <option value="json">JSON</option>
           </select>
         </div>
-        <button class="btn btn-soft" id="btnExport">Export</button>
-        <button class="btn btn-soft" id="btnImportModal">Import</button>
+        <button class="btn btn-soft btn-export-group" id="btnExport">Export</button>
+        <button class="btn btn-soft btn-import" id="btnImportModal">Import</button>
         <button class="btn btn-primary" id="btnAddPerson">Add Person</button>
       </div>
     </div>
@@ -82,20 +82,26 @@
 
     <section class="roster-controls">
       <div class="control-group roster-filter-bar">
-        <input type="search" id="searchInput" class="search-input" placeholder="Search name, email, PID">
-        <span class="filter-divider" aria-hidden="true">|</span>
-        <div class="chip-group" role="group" aria-label="Role filter">
-          <button class="chip" data-role-filter="all" data-active="true">All roles</button>
-          <button class="chip" data-role-filter="student">Students</button>
-          <button class="chip" data-role-filter="ta">TAs</button>
-          <button class="chip" data-role-filter="tutor">Tutors</button>
+        <div class="search-input-wrapper">
+          <input type="search" id="search-input" class="search-input" placeholder="Search name, email, PID" aria-label="Search roster by name, email, or PID">
         </div>
         <span class="filter-divider" aria-hidden="true">|</span>
-        <div class="chip-group" role="group" aria-label="Status filter">
-          <button class="chip" data-status-filter="all" data-active="true">All statuses</button>
-          <button class="chip" data-status-filter="enrolled">Enrolled</button>
-          <button class="chip" data-status-filter="waitlisted">Waitlist</button>
-          <button class="chip" data-status-filter="dropped">Dropped</button>
+        <div class="filter-group">
+          <div class="chip-group" role="group" aria-label="Role filter">
+            <button class="chip" data-role-filter="all" data-active="true">All roles</button>
+            <button class="chip" data-role-filter="student">Students</button>
+            <button class="chip" data-role-filter="ta">TAs</button>
+            <button class="chip" data-role-filter="tutor">Tutors</button>
+          </div>
+        </div>
+        <span class="filter-divider" aria-hidden="true">|</span>
+        <div class="filter-group">
+          <div class="chip-group" role="group" aria-label="Status filter">
+            <button class="chip" data-status-filter="all" data-active="true">All statuses</button>
+            <button class="chip" data-status-filter="enrolled">Enrolled</button>
+            <button class="chip" data-status-filter="waitlisted">Waitlist</button>
+            <button class="chip" data-status-filter="dropped">Dropped</button>
+          </div>
         </div>
         <span class="filter-divider" aria-hidden="true">|</span>
         <div class="team-filter-group" id="teamFilterWrapper">
@@ -105,6 +111,7 @@
             <option value="team-leads">Team Leads</option>
           </select>
         </div>
+        <button class="btn btn-ghost clear-filters-btn" id="clearFilters">Clear filters</button>
       </div>
       <div class="control-group">
         <label class="sr-only" for="sortSelect">Sort roster</label>
@@ -123,6 +130,9 @@
         <table aria-describedby="statTotal" class="roster-table">
           <thead>
             <tr>
+              <th class="col-checkbox">
+                <input type="checkbox" id="select-all" aria-label="Select all people" title="Select all">
+              </th>
               <th class="col-person">Person</th>
               <th class="col-role">Course Role</th>
               <th class="col-status">Status</th>
@@ -135,27 +145,36 @@
         </table>
       </div>
       <div id="emptyState" class="empty-state" hidden>
-        <p>No people match the current filters.</p>
-        <p class="empty-state-note">
-          Try clearing your search or importing additional records.
-        </p>
+        <div class="empty-state-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <p>No people found, try clearing your search or importing additional records.</p>
       </div>
     </section>
 
     <section class="pagination" aria-label="Pagination controls">
       <div class="control-group">
-        <button class="btn btn-soft" id="prevPage">← Prev</button>
-        <button class="btn btn-soft" id="nextPage">Next →</button>
+        <button class="btn btn-soft" id="prevPage" aria-label="Previous page">← Prev</button>
+        <button class="btn btn-soft" id="nextPage" aria-label="Next page">Next →</button>
       </div>
       <div class="control-group">
-        <span>Page <strong id="pageNumber">1</strong> of <strong id="totalPages">1</strong></span>
+        <div class="pagination-info">
+          <span>Showing <strong id="showingStart">1</strong> - <strong id="showingEnd">10</strong> of <strong id="showingTotal">0</strong></span>
+          <span>|</span>
+          <span>Page <strong id="pageNumber">1</strong> of <strong id="totalPages">1</strong></span>
+        </div>
         <label>
           <span class="sr-only">Rows per page</span>
           <select id="pageSize" class="search-input page-size-select">
-            <option value="10">10 / page</option>
+            <option value="10" selected>10 / page</option>
             <option value="25">25 / page</option>
             <option value="50">50 / page</option>
-            <option value="100" selected>100 / page</option>
+            <option value="100">100 / page</option>
           </select>
         </label>
       </div>
@@ -270,6 +289,25 @@
   </div>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Floating Bulk Actions Bar -->
+  <div id="bulkActions" class="bulk-actions-bar">
+    <div class="bulk-actions-info">
+      <span id="selectedCount">0</span> selected
+    </div>
+    <div class="bulk-actions-buttons">
+      <button class="btn btn-soft" id="bulkEmailBtn" title="Email selected people">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        Email selected
+      </button>
+      <button class="btn btn-danger btn-icon" id="bulkDropBtn" title="Mark selected people as dropped">
+        Drop selected
+      </button>
+    </div>
+  </div>
 
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/roster.js" defer></script>

@@ -597,7 +597,6 @@
         return `${year}-${month}-${day}T${hours}:${minutes}:00${offsetSign}${offsetHours}:${offsetMins}`;
       };
       
-      const sessionDateTimeStr = formatLocalDateTime(formData.date, formData.startTime);
       const endDateTimeStr = formatLocalDateTime(formData.date, formData.endTime);
       
       const response = await fetch('/api/sessions', {
@@ -622,7 +621,7 @@
         throw new Error(error.error || 'Failed to create meeting');
       }
 
-      const newMeeting = await response.json();
+      await response.json();
 
       // Reset form
       form.reset();

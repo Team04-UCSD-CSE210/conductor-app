@@ -188,6 +188,12 @@ body.dashboard-page {
   padding-left: 1rem;
 }
 
+.sidebar nav a.active {
+  background: var(--emerald-50, #ecfdf5);
+  color: var(--teal-600, #0d9488);
+  font-weight: 600;
+}
+
 .sidebar footer {
   margin-top: auto;
   border-top: 1px solid var(--gray-200, #e5e7eb);

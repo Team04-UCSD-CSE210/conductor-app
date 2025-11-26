@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/css/dashboard-global.css">
   <link rel="stylesheet" href="/css/instructor-meetings.css">
 </head>
-<body>
+<body class="dashboard-page">
   <!-- Hamburger Menu Button (mobile only) -->
   <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger-line"></span>
@@ -22,12 +22,8 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/instructor-dashboard">Dashboard</a>
-      <a href="/course-settings">Course Settings</a>
-      <a href="/instructor-lectures">Attendance</a>
-      <a href="/roster">Roster</a>
-      <a href="/instructor-meetings">Team Meetings</a>
+    <nav aria-label="Dashboard navigation" id="sidebarNav">
+      <!-- Navigation will be dynamically populated based on user role -->
     </nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
@@ -41,6 +37,7 @@
       <!-- Team rows will be injected here -->
     </section>
   </main>
+  <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/instructor-meetings.js" defer></script>
 </body>
 </html>
