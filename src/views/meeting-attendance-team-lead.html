@@ -26,12 +26,8 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/student-dashboard">Dashboard</a>
-      <a href="/lecture-attendance-student">Lectures</a>
-      <a href="/meeting-attendance-team-lead" class="active">Team Meetings</a>
-      <a href="/work-journal">Work Journal</a>
-      <a href="/my-team">My Team</a>
+    <nav aria-label="Dashboard navigation" id="sidebarNav">
+      <!-- Navigation will be dynamically populated based on user role -->
     </nav>
     <footer>
       <a href="/logout" class="btn btn-ghost">Sign out</a>
@@ -152,6 +148,7 @@
 
   <script src="/js/inactivity-timeout.js?v=26" defer></script>
   <script src="/js/lecture-data.service.js?v=26" defer></script>
+  <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/student-nav.js?v=26"></script>
   <script src="/js/meeting-attendance-team-lead.js?v=26" defer></script>
 </body>
