@@ -152,6 +152,15 @@ NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
  'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  NULL, NULL, '+1-858-555-0102', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
 
+('kanzhekanzhe1@gmail.com', NULL, 'Zhe Kan', 'Zhe',
+ 'Software Engineering', NULL, 2025, 'Extension', 'Professional',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
+ NULL, NULL, '+1-619-555-0406', 'zhekan', 'https://linkedin.com/in/zhekan'),
+
+('jackkanzhe@gmail.com', NULL, 'Jack Kan', 'Jack',
+ 'Software Engineering', NULL, 2025, 'Extension', 'Professional',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
+ NULL, NULL, '+1-619-555-0407', 'jackkanzhe', 'https://linkedin.com/in/jackkanzhe'),
 
 ('extension2@gmail.com', NULL, 'Olivia Taylor', 'Olivia',
  'Computer Science', NULL, 2026, 'Extension', 'Professional',
