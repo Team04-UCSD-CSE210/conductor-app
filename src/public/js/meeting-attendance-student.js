@@ -181,7 +181,12 @@
     actionButton.className = 'btn-link';
     actionButton.type = 'button';
     if (meeting.sessionState === 'open') {
-      actionButton.textContent = meeting.status === 'present' ? 'View responses' : 'I\'m here';
+      if (meeting.status === 'present') {
+        // For team meetings, hide the button when already present (no responses to view)
+        actionButton.style.display = 'none';
+      } else {
+        actionButton.textContent = 'I\'m here';
+      }
     } else if (meeting.sessionState === 'pending') {
       actionButton.textContent = 'Not available';
       actionButton.disabled = true;
@@ -195,28 +200,34 @@
     }
     
     actionButton.addEventListener('click', async () => {
-      if (meeting.sessionState === 'open') {
-        if (meeting.status === 'present') {
-          window.location.href = `/student-lecture-response?sessionId=${meeting.id}`;
-        } else {
-          // For team meetings, directly check in using the meeting's access code
-          if (!meeting.accessCode) {
-            alert('Unable to check in: no access code available');
-            return;
+      if (meeting.sessionState === 'open' && meeting.status !== 'present') {
+        // For team meetings, directly check in using the meeting's access code
+        if (!meeting.accessCode) {
+          alert('Unable to check in: no access code available');
+          return;
+        }
+        
+        actionButton.disabled = true;
+        actionButton.textContent = 'Checking in...';
+        try {
+          await window.LectureService.checkIn(meeting.accessCode, []);
+          // Update the meeting status
+          meeting.status = 'present';
+          // Hide the button after successful check-in
+          actionButton.style.display = 'none';
+          // Update the badge to show "Present" status
+          const badge = row.querySelector('.lecture-badge');
+          if (badge) {
+            badge.textContent = 'Present';
+            badge.className = 'lecture-badge present';
           }
-          
-          actionButton.disabled = true;
-          actionButton.textContent = 'Checking in...';
-          try {
-            await window.LectureService.checkIn(meeting.accessCode, []);
-            // Refresh the page to show updated status
-            window.location.reload();
-          } catch (error) {
-            console.error('Error checking in:', error);
-            alert(`Failed to record attendance: ${error.message}`);
-            actionButton.disabled = false;
-            actionButton.textContent = 'I\'m here';
-          }
+          // Update overall attendance percentage
+          updateOverallAttendance();
+        } catch (error) {
+          console.error('Error checking in:', error);
+          alert(`Failed to record attendance: ${error.message}`);
+          actionButton.disabled = false;
+          actionButton.textContent = 'I\'m here';
         }
       }
     });
