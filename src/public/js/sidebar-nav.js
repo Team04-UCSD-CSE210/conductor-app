@@ -24,7 +24,8 @@
         text: "Attendance",
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
-      { href: "/roster", text: "Roster" }
+      { href: "/roster", text: "Roster" },
+      { href: "/instructor-meetings", text: "Team Meetings" }
     ],
     ta: [
       { href: "/ta-dashboard", text: "Dashboard" },
