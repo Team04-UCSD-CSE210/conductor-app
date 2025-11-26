@@ -182,42 +182,31 @@
 
   async function getTeamInfo() {
     try {
-      const response = await fetch('/api/users/me', {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (!response.ok) return null;
-      
-      const user = await response.json();
-      
-      // Get user's team for the active offering
+      // Get user's team using the my-team endpoint
       if (!state.offeringId) return null;
       
-      const teamsResponse = await fetch(`/api/teams?offering_id=${state.offeringId}`, {
+      const myTeamResponse = await fetch(`/api/teams/my-team?offering_id=${state.offeringId}`, {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
       });
       
-      if (!teamsResponse.ok) return null;
+      if (!myTeamResponse.ok) {
+        console.log('No team found for user (status:', myTeamResponse.status, ')');
+        return null;
+      }
       
-      const teamsData = await teamsResponse.json();
-      const teams = teamsData.teams || [];
+      const teamData = await myTeamResponse.json();
+      console.log('Team data received:', teamData);
       
-      // Find team where user is a member
-      for (const team of teams) {
-        const teamDetailResponse = await fetch(`/api/teams/${team.id}`, {
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (teamDetailResponse.ok) {
-          const teamDetail = await teamDetailResponse.json();
-          const isMember = teamDetail.members?.some(m => m.user_id === user.id);
-          if (isMember) {
-            return { id: team.id, name: team.name || `Team ${team.team_number || ''}` };
-          }
-        }
+      // Handle both response formats: { team: {...} } or direct object
+      const team = teamData.team || teamData;
+      
+      if (team && team.id) {
+        return { 
+          id: team.id, 
+          name: team.name || `Team ${team.team_number || ''}`,
+          number: team.team_number
+        };
       }
       
       return null;
@@ -246,11 +235,11 @@
         state.teamId = teamInfo.id;
         state.teamName = teamInfo.name;
         if (selectors.teamName) {
-          selectors.teamName.textContent = teamInfo.name;
+          selectors.teamName.textContent = `Team ${teamInfo.number || teamInfo.name}`;
         }
       } else {
         if (selectors.teamName) {
-          selectors.teamName.textContent = 'No team';
+          selectors.teamName.textContent = 'No team assigned';
         }
       }
 
@@ -275,9 +264,9 @@
             attendanceMap[record.session_id] = record.status;
           });
           
-          // Transform sessions and filter to team meetings
+          // Transform sessions and filter to team meetings (ONLY sessions with team_id, NOT lectures)
           const transformedSessions = sessionsArray
-            .filter(s => s.team_id === state.teamId)
+            .filter(s => s.team_id && s.team_id === state.teamId)
             .map(session => {
               // If a transformSession helper exists, use it. Otherwise fall back to a safe default
               // Avoid optional-chaining + conditional that can yield `undefined` for `transformed`

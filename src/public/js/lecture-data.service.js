@@ -638,7 +638,10 @@
         });
 
         // Transform and combine
-        return sessionsArray.map(session => {
+        // FILTER: Only show lectures (team_id IS NULL), exclude team meetings
+        return sessionsArray
+          .filter(session => !session.team_id) // Only lectures, not team meetings
+          .map(session => {
           const transformed = transformSession(session);
           const attendanceStatus = attendanceMap[session.id] || 'absent';
           const sessionState = transformed.status;
