@@ -441,6 +441,21 @@ CREATE INDEX IF NOT EXISTS idx_session_responses_question ON session_responses(q
 CREATE INDEX IF NOT EXISTS idx_session_responses_user ON session_responses(user_id);
 CREATE INDEX IF NOT EXISTS idx_session_responses_submitted ON session_responses(submitted_at);
 
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'session_responses'::regclass
+          AND conname = 'session_responses_session_question_user_unique'
+    ) THEN
+        ALTER TABLE session_responses
+        ADD CONSTRAINT session_responses_session_question_user_unique
+        UNIQUE (session_id, question_id, user_id);
+    END IF;
+END;
+$$;
+
 DROP TRIGGER IF EXISTS update_session_responses_updated_at ON session_responses;
 CREATE TRIGGER update_session_responses_updated_at BEFORE UPDATE ON session_responses
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

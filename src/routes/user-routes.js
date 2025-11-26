@@ -313,7 +313,12 @@ router.post('/roster/import/csv', ...protect('roster.import', 'course'), rosterI
   }
 });
 
-router.get('/roster/export/json', ...protectAny(['roster.view', 'roster.export'], 'global'), async (req, res) => {
+/**
+ * Export roster as JSON
+ * GET /users/roster/export/json
+ * Requires: roster.export or course.manage permission (instructor/admin only)
+ */
+router.get('/roster/export/json', ...protectAny(['roster.export', 'course.manage'], 'course'), async (req, res) => {
   try {
     const users = await RosterService.exportRosterToJson();
 
@@ -328,7 +333,12 @@ router.get('/roster/export/json', ...protectAny(['roster.view', 'roster.export']
   }
 });
 
-router.get('/roster/export/csv', ...protectAny(['roster.view', 'roster.export'], 'global'), async (req, res) => {
+/**
+ * Export roster as CSV
+ * GET /users/roster/export/csv
+ * Requires: roster.export or course.manage permission (instructor/admin only)
+ */
+router.get('/roster/export/csv', ...protectAny(['roster.export', 'course.manage'], 'course'), async (req, res) => {
   try {
     const csv = await RosterService.exportRosterToCsv();
 
