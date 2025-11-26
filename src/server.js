@@ -689,6 +689,10 @@ app.get("/student-dashboard", ensureAuthenticated, async (req, res) => {
   }
 });
 
+app.get("/journal-ui", ensureAuthenticated, (req, res) => {
+  res.sendFile(buildFullViewPath("journal.html"));
+});
+
 // -------------------- LECTURE ATTENDANCE ROUTES --------------------
 
 /**
@@ -1037,7 +1041,7 @@ app.use("/api/offerings", offeringRoutes);
 app.use("/api/interactions", interactionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
-app.use("/api/journals", journalRoutes);
+app.use("/api/journals", ensureAuthenticated, journalRoutes);
 app.use("/api/class", courseOfferingRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED

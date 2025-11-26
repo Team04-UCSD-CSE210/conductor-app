@@ -10,7 +10,7 @@ function toggleMenu(id) {
 async function deleteEntry(id) {
   if (!confirm("Delete this entry?")) return;
 
-  await fetch(`/journal/${id}`, { method: "DELETE", credentials: "include" });
+  await fetch(`/api/journals/${id}`, { method: "DELETE", credentials: "include" });
   loadEntries();
 }
 
@@ -42,11 +42,11 @@ async function submitJournal() {
     feelings: document.getElementById("feelings").value
   };
 
-  let url = "/journal";
+  let url = "/api/journals";
   let method = "POST";
 
   if (window.editingId) {
-    url = `/journal/${window.editingId}`;
+    url = `/api/journals/${window.editingId}`;
     method = "PUT";
     delete payload.date;
   }
@@ -71,7 +71,7 @@ async function submitJournal() {
 }
 
 async function loadEntries() {
-  const res = await fetch("/journal", { credentials: "include" });
+  const res = await fetch("/api/journals", { credentials: "include" });
   const data = await res.json();
 
   const container = document.getElementById("entries");
