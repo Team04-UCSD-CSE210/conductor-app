@@ -204,17 +204,16 @@ export class DatabaseInitializer {
 
       if (schemaExists && !force) {
         console.log('[database] Schema already initialized. Use force=true to re-run migrations.\n');
-        // If schema exists but seed is requested, run seed migrations
-        // Seed files use ON CONFLICT, so they're safe to run multiple times
         if (seed) {
           console.log('[database] Running seed migrations (idempotent - safe to re-run)...\n');
           await this.runMigrations(true);
         }
+        await this.ensureSessionResponsesConstraint();
         return;
       }
 
-      // Run migrations (force will re-run everything)
       await this.runMigrations(seed);
+      await this.ensureSessionResponsesConstraint();
 
       // Final verification
       const isValid = await this.verifySchema();
@@ -227,6 +226,30 @@ export class DatabaseInitializer {
       console.log('[database] Database initialization completed successfully\n');
     } catch (error) {
       console.error('[database] Initialization failed:', error.message);
+      throw error;
+    }
+  }
+
+  static async ensureSessionResponsesConstraint() {
+    try {
+      const result = await pool.query(`
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'session_responses'::regclass
+          AND conname = 'session_responses_session_question_user_unique'
+      `);
+
+      if (result.rowCount === 0) {
+        console.log('[database] Adding missing session_responses unique constraint...');
+        await pool.query(`
+          ALTER TABLE session_responses
+          ADD CONSTRAINT session_responses_session_question_user_unique
+          UNIQUE (session_id, question_id, user_id)
+        `);
+        console.log('[database] session_responses unique constraint added ✅');
+      }
+    } catch (error) {
+      console.error('[database] Failed to ensure session_responses constraint:', error.message);
       throw error;
     }
   }

@@ -1,10 +1,11 @@
-(function meetingAttendancePage() {
+(function meetingAttendanceLeadPage() {
   const state = {
     meetings: [],
     filter: 'all',
     offeringId: null,
     teamId: null,
-    teamName: null
+    teamName: null,
+    isTeamLead: false
   };
 
   const selectors = {
@@ -13,7 +14,17 @@
     filter: document.getElementById('meeting-filter'),
     attendancePercentage: document.getElementById('attendance-percentage'),
     container: document.querySelector('.attendance-content'),
-    teamName: document.getElementById('team-name')
+    teamName: document.getElementById('team-name'),
+    newMeetingBtn: document.getElementById('new-meeting-btn'),
+    newMeetingForm: document.getElementById('new-meeting-form'),
+    createMeetingBtn: document.getElementById('create-meeting-btn'),
+    cancelMeetingBtn: document.getElementById('cancel-meeting-btn'),
+    meetingDate: document.getElementById('meeting-date'),
+    meetingStartTime: document.getElementById('meeting-start-time'),
+    meetingEndTime: document.getElementById('meeting-end-time'),
+    attendanceSummary: document.getElementById('attendance-summary'),
+    lastMeetingPercentage: document.getElementById('last-meeting-percentage'),
+    attendanceChart: document.getElementById('attendance-chart')
   };
 
   let isLoading = false;
@@ -100,33 +111,57 @@
 
     const actions = document.createElement('div');
     actions.className = 'lecture-actions';
-    const actionButton = document.createElement('button');
-    actionButton.className = 'btn-link';
-    actionButton.type = 'button';
-    if (meeting.sessionState === 'open') {
-      actionButton.textContent = meeting.status === 'present' ? 'View responses' : 'I\'m here';
-    } else if (meeting.sessionState === 'pending') {
-      actionButton.textContent = 'Not available';
-      actionButton.disabled = true;
-      actionButton.style.opacity = '0.6';
-      actionButton.style.cursor = 'not-allowed';
-    } else {
-      actionButton.textContent = 'Closed';
-      actionButton.disabled = true;
-      actionButton.style.opacity = '0.6';
-      actionButton.style.cursor = 'not-allowed';
-    }
     
-    actionButton.addEventListener('click', () => {
-      if (meeting.sessionState === 'open') {
+    if (meeting.sessionState === 'open') {
+      const accessCode = document.createElement('div');
+      accessCode.className = 'meeting-access-code-display';
+      
+      const codeInput = document.createElement('input');
+      codeInput.type = 'text';
+      codeInput.value = meeting.accessCode || '';
+      codeInput.readOnly = true;
+      codeInput.className = 'meeting-access-code-input';
+      
+      const checkInBtn = document.createElement('button');
+      checkInBtn.className = 'btn-link';
+      checkInBtn.textContent = meeting.status === 'present' ? 'View responses' : 'I\'m here';
+      checkInBtn.addEventListener('click', () => {
         if (meeting.status === 'present') {
           window.location.href = `/student-lecture-response?sessionId=${meeting.id}`;
         } else {
           showAccessCodeModal(meeting);
         }
-      }
-    });
-    actions.appendChild(actionButton);
+      });
+      
+      accessCode.appendChild(codeInput);
+      accessCode.appendChild(checkInBtn);
+      actions.appendChild(accessCode);
+    } else {
+      const statusText = document.createElement('span');
+      statusText.textContent = meeting.sessionState === 'pending' ? 'Not available' : 'Closed';
+      statusText.className = 'meeting-status-text';
+      actions.appendChild(statusText);
+    }
+    
+    // Delete button for team leads
+    if (state.isTeamLead) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-link';
+      deleteBtn.style.color = 'var(--red-600)';
+      deleteBtn.innerHTML = '🗑️';
+      deleteBtn.title = 'Delete meeting';
+      deleteBtn.addEventListener('click', async () => {
+        if (confirm('Are you sure you want to delete this meeting?')) {
+          try {
+            await window.LectureService.deleteLecture(meeting.id);
+            await hydrateLeadView();
+          } catch (error) {
+            alert(`Error deleting meeting: ${error.message}`);
+          }
+        }
+      });
+      actions.appendChild(deleteBtn);
+    }
 
     meta.append(sessionStatus, actions);
     info.append(details, meta);
@@ -139,7 +174,6 @@
     if (!selectors.attendancePercentage || !state.offeringId) return;
     
     try {
-      // Get team-specific attendance statistics
       const teamMeetings = state.meetings.filter(m => m.team_id === state.teamId);
       const totalMeetings = teamMeetings.length;
       const presentCount = teamMeetings.filter((m) => m.status === 'present').length;
@@ -147,6 +181,34 @@
         ? Math.round((presentCount / totalMeetings) * 100)
         : 0;
       selectors.attendancePercentage.textContent = `${percent}%`;
+      
+      // Update last meeting percentage and chart
+      if (teamMeetings.length > 0) {
+        const lastMeeting = teamMeetings[0];
+        const lastMeetingStats = await window.LectureService.getSessionStatistics?.(lastMeeting.id);
+        if (lastMeetingStats) {
+          const lastPercent = Math.round(lastMeetingStats.attendance_percent || 0);
+          if (selectors.lastMeetingPercentage) {
+            selectors.lastMeetingPercentage.textContent = `${lastPercent}%`;
+          }
+          selectors.attendanceSummary.classList.add('show');
+        }
+        
+        // Simple bar chart
+        if (selectors.attendanceChart) {
+          selectors.attendanceChart.innerHTML = '';
+          const recentMeetings = teamMeetings.slice(0, 12);
+          recentMeetings.forEach((m) => {
+            const bar = document.createElement('div');
+            bar.style.width = '20px';
+            bar.style.height = `${m.attendancePercent || 0}%`;
+            bar.style.backgroundColor = m.attendancePercent >= 80 ? 'var(--green-500)' : 'var(--yellow-500)';
+            bar.style.borderRadius = '2px 2px 0 0';
+            bar.title = `${m.label}: ${m.attendancePercent || 0}%`;
+            selectors.attendanceChart.appendChild(bar);
+          });
+        }
+      }
     } catch (error) {
       console.error('Error updating overall attendance:', error);
       selectors.attendancePercentage.textContent = '0%';
@@ -191,7 +253,6 @@
       
       const user = await response.json();
       
-      // Get user's team for the active offering
       if (!state.offeringId) return null;
       
       const teamsResponse = await fetch(`/api/teams?offering_id=${state.offeringId}`, {
@@ -204,7 +265,6 @@
       const teamsData = await teamsResponse.json();
       const teams = teamsData.teams || [];
       
-      // Find team where user is a member
       for (const team of teams) {
         const teamDetailResponse = await fetch(`/api/teams/${team.id}`, {
           credentials: 'include',
@@ -213,9 +273,14 @@
         
         if (teamDetailResponse.ok) {
           const teamDetail = await teamDetailResponse.json();
-          const isMember = teamDetail.members?.some(m => m.user_id === user.id);
-          if (isMember) {
-            return { id: team.id, name: team.name || `Team ${team.team_number || ''}` };
+          const member = teamDetail.members?.find(m => m.user_id === user.id);
+          if (member) {
+            const isLead = member.role === 'leader' || teamDetail.leader_id === user.id;
+            return { 
+              id: team.id, 
+              name: teamDetail.name || `Team ${teamDetail.team_number || ''}`,
+              isLead 
+            };
           }
         }
       }
@@ -227,35 +292,41 @@
     }
   }
 
-  async function hydrateStudentView() {
+  async function hydrateLeadView() {
     if (!window.LectureService || !selectors.container) return;
 
     showLoading();
 
     try {
-      // Get offering ID
       state.offeringId = selectors.container.getAttribute('data-offering-id');
       if (!state.offeringId) {
         state.offeringId = await window.LectureService.getActiveOfferingId();
         selectors.container.setAttribute('data-offering-id', state.offeringId);
       }
 
-      // Get team info
       const teamInfo = await getTeamInfo();
       if (teamInfo) {
         state.teamId = teamInfo.id;
         state.teamName = teamInfo.name;
+        state.isTeamLead = teamInfo.isLead;
         if (selectors.teamName) {
           selectors.teamName.textContent = teamInfo.name;
+        }
+        
+        // Show/hide new meeting form based on team lead status
+        if (selectors.newMeetingBtn && selectors.newMeetingForm) {
+          selectors.newMeetingBtn.style.display = state.isTeamLead ? 'block' : 'none';
         }
       } else {
         if (selectors.teamName) {
           selectors.teamName.textContent = 'No team';
         }
+        if (selectors.newMeetingBtn && selectors.newMeetingForm) {
+          selectors.newMeetingBtn.style.display = 'none';
+        }
       }
 
-      // Get meeting list (team-specific sessions)
-      // Fetch sessions directly from API to get team_id
+      // Fetch sessions directly from API to get team_id and statistics
       try {
         const sessionsResponse = await fetch(`/api/sessions?offering_id=${state.offeringId}&limit=1000`, {
           credentials: 'include',
@@ -276,35 +347,55 @@
           });
           
           // Transform sessions and filter to team meetings
-          const transformedSessions = sessionsArray
-            .filter(s => s.team_id === state.teamId)
-            .map(session => {
-              const transformed = window.LectureService ? 
-                window.LectureService.transformSession?.(session) : 
-                { id: session.id, label: session.title, startsAt: null, endsAt: null, status: 'closed', team_id: session.team_id };
-              const attendanceStatus = attendanceMap[session.id] || 'absent';
-              const sessionState = transformed.status;
-              let status = attendanceStatus;
-              if (sessionState === 'open' && attendanceStatus === 'absent') {
-                status = 'open';
-              }
-              return {
-                id: transformed.id,
-                label: transformed.label || session.title,
-                status,
-                sessionState,
-                startsAt: transformed.startsAt,
-                endsAt: transformed.endsAt,
-                team_id: session.team_id,
-                accessCode: transformed.accessCode || session.access_code
-              };
-            })
-            .sort((a, b) => {
-              if (!a.startsAt && !b.startsAt) return 0;
-              if (!a.startsAt) return 1;
-              if (!b.startsAt) return -1;
-              return new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime();
-            });
+          const transformedSessions = await Promise.all(
+            sessionsArray
+              .filter(s => s.team_id === state.teamId)
+              .map(async (session) => {
+                const transformed = window.LectureService ? 
+                  window.LectureService.transformSession?.(session) : 
+                  { id: session.id, label: session.title, startsAt: null, endsAt: null, status: 'closed', team_id: session.team_id };
+                const attendanceStatus = attendanceMap[session.id] || 'absent';
+                const sessionState = transformed.status;
+                let status = attendanceStatus;
+                if (sessionState === 'open' && attendanceStatus === 'absent') {
+                  status = 'open';
+                }
+                
+                // Get statistics for attendance percentage
+                let attendancePercent = 0;
+                try {
+                  const statsResponse = await fetch(`/api/sessions/${session.id}/statistics`, {
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                  });
+                  if (statsResponse.ok) {
+                    const stats = await statsResponse.json();
+                    attendancePercent = stats.attendance_percent || 0;
+                  }
+                } catch {
+                  // Ignore errors
+                }
+                
+                return {
+                  id: transformed.id,
+                  label: transformed.label || session.title,
+                  status,
+                  sessionState,
+                  startsAt: transformed.startsAt,
+                  endsAt: transformed.endsAt,
+                  team_id: session.team_id,
+                  accessCode: transformed.accessCode || session.access_code,
+                  attendancePercent
+                };
+              })
+          );
+          
+          transformedSessions.sort((a, b) => {
+            if (!a.startsAt && !b.startsAt) return 0;
+            if (!a.startsAt) return 1;
+            if (!b.startsAt) return -1;
+            return new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime();
+          });
           
           state.meetings = transformedSessions;
         } else {
@@ -319,7 +410,7 @@
       isLoading = false;
       renderMeetings();
     } catch (error) {
-      console.error('Error hydrating student view:', error);
+      console.error('Error hydrating lead view:', error);
       isLoading = false;
       if (selectors.list) {
         selectors.list.innerHTML = `<p style="color: var(--red-600); text-align: center; padding: 2rem;">Error loading meetings: ${error.message}</p>`;
@@ -334,6 +425,76 @@
       state.filter = event.target.value;
       renderMeetings();
     });
+  }
+
+  function initNewMeetingForm() {
+    if (!selectors.newMeetingBtn || !selectors.newMeetingForm) return;
+    
+    selectors.newMeetingBtn.addEventListener('click', () => {
+      selectors.newMeetingForm.classList.add('show');
+      selectors.newMeetingBtn.style.display = 'none';
+      
+      // Set default date to today
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      if (selectors.meetingDate) {
+        selectors.meetingDate.value = dateStr;
+      }
+    });
+    
+    if (selectors.cancelMeetingBtn) {
+      selectors.cancelMeetingBtn.addEventListener('click', () => {
+        selectors.newMeetingForm.classList.remove('show');
+        selectors.newMeetingBtn.style.display = 'block';
+      });
+    }
+    
+    if (selectors.createMeetingBtn) {
+      selectors.createMeetingBtn.addEventListener('click', async () => {
+        const date = selectors.meetingDate?.value;
+        const startTime = selectors.meetingStartTime?.value;
+        const endTime = selectors.meetingEndTime?.value;
+        
+        if (!date || !startTime || !endTime) {
+          alert('Please fill in all fields');
+          return;
+        }
+        
+        try {
+          // Combine date and time
+          const startDateTime = new Date(`${date}T${startTime}`);
+          const endDateTime = new Date(`${date}T${endTime}`);
+          
+          if (endDateTime <= startDateTime) {
+            alert('End time must be after start time');
+            return;
+          }
+          
+          const sessionData = {
+            offering_id: state.offeringId,
+            team_id: state.teamId,
+            label: `Meeting ${new Date(date).toLocaleDateString()}`,
+            title: `Meeting ${new Date(date).toLocaleDateString()}`,
+            startsAt: startDateTime.toISOString(),
+            endsAt: endDateTime.toISOString()
+          };
+          
+          await window.LectureService.createLecture(sessionData);
+          
+          // Reset form
+          selectors.newMeetingForm.classList.remove('show');
+          selectors.newMeetingBtn.style.display = 'block';
+          if (selectors.meetingDate) selectors.meetingDate.value = '';
+          if (selectors.meetingStartTime) selectors.meetingStartTime.value = '';
+          if (selectors.meetingEndTime) selectors.meetingEndTime.value = '';
+          
+          // Refresh meetings
+          await hydrateLeadView();
+        } catch (error) {
+          alert(`Error creating meeting: ${error.message}`);
+        }
+      });
+    }
   }
 
   function initHamburger() {
@@ -362,6 +523,7 @@
   }
 
   async function showAccessCodeModal(meeting) {
+    // Similar to student version - reuse the same modal logic
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
@@ -456,7 +618,7 @@
       }
     };
 
-    // Handle input navigation (similar to lecture-attendance-student.js)
+    // Handle input navigation (same as student version)
     inputs.forEach((input, index) => {
       input.disabled = false;
       input.readOnly = false;
@@ -647,7 +809,8 @@
   function init() {
     initHamburger();
     initFilter();
-    hydrateStudentView();
+    initNewMeetingForm();
+    hydrateLeadView();
   }
 
   if (document.readyState === 'loading') {

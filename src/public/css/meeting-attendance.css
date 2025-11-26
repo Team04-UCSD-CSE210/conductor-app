@@ -1,0 +1,414 @@
+/* Meeting Attendance Styles - Similar to lecture attendance but with meeting-specific styling */
+
+.meeting-attendance-layout {
+  display: flex;
+  gap: 1.5rem;
+  min-height: 100%;
+  overflow: visible;
+  align-items: flex-start;
+}
+
+.meeting-attendance-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  min-width: 0;
+  min-height: 0;
+}
+
+.meeting-attendance-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, var(--blue-50, #eff6ff) 0%, white 100%);
+  border-radius: 1rem;
+  border: 1px solid var(--blue-200, #bfdbfe);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgb(37 99 235 / 8%);
+}
+
+.meeting-attendance-title h2 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.5rem;
+  color: var(--blue-700, #1d4ed8);
+  font-weight: 700;
+}
+
+.meeting-attendance-title .subtitle {
+  margin: 0;
+  color: var(--gray-600, #4b5563);
+  font-size: 0.95rem;
+}
+
+.meeting-attendance-title .subtitle-note {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--gray-600, #4b5563);
+}
+
+.meeting-attendance-title .eyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gray-500, #6b7280);
+}
+
+.meeting-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 180px;
+}
+
+.meeting-filter label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-500, #6b7280);
+}
+
+.meeting-filter select {
+  border-radius: 9999px;
+  border: 1px solid var(--gray-300, #d1d5db);
+  padding: 0.35rem 1rem;
+  font-size: 0.9rem;
+  background: white;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}
+
+.meeting-list {
+  flex: 1;
+  overflow: hidden auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.meeting-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.meeting-list::-webkit-scrollbar-track {
+  background: var(--gray-100, #f3f4f6);
+  border-radius: 3px;
+}
+
+.meeting-list::-webkit-scrollbar-thumb {
+  background: var(--gray-300, #d1d5db);
+  border-radius: 3px;
+}
+
+.meeting-list::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400, #9ca3af);
+}
+
+.meeting-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: white;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+  align-items: center;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
+}
+
+.meeting-item:hover {
+  background: var(--blue-50, #eff6ff);
+  border-color: var(--blue-200, #bfdbfe);
+  box-shadow: 0 2px 8px rgb(37 99 235 / 10%);
+  transform: translateY(-1px);
+}
+
+.meeting-badge {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 100px;
+  text-align: center;
+}
+
+.meeting-badge.present {
+  background: #10b981;
+  color: white;
+}
+
+.meeting-badge.absent {
+  background: #ef4444;
+  color: white;
+}
+
+.meeting-badge.open {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.meeting-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.meeting-number {
+  font-weight: 600;
+  color: var(--gray-900, #111827);
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.meeting-time {
+  color: var(--gray-600, #4b5563);
+  font-size: 0.875rem;
+}
+
+.meeting-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-width: 200px;
+}
+
+.meeting-attendance-sidebar {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.meeting-attendance-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.meeting-attendance-sidebar::-webkit-scrollbar-track {
+  background: var(--gray-100, #f3f4f6);
+  border-radius: 3px;
+}
+
+.meeting-attendance-sidebar::-webkit-scrollbar-thumb {
+  background: var(--gray-300, #d1d5db);
+  border-radius: 3px;
+}
+
+.meeting-attendance-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400, #9ca3af);
+}
+
+.meeting-stats-box {
+  background: linear-gradient(135deg, white 0%, var(--blue-50, #eff6ff) 100%);
+  border: 1px solid var(--blue-200, #bfdbfe);
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgb(37 99 235 / 10%);
+  text-align: center;
+}
+
+.meeting-stats-box h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700, #374151);
+}
+
+.meeting-attendance-percentage {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--blue-600, #2563eb);
+  line-height: 1;
+  text-shadow: 0 2px 4px rgb(37 99 235 / 15%);
+}
+
+.meeting-attendance-summary {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
+  display: none;
+}
+
+.meeting-attendance-summary.show {
+  display: block;
+}
+
+.meeting-attendance-summary-content {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.meeting-last-percentage {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--blue-600, #2563eb);
+}
+
+.meeting-attendance-chart {
+  flex: 1;
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.meeting-chart-bar {
+  width: 20px;
+  border-radius: 2px 2px 0 0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.meeting-chart-bar:hover {
+  opacity: 0.8;
+}
+
+.meeting-chart-bar.green {
+  background-color: var(--green-500, #10b981);
+}
+
+.meeting-chart-bar.yellow {
+  background-color: var(--yellow-500, #eab308);
+}
+
+/* Meeting form styles */
+.meeting-new-form-container {
+  border: 2px dashed var(--red-300, #fca5a5);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  background: var(--red-50, #fef2f2);
+}
+
+.meeting-new-form-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.meeting-new-form-header .btn {
+  flex: 1;
+}
+
+.meeting-new-form-header .plus-icon {
+  font-size: 1.5rem;
+}
+
+.meeting-new-form {
+  display: none;
+}
+
+.meeting-new-form.show {
+  display: block;
+}
+
+.meeting-form-field {
+  margin-bottom: 1rem;
+}
+
+.meeting-form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--gray-700, #374151);
+  font-size: 0.875rem;
+}
+
+.meeting-form-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.meeting-form-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.meeting-form-actions .btn {
+  flex: 1;
+}
+
+.meeting-form-footer {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--gray-600, #6b7280);
+  text-align: center;
+}
+
+.meeting-access-code-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.meeting-access-code-input {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.875rem;
+  width: 80px;
+  background: white;
+  color: var(--gray-900, #111827);
+  text-align: center;
+}
+
+.meeting-status-text {
+  opacity: 0.6;
+}
+
+@media (width <= 768px) {
+  .meeting-attendance-layout {
+    flex-direction: column;
+  }
+
+  .meeting-attendance-sidebar {
+    width: 100%;
+    order: 2;
+  }
+
+  .meeting-attendance-content {
+    order: 1;
+  }
+
+  .meeting-attendance-title {
+    flex-direction: column;
+  }
+
+  .meeting-attendance-summary-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+

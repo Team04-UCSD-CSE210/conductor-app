@@ -25,12 +25,7 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/instructor-dashboard">Dashboard</a>
-      <a href="/course-settings">Course Settings</a>
-      <a href="/instructor-lectures">Attendance</a>
-      <a href="/roster">Roster</a>
-    </nav>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
@@ -178,8 +173,8 @@
   </main>
 
   <script src="/js/dashboard.service.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/instructor-dashboard.js" defer></script>
-
 </body>
 </html>
 

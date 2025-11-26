@@ -68,11 +68,70 @@ export class RosterService {
 
   /**
    * Retrieves all users from the database for export operations
-   * @returns {Promise<Array>} Array of user objects
+   * Includes team information (team name, team number, team lead)
+   * @returns {Promise<Array>} Array of user objects with team info
    */
   static async retrieveAllUsers() {
+    const { pool } = await import('../db.js');
     const users = await UserModel.findAll(RosterService.MAX_EXPORT_LIMIT, 0);
-    return users;
+    
+    // Get team information for each user
+    const usersWithTeams = await Promise.all(users.map(async (user) => {
+      // Get user's active team memberships
+      const teamMemberships = await pool.query(
+        `SELECT 
+          t.id as team_id,
+          t.name as team_name,
+          t.team_number,
+          t.leader_id,
+          tm.role
+        FROM team_members tm
+        INNER JOIN team t ON tm.team_id = t.id
+        WHERE tm.user_id = $1 AND tm.left_at IS NULL
+        ORDER BY t.created_at DESC
+        LIMIT 1`,
+        [user.id]
+      );
+      
+      if (teamMemberships.rows.length > 0) {
+        const team = teamMemberships.rows[0];
+        const isTeamLead = team.leader_id === user.id || team.role === 'leader';
+        
+        // Get team lead name if not the current user
+        let teamLeadName = null;
+        if (team.leader_id && team.leader_id !== user.id) {
+          const leaderRes = await pool.query(
+            'SELECT name FROM users WHERE id = $1',
+            [team.leader_id]
+          );
+          teamLeadName = leaderRes.rows[0]?.name || null;
+        } else if (isTeamLead) {
+          teamLeadName = user.name;
+        }
+        
+        return {
+          ...user,
+          team_id: team.team_id,
+          team_name: team.team_name,
+          team_number: team.team_number,
+          team_lead_id: team.leader_id,
+          team_lead_name: teamLeadName,
+          is_team_lead: isTeamLead
+        };
+      }
+      
+      return {
+        ...user,
+        team_id: null,
+        team_name: null,
+        team_number: null,
+        team_lead_id: null,
+        team_lead_name: null,
+        is_team_lead: false
+      };
+    }));
+    
+    return usersWithTeams;
   }
 
   /**
@@ -403,6 +462,7 @@ export class RosterService {
 
   /**
    * Exports all users as CSV string
+   * Includes team information (team name, team number, team lead)
    * @returns {Promise<string>} CSV formatted string with headers
    */
   static async exportRosterToCsv() {
@@ -410,7 +470,7 @@ export class RosterService {
 
     if (users.length === 0) {
       // Return header only, no trailing newline
-      return 'name,email,primary_role,status,institution_type,created_at,updated_at';
+      return 'name,email,primary_role,status,institution_type,team_name,team_number,team_lead_name,is_team_lead,created_at,updated_at';
     }
 
     const csvRows = users.map((user) => ({
@@ -419,25 +479,30 @@ export class RosterService {
       primary_role: user.primary_role,
       status: user.status,
       institution_type: user.institution_type,
+      team_name: user.team_name || '',
+      team_number: user.team_number || '',
+      team_lead_name: user.team_lead_name || '',
+      is_team_lead: user.is_team_lead ? 'Yes' : 'No',
       created_at: user.created_at,
       updated_at: user.updated_at,
     }));
 
     return stringify(csvRows, {
       header: true,
-      columns: ['name', 'email', 'primary_role', 'status', 'institution_type', 'created_at', 'updated_at'],
+      columns: ['name', 'email', 'primary_role', 'status', 'institution_type', 'team_name', 'team_number', 'team_lead_name', 'is_team_lead', 'created_at', 'updated_at'],
     });
   }
 
   /**
    * Exports imported users list as CSV string
    * Used to export users that were successfully imported in a batch operation
+   * Includes team information (team name, team number, team lead)
    * @param {Array<Object>} importedUsers - Array of imported user objects with id, email, name
    * @returns {Promise<string>} CSV formatted string with headers
    */
   static async exportImportedUsersToCsv(importedUsers) {
     if (!Array.isArray(importedUsers) || importedUsers.length === 0) {
-      return 'name,email,primary_role,status,institution_type,created_at,updated_at\n';
+      return 'name,email,primary_role,status,institution_type,team_name,team_number,team_lead_name,is_team_lead,created_at,updated_at\n';
     }
 
     // Fetch full user details from database using IDs
@@ -457,22 +522,77 @@ export class RosterService {
     }
 
     if (fullUsers.length === 0) {
-      return 'name,email,primary_role,status,institution_type,created_at,updated_at\n';
+      return 'name,email,primary_role,status,institution_type,team_name,team_number,team_lead_name,is_team_lead,created_at,updated_at\n';
     }
 
-    const csvRows = fullUsers.map((user) => ({
+    // Get team information for each user
+    const { pool } = await import('../db.js');
+    const usersWithTeams = await Promise.all(fullUsers.map(async (user) => {
+      const teamMemberships = await pool.query(
+        `SELECT 
+          t.id as team_id,
+          t.name as team_name,
+          t.team_number,
+          t.leader_id,
+          tm.role
+        FROM team_members tm
+        INNER JOIN team t ON tm.team_id = t.id
+        WHERE tm.user_id = $1 AND tm.left_at IS NULL
+        ORDER BY t.created_at DESC
+        LIMIT 1`,
+        [user.id]
+      );
+      
+      if (teamMemberships.rows.length > 0) {
+        const team = teamMemberships.rows[0];
+        const isTeamLead = team.leader_id === user.id || team.role === 'leader';
+        
+        let teamLeadName = null;
+        if (team.leader_id && team.leader_id !== user.id) {
+          const leaderRes = await pool.query(
+            'SELECT name FROM users WHERE id = $1',
+            [team.leader_id]
+          );
+          teamLeadName = leaderRes.rows[0]?.name || null;
+        } else if (isTeamLead) {
+          teamLeadName = user.name;
+        }
+        
+        return {
+          ...user,
+          team_name: team.team_name,
+          team_number: team.team_number,
+          team_lead_name: teamLeadName,
+          is_team_lead: isTeamLead
+        };
+      }
+      
+      return {
+        ...user,
+        team_name: null,
+        team_number: null,
+        team_lead_name: null,
+        is_team_lead: false
+      };
+    }));
+
+    const csvRows = usersWithTeams.map((user) => ({
       name: user.name,
       email: user.email,
       primary_role: user.primary_role,
       status: user.status,
       institution_type: user.institution_type,
+      team_name: user.team_name || '',
+      team_number: user.team_number || '',
+      team_lead_name: user.team_lead_name || '',
+      is_team_lead: user.is_team_lead ? 'Yes' : 'No',
       created_at: user.created_at,
       updated_at: user.updated_at,
     }));
 
     return stringify(csvRows, {
       header: true,
-      columns: ['name', 'email', 'primary_role', 'status', 'institution_type', 'created_at', 'updated_at'],
+      columns: ['name', 'email', 'primary_role', 'status', 'institution_type', 'team_name', 'team_number', 'team_lead_name', 'is_team_lead', 'created_at', 'updated_at'],
     });
   }
 }
