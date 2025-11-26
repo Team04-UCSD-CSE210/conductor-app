@@ -10,10 +10,10 @@ const router = Router();
 /**
  * Create a new session
  * POST /api/sessions
- * Body: { offering_id, title, description, session_date, session_time, questions? }
- * Requires: session.create permission (course scope) - Professor/Instructor
+ * Body: { offering_id, title, description, session_date, session_time, team_id?, questions? }
+ * Requires: session.create permission (course scope for instructor, or team leader for team_id)
  */
-router.post('/', ...protect('session.create', 'course'), async (req, res) => {
+router.post('/', ensureAuthenticated, async (req, res) => {
   try {
     // Ensure req.body exists (bodyParser should have parsed it by now)
     // If not, it might be an empty body which is still valid - just use empty object
