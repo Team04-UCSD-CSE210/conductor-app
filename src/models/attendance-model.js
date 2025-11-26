@@ -247,7 +247,7 @@ export class AttendanceModel {
          s.session_date,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present')::INTEGER as present_count,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent')::INTEGER as absent_count,
-         COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'late')::INTEGER as late_count,
+         0::INTEGER as late_count,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'excused')::INTEGER as excused_count,
          COUNT(DISTINCT a.user_id)::INTEGER as total_marked,
          (SELECT COUNT(*)::INTEGER FROM enrollments 
@@ -283,7 +283,7 @@ export class AttendanceModel {
          COUNT(DISTINCT s.id)::INTEGER as total_sessions,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present')::INTEGER as sessions_present,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'absent')::INTEGER as sessions_absent,
-         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'late')::INTEGER as sessions_late,
+         0::INTEGER as sessions_late,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'excused')::INTEGER as sessions_excused,
          ROUND(
            COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present')::NUMERIC / 
@@ -314,7 +314,7 @@ export class AttendanceModel {
          COUNT(DISTINCT s.id) as total_sessions,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present') as sessions_present,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'absent') as sessions_absent,
-         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'late') as sessions_late,
+         0 as sessions_late,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'excused') as sessions_excused,
          ROUND(
            COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present')::NUMERIC / 

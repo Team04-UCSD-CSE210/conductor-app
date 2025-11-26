@@ -54,6 +54,12 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     };
 
     const sessions = await SessionService.getSessionsByOffering(offering_id, options);
+    
+    // Disable caching to ensure fresh data
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
     res.json(sessions);
   } catch (err) {
     res.status(400).json({ error: err.message });

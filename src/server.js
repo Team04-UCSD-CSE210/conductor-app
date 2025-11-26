@@ -56,6 +56,9 @@ try {
 
 const app = express();
 
+// Disable ETag generation to prevent 304 caching issues
+app.set('etag', false);
+
 // Serve static frontend assets
 // Since server.js is in src/, paths are relative to src/ directory
 app.use(express.static(path.join(__dirname, "views")));

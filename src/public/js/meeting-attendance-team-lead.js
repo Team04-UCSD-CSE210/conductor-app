@@ -167,6 +167,8 @@
     const meta = document.createElement('div');
     meta.className = 'lecture-meta';
 
+    // Only show session status for open/closed meetings (not pending)
+    // The badge already shows "Upcoming" for pending meetings
     const sessionStatus = document.createElement('span');
     if (isOpen) {
       sessionStatus.className = 'lecture-status open';
@@ -174,26 +176,64 @@
     } else if (isPast) {
       sessionStatus.className = 'lecture-status closed';
       sessionStatus.textContent = 'Closed';
-    } else {
-      sessionStatus.className = 'lecture-status pending';
-      sessionStatus.textContent = 'Upcoming';
     }
 
     const actions = document.createElement('div');
     actions.className = 'lecture-actions';
-    const actionButton = document.createElement('button');
-    actionButton.className = 'btn-link';
-    actionButton.type = 'button';
-    actionButton.textContent = 'Manage';
     
-    actionButton.addEventListener('click', () => {
+    // Add "I'm here" button for open meetings (team leader can mark themselves present)
+    if (isOpen) {
+      const checkInButton = document.createElement('button');
+      checkInButton.className = 'btn-link';
+      checkInButton.type = 'button';
+      checkInButton.textContent = 'I\'m here';
+      checkInButton.style.marginRight = '0.5rem';
+      
+      checkInButton.addEventListener('click', async () => {
+        if (!meeting.access_code) {
+          alert('Unable to check in: no access code available');
+          return;
+        }
+        
+        checkInButton.disabled = true;
+        checkInButton.textContent = 'Checking in...';
+        try {
+          await window.LectureService.checkIn(meeting.access_code, []);
+          checkInButton.textContent = '✓ Present';
+          checkInButton.style.color = 'var(--green-600)';
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        } catch (error) {
+          console.error('Error checking in:', error);
+          alert(`Failed to record attendance: ${error.message}`);
+          checkInButton.disabled = false;
+          checkInButton.textContent = 'I\'m here';
+        }
+      });
+      
+      actions.appendChild(checkInButton);
+    }
+    
+    // Add manage button
+    const manageButton = document.createElement('button');
+    manageButton.className = 'btn-link';
+    manageButton.type = 'button';
+    manageButton.textContent = 'Manage';
+    
+    manageButton.addEventListener('click', () => {
       // Navigate to meeting management page
       window.location.href = `/manage-session?sessionId=${meeting.id}`;
     });
     
-    actions.appendChild(actionButton);
+    actions.appendChild(manageButton);
 
-    meta.append(sessionStatus, actions);
+    // Only append sessionStatus if it has content (open or closed)
+    if (isOpen || isPast) {
+      meta.append(sessionStatus, actions);
+    } else {
+      meta.appendChild(actions);
+    }
     info.append(details, meta);
     row.appendChild(info);
 
@@ -209,12 +249,13 @@
     }
     
     try {
-      // Calculate average attendance across all meetings
+      // Calculate average attendance across all meetings (only closed meetings)
       let totalAttendance = 0;
       let totalPossible = 0;
       
       state.meetings.forEach(meeting => {
-        if (meeting.status === 'closed') {
+        const sessionState = determineMeetingStatus(meeting);
+        if (sessionState === 'closed') {
           totalAttendance += meeting.attendance_count || 0;
           totalPossible += meeting.team_member_count || 0;
         }
@@ -253,19 +294,24 @@
       return false;
     });
 
-    if (!filtered.length) {
-      selectors.empty?.removeAttribute('hidden');
-      const emptyMessage = state.meetings.length === 0 
-        ? 'No meetings scheduled yet. Click "Create Meeting" to schedule your first team meeting.'
-        : 'No meetings match this filter.';
+    // Only show empty state if there are NO meetings at all
+    if (state.meetings.length === 0) {
       if (selectors.empty) {
-        const emptyP = selectors.empty.querySelector('p');
-        if (emptyP) emptyP.textContent = emptyMessage;
+        selectors.empty.removeAttribute('hidden');
+        selectors.empty.style.display = '';
       }
       return;
+    } else {
+      if (selectors.empty) {
+        selectors.empty.setAttribute('hidden', 'true');
+        selectors.empty.style.display = 'none';
+      }
     }
     
-    selectors.empty?.setAttribute('hidden', 'true');
+    // If filtered list is empty but meetings exist, just show nothing
+    if (!filtered.length) {
+      return;
+    }
 
     // Sort by date (most recent first)
     filtered.sort((a, b) => {
@@ -447,13 +493,8 @@
 
       const meetings = await fetchMeetings();
       
-      // For each meeting, fetch attendance count
-      // TODO: Optimize this with a batch endpoint
-      state.meetings = meetings.map(meeting => ({
-        ...meeting,
-        attendance_count: 0, // Will be populated by real data
-        team_member_count: 0 // Will be populated by real data
-      }));
+      // Store meetings with attendance data from API
+      state.meetings = meetings;
 
       await updateTeamAttendance();
       isLoading = false;
