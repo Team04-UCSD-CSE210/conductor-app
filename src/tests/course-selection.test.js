@@ -14,27 +14,30 @@ describe('Course Selection Logic', () => {
   beforeAll(async () => {
     // Create test user directly
     const userResult = await pool.query(
-      `INSERT INTO users (email, name, primary_role, created_at, updated_at) 
-       VALUES ($1, $2, $3, NOW(), NOW()) 
+      `INSERT INTO users (email, name, primary_role, status, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, NOW(), NOW()) 
        RETURNING id`,
-      ['test-course-selection@ucsd.edu', 'Test User', 'student']
+      ['test-course-selection@ucsd.edu', 'Test User', 'student', 'active']
     );
     testUserId = userResult.rows[0].id;
 
+    // Clean up any auto-enrolled enrollments for this test user
+    await pool.query('DELETE FROM enrollments WHERE user_id = $1', [testUserId]);
+
     // Create test course offerings directly
     const offering1Result = await pool.query(
-      `INSERT INTO course_offerings (code, name, term, year, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, NOW(), NOW()) 
+      `INSERT INTO course_offerings (code, name, term, year, instructor_id, start_date, end_date, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) 
        RETURNING id`,
-      ['CSE210', 'Software Engineering', 'Fall', 2024]
+      ['CSE210', 'Software Engineering', 'Fall', 2024, testUserId, '2024-09-01', '2024-12-15']
     );
     testOffering1Id = offering1Result.rows[0].id;
 
     const offering2Result = await pool.query(
-      `INSERT INTO course_offerings (code, name, term, year, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, NOW(), NOW()) 
+      `INSERT INTO course_offerings (code, name, term, year, instructor_id, start_date, end_date, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) 
        RETURNING id`,
-      ['CSE110', 'Software Engineering Fundamentals', 'Fall', 2024]
+      ['CSE110', 'Software Engineering Fundamentals', 'Fall', 2024, testUserId, '2024-09-01', '2024-12-15']
     );
     testOffering2Id = offering2Result.rows[0].id;
 
