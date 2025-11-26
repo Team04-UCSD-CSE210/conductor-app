@@ -1,48 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login Failed - Conductor</title>
-    <link rel="stylesheet" href="/css/global.css" />
-    <link rel="stylesheet" href="/css/landing-page.css" />
-    <link rel="stylesheet" href="/css/blocked.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Access Restricted</title>
+  <link rel="stylesheet" href="/css/console.css" />
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: "Inter", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .card {
+      background: #1e1e1e;
+      padding: 2rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    h2 { color: #ff5555; }
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+    label {
+      align-self: flex-start;
+      font-weight: 600;
+    }
+    input[type="email"],
+    input[type="text"] {
+      background-color: #2a2a2a;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      color: #fff;
+      width: 100%;
+      max-width: 300px;
+      box-sizing: border-box;
+    }
+    input[type="email"]::placeholder,
+    input[type="text"]::placeholder {
+      color: #888;
+    }
+    button[type="submit"] {
+      background: #3a7afe;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+      max-width: 320px;
+      font-weight: 600;
+    }
+    button[type="submit"]:hover {
+      background: #5588ff;
+    }
+    a {
+      margin-top: 1rem;
+      display: inline-block;
+      background: #3a7afe;
+      color: white;
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    a:hover { background: #5588ff; }
+  </style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="hero">
-        <span class="blob blob-1"></span>
-        <span class="blob blob-2"></span>
+  <div class="card">
+   <h2>Access Restricted</h2>
+<p>Only UCSD or approved users can access Conductor IAM.</p>
 
-        <article class="hero-layout">
-            <!-- Show for attempts 1-2 -->
-            <div id="attemptContent">
-                <header>
-                    <h1 class="hero-title">Login Failed</h1>
-                    <p class="attempt-description">Invalid email or unauthorized access</p>
-                    <p class="attempt-info">Only UCSD or approved users can access Conductor</p>
-                    <div class="attempt-counter">
-                        Attempt <span id="attemptNum">1</span> of 3
-                    </div>
-                    <a class="btn btn-primary" href="/">Try Again</a>
-                </header>
-            </div>
+<form action="/request-access" method="POST" id="accessRequestForm">
+  <label for="email">Your Email:</label>
+  <input type="email" name="email" id="email" required style="background:#2a2a2a;color:#fff;">
+  <label for="reason">Reason (optional):</label>
+  <input type="text" name="reason" id="reason" placeholder="Why you need access">
+  <button type="submit">Request Access</button>
+</form>
+<p>Your request will be reviewed by the admin.</p>
+    <a href="/login">🔁 Return to Login</a>
+  </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let requestSubmitted = false;
+  const form = document.getElementById('accessRequestForm');
+  const submitButton = form.querySelector('button[type="submit"]');
 
-            <!-- Show when blocked (3+ attempts) -->
-            <div id="blockedContent">
-                <header>
-                    <h1 class="hero-title">Access Temporarily Blocked</h1>
-                    <p class="blocked-description">Too many failed login attempts</p>
-                    <p class="blocked-info">For security reasons, your access has been temporarily restricted</p>
-                    <div id="countdown" class="countdown">
-                        Please wait 15 minutes before trying again
-                    </div>
-                    <a class="btn btn-primary" href="/">Return Home</a>
-                </header>
-            </div>
-        </article>
-    </section>
+  form.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    if (requestSubmitted) return; // Prevent multiple submissions
 
-    <script src="/js/blocked.js"></script>
+    const formData = new URLSearchParams(new FormData(this));
+    const email = document.getElementById('email').value;
+
+    try {
+      const res = await fetch('/request-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData
+      });
+
+      const text = await res.text();
+      if (text.includes('Already Requested')) {
+        alert(`⚠️ Access for ${email} has already been requested. Please wait for admin approval.`);
+        requestSubmitted = true;
+        submitButton.disabled = true;
+        submitButton.style.background = "#555";
+        submitButton.textContent = "Already Requested";
+      } else if (res.ok) {
+        alert(`✅ Access request for ${email} submitted successfully! Admin will review it shortly.`);
+        requestSubmitted = true;
+        submitButton.disabled = true;
+        submitButton.style.background = "#555";
+        submitButton.textContent = "Request Submitted";
+      } else {
+        alert('⚠️ Failed to submit request. Please try again.');
+      }
+    } catch (err) {
+      alert('❌ Error submitting request. Check network or server logs.');
+    }
+  });
+});
+</script>
 </body>
 </html>
