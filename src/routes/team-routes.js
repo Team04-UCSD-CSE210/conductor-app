@@ -35,6 +35,8 @@ router.get('/my-team', ensureAuthenticated, async (req, res) => {
     const userId = req.currentUser.id;
 
     // Find team where user is either leader or member
+    // Use LEFT JOIN to include teams where user is leader but not in team_members
+    // Prioritize teams where user is the leader
     const result = await pool.query(
       `SELECT 
         t.id,
@@ -46,14 +48,17 @@ router.get('/my-team', ensureAuthenticated, async (req, res) => {
         t.created_at,
         u.name as leader_name,
         u.email as leader_email,
-        tm.role as user_role
+        tm.role as user_role,
+        CASE WHEN t.leader_id = $1 THEN 1 ELSE 2 END as priority
       FROM team t
       LEFT JOIN users u ON t.leader_id = u.id
-      INNER JOIN team_members tm 
+      LEFT JOIN team_members tm 
         ON t.id = tm.team_id 
         AND tm.user_id = $1 
         AND tm.left_at IS NULL
       WHERE t.offering_id = $2
+        AND (tm.user_id = $1 OR t.leader_id = $1)
+      ORDER BY priority, t.team_number
       LIMIT 1`,
       [userId, offering_id]
     );
