@@ -504,10 +504,6 @@
         return;
       }
 
-      // Create ISO datetime strings
-      const startDateTime = new Date(`${formData.date}T${formData.startTime}`).toISOString();
-      const endDateTime = new Date(`${formData.date}T${formData.endTime}`).toISOString();
-
       // Create the session
       const response = await fetch('/api/sessions', {
         method: 'POST',
