@@ -17,34 +17,6 @@
 
   let isLoading = false;
 
-  function formatTimeRange(startIso, endIso) {
-    if (!startIso || !endIso) return '—';
-    try {
-      const start = new Date(startIso);
-      const end = new Date(endIso);
-      
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return '—';
-      }
-      
-      const dateFormatter = new Intl.DateTimeFormat('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric',
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      });
-      const timeFormatter = new Intl.DateTimeFormat('en-US', { 
-        hour: 'numeric', 
-        minute: 'numeric',
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      });
-      return `${dateFormatter.format(start)} ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
-    } catch (e) {
-      console.warn('Error formatting time range:', e, startIso, endIso);
-      return '—';
-    }
-  }
-
   function formatDate(dateString) {
     if (!dateString) return '—';
     try {
@@ -55,18 +27,6 @@
     } catch (e) {
       console.warn('Error formatting date:', e, dateString);
       return '—';
-    }
-  }
-
-  function formatTime(dateString) {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    } catch (e) {
-      console.warn('Error formatting time:', e, dateString);
-      return '';
     }
   }
 
@@ -92,10 +52,8 @@
   }
 
   function isMeetingOpen(meeting) {
-    // Check if explicitly marked as open
     if (meeting.status === 'open') return true;
     
-    // If marked as closed, it's not open
     if (meeting.status === 'closed') return false;
     
     // Otherwise, check if it's currently within the meeting time
