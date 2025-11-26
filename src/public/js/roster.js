@@ -8,9 +8,11 @@ const state = {
     statuses: { enrolled: 0, waitlisted: 0, dropped: 0, completed: 0 },
   },
   pagination: { limit: 100, page: 1, totalPages: 1, total: 0 },
-  filters: { course_role: null, status: null, search: '', sort: 'name' },
+  filters: { course_role: null, status: null, team: null, search: '', sort: 'name' },
+  teams: [], // Available teams for filtering
   lastImport: null,
   roleEditing: null,
+  canEdit: false, // Whether user can edit roster (instructor/admin only)
 };
 
 // Elements will be initialized when DOM is ready
@@ -33,6 +35,8 @@ const initializeElements = () => {
   sortSelect: document.getElementById('sortSelect'),
   roleFilters: document.querySelectorAll('[data-role-filter]'),
   statusFilters: document.querySelectorAll('[data-status-filter]'),
+  teamFilterWrapper: document.getElementById('teamFilterWrapper'),
+  teamFilterSelect: document.getElementById('teamFilterSelect'),
   prevPage: document.getElementById('prevPage'),
   nextPage: document.getElementById('nextPage'),
   pageNumber: document.getElementById('pageNumber'),
@@ -49,6 +53,10 @@ const initializeElements = () => {
   roleSelect: document.getElementById('roleSelect'),
   roleStudentName: document.getElementById('roleStudentName'),
     exportFormat: document.getElementById('exportFormat'),
+  btnAddPerson: document.getElementById('btnAddPerson'),
+  btnImportModal: document.getElementById('btnImportModal'),
+  btnExport: document.getElementById('btnExport'),
+  rosterActions: document.querySelector('.roster-actions'),
   };
 };
 
@@ -67,6 +75,7 @@ const toggleOverlay = (overlay, open) => {
 
 const fetchJSON = async (url, options = {}) => {
   const res = await fetch(url, {
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });
@@ -226,22 +235,57 @@ const loadRoster = async () => {
   if (state.filters.course_role) params.set('course_role', state.filters.course_role);
   if (state.filters.status) params.set('status', state.filters.status);
   if (state.filters.sort) params.set('sort', state.filters.sort);
+  
+  // Note: Team filtering is done client-side after fetching
 
   try {
-    elements.rosterTableBody.innerHTML = '<tr><td colspan="5" style="padding: 2rem; text-align:center;">Loading roster…</td></tr>';
+    elements.rosterTableBody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align:center;">Loading roster…</td></tr>';
     const data = await fetchJSON(`/api/enrollments/offering/${state.offeringId}/roster?${params.toString()}`);
-    state.roster = data.results || [];
+    let allRoster = data.results || [];
+    
+    // Extract unique teams for filtering
+    const teamsMap = new Map();
+    allRoster.forEach(entry => {
+      if (entry.user?.team_name && entry.user?.team_number) {
+        const key = `${entry.user.team_number}:${entry.user.team_name}`;
+        if (!teamsMap.has(key)) {
+          teamsMap.set(key, {
+            number: entry.user.team_number,
+            name: entry.user.team_name,
+            key: key
+          });
+        }
+      }
+    });
+    // Sort teams by number
+    state.teams = Array.from(teamsMap.values()).sort((a, b) => a.number - b.number);
+    
+    // Update team filter controls
+    updateTeamFilterControls();
+    
+    // Apply team filter client-side
+    if (state.filters.team === 'team-leads') {
+      allRoster = allRoster.filter(entry => entry.user?.is_team_lead === true);
+    } else if (state.filters.team && state.filters.team !== 'all') {
+      // Filter by specific team (format: "number:name")
+      const [teamNum, teamName] = state.filters.team.split(':');
+      allRoster = allRoster.filter(entry => 
+        entry.user?.team_number == teamNum && entry.user?.team_name === teamName
+      );
+    }
+    
+    state.roster = allRoster;
     state.stats = data.stats || state.stats;
-    state.pagination.total = data.pagination?.total ?? state.stats.total ?? 0;
-    state.pagination.totalPages = Math.max(1, data.pagination?.totalPages ?? 1);
-    state.pagination.page = Math.min(state.pagination.totalPages, data.pagination?.page ?? state.pagination.page);
+    state.pagination.total = allRoster.length;
+    state.pagination.totalPages = Math.max(1, Math.ceil(allRoster.length / state.pagination.limit));
+    state.pagination.page = Math.min(state.pagination.totalPages, state.pagination.page);
 
     renderRoster();
     renderStats();
     renderPagination();
   } catch (error) {
     console.error('Failed to load roster', error);
-    elements.rosterTableBody.innerHTML = '<tr><td colspan="5" style="padding: 2rem; text-align:center; color: var(--rose-500);">Unable to load roster.</td></tr>';
+    elements.rosterTableBody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align:center; color: var(--rose-500);">Unable to load roster.</td></tr>';
     showToast(error.message || 'Failed to load roster', 'error');
   }
 };
@@ -292,12 +336,42 @@ const renderRoster = () => {
     const role = entry.course_role || 'student';
     const status = entry.enrollment_status || 'enrolled';
     const institution = entry.user?.institution_type === 'extension' ? 'Extension' : 'UCSD';
+    const teamName = entry.user?.team_name || null;
+    const teamNumber = entry.user?.team_number || null;
+    const teamLead = entry.user?.team_lead_name || null;
+    const isTeamLead = entry.user?.is_team_lead || false;
+    
+    // Format team display
+    let teamDisplay = 'No team';
+    if (teamName && teamNumber) {
+      teamDisplay = `Team ${teamNumber}: ${teamName}`;
+    } else if (teamName) {
+      teamDisplay = teamName;
+    } else if (teamNumber) {
+      teamDisplay = `Team ${teamNumber}`;
+    }
+    
+    // Format role display - show role with team lead indicator if applicable
+    let roleDisplay = role;
+    let roleClass = role;
+    if (isTeamLead && role === 'student') {
+      roleDisplay = 'Team Lead';
+      roleClass = 'team-lead';
+    }
+    
+    // Show edit role button only if user can edit (Drop button is in actions column)
+    const editRoleButton = state.canEdit ? `
+      <button class="role-btn text-btn" data-action="edit-role" data-user-id="${entry.user_id}" data-name="${entry.user?.name || entry.user?.email || 'Unknown'}" data-role="${role}">
+        Change role
+      </button>
+    ` : '';
+    
     return `
       <tr>
         <td>
           <div class="name-cell">
             <div class="avatar" aria-hidden="true">${initials}</div>
-            <div>
+            <div class="name-info">
               <div class="person-name">${entry.user?.name || 'Unknown'}</div>
               <div class="person-email">${entry.user?.email || ''}</div>
             </div>
@@ -305,23 +379,33 @@ const renderRoster = () => {
         </td>
         <td>
           <div class="role-chip">
-            <span class="role-pill ${role}">${role}</span>
-            <button class="role-btn text-btn" data-action="edit-role" data-user-id="${entry.user_id}" data-name="${entry.user?.name || entry.user?.email || 'Unknown'}" data-role="${role}">
-              Change role
-            </button>
+            <span class="role-pill ${roleClass}">${roleDisplay}</span>
+            ${editRoleButton}
           </div>
         </td>
         <td>
-          <span class="status-pill ${status}">${status}</span>
-          <div class="status-meta">Since ${formatDate(entry.enrolled_at)}</div>
+          <div class="status-cell">
+            <span class="status-pill ${status}">${status}</span>
+            <div class="status-meta">Since ${formatDate(entry.enrolled_at)}</div>
+          </div>
         </td>
         <td>
-          <div class="institution-name">${institution}</div>
-          <div class="institution-meta">${entry.user?.ucsd_pid || 'PID —'}</div>
+          <div class="institution-cell">
+            <div class="institution-name">${institution}</div>
+            <div class="institution-meta">${entry.user?.ucsd_pid || 'PID —'}</div>
+          </div>
+        </td>
+        <td>
+          <div class="team-cell">
+            ${entry.user?.team_name ? `
+              <div class="team-name">${teamDisplay}</div>
+              ${entry.user?.team_lead_name && !isTeamLead ? `<div class="team-lead-meta">Lead: ${teamLead}</div>` : ''}
+            ` : '<div class="team-empty">No team</div>'}
+          </div>
         </td>
         <td class="actions-cell">
           <button class="icon-btn" title="Email ${entry.user?.name}" data-action="email" data-email="${entry.user?.email || ''}">✉️</button>
-          <button class="btn btn-danger btn-icon" title="Drop from roster" data-action="drop" data-id="${entry.enrollment_id}">Drop</button>
+          ${state.canEdit ? `<button class="btn btn-danger btn-icon" title="Drop from roster" data-action="drop" data-id="${entry.enrollment_id}">Drop</button>` : ''}
         </td>
       </tr>
     `;
@@ -611,57 +695,39 @@ const exportRoster = async () => {
   const format = elements.exportFormat?.value || 'csv';
   
   try {
-    // Fetch all roster data (with a high limit)
-    const params = new URLSearchParams({
-      limit: '10000',
+    // Use the API endpoint which checks permissions
+    const endpoint = format === 'csv' 
+      ? `/api/users/roster/export/csv`
+      : `/api/users/roster/export/json`;
+    
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
     });
-    const data = await fetchJSON(`/api/enrollments/offering/${state.offeringId}/roster?${params.toString()}`);
-    const roster = data.results || [];
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || error.error || 'Export failed - you may not have permission to export');
+    }
     
     if (format === 'csv') {
-      // Convert to CSV
-      const headers = ['Name', 'Email', 'PID', 'Course Role', 'Status', 'Institution Type', 'Enrolled At'];
-      const rows = roster.map(entry => [
-        entry.user?.name || '',
-        entry.user?.email || '',
-        entry.user?.ucsd_pid || '',
-        entry.course_role || '',
-        entry.enrollment_status || '',
-        entry.user?.institution_type || '',
-        entry.enrolled_at || ''
-      ]);
-      
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-      ].join('\n');
-      
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+      const csv = await response.text();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
       link.download = `roster-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
-      // Export JSON
-      const exportData = roster.map(entry => ({
-    name: entry.user?.name,
-    email: entry.user?.email,
-    pid: entry.user?.ucsd_pid,
-    course_role: entry.course_role,
-    status: entry.enrollment_status,
-    institution_type: entry.user?.institution_type,
-        enrolled_at: entry.enrolled_at
-  }));
-      
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+      const json = await response.json();
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
       link.download = `roster-${new Date().toISOString().split('T')[0]}.json`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
     showToast(`Roster exported as ${format.toUpperCase()}`);
   } catch (error) {
@@ -672,6 +738,72 @@ const exportRoster = async () => {
 
 // Removed exportFiltered - using main export function with current filters
 
+const allowTeamFilter = () => (
+  state.filters.course_role === null || state.filters.course_role === 'student'
+);
+
+const updateTeamFilterControls = () => {
+  if (!elements.teamFilterWrapper || !elements.teamFilterSelect) return;
+
+  if (!allowTeamFilter()) {
+    elements.teamFilterWrapper.hidden = true;
+    state.filters.team = null;
+    elements.teamFilterSelect.value = 'all';
+    return;
+  }
+
+  elements.teamFilterWrapper.hidden = false;
+
+  const prevValue = state.filters.team || 'all';
+  const select = elements.teamFilterSelect;
+  select.innerHTML = `
+    <option value="all">All teams</option>
+    <option value="team-leads">Team Leads</option>
+  `;
+
+  state.teams.forEach((team) => {
+    const option = document.createElement('option');
+    option.value = team.key;
+    option.textContent = `Team ${team.number}`;
+    select.appendChild(option);
+  });
+
+  if ([...select.options].some((opt) => opt.value === prevValue)) {
+    select.value = prevValue;
+  } else {
+    state.filters.team = null;
+    select.value = 'all';
+  }
+};
+
+const checkEditPermissions = async () => {
+  try {
+    // Check if user can import roster (instructor/admin only)
+    const response = await fetch('/api/users/roster/export/json', {
+      credentials: 'include',
+      method: 'HEAD' // Use HEAD to check permissions without downloading
+    });
+    
+    // If we get 200 or 403, we know the permission status
+    // 200 = has permission, 403 = no permission
+    state.canEdit = response.ok || response.status === 200;
+    
+    // Update UI to hide/show edit buttons
+    if (elements.rosterActions) {
+      if (!state.canEdit) {
+        // Hide edit buttons for non-instructors/admins
+        if (elements.btnAddPerson) elements.btnAddPerson.style.display = 'none';
+        if (elements.btnImportModal) elements.btnImportModal.style.display = 'none';
+        if (elements.btnExport) elements.btnExport.style.display = 'none';
+        if (elements.exportFormat) elements.exportFormat.style.display = 'none';
+      }
+    }
+  } catch (error) {
+    console.error('Error checking edit permissions:', error);
+    state.canEdit = false;
+  }
+};
+
 const bindEvents = () => {
   document.getElementById('btnRefresh').addEventListener('click', async () => {
     await loadOfferings();
@@ -679,9 +811,16 @@ const bindEvents = () => {
       await loadRoster();
     }
   });
-  document.getElementById('btnAddPerson').addEventListener('click', () => toggleOverlay(elements.addPersonOverlay, true));
-  document.getElementById('btnImportModal').addEventListener('click', () => toggleOverlay(elements.importOverlay, true));
-  document.getElementById('btnExport').addEventListener('click', exportRoster);
+  
+  if (elements.btnAddPerson) {
+    elements.btnAddPerson.addEventListener('click', () => toggleOverlay(elements.addPersonOverlay, true));
+  }
+  if (elements.btnImportModal) {
+    elements.btnImportModal.addEventListener('click', () => toggleOverlay(elements.importOverlay, true));
+  }
+  if (elements.btnExport) {
+    elements.btnExport.addEventListener('click', exportRoster);
+  }
   document.getElementById('btnRunImport').addEventListener('click', handleImport);
   elements.searchInput.addEventListener('input', debounce((event) => {
     state.filters.search = event.target.value.trim();
@@ -698,6 +837,7 @@ const bindEvents = () => {
       button.dataset.active = 'true';
       state.filters.course_role = button.dataset.roleFilter === 'all' ? null : button.dataset.roleFilter;
       state.pagination.page = 1;
+      updateTeamFilterControls();
       loadRoster();
     });
   });
@@ -710,6 +850,15 @@ const bindEvents = () => {
       loadRoster();
     });
   });
+  
+  if (elements.teamFilterSelect) {
+    elements.teamFilterSelect.addEventListener('change', (event) => {
+      const value = event.target.value;
+      state.filters.team = value === 'all' ? null : value;
+      state.pagination.page = 1;
+      loadRoster();
+    });
+  }
   elements.prevPage.addEventListener('click', () => {
     if (state.pagination.page <= 1) return;
     state.pagination.page -= 1;
@@ -753,6 +902,7 @@ const bindEvents = () => {
 const init = async () => {
   // Initialize elements now that DOM is ready
   initializeElements();
+  updateTeamFilterControls();
   
   // Ensure elements are found before proceeding
   if (!elements.activeOfferingName) {
@@ -793,6 +943,7 @@ const init = async () => {
   }
   
   bindEvents();
+  await checkEditPermissions();
   await loadOfferings();
   if (state.offeringId) {
   await loadRoster();

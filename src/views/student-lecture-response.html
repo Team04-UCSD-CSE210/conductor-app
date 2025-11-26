@@ -23,13 +23,7 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/student-dashboard">Dashboard</a>
-      <a href="/lecture-attendance-student">Lectures</a>
-      <a href="/meeting-attendance">Meetings</a>
-      <a href="/work-journal">Work Journal</a>
-      <a href="/my-team">My Team</a>
-    </nav>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
     <footer>
       <a href="/logout" class="btn btn-ghost">Sign out</a>
     </footer>
@@ -71,7 +65,7 @@
     </section>
   </main>
 
-  <script src="/js/student-nav.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/inactivity-timeout.js" defer></script>
   <script src="/js/lecture-data.service.js" defer></script>
   <script src="/js/student-lecture-response.js" defer></script>

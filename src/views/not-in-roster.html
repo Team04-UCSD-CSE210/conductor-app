@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Denied - Not in Roster</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/landing-page.css">
+</head>
+<body>
+  <div class="container" style="max-width: 600px; margin: 4rem auto; padding: 2rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h1 style="color: var(--red-600, #dc2626); font-size: 2rem; margin-bottom: 1rem;">Access Denied</h1>
+      <p style="color: var(--gray-600, #4b5563); font-size: 1.1rem; margin-bottom: 2rem;">
+        You are not currently enrolled in this course roster.
+      </p>
+    </div>
+
+    <div style="background: var(--red-50, #fef2f2); border: 1px solid var(--red-200, #fecaca); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem;">
+      <h2 style="color: var(--red-700, #b91c1c); font-size: 1.25rem; margin-bottom: 1rem;">What does this mean?</h2>
+      <p style="color: var(--gray-700, #374151); margin-bottom: 1rem;">
+        Your account is not currently in the course roster. To access this course, you must be added to the roster by an instructor or administrator.
+      </p>
+      <p style="color: var(--gray-700, #374151); margin: 0;">
+        <strong>Email:</strong> <span id="user-email"></span>
+      </p>
+    </div>
+
+    <div style="background: white; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 0.75rem; padding: 1.5rem;">
+      <h2 style="color: var(--gray-900, #111827); font-size: 1.25rem; margin-bottom: 1rem;">What should I do?</h2>
+      <ol style="color: var(--gray-700, #374151); padding-left: 1.5rem; line-height: 1.8;">
+        <li>Contact your course instructor or administrator</li>
+        <li>Provide them with your email address</li>
+        <li>Request to be added to the course roster</li>
+        <li>Once added, you will be able to log in and access the course</li>
+      </ol>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+      <a href="/logout" class="btn btn-primary" style="display: inline-block; padding: 0.75rem 2rem; text-decoration: none;">
+        Sign Out
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Get email from session or URL
+    const email = new URLSearchParams(window.location.search).get('email') || 
+                  '<script>document.write(window.prefilledEmail || "")</script>'.replace(/<script>.*?<\/script>/g, '') ||
+                  '';
+    
+    if (email) {
+      document.getElementById('user-email').textContent = email;
+    } else {
+      // Try to get from session via server-side rendering
+      const emailEl = document.getElementById('user-email');
+      if (emailEl && window.prefilledEmail) {
+        emailEl.textContent = window.prefilledEmail;
+      } else {
+        emailEl.textContent = 'Not available';
+      }
+    }
+  </script>
+</body>
+</html>
+
