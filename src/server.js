@@ -957,7 +957,7 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
       if (isTeamLead) {
         return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
       } else {
-        return res.sendFile(buildFullViewPath("meeting-attendance.html"));
+        return res.sendFile(buildFullViewPath("meeting-attendance-student.html"));
       }
     }
 
