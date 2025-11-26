@@ -62,6 +62,9 @@ BEGIN
                 END LOOP;
                 
                 -- Insert team meeting session
+                -- Set attendance_opened_at and attendance_closed_at based on meeting date
+                -- Past meetings (before today): both opened and closed
+                -- Future meetings: neither opened nor closed (pending)
                 INSERT INTO sessions (
                     offering_id,
                     team_id,
@@ -72,6 +75,8 @@ BEGIN
                     access_code,
                     code_expires_at,
                     is_active,
+                    attendance_opened_at,
+                    attendance_closed_at,
                     created_by,
                     updated_by
                 ) VALUES (
@@ -83,7 +88,17 @@ BEGIN
                     '15:00:00'::TIME, -- 3:00 PM
                     access_code_var,
                     (meeting_dates[meeting_idx] || ' 17:00:00')::TIMESTAMPTZ, -- 5:00 PM same day
-                    FALSE, -- Not active yet (team lead will open)
+                    TRUE, -- Active (visible to students)
+                    CASE 
+                        WHEN meeting_dates[meeting_idx] < CURRENT_DATE THEN 
+                            (meeting_dates[meeting_idx] || ' 15:00:00')::TIMESTAMPTZ
+                        ELSE NULL 
+                    END, -- Open if in the past
+                    CASE 
+                        WHEN meeting_dates[meeting_idx] < CURRENT_DATE THEN 
+                            (meeting_dates[meeting_idx] || ' 17:00:00')::TIMESTAMPTZ
+                        ELSE NULL 
+                    END, -- Close if in the past
                     team_record.leader_id,
                     team_record.leader_id
                 )

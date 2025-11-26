@@ -49,38 +49,60 @@
     return badge;
   }
 
-  function isMeetingOpen(meeting) {
-    // Check if explicitly marked as open
-    if (meeting.status === 'open') return true;
+  function determineMeetingStatus(meeting) {
+    const now = new Date();
     
-    // If marked as closed, it's not open
-    if (meeting.status === 'closed') return false;
+    if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
+      // Both timestamps are set (scheduled start/end times)
+      const openTime = new Date(meeting.attendance_opened_at);
+      const closeTime = new Date(meeting.attendance_closed_at);
+      
+      if (now < openTime) {
+        return 'pending'; // Meeting hasn't started yet
+      } else if (now >= openTime && now < closeTime) {
+        return 'open'; // Meeting is currently open
+      } else {
+        return 'closed'; // Meeting has ended
+      }
+    } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
+      // Only open time is set
+      const openTime = new Date(meeting.attendance_opened_at);
+      
+      if (now < openTime) {
+        return 'pending';
+      }
+      
+      // Check if end time has passed
+      if (meeting.code_expires_at) {
+        const endTime = new Date(meeting.code_expires_at);
+        if (endTime < now) {
+          return 'closed';
+        }
+      }
+      return 'open';
+    } else {
+      // No attendance timestamps - fall back to session_date/session_time
+      if (meeting.session_date && meeting.session_time) {
+        const startTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
+        if (startTime > now) {
+          return 'pending';
+        }
+        return 'closed';
+      }
+    }
     
-    // Otherwise, check if it's currently within the meeting time
-    // For now, without end_time, we can't determine this automatically
-    return false;
+    return 'pending';
   }
 
   function buildMeetingRow(meeting) {
     const row = document.createElement('article');
     row.className = 'lecture-item';
     
-    const isOpen = isMeetingOpen(meeting);
-    
-    // Determine if meeting is past by comparing session_date + session_time with now
-    let isPast = false;
-    if (meeting.status === 'closed') {
-      isPast = true;
-    } else if (meeting.session_date && meeting.session_time) {
-      // Combine session_date and session_time to create a full datetime
-      const meetingDateTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
-      const now = new Date();
-      // If the meeting time is more than 2 hours ago, consider it past
-      isPast = !isOpen && (now - meetingDateTime) > (2 * 60 * 60 * 1000);
-    }
-    
-    const sessionState = isOpen ? 'open' : (isPast ? 'closed' : 'pending');
+    const sessionState = determineMeetingStatus(meeting);
     row.dataset.status = sessionState;
+    
+    const isOpen = sessionState === 'open';
+    const isPast = sessionState === 'closed';
 
     const attendanceCount = meeting.attendance_count || 0;
     const totalMembers = meeting.team_member_count || 0;
@@ -98,25 +120,47 @@
     const time = document.createElement('p');
     time.className = 'lecture-time';
     
-    // Format date and time display
-    const displayDate = meeting.session_date || meeting.scheduled_date || meeting.created_at;
-    const dateStr = formatDate(displayDate);
-    
-    // Format time if available
+    // Format date and time display using attendance timestamps if available
     let timeStr = '';
-    if (meeting.session_time) {
-      // session_time is stored as HH:MM:SS, format it nicely
-      const timeParts = meeting.session_time.split(':');
-      if (timeParts.length >= 2) {
-        const hour = parseInt(timeParts[0], 10);
-        const minute = timeParts[1];
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour % 12 || 12;
-        timeStr = `${displayHour}:${minute} ${ampm}`;
+    
+    if (meeting.attendance_opened_at || (meeting.session_date && meeting.session_time)) {
+      // Use attendance_opened_at for start time if available, otherwise session_date/time
+      const startTime = meeting.attendance_opened_at 
+        ? new Date(meeting.attendance_opened_at)
+        : new Date(`${meeting.session_date}T${meeting.session_time}`);
+      
+      const dateFormatter = new Intl.DateTimeFormat('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric'
+      });
+      const timeFormatter = new Intl.DateTimeFormat('en-US', { 
+        hour: 'numeric', 
+        minute: 'numeric'
+      });
+      
+      const dateStr = dateFormatter.format(startTime);
+      const startTimeStr = timeFormatter.format(startTime);
+      
+      // Add end time if available
+      if (meeting.attendance_closed_at) {
+        const endTime = new Date(meeting.attendance_closed_at);
+        const endTimeStr = timeFormatter.format(endTime);
+        timeStr = `${dateStr} ${startTimeStr}–${endTimeStr}`;
+      } else if (meeting.code_expires_at) {
+        const endTime = new Date(meeting.code_expires_at);
+        const endTimeStr = timeFormatter.format(endTime);
+        timeStr = `${dateStr} ${startTimeStr}–${endTimeStr}`;
+      } else {
+        timeStr = `${dateStr} at ${startTimeStr}`;
       }
+    } else {
+      // Fallback to old logic
+      const displayDate = meeting.session_date || meeting.scheduled_date || meeting.created_at;
+      timeStr = formatDate(displayDate);
     }
     
-    time.textContent = timeStr ? `${dateStr} at ${timeStr}` : dateStr;
+    time.textContent = timeStr;
     
     details.append(label, time);
 
@@ -193,19 +237,10 @@
     const filtered = state.meetings.filter((meeting) => {
       if (state.filter === 'all') return true;
       
-      const isOpen = isMeetingOpen(meeting);
-      
-      // Determine if past using same logic as buildMeetingRow
-      let isPast = false;
-      if (meeting.status === 'closed') {
-        isPast = true;
-      } else if (meeting.session_date && meeting.session_time) {
-        const meetingDateTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
-        const now = new Date();
-        isPast = !isOpen && (now - meetingDateTime) > (2 * 60 * 60 * 1000);
-      }
-      
-      const isUpcoming = !isOpen && !isPast;
+      const sessionState = determineMeetingStatus(meeting);
+      const isOpen = sessionState === 'open';
+      const isPast = sessionState === 'closed';
+      const isUpcoming = sessionState === 'pending';
       
       if (state.filter === 'open') {
         return isOpen;
@@ -382,7 +417,6 @@
       state.userTeam = await getUserTeam(user.id, state.offeringId);
       
       if (!state.userTeam) {
-        console.log('User is not assigned to a team');
         if (selectors.courseTitle) {
           selectors.courseTitle.textContent = 'Team Meetings - No Team Assigned';
         }
@@ -405,7 +439,6 @@
                            state.userTeam.leader_id === user.id;
       
       if (!isTeamLeader) {
-        console.log('User is not a team leader, redirecting...');
         window.location.href = '/meeting-attendance';
         return;
       }
@@ -501,7 +534,28 @@
         return;
       }
 
-      // Create the session
+      // Create the session with attendance times
+      // Build timestamps that preserve the local time
+      // Get the timezone offset and format as ISO string with timezone
+      const formatLocalDateTime = (dateStr, timeStr) => {
+        const date = new Date(`${dateStr}T${timeStr}:00`);
+        const tzOffset = -date.getTimezoneOffset();
+        const offsetHours = String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, '0');
+        const offsetMins = String(Math.abs(tzOffset) % 60).padStart(2, '0');
+        const offsetSign = tzOffset >= 0 ? '+' : '-';
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}T${hours}:${minutes}:00${offsetSign}${offsetHours}:${offsetMins}`;
+      };
+      
+      const sessionDateTimeStr = formatLocalDateTime(formData.date, formData.startTime);
+      const endDateTimeStr = formatLocalDateTime(formData.date, formData.endTime);
+      
       const response = await fetch('/api/sessions', {
         method: 'POST',
         headers: {
@@ -514,6 +568,9 @@
           title: formData.name,
           session_date: formData.date,
           session_time: formData.startTime,
+          code_expires_at: endDateTimeStr,
+          attendance_opened_at: sessionDateTimeStr,
+          attendance_closed_at: endDateTimeStr,
           status: 'pending'
         })
       });
@@ -524,7 +581,6 @@
       }
 
       const newMeeting = await response.json();
-      console.log('Meeting created:', newMeeting);
 
       // Reset form
       form.reset();
