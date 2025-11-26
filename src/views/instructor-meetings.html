@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instructor Meetings Overview</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/lecture-attendance-student.css">
+  <style>
+    .team-list {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #fff;
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 2rem;
+    }
+    .team-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .team-row:last-child {
+      border-bottom: none;
+    }
+    .team-name {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--teal-700, #0f766e);
+    }
+    .team-meta {
+      display: flex;
+      gap: 2rem;
+      font-size: 0.98rem;
+      color: var(--gray-700, #374151);
+    }
+    .attendance-bar {
+      height: 1.2rem;
+      width: 120px;
+      background: #f3f4f6;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      margin-left: 1rem;
+      position: relative;
+    }
+    .attendance-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #14b8a6 0%, #f59e0b 100%);
+      border-radius: 0.5rem;
+      transition: width 0.3s;
+    }
+    .attendance-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 style="text-align:center; margin-top:2rem;">Team Meetings Overview</h1>
+    <section class="team-list" id="team-list">
+      <!-- Team rows will be injected here -->
+    </section>
+  </main>
+  <script>
+    async function fetchTeams() {
+      const res = await fetch('/api/teams?includeStats=true', { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    }
+    async function fetchMeetings(teamId) {
+      const res = await fetch(`/api/sessions?team_id=${teamId}`, { credentials: 'include' });
+      if (!res.ok) return [];
+      return await res.json();
+    }
+    async function fetchAttendance(teamId) {
+      const res = await fetch(`/api/attendance/team-stats?team_id=${teamId}`, { credentials: 'include' });
+      if (!res.ok) return { percent: 0 };
+      return await res.json();
+    }
+    async function renderTeams() {
+      const container = document.getElementById('team-list');
+      container.innerHTML = '<p style="text-align:center; color:#888;">Loading teams...</p>';
+      const teams = await fetchTeams();
+      container.innerHTML = '';
+      if (!teams.length) {
+        container.innerHTML = '<p style="text-align:center; color:#888;">No teams found.</p>';
+        return;
+      }
+      for (const team of teams) {
+        const meetings = await fetchMeetings(team.id);
+        const attendance = await fetchAttendance(team.id);
+        const percent = attendance.percent || 0;
+        const row = document.createElement('div');
+        row.className = 'team-row';
+        row.innerHTML = `
+          <span class="team-name">${team.name || 'Team ' + team.team_number}</span>
+          <div class="team-meta">
+            <span>Members: ${team.member_count || team.members?.length || 0}</span>
+            <span>Meetings: ${meetings.length}</span>
+            <span style="display:flex;align-items:center;">Attendance:
+              <span class="attendance-bar">
+                <span class="attendance-fill" style="width:${percent}%"></span>
+                <span class="attendance-label">${percent}%</span>
+              </span>
+            </span>
+          </div>
+        `;
+        container.appendChild(row);
+      }
+    }
+    renderTeams();
+  </script>
+</body>
+</html>
