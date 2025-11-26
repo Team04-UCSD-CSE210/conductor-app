@@ -19,47 +19,80 @@
   let isLoading = false;
 
   function formatTimeRange(startIso, endIso) {
-    if (!startIso || !endIso) return '—';
-    try {
-      const start = new Date(startIso);
-      const end = new Date(endIso);
-      
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    // If both are provided, format as range
+    if (startIso && endIso) {
+      try {
+        const start = new Date(startIso);
+        const end = new Date(endIso);
+        
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+          return '—';
+        }
+        
+        const dateFormatter = new Intl.DateTimeFormat('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric',
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+        const timeFormatter = new Intl.DateTimeFormat('en-US', { 
+          hour: 'numeric', 
+          minute: 'numeric',
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+        return `${dateFormatter.format(start)} ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
+      } catch (e) {
+        console.warn('Error formatting time range:', e, startIso, endIso);
         return '—';
       }
-      
-      const dateFormatter = new Intl.DateTimeFormat('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric',
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      });
-      const timeFormatter = new Intl.DateTimeFormat('en-US', { 
-        hour: 'numeric', 
-        minute: 'numeric',
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      });
-      return `${dateFormatter.format(start)} ${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
-    } catch (e) {
-      console.warn('Error formatting time range:', e, startIso, endIso);
-      return '—';
     }
+    
+    // If only start is provided, format just the start
+    if (startIso) {
+      try {
+        const start = new Date(startIso);
+        if (isNaN(start.getTime())) return '—';
+        
+        const dateFormatter = new Intl.DateTimeFormat('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric',
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+        const timeFormatter = new Intl.DateTimeFormat('en-US', { 
+          hour: 'numeric', 
+          minute: 'numeric',
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+        return `${dateFormatter.format(start)} at ${timeFormatter.format(start)}`;
+      } catch (e) {
+        console.warn('Error formatting start time:', e, startIso);
+        return '—';
+      }
+    }
+    
+    return '—';
   }
 
   function buildStatusBadge(status) {
     const badge = document.createElement('span');
     badge.classList.add('lecture-badge');
-    const statusLabel = status === 'open' ? 'Needs response' : status;
+    const statusLabel = status === 'open' ? 'Needs response' : status === 'pending' ? 'Upcoming' : status;
     badge.textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
-    badge.classList.add(status === 'present' ? 'present' : status === 'absent' ? 'absent' : 'present');
-    if (status === 'absent') {
-      badge.classList.remove('present');
+    
+    // Apply appropriate CSS class for styling
+    if (status === 'present') {
+      badge.classList.add('present');
+    } else if (status === 'absent') {
       badge.classList.add('absent');
-    }
-    if (status === 'open') {
-      badge.classList.remove('present');
+    } else if (status === 'open') {
       badge.classList.add('open');
+    } else if (status === 'pending') {
+      badge.classList.add('present'); // Use 'present' class for green background (same as team leader view)
+    } else {
+      badge.classList.add('present'); // Default
     }
+    
     return badge;
   }
 
@@ -92,7 +125,7 @@
       sessionStatus.textContent = 'Open';
     } else if (meeting.sessionState === 'pending') {
       sessionStatus.className = 'lecture-status pending';
-      sessionStatus.textContent = 'Not Opened';
+      sessionStatus.textContent = 'Upcoming';
     } else {
       sessionStatus.className = 'lecture-status closed';
       sessionStatus.textContent = 'Closed';
@@ -191,12 +224,10 @@
       });
       
       if (!myTeamResponse.ok) {
-        console.log('No team found for user (status:', myTeamResponse.status, ')');
         return null;
       }
-      
+      }
       const teamData = await myTeamResponse.json();
-      console.log('Team data received:', teamData);
       
       // Handle both response formats: { team: {...} } or direct object
       const team = teamData.team || teamData;
@@ -269,7 +300,6 @@
             .filter(s => s.team_id && s.team_id === state.teamId)
             .map(session => {
               // If a transformSession helper exists, use it. Otherwise fall back to a safe default
-              // Avoid optional-chaining + conditional that can yield `undefined` for `transformed`
               let transformed;
               if (window.LectureService && typeof window.LectureService.transformSession === 'function') {
                 transformed = window.LectureService.transformSession(session);
@@ -287,8 +317,15 @@
               const attendanceStatus = attendanceMap[session.id] || 'absent';
               const sessionState = transformed?.status || 'closed';
               let status = attendanceStatus;
+              
+              // For open sessions where user hasn't attended, show as 'open'
               if (sessionState === 'open' && attendanceStatus === 'absent') {
                 status = 'open';
+              }
+              
+              // For pending/upcoming sessions, show as 'pending' instead of 'absent'
+              if (sessionState === 'pending') {
+                status = 'pending';
               }
               return {
                 id: transformed.id,

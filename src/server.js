@@ -949,7 +949,7 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     );
 
     const isTeamLead = teamLeadCheck.rows.length > 0 && 
-      (teamLeadCheck.rows[0].leader_id === user.id || teamLeadCheck.rows[0].role === 'leader');
+      teamLeadCheck.rows[0].leader_id === user.id;
 
     // Allow students, admins, and instructors (for testing/viewing)
     const enrollmentRole = await getUserEnrollmentRole(user.id);

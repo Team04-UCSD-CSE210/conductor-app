@@ -71,17 +71,21 @@ export class SessionModel {
       code_expires_at,
       is_active = true,
       team_id = null,
+      attendance_opened_at = null,
+      attendance_closed_at = null,
       created_by
     } = sessionData;
 
     const result = await pool.query(
       `INSERT INTO sessions 
        (offering_id, title, description, session_date, session_time, 
-        access_code, code_expires_at, is_active, team_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
+        access_code, code_expires_at, is_active, team_id, 
+        attendance_opened_at, attendance_closed_at, created_by, updated_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12)
        RETURNING *`,
       [offering_id, title, description, session_date, session_time, 
-       access_code, code_expires_at, is_active, team_id, created_by]
+       access_code, code_expires_at, is_active, team_id, 
+       attendance_opened_at, attendance_closed_at, created_by]
     );
 
     return result.rows[0];
