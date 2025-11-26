@@ -332,9 +332,21 @@ const getLoginIdentifier = (email, req) => {
 const getLoginAttemptKey = (identifier) => `${LOGIN_ATTEMPT_KEY_PREFIX}${identifier}`;
 
 const getLoginAttemptStatus = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) {
+  if (!identifier) {
     return { attempts: 0, blocked: false };
   }
+  
+  // Fallback to session-based counting if Redis is not available
+  if (!redisClient || !redisConnected) {
+    // Use a simple in-memory store as fallback
+    global.loginAttempts = global.loginAttempts || {};
+    const attempts = global.loginAttempts[identifier] || 0;
+    return {
+      attempts,
+      blocked: attempts >= LOGIN_FAILURE_THRESHOLD
+    };
+  }
+  
   try {
     const rawAttempts = await redisClient.get(getLoginAttemptKey(identifier));
     const attempts = rawAttempts ? Number.parseInt(rawAttempts, 10) : 0;
@@ -352,17 +364,42 @@ const getLoginAttemptStatus = async (identifier) => {
 };
 
 const recordFailedLoginAttempt = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) return 0;
+  console.log(`[DEBUG] recordFailedLoginAttempt - identifier: ${identifier}, redisClient: ${!!redisClient}, redisConnected: ${redisConnected}`);
+  
+  if (!identifier) return 0;
+  
+  // Fallback to in-memory counting if Redis is not available
+  if (!redisClient || !redisConnected) {
+    console.log(`[DEBUG] Using in-memory fallback for attempt counting`);
+    global.loginAttempts = global.loginAttempts || {};
+    global.loginAttempts[identifier] = (global.loginAttempts[identifier] || 0) + 1;
+    const attempts = global.loginAttempts[identifier];
+    console.log(`[DEBUG] In-memory attempts for ${identifier}: ${attempts}`);
+    
+    // Set a timeout to clear attempts after 15 minutes
+    setTimeout(() => {
+      if (global.loginAttempts && global.loginAttempts[identifier]) {
+        delete global.loginAttempts[identifier];
+        console.log(`[DEBUG] Cleared attempts for ${identifier} after timeout`);
+      }
+    }, LOGIN_FAILURE_WINDOW_MS);
+    
+    return attempts;
+  }
+  
   try {
     const key = getLoginAttemptKey(identifier);
+    console.log(`[DEBUG] Recording attempt with key: ${key}`);
     const attempts = await redisClient.incr(key);
+    console.log(`[DEBUG] Redis incr result: ${attempts}`);
     if (attempts === 1) {
       await redisClient.pexpire(key, LOGIN_FAILURE_WINDOW_MS);
+      console.log(`[DEBUG] Set expiry for key: ${key}`);
     }
     return attempts;
   } catch (error) {
     console.error("Unable to record failed login attempt", error);
-    return 0;
+    return 1; // Return 1 as fallback
   }
 };
 
@@ -439,6 +476,11 @@ passport.use(new GoogleStrategy({
         windowMinutes: LOGIN_FAILURE_WINDOW_MINUTES
       }
     });
+    // Store email in session for blocked users
+    if (req.session && email) {
+      req.session.userEmail = email;
+      req.session.blockedEmail = email;
+    }
     return done(null, false, { message: "Too many failed login attempts. Please try again later." });
   }
 
@@ -499,7 +541,9 @@ passport.use(new GoogleStrategy({
     }
 
     // --- Step 3: All others → block and log ---
+    console.log(`[DEBUG] Recording failed attempt for identifier: ${identifier}`);
     const attempts = await recordFailedLoginAttempt(identifier);
+    console.log(`[DEBUG] Failed attempts now: ${attempts}`);
     await logAuthEvent("LOGIN_REJECTED_DOMAIN", {
       req,
       message: `Attempted login from unauthorized domain: ${domain || "unknown"}`,
@@ -562,7 +606,7 @@ app.get("/test-session", (req, res) => {
 
 // Root route
 app.get("/", (req, res) => {
-  res.send('<h1>Conductor App</h1><a href="/login">Login</a>');
+  res.sendFile(buildFullViewPath("index.html"));
 });
 
 // Parse JSON and URL-encoded request bodies (must be before API routes)
@@ -969,7 +1013,8 @@ app.get("/auth/failure", async (req, res) => {
     delete req.session.userEmail;
     req.session.blockedEmail = email;
   }
-  
+
+  // Always redirect to blocked.html - it will handle the attempt counting and redirect logic
   res.redirect("/blocked.html");
 });
 
@@ -1042,9 +1087,12 @@ app.use("/api/class", courseOfferingRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {
-  const email = req.user?.emails?.[0]?.value || null;
+  const email = req.user?.emails?.[0]?.value || req.session?.blockedEmail || null;
+  console.log(`[DEBUG] /api/login-attempts - email: ${email}, session.blockedEmail: ${req.session?.blockedEmail}`);
   const identifier = getLoginIdentifier(email, req);
+  console.log(`[DEBUG] /api/login-attempts - identifier: ${identifier}`);
   const status = await getLoginAttemptStatus(identifier);
+  console.log(`[DEBUG] /api/login-attempts - status:`, status);
   const threshold = LOGIN_FAILURE_THRESHOLD;
   const windowMinutes = LOGIN_FAILURE_WINDOW_MINUTES;
   const remaining = Math.max(0, threshold - status.attempts);
