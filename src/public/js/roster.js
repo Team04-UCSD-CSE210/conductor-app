@@ -319,12 +319,14 @@ const loadRoster = async () => {
     const endIndex = startIndex + state.pagination.limit;
     state.roster = allRoster.slice(startIndex, endIndex);
     state.stats = data.stats || state.stats;
+    state.instructor = data.instructor || null;
 
     // Clear selections when roster changes
     state.selectedItems.clear();
     
     renderRoster();
     renderStats();
+    renderInstructor();
     renderPagination();
     updateFilterCount();
     
@@ -353,6 +355,19 @@ const renderStats = () => {
   elements.statTAsMeta.textContent = '';
   elements.statTutors.textContent = state.stats.roles?.tutor ?? 0;
   elements.statTutorsMeta.textContent = '';
+};
+
+const renderInstructor = () => {
+  const instructorDisplay = document.getElementById('instructorDisplay');
+  if (!instructorDisplay) return;
+  
+  if (state.instructor && state.instructor.name) {
+    instructorDisplay.textContent = `Instructor: ${state.instructor.name}`;
+    instructorDisplay.style.display = 'inline';
+  } else {
+    instructorDisplay.textContent = '';
+    instructorDisplay.style.display = 'none';
+  }
 };
 
 const showSkeletonLoader = () => {

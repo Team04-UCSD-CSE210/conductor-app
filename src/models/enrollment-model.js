@@ -386,6 +386,9 @@ export class EnrollmentModel {
           ) u_lead
         ) AS team_lead_name,
         CASE WHEN tm.role = 'leader' THEN TRUE ELSE FALSE END AS is_team_lead,
+        co.instructor_id,
+        u_instructor.name AS instructor_name,
+        u_instructor.email AS instructor_email,
         COUNT(*) OVER()::INTEGER AS total_count,
         SUM(CASE WHEN e.course_role = 'student' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_students,
         SUM(CASE WHEN e.course_role = 'ta' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_tas,
@@ -396,6 +399,8 @@ export class EnrollmentModel {
         SUM(CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_completed
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
+      LEFT JOIN course_offerings co ON e.offering_id = co.id
+      LEFT JOIN users u_instructor ON co.instructor_id = u_instructor.id
       LEFT JOIN team_members tm ON u.id = tm.user_id AND tm.left_at IS NULL
       LEFT JOIN team t ON tm.team_id = t.id AND t.offering_id = e.offering_id
       ${whereClause}
@@ -463,9 +468,17 @@ export class EnrollmentModel {
     const totalPages = stats.total === 0 ? 1 : Math.max(1, Math.ceil(stats.total / limit));
     const page = stats.total === 0 ? 1 : Math.floor(offset / limit) + 1;
 
+    // Get instructor info from first row (same for all rows in same offering)
+    const instructorInfo = rows.length > 0 ? {
+      id: rows[0].instructor_id,
+      name: rows[0].instructor_name,
+      email: rows[0].instructor_email,
+    } : null;
+
     return {
       results,
       stats,
+      instructor: instructorInfo,
       pagination: {
         limit,
         offset,

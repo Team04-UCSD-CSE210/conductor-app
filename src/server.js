@@ -1357,10 +1357,28 @@ app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) =
     const enrollmentRole = await getUserEnrollmentRole(user.id);
     const isTeamLead = await isUserTeamLead(user.id);
 
+    // Determine display role
+    let displayRole = user.primary_role;
+    if (enrollmentRole === 'ta') {
+      displayRole = 'TA';
+    } else if (enrollmentRole === 'tutor') {
+      displayRole = 'Tutor';
+    } else if (isTeamLead || enrollmentRole === 'team-lead') {
+      displayRole = 'Team Lead';
+    } else if (user.primary_role === 'instructor') {
+      displayRole = 'Instructor';
+    } else if (user.primary_role === 'admin') {
+      displayRole = 'Admin';
+    } else if (user.primary_role === 'student') {
+      displayRole = 'Student';
+    }
+
     res.json({
       primary_role: user.primary_role,
       enrollment_role: enrollmentRole,
-      is_team_lead: isTeamLead
+      is_team_lead: isTeamLead,
+      name: user.name || user.preferred_name || 'User',
+      display_role: displayRole
     });
   } catch (error) {
     console.error("Failed to fetch navigation context:", error);
