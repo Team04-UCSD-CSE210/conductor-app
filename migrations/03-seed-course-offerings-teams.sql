@@ -21,7 +21,8 @@ BEGIN
     -- Get instructor ID first (try multiple possible emails)
     SELECT id INTO instructor_id 
     FROM users 
-    WHERE email = 'bhchandna@ucsd.edu' 
+    WHERE email = 'zhkan@ucsd.edu'
+       OR email = 'bhchandna@ucsd.edu' 
        OR email = 'instructor1@ucsd.edu'
     LIMIT 1;
     
@@ -217,5 +218,59 @@ BEGIN
     END LOOP;
     
     RAISE NOTICE '✅ Seed data complete: CSE 210 offering with enrollments and 10 teams';
+    
+    -- ============================================
+    -- SPECIAL TEAM: Team 11 with kanzhekanzhe1@gmail.com as leader
+    -- ============================================
+    DECLARE
+        team11_id UUID;
+        zhekan_id UUID;
+        jack_id UUID;
+    BEGIN
+        -- Get user IDs
+        SELECT id INTO zhekan_id FROM users WHERE email = 'kanzhekanzhe1@gmail.com';
+        SELECT id INTO jack_id FROM users WHERE email = 'jackkanzhe@gmail.com';
+        
+        IF zhekan_id IS NOT NULL AND jack_id IS NOT NULL THEN
+            -- Create Team 11
+            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
+            VALUES (
+                offering_id_var,
+                'Team 11',
+                11,
+                zhekan_id,
+                'active'::team_status_enum,
+                CURRENT_DATE,
+                instructor_id
+            )
+            RETURNING id INTO team11_id;
+            
+            -- Add kanzhekanzhe1@gmail.com as leader
+            INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
+            VALUES (
+                team11_id,
+                zhekan_id,
+                'leader'::team_member_role_enum,
+                CURRENT_DATE,
+                instructor_id
+            )
+            ON CONFLICT (team_id, user_id) DO NOTHING;
+            
+            -- Add jackkanzhe@gmail.com as member
+            INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
+            VALUES (
+                team11_id,
+                jack_id,
+                'member'::team_member_role_enum,
+                CURRENT_DATE,
+                instructor_id
+            )
+            ON CONFLICT (team_id, user_id) DO NOTHING;
+            
+            RAISE NOTICE '✅ Created Team 11 with kanzhekanzhe1@gmail.com (leader) and jackkanzhe@gmail.com (member)';
+        ELSE
+            RAISE NOTICE '⚠️ Could not create Team 11: kanzhekanzhe1@gmail.com or jackkanzhe@gmail.com not found';
+        END IF;
+    END;
 END $$;
 
