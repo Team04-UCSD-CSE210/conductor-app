@@ -221,11 +221,17 @@ button {
 }
 
 .stat-card {
-  border-radius: 0.5rem;
-  padding: 1rem;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
   background: white;
   border: 1px solid var(--gray-200);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 6%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
 }
 
 .stat-label {
@@ -250,15 +256,15 @@ button {
 .roster-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 1rem;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-radius: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
   background: white;
   border: 1px solid var(--gray-200);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
-  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 6%);
+  margin-bottom: 1rem;
 }
 
 .control-group {
@@ -281,6 +287,29 @@ button {
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.team-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.team-filter-select {
+  width: 170px;
+  min-width: 170px;
+  padding-right: 2rem;
+}
+
+.team-filter-group[hidden] {
+  display: none;
+}
+
+.filter-divider {
+  font-weight: 600;
+  color: var(--gray-300);
+  padding: 0 0.3rem;
 }
 
 .chip {
@@ -303,13 +332,13 @@ button {
 }
 
 .roster-surface {
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   background: white;
   border: 1px solid var(--gray-200);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
-  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
+  padding: 1.5rem;
   overflow: hidden;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .table-container {
@@ -341,11 +370,12 @@ table {
   border-collapse: collapse;
 }
 
-.roster-table th.col-person { width: 32%; }
-.roster-table th.col-role { width: 20%; }
-.roster-table th.col-status { width: 15%; }
-.roster-table th.col-institution { width: 20%; }
-.roster-table th.col-actions { width: 18%; }
+.roster-table th.col-person { width: 28%; }
+.roster-table th.col-role { width: 18%; }
+.roster-table th.col-status { width: 14%; }
+.roster-table th.col-institution { width: 16%; }
+.roster-table th.col-team { width: 18%; }
+.roster-table th.col-actions { width: 16%; }
 
 thead {
   background: var(--gray-50);
@@ -353,35 +383,70 @@ thead {
 
 th {
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--gray-500);
-  padding: 0.75rem 0.5rem;
+  letter-spacing: 0.06em;
+  color: var(--gray-600);
+  padding: 1rem 0.75rem;
+  font-weight: 700;
+  border-bottom: 2px solid var(--gray-200);
+  background: var(--gray-50);
 }
 
 td {
-  padding: 0.9rem 0.5rem;
+  padding: 1rem 0.75rem;
   border-bottom: 1px solid var(--gray-100);
   vertical-align: middle;
 }
 
+tr:hover td {
+  background: var(--gray-50);
+  transition: background 0.15s ease;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
 .name-cell {
   display: flex;
-  gap: 0.8rem;
+  gap: 0.9rem;
   align-items: center;
 }
 
-.avatar {
- 	width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--emerald-100);
-  color: var(--emerald-700);
+.name-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.person-name {
   font-weight: 600;
+  color: var(--gray-900);
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.person-email {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  line-height: 1.3;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--emerald-400), var(--teal-600));
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgb(16 185 129 / 20%);
 }
 
 .role-pill {
@@ -400,6 +465,13 @@ td {
   color: var(--sky-500);
 }
 
+.role-pill.team-lead {
+  background: linear-gradient(135deg, rgb(99 102 241 / 20%), rgb(139 92 246 / 20%));
+  color: #6366f1;
+  border: 1px solid rgb(99 102 241 / 30%);
+  font-weight: 700;
+}
+
 .role-pill.ta {
   background: rgb(245 158 11 / 18%);
   color: var(--amber-500);
@@ -416,6 +488,18 @@ td {
   font-weight: 600;
   font-size: 0.8rem;
   text-transform: capitalize;
+}
+
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.status-meta {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-top: 0.2rem;
 }
 
 .status-pill.enrolled {
@@ -440,9 +524,50 @@ td {
 }
 
 .role-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.institution-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.institution-name {
   font-weight: 600;
+  color: var(--gray-900);
+  font-size: 0.9rem;
+}
+
+.institution-meta {
+  font-size: 0.75rem;
   color: var(--gray-500);
+}
+
+.team-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.team-name {
+  font-weight: 600;
+  color: var(--gray-900);
+  font-size: 0.9rem;
+}
+
+.team-lead-meta {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.team-empty {
   font-size: 0.85rem;
+  color: var(--gray-400);
+  font-style: italic;
 }
 
 .icon-btn {
