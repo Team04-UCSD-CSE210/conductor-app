@@ -80,9 +80,18 @@ BEGIN
     SELECT id INTO ta2_id FROM users WHERE email = 'grad2@ucsd.edu' LIMIT 1;
     SELECT id INTO ta3_id FROM users WHERE email = 'grad3@ucsd.edu' LIMIT 1;
     
-    -- Get Tutor IDs (use some students as tutors)
-    SELECT id INTO tutor1_id FROM users WHERE email = 'student1@ucsd.edu' LIMIT 1;
-    SELECT id INTO tutor2_id FROM users WHERE email = 'student2@ucsd.edu' LIMIT 1;
+    -- Get Tutor IDs (use students who are NOT in teams)
+    -- Team leaders: student1, student4, student6, student8, ext5, bgyawali
+    -- Students in teams: student3, student5, student7, ext2, ext3, ext4, bhavikgmail
+    -- Available for tutors: student2 (Grace Chen) and other students not in teams
+    SELECT id INTO tutor1_id FROM users WHERE email = 'student2@ucsd.edu' LIMIT 1;
+    
+    -- For tutor2, use a student that's not a leader and not in a team
+    -- We'll use student7 who is in Team 3, but we'll remove them from the team later
+    -- Actually, better to use a student not in any team - let's use student2 and find another
+    -- Since student2 is the only one guaranteed not in a team, we'll use student2 for tutor1
+    -- and for tutor2, we'll use a different approach - use student7 but remove from team
+    SELECT id INTO tutor2_id FROM users WHERE email = 'student7@ucsd.edu' LIMIT 1;
     
     -- ============================================
     -- ENROLLMENTS
@@ -304,6 +313,46 @@ BEGIN
             RAISE NOTICE '✅ Created Team % (empty, forming)', team_num;
         END LOOP;
     END;
+    
+    -- Ensure TAs and Tutors are NOT in any teams (remove if accidentally added)
+    -- This must happen AFTER teams are created
+    DELETE FROM team_members 
+    WHERE user_id IN (ta1_id, ta2_id, ta3_id, tutor1_id, tutor2_id)
+       OR user_id IN (
+           SELECT user_id FROM enrollments 
+           WHERE offering_id = offering_id_var 
+             AND course_role IN ('ta'::enrollment_role_enum, 'tutor'::enrollment_role_enum)
+         );
+    
+    -- Also remove TAs/tutors from team leader_id and reassign if needed
+    UPDATE team 
+    SET leader_id = NULL 
+    WHERE offering_id = offering_id_var 
+      AND (leader_id IN (ta1_id, ta2_id, ta3_id, tutor1_id, tutor2_id)
+           OR leader_id IN (
+               SELECT user_id FROM enrollments 
+               WHERE offering_id = offering_id_var 
+                 AND course_role IN ('ta'::enrollment_role_enum, 'tutor'::enrollment_role_enum)
+             ));
+    
+    -- For teams that lost their leader, assign a new leader from team members
+    UPDATE team t
+    SET leader_id = (
+        SELECT tm.user_id 
+        FROM team_members tm 
+        WHERE tm.team_id = t.id 
+          AND tm.left_at IS NULL 
+          AND tm.user_id NOT IN (
+              SELECT user_id FROM enrollments 
+              WHERE offering_id = t.offering_id 
+                AND course_role IN ('ta'::enrollment_role_enum, 'tutor'::enrollment_role_enum)
+          )
+        ORDER BY tm.role DESC, tm.joined_at ASC
+        LIMIT 1
+    )
+    WHERE t.offering_id = offering_id_var 
+      AND t.leader_id IS NULL
+      AND EXISTS (SELECT 1 FROM team_members WHERE team_id = t.id AND left_at IS NULL);
     
     RAISE NOTICE '✅ Seed data complete: CSE 210 offering with enrollments and teams 1-10 (some students unassigned)';
     

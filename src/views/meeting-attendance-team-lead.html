@@ -39,9 +39,9 @@
       <section class="attendance-content" data-offering-id="">
         <div class="attendance-title">
           <div>
-            <p class="eyebrow">Team Lead</p>
+            <p class="eyebrow">Team Lead Dashboard</p>
             <h2 id="course-title">Loading...</h2>
-            <p class="subtitle">Create and manage meetings for your team. Track attendance and participation.</p>
+            <p class="subtitle">Create and manage team meetings. Track attendance, view participation, and manage your team's schedule.</p>
           </div>
           <div class="attendance-filter">
             <label for="meeting-filter">Filter</label>
@@ -56,19 +56,32 @@
 
         <div class="lecture-list" id="meeting-list" aria-live="polite"></div>
         <div class="empty-state" id="meeting-empty" hidden>
-          <p>No meetings scheduled yet. Click "Create Meeting" to schedule your first team meeting.</p>
+          <div style="text-align: center; padding: 2rem;">
+            <p style="font-size: 1.1rem; color: var(--gray-700); margin-bottom: 0.5rem;">
+              No meetings scheduled yet
+            </p>
+            <p style="font-size: 0.95rem; color: var(--gray-600);">
+              Use the form on the right to create your first team meeting and start tracking attendance.
+            </p>
+          </div>
         </div>
       </section>
 
       <aside class="attendance-sidebar">
         <div class="stats-box">
-          <h3>Team Attendance</h3>
-          <div class="attendance-percentage" id="team-attendance-percentage">0%</div>
-          <p style="font-size: 0.85rem; color: var(--gray-600); margin-top: 0.5rem;">Average attendance across all team meetings</p>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <h3 style="margin: 0;">Team Attendance</h3>
+            <span style="font-size: 0.75rem; color: var(--gray-500);">Overall</span>
+          </div>
+          <div class="attendance-percentage" id="team-attendance-percentage" style="font-size: 2.5rem; font-weight: 700; color: var(--teal-600, #0d9488); margin: 0.5rem 0;">0%</div>
+          <p style="font-size: 0.85rem; color: var(--gray-600); margin-top: 0.5rem;">Average attendance across all completed team meetings</p>
         </div>
 
         <div class="help-box team-lead-card">
-          <h3>Create Team Meeting</h3>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">Create Team Meeting</h3>
+            <span style="font-size: 0.85rem; color: var(--gray-500);">Quick Setup</span>
+          </div>
           <form id="create-meeting-form" style="display: flex; flex-direction: column; gap: 1rem;">
             <div class="form-field">
               <label for="meeting-name">

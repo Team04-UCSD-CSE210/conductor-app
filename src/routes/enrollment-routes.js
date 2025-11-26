@@ -7,6 +7,15 @@ import { PermissionService } from '../services/permission-service.js';
 const router = Router();
 
 /**
+ * Validate if a string is a valid UUID format
+ */
+function isValidUUID(str) {
+  if (!str || typeof str !== 'string') return false;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+/**
  * Create a new enrollment
  * POST /enrollments
  * Body: { offering_id, user_id, course_role, status, ... }
@@ -35,6 +44,14 @@ router.get(
   async (req, res) => {
     try {
       const { offeringId, userId } = req.params;
+
+      // Validate UUIDs
+      if (!offeringId || offeringId === 'undefined' || !isValidUUID(offeringId)) {
+        return res.status(400).json({ error: 'Invalid offering ID' });
+      }
+      if (!userId || userId === 'undefined' || !isValidUUID(userId)) {
+        return res.status(400).json({ error: 'Invalid user ID' });
+      }
 
       // Load the enrollment first
       const enrollment = await EnrollmentService.getEnrollmentByOfferingAndUser(
@@ -324,8 +341,8 @@ router.put('/offering/:offeringId/user/:userId/role', ...protect('enrollment.man
   try {
     const updatedBy = req.currentUser.id;
     const { course_role } = req.body;
-    if (!course_role || !['student', 'ta', 'tutor'].includes(course_role)) {
-      return res.status(400).json({ error: 'Invalid course_role. Must be student, ta, or tutor' });
+    if (!course_role || !['student', 'ta', 'tutor', 'team-lead'].includes(course_role)) {
+      return res.status(400).json({ error: 'Invalid course_role. Must be student, ta, tutor, or team-lead' });
     }
     const updated = await EnrollmentService.updateCourseRole(
       req.params.offeringId,

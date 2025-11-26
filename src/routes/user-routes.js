@@ -152,11 +152,26 @@ router.get('/me', ensureAuthenticated, async (req, res) => {
  */
 router.put('/:id', ensureAuthenticated, async (req, res) => {
   try {
-    // Users can update themselves, admins/instructors can update anyone
+    // Users can update themselves, admins/instructors/TAs can update anyone
+    // Check if user is TA by checking enrollment role
+    let isTA = false;
+    if (req.currentUser.primary_role === 'student') {
+      // Check if user has TA enrollment role in any offering
+      const { pool } = await import('../db.js');
+      const taCheck = await pool.query(
+        `SELECT 1 FROM enrollments 
+         WHERE user_id = $1 AND course_role = 'ta' AND status = 'enrolled' 
+         LIMIT 1`,
+        [req.currentUser.id]
+      );
+      isTA = taCheck.rows.length > 0;
+    }
+    
     // Note: IDs are UUIDs (strings), not integers, so compare directly
     if (req.currentUser.id !== req.params.id && 
         req.currentUser.primary_role !== 'admin' && 
-        req.currentUser.primary_role !== 'instructor') {
+        req.currentUser.primary_role !== 'instructor' &&
+        !isTA) {
       return res.status(403).json({ error: "forbidden" });
     }
     const updatedBy = req.currentUser.id;

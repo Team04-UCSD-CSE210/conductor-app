@@ -151,9 +151,12 @@
         // Fallback to attendance_percent if attendance_percentage not available
         selectors.attendancePercentage.textContent = `${Math.round(stats.attendance_percent)}%`;
       } else {
-        // Calculate from all lectures (including open ones, matching backend logic)
-        const totalLectures = state.lectures.length;
-        const presentCount = state.lectures.filter((lec) => lec.status === 'present').length;
+        // Calculate from closed lectures only (exclude open/pending lectures)
+        const closedLectures = state.lectures.filter((lec) => 
+          lec.sessionState === 'closed' || lec.status === 'present' || lec.status === 'absent'
+        );
+        const totalLectures = closedLectures.length;
+        const presentCount = closedLectures.filter((lec) => lec.status === 'present').length;
         const percent = totalLectures > 0
           ? Math.round((presentCount / totalLectures) * 100)
           : 0;
@@ -161,13 +164,16 @@
       }
     } catch (error) {
       console.error('Error updating overall attendance:', error);
-      // Fallback calculation - use all lectures (matching backend logic)
-      const totalLectures = state.lectures.length;
-      const presentCount = state.lectures.filter((lec) => lec.status === 'present').length;
+      // Fallback calculation - use closed lectures only
+      const closedLectures = state.lectures.filter((lec) => 
+        lec.sessionState === 'closed' || lec.status === 'present' || lec.status === 'absent'
+      );
+      const totalLectures = closedLectures.length;
+      const presentCount = closedLectures.filter((lec) => lec.status === 'present').length;
       const percent = totalLectures > 0
         ? Math.round((presentCount / totalLectures) * 100)
-      : 0;
-    selectors.attendancePercentage.textContent = `${percent}%`;
+        : 0;
+      selectors.attendancePercentage.textContent = `${percent}%`;
     }
   }
 
@@ -230,18 +236,29 @@
       state.offeringId = selectors.container.getAttribute('data-offering-id');
       if (!state.offeringId) {
         state.offeringId = await window.LectureService.getActiveOfferingId();
-        selectors.container.setAttribute('data-offering-id', state.offeringId);
+        if (state.offeringId) {
+          selectors.container.setAttribute('data-offering-id', state.offeringId);
+        }
       }
 
-      // Update course title dynamically
-      await updateCourseTitle();
+      // Update course title dynamically (must have offeringId)
+      if (state.offeringId) {
+        await updateCourseTitle();
+      }
 
-      // Get lecture list
-      state.lectures = await window.LectureService.getStudentLectureList(state.offeringId);
+      // Get lecture list (only lectures, not team meetings)
+      if (state.offeringId) {
+        state.lectures = await window.LectureService.getStudentLectureList(state.offeringId);
+        await updateOverallAttendance();
+      } else {
+        state.lectures = [];
+        if (selectors.attendancePercentage) {
+          selectors.attendancePercentage.textContent = '0%';
+        }
+      }
       
-      await updateOverallAttendance();
       isLoading = false;
-    renderLectures();
+      renderLectures();
     } catch (error) {
       console.error('Error hydrating student view:', error);
       isLoading = false;

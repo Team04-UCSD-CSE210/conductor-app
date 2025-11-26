@@ -49,15 +49,14 @@
         }
       }
       return 'open';
-    } else {
-      // No attendance timestamps - fall back to session_date/session_time
-      if (meeting.session_date && meeting.session_time) {
-        const startTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
-        if (startTime > now) {
-          return 'pending';
-        }
-        return 'closed';
+    }
+    // No attendance timestamps - fall back to session_date/session_time
+    if (meeting.session_date && meeting.session_time) {
+      const startTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
+      if (startTime > now) {
+        return 'pending';
       }
+      return 'closed';
     }
     
     return 'pending';
@@ -70,7 +69,7 @@
         const start = new Date(startIso);
         const end = new Date(endIso);
         
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
           return '—';
         }
         
@@ -96,7 +95,7 @@
     if (startIso) {
       try {
         const start = new Date(startIso);
-        if (isNaN(start.getTime())) return '—';
+        if (Number.isNaN(start.getTime())) return '—';
         
         const dateFormatter = new Intl.DateTimeFormat('en-US', { 
           month: 'short', 
@@ -337,11 +336,14 @@
     showLoading();
 
     try {
+      // Server-side routing already handles team lead vs student view
+      // No need to check and redirect here - if we're on this page, we should be a student
+      
       // Get offering ID
       state.offeringId = selectors.container.getAttribute('data-offering-id');
       if (!state.offeringId) {
         state.offeringId = await window.LectureService.getActiveOfferingId();
-        selectors.container.setAttribute('data-offering-id', state.offeringId);
+        selectors.container.dataset.offeringId = state.offeringId;
       }
 
       // Get team info

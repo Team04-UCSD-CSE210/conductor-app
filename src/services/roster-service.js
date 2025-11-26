@@ -84,6 +84,7 @@ export class RosterService {
           t.name as team_name,
           t.team_number,
           t.leader_id,
+          t.offering_id,
           tm.role
         FROM team_members tm
         INNER JOIN team t ON tm.team_id = t.id
@@ -95,18 +96,67 @@ export class RosterService {
       
       if (teamMemberships.rows.length > 0) {
         const team = teamMemberships.rows[0];
-        const isTeamLead = team.leader_id === user.id || team.role === 'leader';
+        const offeringId = team.offering_id;
         
-        // Get team lead name if not the current user
-        let teamLeadName = null;
-        if (team.leader_id && team.leader_id !== user.id) {
-          const leaderRes = await pool.query(
-            'SELECT name FROM users WHERE id = $1',
-            [team.leader_id]
+        // Check user's enrollment role - TAs and tutors cannot be team leads
+        let userEnrollmentRole = null;
+        if (offeringId) {
+          const enrollmentCheck = await pool.query(
+            `SELECT course_role FROM enrollments 
+             WHERE user_id = $1 AND offering_id = $2 
+               AND status = 'enrolled'::enrollment_status_enum
+             LIMIT 1`,
+            [user.id, offeringId]
           );
-          teamLeadName = leaderRes.rows[0]?.name || null;
-        } else if (isTeamLead) {
-          teamLeadName = user.name;
+          userEnrollmentRole = enrollmentCheck.rows[0]?.course_role || null;
+        }
+        
+        // TAs and tutors cannot be team leads, even if they're in a team
+        if (userEnrollmentRole === 'ta' || userEnrollmentRole === 'tutor') {
+          return {
+            ...user,
+            team_id: team.team_id,
+            team_name: team.team_name,
+            team_number: team.team_number,
+            team_lead_id: team.leader_id,
+            team_lead_name: null, // Don't show TAs/tutors as team leads
+            is_team_lead: false
+          };
+        }
+        
+        const isTeamLeadByTeam = team.leader_id === user.id || team.role === 'leader';
+        const hasTeamLeadEnrollmentRole = userEnrollmentRole === 'team-lead';
+        const isTeamLead = hasTeamLeadEnrollmentRole || isTeamLeadByTeam;
+        
+        // Get all team leads (both from leader_id and team_members with role='leader')
+        // Show only first names, comma-separated
+        const teamLeadsRes = await pool.query(
+          `SELECT DISTINCT u.id, u.name
+           FROM users u
+           WHERE u.id IN (
+             SELECT leader_id FROM team WHERE id = $1 AND leader_id IS NOT NULL
+             UNION
+             SELECT tm.user_id FROM team_members tm 
+             WHERE tm.team_id = $1 AND tm.role = 'leader'::team_member_role_enum AND tm.left_at IS NULL
+           )
+           ORDER BY u.name`,
+          [team.team_id]
+        );
+        
+        let teamLeadName = null;
+        if (teamLeadsRes.rows.length > 0) {
+          // Extract first names only and join with comma and space
+          const firstNames = teamLeadsRes.rows.map(row => {
+            const fullName = (row.name || '').trim();
+            if (!fullName) return '';
+            // Get first name only (everything before first space)
+            const firstName = fullName.split(/\s+/)[0];
+            return firstName;
+          }).filter(name => name.length > 0); // Filter out empty names
+          
+          if (firstNames.length > 0) {
+            teamLeadName = firstNames.join(', ');
+          }
         }
         
         return {
@@ -120,6 +170,7 @@ export class RosterService {
         };
       }
       
+      // User not in a team - not a team lead
       return {
         ...user,
         team_id: null,
@@ -534,6 +585,7 @@ export class RosterService {
           t.name as team_name,
           t.team_number,
           t.leader_id,
+          t.offering_id,
           tm.role
         FROM team_members tm
         INNER JOIN team t ON tm.team_id = t.id
@@ -545,17 +597,67 @@ export class RosterService {
       
       if (teamMemberships.rows.length > 0) {
         const team = teamMemberships.rows[0];
-        const isTeamLead = team.leader_id === user.id || team.role === 'leader';
+        const offeringId = team.offering_id;
+        
+        // Check user's enrollment role - TAs and tutors cannot be team leads
+        let userEnrollmentRole = null;
+        if (offeringId) {
+          const enrollmentCheck = await pool.query(
+            `SELECT course_role FROM enrollments 
+             WHERE user_id = $1 AND offering_id = $2 
+               AND status = 'enrolled'::enrollment_status_enum
+             LIMIT 1`,
+            [user.id, offeringId]
+          );
+          userEnrollmentRole = enrollmentCheck.rows[0]?.course_role || null;
+        }
+        
+        // TAs and tutors cannot be team leads, even if they're in a team
+        if (userEnrollmentRole === 'ta' || userEnrollmentRole === 'tutor') {
+          return {
+            ...user,
+            team_id: team.team_id,
+            team_name: team.team_name,
+            team_number: team.team_number,
+            team_lead_id: team.leader_id,
+            team_lead_name: null, // Don't show TAs/tutors as team leads
+            is_team_lead: false
+          };
+        }
+        
+        const isTeamLeadByTeam = team.leader_id === user.id || team.role === 'leader';
+        const hasTeamLeadEnrollmentRole = userEnrollmentRole === 'team-lead';
+        const isTeamLead = hasTeamLeadEnrollmentRole || isTeamLeadByTeam;
+        
+        // Get all team leads (both from leader_id and team_members with role='leader')
+        // Show only first names, comma-separated
+        const teamLeadsRes = await pool.query(
+          `SELECT DISTINCT u.id, u.name
+           FROM users u
+           WHERE u.id IN (
+             SELECT leader_id FROM team WHERE id = $1 AND leader_id IS NOT NULL
+             UNION
+             SELECT tm.user_id FROM team_members tm 
+             WHERE tm.team_id = $1 AND tm.role = 'leader'::team_member_role_enum AND tm.left_at IS NULL
+           )
+           ORDER BY u.name`,
+          [team.team_id]
+        );
         
         let teamLeadName = null;
-        if (team.leader_id && team.leader_id !== user.id) {
-          const leaderRes = await pool.query(
-            'SELECT name FROM users WHERE id = $1',
-            [team.leader_id]
-          );
-          teamLeadName = leaderRes.rows[0]?.name || null;
-        } else if (isTeamLead) {
-          teamLeadName = user.name;
+        if (teamLeadsRes.rows.length > 0) {
+          // Extract first names only and join with comma and space
+          const firstNames = teamLeadsRes.rows.map(row => {
+            const fullName = (row.name || '').trim();
+            if (!fullName) return '';
+            // Get first name only (everything before first space)
+            const firstName = fullName.split(/\s+/)[0];
+            return firstName;
+          }).filter(name => name.length > 0); // Filter out empty names
+          
+          if (firstNames.length > 0) {
+            teamLeadName = firstNames.join(', ');
+          }
         }
         
         return {
@@ -567,6 +669,7 @@ export class RosterService {
         };
       }
       
+      // User not in a team - not a team lead
       return {
         ...user,
         team_name: null,

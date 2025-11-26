@@ -4,7 +4,8 @@
     filter: 'all',
     offeringId: null,
     userTeam: null,
-    currentUser: null
+    currentUser: null,
+    currentOffering: null
   };
 
   const selectors = {
@@ -22,7 +23,7 @@
     if (!dateString) return '—';
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '—';
+      if (Number.isNaN(date.getTime())) return '—';
       const options = { month: 'short', day: 'numeric', year: 'numeric' };
       return date.toLocaleDateString('en-US', options);
     } catch (e) {
@@ -198,7 +199,7 @@
         checkInButton.disabled = true;
         checkInButton.textContent = 'Checking in...';
         try {
-          await window.LectureService.checkIn(meeting.access_code, []);
+          await globalThis.LectureService.checkIn(meeting.access_code, []);
           // Hide the button after successful check-in
           checkInButton.style.display = 'none';
           // Update the badge to show new attendance count
@@ -226,7 +227,7 @@
     
     manageButton.addEventListener('click', () => {
       // Navigate to meeting management page
-      window.location.href = `/manage-session?sessionId=${meeting.id}`;
+      globalThis.location.href = `/manage-session?sessionId=${meeting.id}`;
     });
     
     actions.appendChild(manageButton);
@@ -304,11 +305,10 @@
         selectors.empty.style.display = '';
       }
       return;
-    } else {
-      if (selectors.empty) {
-        selectors.empty.setAttribute('hidden', 'true');
-        selectors.empty.style.display = 'none';
-      }
+    }
+    if (selectors.empty) {
+      selectors.empty.setAttribute('hidden', 'true');
+      selectors.empty.style.display = 'none';
     }
     
     // If filtered list is empty but meetings exist, just show nothing
@@ -355,8 +355,8 @@
 
   async function getActiveCourseOffering() {
     try {
-      if (window.LectureService) {
-        const offeringId = await window.LectureService.getActiveOfferingId();
+      if (globalThis.LectureService) {
+        const offeringId = await globalThis.LectureService.getActiveOfferingId();
         if (offeringId) {
           const response = await fetch(`/api/offerings/${offeringId}`, {
             credentials: 'include'
@@ -426,17 +426,30 @@
     }
   }
 
-  async function updateTeamTitle() {
-    if (!selectors.courseTitle || !state.userTeam) return;
+  function updateTeamTitle() {
+    if (!selectors.courseTitle) return;
     
     try {
-      const teamDisplay = state.userTeam.team_number 
-        ? `Team ${state.userTeam.team_number}` 
-        : state.userTeam.name;
-      selectors.courseTitle.textContent = `${teamDisplay} Meetings`;
+      if (state.userTeam && state.currentOffering) {
+        const teamDisplay = state.userTeam.team_number 
+          ? `Team ${state.userTeam.team_number}` 
+          : state.userTeam.name;
+        const courseName = state.currentOffering.name || state.currentOffering.code || 'Course';
+        selectors.courseTitle.textContent = `${teamDisplay} - ${courseName}`;
+      } else if (state.currentOffering) {
+        const courseName = state.currentOffering.name || state.currentOffering.code || 'Course';
+        selectors.courseTitle.textContent = `${courseName} - Meeting Management`;
+      } else if (state.userTeam) {
+        const teamDisplay = state.userTeam.team_number 
+          ? `Team ${state.userTeam.team_number}` 
+          : state.userTeam.name;
+        selectors.courseTitle.textContent = `${teamDisplay} - Meeting Management`;
+      } else {
+        selectors.courseTitle.textContent = 'Team Meeting Management';
+      }
     } catch (error) {
       console.error('Error updating team title:', error);
-      selectors.courseTitle.textContent = 'Team Meetings';
+      selectors.courseTitle.textContent = 'Team Meeting Management';
     }
   }
 
@@ -459,11 +472,15 @@
       }
 
       state.offeringId = offering.id;
+      state.currentOffering = offering;
       if (selectors.container) {
-        selectors.container.setAttribute('data-offering-id', state.offeringId);
+        selectors.container.dataset.offeringId = state.offeringId;
       }
 
       state.userTeam = await getUserTeam(user.id, state.offeringId);
+      
+      // Update title immediately after loading team and offering
+      updateTeamTitle();
       
       if (!state.userTeam) {
         if (selectors.courseTitle) {
@@ -483,16 +500,11 @@
         return;
       }
 
-      // Verify user is team leader
-      const isTeamLeader = state.userTeam.user_role === 'leader' || 
-                           state.userTeam.leader_id === user.id;
-      
-      if (!isTeamLeader) {
-        window.location.href = '/meeting-attendance';
-        return;
-      }
+      // Server-side routing already verified user is a team lead
+      // If we're on this page, we should be a team lead - no need to redirect
+      // Just verify we have a team, otherwise show appropriate message
 
-      await updateTeamTitle();
+      updateTeamTitle();
 
       const meetings = await fetchMeetings();
       
