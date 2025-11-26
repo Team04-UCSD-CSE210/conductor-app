@@ -7,27 +7,29 @@
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/course-selection.css">
 </head>
-<body class="course-selection-page">
-  <div class="container">
-    <header class="header">
-      <div class="logo">
-        <img src="/assets/temp-logo.png" alt="Conductor logo">
-        <h1>Conductor</h1>
-      </div>
-      <a href="/logout" class="btn btn-ghost">Sign out</a>
-    </header>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <span class="logo-text">conductor</span>
+    <a href="/" class="btn btn-outline">Sign out</a>
+  </header>
 
-    <main class="main-content">
+  <!-- Hero Section -->
+  <section class="hero">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+
+    <div class="hero-layout">
       <div class="welcome-section">
-        <h2>Welcome back!</h2>
-        <p>Select a course to continue:</p>
+        <h1 class="hero-title">Welcome back!</h1>
+        <p class="hero-description">Select a course to continue your learning journey.</p>
       </div>
 
       <div class="courses-grid" id="coursesGrid">
         <div class="loading-state">Loading your courses...</div>
       </div>
-    </main>
-  </div>
+    </div>
+  </section>
 
   <script src="/js/course-selection.js" defer></script>
 </body>

@@ -55,12 +55,6 @@ const renderCourseCard = (course) => {
           <span class="detail-label">Status:</span>
           <span class="status-badge status-${course.status}">${course.status}</span>
         </div>
-        ${offering.department ? `
-          <div class="detail-row">
-            <span class="detail-label">Department:</span>
-            <span class="detail-value">${offering.department}</span>
-          </div>
-        ` : ''}
       </div>
     </div>
   `;
