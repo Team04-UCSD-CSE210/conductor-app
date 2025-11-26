@@ -936,12 +936,14 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
       return res.status(404).send("No active course offering found");
     }
 
-    // Check if user is a team lead
+    // Check if user is a team lead - prioritize teams where user is leader
     const teamLeadCheck = await pool.query(
-      `SELECT t.id, t.leader_id, tm.role
+      `SELECT t.id, t.leader_id, tm.role,
+              CASE WHEN t.leader_id = $1 THEN 1 ELSE 2 END as priority
        FROM team t
        LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = $1 AND tm.left_at IS NULL
        WHERE t.offering_id = $2 AND (t.leader_id = $1 OR tm.user_id = $1)
+       ORDER BY priority, t.team_number
        LIMIT 1`,
       [user.id, offering.id]
     );
