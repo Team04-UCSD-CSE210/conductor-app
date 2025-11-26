@@ -13,6 +13,7 @@ const state = {
   lastImport: null,
   roleEditing: null,
   canEdit: false, // Whether user can edit roster (instructor/admin only)
+  canSelect: false, // Whether user can select/email/drop (admin/instructor/TA only)
   selectedItems: new Set(), // Track selected enrollment IDs
 };
 
@@ -275,9 +276,31 @@ const loadRoster = async () => {
     // Update team filter controls
     updateTeamFilterControls();
     
+    // If filtering by team-lead role, exclude TAs and tutors (they cannot be team leads)
+    if (state.filters.course_role === 'team-lead') {
+      allRoster = allRoster.filter(entry => {
+        // TAs and tutors cannot be team leads
+        if (entry.course_role === 'ta' || entry.course_role === 'tutor') {
+          return false;
+        }
+        // Only show entries with team-lead role or is_team_lead flag
+        return entry.course_role === 'team-lead' || entry.user?.is_team_lead === true;
+      });
+    }
+    
     // Apply team filter client-side
     if (state.filters.team === 'team-leads') {
-      allRoster = allRoster.filter(entry => entry.user?.is_team_lead === true);
+      // Filter by team leads - check both is_team_lead flag and enrollment role
+      // Exclude TAs and tutors from team leads filter
+      allRoster = allRoster.filter(entry => {
+        // TAs and tutors cannot be team leads
+        if (entry.course_role === 'ta' || entry.course_role === 'tutor') {
+          return false;
+        }
+        const isTeamLeadByFlag = entry.user?.is_team_lead === true;
+        const isTeamLeadByRole = entry.course_role === 'team-lead';
+        return isTeamLeadByFlag || isTeamLeadByRole;
+      });
     } else if (state.filters.team && state.filters.team !== 'all') {
       // Filter by specific team (format: "number:name")
       const [teamNum, teamName] = state.filters.team.split(':');
@@ -311,7 +334,8 @@ const loadRoster = async () => {
     }
   } catch (error) {
     console.error('Failed to load roster', error);
-    elements.rosterTableBody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align:center; color: var(--rose-500);">Unable to load roster.</td></tr>';
+    const colspan = state.canSelect ? '7' : '6';
+    elements.rosterTableBody.innerHTML = `<tr><td colspan="${colspan}" style="padding: 2rem; text-align:center; color: var(--rose-500);">Unable to load roster.</td></tr>`;
     showToast(error.message || 'Failed to load roster', 'error');
     updateFilterCount();
   }
@@ -332,8 +356,11 @@ const renderStats = () => {
 };
 
 const showSkeletonLoader = () => {
+  // Show checkbox column in skeleton only if user can select (matches actual roster rows)
+  const checkboxCol = state.canSelect ? '<td class="checkbox-cell"><div class="skeleton skeleton-cell" style="width: 24px;"></div></td>' : '';
   const skeletonRows = Array(5).fill(0).map(() => `
     <tr>
+      ${checkboxCol}
       <td><div class="skeleton skeleton-avatar"></div></td>
       <td><div class="skeleton skeleton-cell" style="width: 200px;"></div></td>
       <td><div class="skeleton skeleton-pill" style="width: 100px;"></div></td>
@@ -412,9 +439,9 @@ const updateBulkActions = () => {
     elements.selectedCount.textContent = count;
   }
   if (elements.bulkActions) {
-    elements.bulkActions.style.display = count > 0 ? 'flex' : 'none';
+    elements.bulkActions.style.display = (count > 0 && state.canSelect) ? 'flex' : 'none';
   }
-  if (elements.selectAll && state.roster.length > 0) {
+  if (elements.selectAll && state.roster.length > 0 && state.canSelect) {
     const selectableEntries = state.roster.filter(entry => 
       entry.enrollment_status !== 'dropped' || state.canEdit
     );
@@ -518,9 +545,9 @@ const renderRoster = () => {
     }
     
     // Format role display - show role with team lead indicator if applicable
-    let roleDisplay = role;
     let roleClass = role;
-    if (isTeamLead && role === 'student') {
+    let roleDisplay;
+    if (role === 'team-lead' || (isTeamLead && role === 'student')) {
       roleDisplay = 'Team Lead';
       roleClass = 'team-lead';
     } else if (role === 'ta') {
@@ -538,13 +565,13 @@ const renderRoster = () => {
     ` : '';
     
     const isSelected = state.selectedItems.has(entry.enrollment_id);
-    const canSelect = status !== 'dropped' || state.canEdit; // Can select if not dropped or if can edit
+    const canSelect = state.canSelect && (status !== 'dropped' || state.canEdit); // Can select only if user has permission AND (not dropped or can edit)
     
     return `
       <tr data-enrollment-id="${entry.enrollment_id}" ${isSelected ? 'class="row-selected"' : ''}>
-        <td class="checkbox-cell">
-          ${canSelect ? `<input type="checkbox" class="row-checkbox" data-enrollment-id="${entry.enrollment_id}" data-user-id="${entry.user_id}" data-email="${entry.user?.email || ''}" data-name="${entry.user?.name || 'Unknown'}" ${isSelected ? 'checked' : ''} aria-label="Select ${entry.user?.name || 'Unknown'}">` : ''}
-        </td>
+        ${canSelect ? `<td class="checkbox-cell">
+          <input type="checkbox" class="row-checkbox" data-enrollment-id="${entry.enrollment_id}" data-user-id="${entry.user_id}" data-email="${entry.user?.email || ''}" data-name="${entry.user?.name || 'Unknown'}" ${isSelected ? 'checked' : ''} aria-label="Select ${entry.user?.name || 'Unknown'}">
+        </td>` : ''}
         <td>
           <div class="name-cell">
             <div class="avatar" aria-hidden="true">${initials}</div>
@@ -581,13 +608,13 @@ const renderRoster = () => {
           </div>
         </td>
         <td class="actions-cell">
-          <button class="icon-btn" title="Email ${entry.user?.name}" data-action="email" data-email="${entry.user?.email || ''}" aria-label="Email ${entry.user?.name}">
+          ${state.canSelect ? `<button class="icon-btn" title="Email ${entry.user?.name}" data-action="email" data-email="${entry.user?.email || ''}" aria-label="Email ${entry.user?.name}">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
               <polyline points="22,6 12,13 2,6"/>
             </svg>
-          </button>
-          ${state.canEdit && status !== 'dropped' ? `<button class="btn btn-danger btn-icon" title="Mark as dropped" data-action="drop" data-id="${entry.enrollment_id}" data-user-id="${entry.user_id}" aria-label="Mark ${entry.user?.name} as dropped">Drop</button>` : ''}
+          </button>` : ''}
+          ${state.canSelect && status !== 'dropped' ? `<button class="btn btn-danger btn-icon" title="Mark as dropped" data-action="drop" data-id="${entry.enrollment_id}" data-user-id="${entry.user_id}" aria-label="Mark ${entry.user?.name} as dropped">Drop</button>` : ''}
         </td>
       </tr>
     `;
@@ -741,7 +768,7 @@ const handleSaveRole = async (event) => {
   const formData = new FormData(elements.roleForm);
   const newRole = formData.get('course_role');
   
-  if (!newRole || !['student', 'ta', 'tutor'].includes(newRole)) {
+  if (!newRole || !['student', 'ta', 'tutor', 'team-lead'].includes(newRole)) {
     showToast('Invalid role selected', 'error');
     return;
   }
@@ -1051,6 +1078,26 @@ const checkEditPermissions = async () => {
     // 200 = has permission, 403 = no permission
     state.canEdit = response.ok || response.status === 200;
     
+    // Check if user can select/email/drop (admin/instructor/TA only)
+    try {
+      const navContextResponse = await fetch('/api/users/navigation-context', {
+        credentials: 'include'
+      });
+      if (navContextResponse.ok) {
+        const navContext = await navContextResponse.json();
+        const primaryRole = navContext.primary_role;
+        const enrollmentRole = navContext.enrollment_role;
+        // Allow admin, instructor, or TA (enrollment role)
+        state.canSelect = primaryRole === 'admin' || 
+                         primaryRole === 'instructor' || 
+                         enrollmentRole === 'ta' || 
+                         enrollmentRole === 'tutor';
+      }
+    } catch (error) {
+      console.warn('Could not check select permissions:', error);
+      state.canSelect = state.canEdit; // Fallback to canEdit
+    }
+    
     // Update UI to hide/show edit buttons
     if (elements.rosterActions) {
       if (!state.canEdit) {
@@ -1061,9 +1108,45 @@ const checkEditPermissions = async () => {
         if (elements.exportFormat) elements.exportFormat.style.display = 'none';
       }
     }
+    
+    // Hide select/email/drop controls if user cannot select
+    // Note: We update the UI after roster loads, so this is just initial setup
+    if (!state.canSelect) {
+      // Hide select-all checkbox header column
+      if (elements.selectAll) {
+        const selectAllTh = elements.selectAll.closest('th');
+        if (selectAllTh) {
+          selectAllTh.style.display = 'none';
+        }
+      }
+      // Hide bulk actions bar (will be hidden by updateBulkActions anyway)
+      if (elements.bulkActions) {
+        elements.bulkActions.style.display = 'none';
+      }
+      // Hide all checkbox cells
+      setTimeout(() => {
+        document.querySelectorAll('.checkbox-cell').forEach(cell => {
+          cell.style.display = 'none';
+        });
+      }, 0);
+    } else {
+      // Show checkbox column if user can select
+      if (elements.selectAll) {
+        const selectAllTh = elements.selectAll.closest('th');
+        if (selectAllTh) {
+          selectAllTh.style.display = '';
+        }
+      }
+      setTimeout(() => {
+        document.querySelectorAll('.checkbox-cell').forEach(cell => {
+          cell.style.display = '';
+        });
+      }, 0);
+    }
   } catch (error) {
     console.error('Error checking edit permissions:', error);
     state.canEdit = false;
+    state.canSelect = false;
   }
 };
 

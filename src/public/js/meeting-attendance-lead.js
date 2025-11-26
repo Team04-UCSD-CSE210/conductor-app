@@ -35,7 +35,7 @@
       const start = new Date(startIso);
       const end = new Date(endIso);
       
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -62,15 +62,13 @@
     badge.classList.add('lecture-badge');
     const statusLabel = status === 'open' ? 'Needs response' : status;
     badge.textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
-    badge.classList.add(status === 'present' ? 'present' : status === 'absent' ? 'absent' : 'present');
+    let badgeClass = 'present';
     if (status === 'absent') {
-      badge.classList.remove('present');
-      badge.classList.add('absent');
+      badgeClass = 'absent';
+    } else if (status === 'open') {
+      badgeClass = 'open';
     }
-    if (status === 'open') {
-      badge.classList.remove('present');
-      badge.classList.add('open');
-    }
+    badge.classList.add(badgeClass);
     return badge;
   }
 
@@ -301,7 +299,7 @@
       state.offeringId = selectors.container.getAttribute('data-offering-id');
       if (!state.offeringId) {
         state.offeringId = await window.LectureService.getActiveOfferingId();
-        selectors.container.setAttribute('data-offering-id', state.offeringId);
+        selectors.container.dataset.offeringId = state.offeringId;
       }
 
       const teamInfo = await getTeamInfo();
@@ -660,7 +658,7 @@
 
       input.addEventListener('input', (e) => {
         e.stopPropagation();
-        let value = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        let value = e.target.value.replaceAll(/[^A-Z0-9]/gi, '').toUpperCase();
         
         if (value.length > 0) {
           value = value.charAt(0);
@@ -746,7 +744,7 @@
           const pasteData = (e.clipboardData || window.clipboardData).getData('text');
           if (!pasteData) return;
           
-          const chars = pasteData.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 6);
+          const chars = pasteData.replaceAll(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 6);
           
           if (chars.length === 0) return;
           

@@ -44,7 +44,7 @@
         text: "Lectures",
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
-      { href: "/meetings", text: "Meetings" },
+      { href: "/meetings/team-lead", text: "Team Meetings" },
       { href: "/roster", text: "Roster" },
       {
         href: "/work-journal",

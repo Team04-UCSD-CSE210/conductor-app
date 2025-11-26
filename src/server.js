@@ -246,6 +246,21 @@ const isUserTeamLead = async (userId) => {
   const offering = await getActiveCourseOffering();
   if (!offering) return false;
   
+  // First check if user has enrollment role 'team-lead'
+  const enrollmentCheck = await pool.query(
+    `SELECT 1 FROM enrollments 
+     WHERE user_id = $1 AND offering_id = $2 
+       AND course_role = 'team-lead'::enrollment_role_enum 
+       AND status = 'enrolled'::enrollment_status_enum
+     LIMIT 1`,
+    [userId, offering.id]
+  );
+  
+  if (enrollmentCheck.rows.length > 0) {
+    return true;
+  }
+  
+  // Otherwise check if user is a team leader
   const result = await pool.query(
     `SELECT t.id, t.leader_id, tm.role
      FROM team t
@@ -255,7 +270,9 @@ const isUserTeamLead = async (userId) => {
      LIMIT 1`,
     [userId, offering.id]
   );
-  return result.rows.length > 0;
+  // User is a team lead if they are the leader_id OR have role='leader' in team_members
+  return result.rows.length > 0 && 
+    (result.rows[0].leader_id === userId || result.rows[0].role === 'leader');
 };
 
 // Note: getUserEnrollmentRoleForOffering functionality is available in src/middleware/auth.js
@@ -807,9 +824,9 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
       return res.redirect("/student-dashboard");
     }
 
-    // Check if user is enrolled as student
+    // Check if user is enrolled as student or team-lead
     const enrollmentRole = await getUserEnrollmentRole(user.id);
-    if (enrollmentRole === 'student' || user.primary_role === 'student') {
+    if (enrollmentRole === 'student' || enrollmentRole === 'team-lead' || user.primary_role === 'student') {
       return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
     }
 
@@ -928,7 +945,8 @@ app.get("/lecture-attendance-student", ensureAuthenticated, async (req, res) => 
 
 /**
  * Meeting Attendance - Student View
- * Students can check in to team meetings using access codes
+ * Students (including team leads) can check in to team meetings
+ * Team leads will be automatically routed to team lead view
  * Requires: Authentication - Students
  */
 app.get("/meetings", ensureAuthenticated, async (req, res) => {
@@ -949,9 +967,13 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
       return res.status(404).send("No active course offering found");
     }
 
-    // Check if user is a team lead - prioritize teams where user is leader
+    // Check if user is a team lead - check enrollment role first, then team leadership
+    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const isTeamLeadByEnrollment = enrollmentRole === 'team-lead';
+    
+    // Also check if user is a team leader
     const teamLeadCheck = await pool.query(
-      `SELECT t.id, t.leader_id, tm.role,
+      `SELECT t.id, t.leader_id, tm.role, t.team_number, t.name as team_name,
               CASE WHEN t.leader_id = $1 THEN 1 ELSE 2 END as priority
        FROM team t
        LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = $1 AND tm.left_at IS NULL
@@ -961,17 +983,22 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
       [user.id, offering.id]
     );
 
-    const isTeamLead = teamLeadCheck.rows.length > 0 && 
-      teamLeadCheck.rows[0].leader_id === user.id;
+    const isTeamLeadByTeam = teamLeadCheck.rows.length > 0 && 
+      (teamLeadCheck.rows[0].leader_id === user.id || teamLeadCheck.rows[0].role === 'leader');
 
-    // Allow students, admins, and instructors (for testing/viewing)
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
-    if (enrollmentRole === 'student' || user.primary_role === 'student' || 
-        user.primary_role === 'admin' || user.primary_role === 'instructor') {
+    const isTeamLead = isTeamLeadByEnrollment || isTeamLeadByTeam;
+
+    // Allow students, team-leads, admins, and instructors (for testing/viewing)
+    const enrollmentRoleForAccess = await getUserEnrollmentRole(user.id);
+    if (enrollmentRoleForAccess === 'student' || enrollmentRoleForAccess === 'team-lead' || 
+        user.primary_role === 'student' || user.primary_role === 'admin' || 
+        user.primary_role === 'instructor') {
       // Serve team lead view if user is a team lead, otherwise student view
       if (isTeamLead) {
+        // Team leads get the enhanced team lead dashboard
         return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
       } else {
+        // Regular students get the student view
         return res.sendFile(buildFullViewPath("meeting-attendance-student.html"));
       }
     }
@@ -980,6 +1007,44 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     return res.status(403).send("Forbidden: You must be enrolled as a student to access this page");
   } catch (error) {
     console.error("Error accessing meeting attendance page:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * Team Lead Meetings - Dedicated route for team leads
+ * Team leads can create and manage team meetings
+ * Requires: Authentication - Team Leads (who are also students)
+ */
+app.get("/meetings/team-lead", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    const offering = await getActiveCourseOffering();
+    if (!offering) {
+      return res.status(404).send("No active course offering found");
+    }
+
+    // Check if user is a team lead
+    const isTeamLead = await isUserTeamLead(user.id);
+    
+    // Allow admins and instructors to view (for testing)
+    if (!isTeamLead && user.primary_role !== 'admin' && user.primary_role !== 'instructor') {
+      // Redirect non-team-leads to regular meetings page
+      return res.redirect("/meetings");
+    }
+
+    return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
+  } catch (error) {
+    console.error("Error accessing team lead meetings page:", error);
     return res.status(500).send("Internal server error");
   }
 });
