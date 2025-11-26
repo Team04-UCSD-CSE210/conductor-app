@@ -16,17 +16,6 @@ async function fetchMeetings(teamId, offeringId) {
   return await res.json();
 }
 
-function formatTimeRange(startIso, endIso) {
-  if (!startIso || !endIso) return '—';
-  try {
-    const start = new Date(startIso);
-    const end = new Date(endIso);
-    return `${start.toLocaleDateString()} ${start.toLocaleTimeString()}–${end.toLocaleTimeString()}`;
-  } catch {
-    return '—';
-  }
-}
-
 function renderTeamMeta(team) {
   const meta = document.getElementById('team-meta');
   if (!meta || !team) return;
