@@ -1,7 +1,6 @@
 export const createOrUpdateJournal = async (req, res) => {
   try {
     const WorkJournalLog = req.app.get("models").WorkJournalLog;
-    const userId = req.user?.emails?.[0]?.value; // or userRecord.id later
     const { date, done_since_yesterday, working_on_today, blockers, feelings } = req.body;
 
     const entry = await WorkJournalLog.upsert({
@@ -29,6 +28,7 @@ export const getMyJournalEntries = async (req, res) => {
     });
     res.json({ success: true, logs });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch logs" });
   }
 };
@@ -41,6 +41,7 @@ export const getJournalForDate = async (req, res) => {
     });
     res.json({ success: true, log });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch log" });
   }
 };
