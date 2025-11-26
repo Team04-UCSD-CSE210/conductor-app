@@ -289,6 +289,21 @@ let redisConnected = false;
 // Redis completely disabled
 console.log("⚠️ Redis disabled, running without Redis");
 
+// In-memory login attempt tracking (since Redis is disabled)
+const loginAttempts = new Map();
+
+const cleanupExpiredAttempts = () => {
+  const now = Date.now();
+  for (const [key, data] of loginAttempts.entries()) {
+    if (now > data.expiresAt) {
+      loginAttempts.delete(key);
+    }
+  }
+};
+
+// Clean up expired attempts every minute
+setInterval(cleanupExpiredAttempts, 60000);
+
 const extractIpAddress = (req) => {
   const forwarded = req?.headers?.["x-forwarded-for"];
   if (forwarded) {
@@ -332,47 +347,90 @@ const getLoginIdentifier = (email, req) => {
 const getLoginAttemptKey = (identifier) => `${LOGIN_ATTEMPT_KEY_PREFIX}${identifier}`;
 
 const getLoginAttemptStatus = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) {
+  if (!identifier) {
     return { attempts: 0, blocked: false };
   }
-  try {
-    const rawAttempts = await redisClient.get(getLoginAttemptKey(identifier));
-    const attempts = rawAttempts ? Number.parseInt(rawAttempts, 10) : 0;
-    if (Number.isNaN(attempts)) {
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      const rawAttempts = await redisClient.get(getLoginAttemptKey(identifier));
+      const attempts = rawAttempts ? Number.parseInt(rawAttempts, 10) : 0;
+      if (Number.isNaN(attempts)) {
+        return { attempts: 0, blocked: false };
+      }
+      return {
+        attempts,
+        blocked: attempts >= LOGIN_FAILURE_THRESHOLD
+      };
+    } catch (error) {
+      console.error("Unable to read login attempt count", error);
       return { attempts: 0, blocked: false };
     }
-    return {
-      attempts,
-      blocked: attempts >= LOGIN_FAILURE_THRESHOLD
-    };
-  } catch (error) {
-    console.error("Unable to read login attempt count", error);
+  }
+  
+  // Use in-memory storage as fallback
+  cleanupExpiredAttempts();
+  const data = loginAttempts.get(identifier);
+  if (!data || Date.now() > data.expiresAt) {
     return { attempts: 0, blocked: false };
   }
+  
+  return {
+    attempts: data.attempts,
+    blocked: data.attempts >= LOGIN_FAILURE_THRESHOLD
+  };
 };
 
 const recordFailedLoginAttempt = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) return 0;
-  try {
-    const key = getLoginAttemptKey(identifier);
-    const attempts = await redisClient.incr(key);
-    if (attempts === 1) {
-      await redisClient.pexpire(key, LOGIN_FAILURE_WINDOW_MS);
+  if (!identifier) return 0;
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      const key = getLoginAttemptKey(identifier);
+      const attempts = await redisClient.incr(key);
+      if (attempts === 1) {
+        await redisClient.pexpire(key, LOGIN_FAILURE_WINDOW_MS);
+      }
+      return attempts;
+    } catch (error) {
+      console.error("Unable to record failed login attempt", error);
+      return 0;
     }
-    return attempts;
-  } catch (error) {
-    console.error("Unable to record failed login attempt", error);
-    return 0;
   }
+  
+  // Use in-memory storage as fallback
+  cleanupExpiredAttempts();
+  const now = Date.now();
+  const expiresAt = now + LOGIN_FAILURE_WINDOW_MS;
+  
+  const existing = loginAttempts.get(identifier);
+  if (!existing || now > existing.expiresAt) {
+    loginAttempts.set(identifier, { attempts: 1, expiresAt });
+    return 1;
+  }
+  
+  existing.attempts++;
+  existing.expiresAt = expiresAt; // Reset expiry on new attempt
+  return existing.attempts;
 };
 
 const clearLoginAttempts = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) return;
-  try {
-    await redisClient.del(getLoginAttemptKey(identifier));
-  } catch (error) {
-    console.error("Unable to clear login attempts", error);
+  if (!identifier) return;
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      await redisClient.del(getLoginAttemptKey(identifier));
+    } catch (error) {
+      console.error("Unable to clear login attempts", error);
+    }
+    return;
   }
+  
+  // Use in-memory storage as fallback
+  loginAttempts.delete(identifier);
 };
 
 // ensureAuthenticated is imported from middleware/auth.js
@@ -822,6 +880,11 @@ app.get("/blocked", (req, res) => {
 
 // -------------------- ROUTES --------------------
 
+// Serve index.html for root path
+app.get('/', (req, res) => {
+  res.sendFile(buildFullViewPath("index.html"));
+});
+
 // Handle Google OAuth errors (e.g., org_internal)
 app.get("/auth/error", (req, res) => {
   console.warn("⚠️ OAuth error detected:", req.query);
@@ -1042,7 +1105,7 @@ app.use("/api/class", courseOfferingRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {
-  const email = req.user?.emails?.[0]?.value || null;
+  const email = req.user?.emails?.[0]?.value || req.session?.blockedEmail || null;
   const identifier = getLoginIdentifier(email, req);
   const status = await getLoginAttemptStatus(identifier);
   const threshold = LOGIN_FAILURE_THRESHOLD;
