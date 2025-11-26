@@ -61,6 +61,33 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 });
 
 /**
+ * Get all sessions for a specific team
+ * GET /api/sessions/team/:teamId?offering_id=<uuid>&is_active=true
+ * Requires: Authentication
+ */
+router.get('/team/:teamId', ensureAuthenticated, async (req, res) => {
+  try {
+    const { offering_id, is_active, limit, offset } = req.query;
+    const { teamId } = req.params;
+
+    if (!offering_id) {
+      return res.status(400).json({ error: 'offering_id is required' });
+    }
+
+    const options = {
+      is_active: is_active !== undefined ? is_active === 'true' : undefined,
+      limit: limit ? Number(limit) : 50,
+      offset: offset ? Number(offset) : 0
+    };
+    const sessions = await SessionService.getSessionsByTeam(offering_id, teamId, options);
+    res.json(sessions);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+
+/**
  * Get session by ID
  * GET /api/sessions/:sessionId
  * Requires: Authentication

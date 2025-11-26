@@ -109,6 +109,15 @@ async function checkAndAutoOpenSession(session) {
  */
 export class SessionService {
   /**
+   * Get all sessions for a specific team in an offering
+   */
+  static async getSessionsByTeam(offeringId, teamId, options = {}) {
+    const sessions = await SessionModel.findByTeamId(offeringId, teamId, options);
+    // Optionally batch auto-open sessions if needed
+    // await this._batchAutoOpenSessions(sessions);
+    return sessions;
+  }
+  /**
    * Generate a unique access code
    */
   static generateAccessCode(length = 6) {

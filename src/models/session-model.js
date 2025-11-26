@@ -5,6 +5,59 @@ import { pool } from '../db.js';
  */
 export class SessionModel {
   /**
+   * Get all sessions for a specific team in an offering
+   */
+  static async findByTeamId(offeringId, teamId, options = {}) {
+    const { limit = 50, offset = 0, is_active } = options;
+    let query = `
+      SELECT s.*,
+             TO_CHAR(s.session_date, 'YYYY-MM-DD') as session_date_str,
+             TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str,
+             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present') as attendance_count,
+             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent') as absent_count,
+             COUNT(DISTINCT sr.user_id) as response_count,
+             (SELECT COUNT(*) FROM enrollments 
+              WHERE offering_id = s.offering_id 
+              AND status = 'enrolled' 
+              AND course_role = 'student') as total_students
+      FROM sessions s
+      LEFT JOIN attendance a ON s.id = a.session_id
+      LEFT JOIN session_responses sr ON s.id IN (
+        SELECT sq.session_id FROM session_questions sq WHERE sq.id = sr.question_id
+      )
+      WHERE s.offering_id = $1 AND s.team_id = $2
+    `;
+    const params = [offeringId, teamId];
+    let paramIndex = 3;
+    if (is_active !== undefined) {
+      query += ` AND s.is_active = $${paramIndex}`;
+      params.push(is_active);
+      paramIndex++;
+    }
+    query += `
+      GROUP BY s.id
+      ORDER BY s.session_date DESC, s.session_time DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    params.push(limit, offset);
+    const result = await pool.query(query, params);
+    return result.rows.map(row => {
+      if (row.session_date_str) row.session_date = row.session_date_str;
+      if (row.session_time_str) row.session_time = row.session_time_str;
+      const totalStudents = parseInt(row.total_students) || 0;
+      const presentCount = parseInt(row.attendance_count) || 0;
+      const attendance_percent = totalStudents > 0 
+        ? Math.round((presentCount / totalStudents) * 100) 
+        : 0;
+      return {
+        ...row,
+        attendance_percent,
+        total_students: totalStudents,
+        attendance_count: presentCount
+      };
+    });
+  }
+  /**
    * Create a new session
    */
   static async create(sessionData) {
