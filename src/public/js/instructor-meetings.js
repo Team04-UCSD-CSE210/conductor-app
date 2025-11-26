@@ -2,27 +2,41 @@
 // Handles fetching and rendering team meetings and attendance stats for instructor meetings overview page
 
 async function fetchTeams() {
+  // 1) Use page-provided offering id (query string or meta)
+  // 2) Fallback to the active-offering API (/api/offerings/active)
   let offeringId = null;
   try {
-    const offeringRes = await fetch('/api/my-courses', { credentials: 'include' });
-    if (offeringRes.ok) {
-      const data = await offeringRes.json();
-      // Find the active course offering
-      if (data.courses && data.courses.length > 0) {
-        const active = data.courses.find(c => c.offering.status === 'active' || c.offering.is_active);
-        if (active) {
-          offeringId = active.offering.id;
-        } else {
-          offeringId = data.courses[0].offering.id;
-        }
-      }
-    } else {
-      console.log('/api/my-courses request failed:', offeringRes.status, offeringRes.statusText);
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('offering_id')) offeringId = params.get('offering_id');
+    if (!offeringId) {
+      const meta = document.querySelector('meta[name="offering-id"]');
+      if (meta && meta.content) offeringId = meta.content;
     }
   } catch (e) {
-    console.log('Error fetching /api/my-courses:', e);
+    // ignore and continue
   }
+
+  try {
+    if (!offeringId) {
+      // Call the active-offering API directly to determine the offering being viewed
+      try {
+        const offeringRes = await fetch('/api/offerings/active', { credentials: 'include' });
+        if (offeringRes.ok) {
+          const data = await offeringRes.json();
+          offeringId = data?.id || null;
+        } else {
+          console.log('/api/offerings/active request failed:', offeringRes.status, offeringRes.statusText);
+        }
+      } catch (err) {
+        console.warn('Error fetching /api/offerings/active', err);
+      }
+    }
+  } catch (e) {
+    console.log('Error determining active offering:', e);
+  }
+
   if (!offeringId) return { teams: [], offeringId: null };
+
   const res = await fetch(`/api/teams?offering_id=${offeringId}&includeStats=true`, { credentials: 'include' });
   if (!res.ok) {
     console.log('Teams API request failed:', res.status, res.statusText);
@@ -32,6 +46,7 @@ async function fetchTeams() {
   // API returns { teams: [...] }
   return { teams: result.teams || [], offeringId };
 }
+
 async function fetchMeetings(teamId, offeringId) {
   if (!offeringId || !teamId) return [];
   const res = await fetch(`/api/sessions/team/${teamId}?offering_id=${offeringId}`, { credentials: 'include' });
@@ -44,6 +59,7 @@ async function renderTeams() {
   container.innerHTML = '<p style="text-align:center; color:#888;">Loading teams...</p>';
   fetchTeams().then(({ teams, offeringId }) => {
     container.innerHTML = '';
+    console.log('There are teams:', teams);
     if (!teams || !Array.isArray(teams)) {
       container.innerHTML = '<p style="color:red;">Error: Could not fetch teams. Check your network and permissions.</p>';
       return;
@@ -53,6 +69,7 @@ async function renderTeams() {
       return;
     }
     for (const team of teams) {
+      console.log('offering ID is', offeringId);
       fetchMeetings(team.id, offeringId).then(async meetings => {
         // Filter out sessions where team_id is null
         const teamMeetings = meetings.filter(m => m.team_id === team.id);

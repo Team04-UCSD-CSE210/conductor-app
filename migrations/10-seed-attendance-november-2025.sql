@@ -131,6 +131,7 @@ BEGIN
     SELECT id INTO instructor_id 
     FROM users 
     WHERE email = 'bhchandna@ucsd.edu' 
+       OR email = 'lhardy@ucsd.edu'
        OR email = 'instructor1@ucsd.edu'
     LIMIT 1;
     
