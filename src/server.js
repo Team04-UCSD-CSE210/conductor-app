@@ -1310,22 +1310,36 @@ app.get("/health", async (req, res) => {
   }
 });
 
-app.get("/api/user", ensureAuthenticated, (req, res) => {
+app.get("/api/user", ensureAuthenticated, async (req, res) => {
   const email = req.user?.emails?.[0]?.value;
   const name = req.user?.displayName;
   const picture = req.user?.photos?.[0]?.value || null;
   
-  logAuthEvent("PROFILE_ACCESSED", {
-    req,
-    message: "Retrieved authenticated user info",
-    userEmail: email,
-    userId: req.user?.id
-  });
-  res.json({
-    name: name,
-    email: email,
-    picture: picture
-  });
+  try {
+    // Fetch user ID from database
+    const user = await findUserByEmail(email);
+    
+    logAuthEvent("PROFILE_ACCESSED", {
+      req,
+      message: "Retrieved authenticated user info",
+      userEmail: email,
+      userId: user?.id
+    });
+    
+    res.json({
+      id: user?.id,
+      name: name,
+      email: email,
+      picture: picture
+    });
+  } catch (error) {
+    console.error('Error fetching user info:', error);
+    res.json({
+      name: name,
+      email: email,
+      picture: picture
+    });
+  }
 });
 
 app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) => {
