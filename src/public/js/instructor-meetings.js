@@ -10,7 +10,7 @@ async function fetchTeams() {
     if (params.has('offering_id')) offeringId = params.get('offering_id');
     if (!offeringId) {
       const meta = document.querySelector('meta[name="offering-id"]');
-      if (meta && meta.content) offeringId = meta.content;
+      if (meta?.content) offeringId = meta.content;
     }
   } catch {
     // ignore and continue

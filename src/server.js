@@ -296,7 +296,7 @@ const safeLogout = (req, callback = () => {}) => {
   }
   // Clear any lingering user data when session is already gone
   if (req.user) req.user = null;
-  if (req.session && req.session.passport) {
+  if (req.session?.passport) {
     delete req.session.passport;
   }
   callback();

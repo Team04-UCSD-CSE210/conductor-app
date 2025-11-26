@@ -373,7 +373,7 @@ const renderInstructor = () => {
 const showSkeletonLoader = () => {
   // Show checkbox column in skeleton only if user can select (matches actual roster rows)
   const checkboxCol = state.canSelect ? '<td class="checkbox-cell"><div class="skeleton skeleton-cell" style="width: 24px;"></div></td>' : '';
-  const skeletonRows = Array(5).fill(0).map(() => `
+  const skeletonRows = new Array(5).fill(0).map(() => `
     <tr>
       ${checkboxCol}
       <td><div class="skeleton skeleton-avatar"></div></td>
@@ -684,7 +684,7 @@ const handleBulkEmail = () => {
   const entries = state.roster.filter(entry => selected.includes(entry.enrollment_id));
   const emails = entries
     .map(entry => entry.user?.email)
-    .filter(email => email)
+    .filter(Boolean)
     .join(',');
   
   if (emails) {
