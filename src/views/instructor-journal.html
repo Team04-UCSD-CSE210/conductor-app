@@ -22,12 +22,7 @@
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     <p class="sidebar-user">Jordan Lee<br><span class="sidebar-user-role">Instructor</span></p>
-    <nav aria-label="Dashboard navigation">
-      <a href="/courses">Courses</a>
-      <a href="/attendance">Attendance</a>
-      <a href="/work-journal" class="active">Work Journal</a>
-      <a href="/my-team">My Team</a>
-    </nav>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
@@ -445,5 +440,6 @@
 
   <!-- Collapsible behavior script -->
   <script src="../public/journal-collapsible.js" defer></script>
+  <script src="/js/sidebar-nav.js" defer></script>
 </body>
 </html>

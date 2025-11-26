@@ -241,6 +241,7 @@
       id: session.id,
       courseId: session.offering_id, // Keep for compatibility
       offering_id: session.offering_id,
+      team_id: session.team_id || null,
       label: session.title || session.label,
       title: session.title,
       description: session.description,
@@ -654,7 +655,9 @@
             status,
             sessionState,
             startsAt: transformed.startsAt,
-            endsAt: transformed.endsAt
+            endsAt: transformed.endsAt,
+            team_id: transformed.team_id,
+            accessCode: transformed.accessCode
           };
         }).sort((a, b) => {
           // Handle null/undefined dates safely

@@ -348,6 +348,12 @@ export class EnrollmentModel {
         u.phone_number,
         u.created_at AS user_created_at,
         u.updated_at AS user_updated_at,
+        t.id AS team_id,
+        t.name AS team_name,
+        t.team_number,
+        t.leader_id AS team_leader_id,
+        tl.name AS team_lead_name,
+        CASE WHEN tm.role = 'leader' THEN TRUE ELSE FALSE END AS is_team_lead,
         COUNT(*) OVER()::INTEGER AS total_count,
         SUM(CASE WHEN e.course_role = 'student' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_students,
         SUM(CASE WHEN e.course_role = 'ta' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_tas,
@@ -358,6 +364,9 @@ export class EnrollmentModel {
         SUM(CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_completed
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
+      LEFT JOIN team_members tm ON u.id = tm.user_id AND tm.left_at IS NULL
+      LEFT JOIN team t ON tm.team_id = t.id AND t.offering_id = e.offering_id
+      LEFT JOIN users tl ON t.leader_id = tl.id
       ${whereClause}
       ${orderClause}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -412,6 +421,11 @@ export class EnrollmentModel {
         phone_number: row.phone_number,
         created_at: row.user_created_at,
         updated_at: row.user_updated_at,
+        team_id: row.team_id,
+        team_name: row.team_name,
+        team_number: row.team_number,
+        team_lead_name: row.team_lead_name,
+        is_team_lead: row.is_team_lead || false,
       },
     }));
 
