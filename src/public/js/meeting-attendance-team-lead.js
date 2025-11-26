@@ -518,10 +518,9 @@
         body: JSON.stringify({
           offering_id: state.offeringId,
           team_id: state.userTeam.id,
-          name: formData.name,
+          title: formData.name,
           session_date: formData.date,
-          start_time: startDateTime,
-          end_time: endDateTime,
+          session_time: formData.startTime,
           status: 'pending'
         })
       });
