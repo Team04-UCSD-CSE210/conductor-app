@@ -279,9 +279,20 @@ const isUserTeamLead = async (userId) => {
 // as getUserEnrollmentRole(userId, offeringId) - no need to duplicate here
 
 const safeLogout = (req, callback = () => {}) => {
-  if (typeof req.logout === "function" && req.session) {
-    req.logout(callback);
-    return;
+  // Check if session exists before trying to use passport logout
+  if (typeof req.logout === "function" && req.session && typeof req.session.regenerate === "function") {
+    try {
+      req.logout((err) => {
+        if (err) {
+          console.warn("Logout error:", err);
+        }
+        callback(err);
+      });
+      return;
+    } catch (err) {
+      console.warn("Logout exception:", err);
+      // Fall through to manual cleanup
+    }
   }
   // Clear any lingering user data when session is already gone
   if (req.user) req.user = null;
@@ -680,13 +691,13 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
     
     // Unregistered users not in roster - show error
     if (user.primary_role === 'unregistered') {
-      req.session.notInRosterEmail = user.email;
-      return res.redirect("/not-in-roster.html");
+      req.session.accessDeniedEmail = user.email;
+      return res.redirect("/access-denied");
     }
     
     // Default fallback - not in roster
-    req.session.notInRosterEmail = user.email;
-    return res.redirect("/not-in-roster.html");
+    req.session.accessDeniedEmail = user.email;
+    return res.redirect("/access-denied");
   } catch (error) {
     console.error("Error in /dashboard routing:", error);
     return res.redirect("/login");
@@ -1052,12 +1063,14 @@ app.get("/meetings/team-lead", ensureAuthenticated, async (req, res) => {
 // serve all your static files (HTML, CSS, JS, etc.) - serve project root for any other static files
 app.use(express.static(path.join(__dirname, "..")));
 
-// Serve blocked page with injected email (before static middleware)
-app.get("/blocked.html", (req, res) => {
-  const email = req.session.blockedEmail || "";
-  delete req.session.blockedEmail; // Clear after use
+// Removed blocked.html - now using access-denied.html instead
 
-  const filePath = path.join(__dirname, "views", "blocked.html");
+// Serve access-denied page with injected email
+app.get("/access-denied", (req, res) => {
+  const email = req.session.accessDeniedEmail || req.user?.emails?.[0]?.value || "";
+  delete req.session.accessDeniedEmail; // Clear after use
+
+  const filePath = path.join(__dirname, "views", "access-denied.html");
   fs.readFile(filePath, "utf8", (err, data) => {
     if (err) return res.status(500).send("Error loading page");
     const modified = data.replace(
@@ -1068,25 +1081,13 @@ app.get("/blocked.html", (req, res) => {
   });
 });
 
-// Serve not-in-roster page with injected email
+// Legacy routes for backward compatibility
+app.get("/not-in-roster", (req, res) => {
+  res.redirect("/access-denied");
+});
+
 app.get("/not-in-roster.html", (req, res) => {
-  const email = req.session.notInRosterEmail || req.user?.emails?.[0]?.value || "";
-  delete req.session.notInRosterEmail; // Clear after use
-
-  const filePath = path.join(__dirname, "views", "not-in-roster.html");
-  fs.readFile(filePath, "utf8", (err, data) => {
-    if (err) return res.status(500).send("Error loading page");
-    const modified = data.replace(
-      "</body>",
-      `<script>window.prefilledEmail=${JSON.stringify(email)};</script></body>`
-    );
-    res.send(modified);
-  });
-});
-
-// Serve /blocked for legacy routes
-app.get("/blocked", (req, res) => {
-  res.sendFile(buildFullViewPath("blocked.html"));
+  res.redirect("/access-denied");
 });
 
 
@@ -1111,9 +1112,9 @@ app.get("/auth/error", (req, res) => {
     metadata: { query: req.query }
   });
 
-  // Redirect user to blocked page with their email if available
-  req.session.blockedEmail = attemptedEmail;
-  res.redirect("/blocked.html");
+  // Redirect user to access-denied page with their email if available
+  req.session.accessDeniedEmail = attemptedEmail;
+  res.redirect("/access-denied");
 });
 
 // Always force account chooser on each login attempt
@@ -1179,8 +1180,8 @@ app.get(
         if (!enrollmentRole && offering) {
           // User is not in roster - show error page
           console.log(`[DEBUG] User ${email} is not enrolled in roster, showing error`);
-          req.session.notInRosterEmail = email;
-          return res.redirect("/not-in-roster.html");
+          req.session.accessDeniedEmail = email;
+          return res.redirect("/access-denied");
         }
         
         // If unregistered but enrolled, update to student
@@ -1193,8 +1194,8 @@ app.get(
       // Unregistered users not in roster - show error
       if (user.primary_role === 'unregistered') {
         console.log(`[DEBUG] User ${email} is unregistered and not in roster, showing error`);
-        req.session.notInRosterEmail = email;
-        return res.redirect("/not-in-roster.html");
+        req.session.accessDeniedEmail = email;
+        return res.redirect("/access-denied");
       }
 
       // Dashboard routing based on enrollment role (TA comes from enrollments table)
@@ -1226,8 +1227,8 @@ app.get(
       
       // Default fallback - not in roster
       console.log(`[DEBUG] No role match for ${email}, user not in roster`);
-      req.session.notInRosterEmail = email;
-      return res.redirect("/not-in-roster.html");
+      req.session.accessDeniedEmail = email;
+      return res.redirect("/access-denied");
     } catch (error) {
       console.error("Error in /auth/google/callback handler:", error);
       await logAuthEvent("LOGIN_CALLBACK_ERROR", {
@@ -1266,10 +1267,10 @@ app.get("/auth/failure", async (req, res) => {
   // Clear the session email after reading it
   if (req.session) {
     delete req.session.userEmail;
-    req.session.blockedEmail = email;
+    req.session.accessDeniedEmail = email;
   }
   
-  res.redirect("/blocked.html");
+  res.redirect("/access-denied");
 });
 
 
@@ -1415,7 +1416,7 @@ app.get('/api/login-attempts', async (req, res) => {
   });
 });
 
-app.get("/logout", ensureAuthenticated, (req, res, next) => {
+app.get("/logout", (req, res, next) => {
   const email = req.user?.emails?.[0]?.value || "unknown";
   const userId = req.user?.id || null;
 
@@ -1448,8 +1449,8 @@ app.get("/logout", ensureAuthenticated, (req, res, next) => {
         userId
       });
 
-      // ✅ Just go back to login page
-      res.redirect("/login");
+      // ✅ Redirect to landing page
+      res.redirect("/");
     });
   });
 });
@@ -1478,7 +1479,7 @@ app.use((req, res, next) => {
 // Registration removed - users must be added to roster by admin/instructor
 // Show error page instead
 app.get("/register.html", (req, res) => {
-  return res.redirect("/not-in-roster.html");
+  return res.redirect("/access-denied");
 });
 
 app.post("/register/submit", (req, res) => {

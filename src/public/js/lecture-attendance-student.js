@@ -172,8 +172,8 @@
       const presentCount = closedLectures.filter((lec) => lec.status === 'present').length;
       const percent = totalLectures > 0
         ? Math.round((presentCount / totalLectures) * 100)
-        : 0;
-      selectors.attendancePercentage.textContent = `${percent}%`;
+      : 0;
+    selectors.attendancePercentage.textContent = `${percent}%`;
     }
   }
 
@@ -237,19 +237,19 @@
       if (!state.offeringId) {
         state.offeringId = await window.LectureService.getActiveOfferingId();
         if (state.offeringId) {
-          selectors.container.setAttribute('data-offering-id', state.offeringId);
+        selectors.container.setAttribute('data-offering-id', state.offeringId);
         }
       }
 
       // Update course title dynamically (must have offeringId)
       if (state.offeringId) {
-        await updateCourseTitle();
+      await updateCourseTitle();
       }
 
       // Get lecture list (only lectures, not team meetings)
       if (state.offeringId) {
-        state.lectures = await window.LectureService.getStudentLectureList(state.offeringId);
-        await updateOverallAttendance();
+      state.lectures = await window.LectureService.getStudentLectureList(state.offeringId);
+      await updateOverallAttendance();
       } else {
         state.lectures = [];
         if (selectors.attendancePercentage) {
@@ -258,7 +258,7 @@
       }
       
       isLoading = false;
-      renderLectures();
+    renderLectures();
     } catch (error) {
       console.error('Error hydrating student view:', error);
       isLoading = false;
