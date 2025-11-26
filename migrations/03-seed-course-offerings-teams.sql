@@ -273,5 +273,56 @@ BEGIN
             RAISE NOTICE '⚠️ Could not create Team 11: kanzhekanzhe1@gmail.com or jackkanzhe@gmail.com not found';
         END IF;
     END;
+    
+    -- ============================================
+    -- SPECIAL TEAM: Team 12 with liamhardy2004@gmail.com as leader
+    -- ============================================
+    DECLARE
+        team12_id UUID;
+        liam_id UUID;
+    BEGIN
+        -- Get user ID for liam hardy
+        SELECT id INTO liam_id FROM users WHERE email = 'liamhardy2004@gmail.com' LIMIT 1;
+
+        IF liam_id IS NOT NULL THEN
+            -- Create Team 12
+            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
+            VALUES (
+                offering_id_var,
+                'Team 12',
+                12,
+                liam_id,
+                'active'::team_status_enum,
+                CURRENT_DATE,
+                instructor_id
+            )
+            RETURNING id INTO team12_id;
+
+            -- Add liamhardy2004@gmail.com as leader member record
+            INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
+            VALUES (
+                team12_id,
+                liam_id,
+                'leader'::team_member_role_enum,
+                CURRENT_DATE,
+                instructor_id
+            )
+            ON CONFLICT (team_id, user_id) DO NOTHING;
+
+            -- Ensure liam is not an active member of any other team in this offering.
+            -- Soft-remove other memberships (set left_at) to preserve audit history.
+            UPDATE team_members
+            SET left_at = CURRENT_DATE,
+                removed_by = instructor_id
+            WHERE user_id = liam_id
+              AND team_id IS NOT NULL
+              AND team_id <> team12_id
+              AND left_at IS NULL;
+
+            RAISE NOTICE '✅ Created Team 12 with liamhardy2004@gmail.com as leader and removed other active memberships';
+        ELSE
+            RAISE NOTICE '⚠️ Could not create Team 12: liamhardy2004@gmail.com not found';
+        END IF;
+    END;
 END $$;
 
