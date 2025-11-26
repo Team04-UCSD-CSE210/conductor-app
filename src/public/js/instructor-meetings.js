@@ -38,10 +38,7 @@ async function fetchMeetings(teamId, offeringId) {
   if (!res.ok) return [];
   return await res.json();
 }
-async function fetchAttendance(teamId) {
-  // This function is now unused; team attendance will be calculated per meeting below
-  return { percent: 0 };
-}
+
 async function renderTeams() {
   const container = document.getElementById('team-list');
   container.innerHTML = '<p style="text-align:center; color:#888;">Loading teams...</p>';

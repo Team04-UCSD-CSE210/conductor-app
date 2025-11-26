@@ -1,12 +1,14 @@
 /* instructor-meetings.css */
+
 .team-list {
   max-width: 900px;
   margin: 2rem auto;
   background: #fff;
   border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
   padding: 2rem;
 }
+
 .team-row {
   display: flex;
   align-items: center;
@@ -14,20 +16,24 @@
   padding: 1rem 0;
   border-bottom: 1px solid #e5e7eb;
 }
+
 .team-row:last-child {
   border-bottom: none;
 }
+
 .team-name {
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--teal-700, #0f766e);
 }
+
 .team-meta {
   display: flex;
   gap: 2rem;
   font-size: 0.98rem;
   color: var(--gray-700, #374151);
 }
+
 .attendance-bar {
   height: 1.2rem;
   width: 120px;
@@ -37,12 +43,14 @@
   margin-left: 1rem;
   position: relative;
 }
+
 .attendance-fill {
   height: 100%;
   background: linear-gradient(90deg, #14b8a6 0%, #f59e0b 100%);
   border-radius: 0.5rem;
   transition: width 0.3s;
 }
+
 .attendance-label {
   position: absolute;
   left: 50%;
@@ -51,5 +59,5 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 8%);
 }
