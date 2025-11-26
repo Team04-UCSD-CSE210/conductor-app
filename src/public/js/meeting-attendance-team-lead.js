@@ -182,7 +182,7 @@
     actions.className = 'lecture-actions';
     
     // Add "I'm here" button for open meetings (team leader can mark themselves present)
-    if (isOpen) {
+    if (isOpen && attendanceCount < totalMembers) {
       const checkInButton = document.createElement('button');
       checkInButton.className = 'btn-link';
       checkInButton.type = 'button';
@@ -199,11 +199,14 @@
         checkInButton.textContent = 'Checking in...';
         try {
           await window.LectureService.checkIn(meeting.access_code, []);
-          checkInButton.textContent = '✓ Present';
-          checkInButton.style.color = 'var(--green-600)';
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
+          // Hide the button after successful check-in
+          checkInButton.style.display = 'none';
+          // Update the badge to show new attendance count
+          const badge = row.querySelector('.lecture-badge');
+          if (badge) {
+            const newCount = attendanceCount + 1;
+            badge.textContent = `Open - ${newCount}/${totalMembers}`;
+          }
         } catch (error) {
           console.error('Error checking in:', error);
           alert(`Failed to record attendance: ${error.message}`);
@@ -609,9 +612,7 @@
           title: formData.name,
           session_date: formData.date,
           session_time: formData.startTime,
-          code_expires_at: endDateTimeStr,
-          attendance_opened_at: sessionDateTimeStr,
-          attendance_closed_at: endDateTimeStr,
+          endsAt: endDateTimeStr,
           status: 'pending'
         })
       });
@@ -625,6 +626,9 @@
 
       // Reset form
       form.reset();
+
+      // Small delay to allow backend auto-open to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Refresh the meeting list
       await hydrateMeetingView();
