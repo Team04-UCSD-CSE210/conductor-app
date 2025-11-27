@@ -5,384 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Conductor - Your Learning Companion</title>
     <link rel="stylesheet" href="/css/global.css" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
-            color: #1a1a1a;
-            line-height: 1.6;
-        }
-
-        .header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 1.5rem 3rem;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(5, 150, 105, 0.1);
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo-img {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-        }
-
-        .logo-text {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #059669;
-            letter-spacing: -0.02em;
-        }
-
-        .login-btn {
-            padding: 1rem 2.5rem;
-            background: #059669;
-            color: white;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            letter-spacing: 0.01em;
-            box-shadow: 0 4px 20px rgba(5, 150, 105, 0.2);
-        }
-
-        .login-btn:hover {
-            background: #047857;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(5, 150, 105, 0.3);
-        }
-
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            padding: 0 3rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6rem;
-            align-items: center;
-            width: 100%;
-        }
-
-        .hero-content {
-            max-width: 600px;
-        }
-
-        .hero-eyebrow {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #059669;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-title {
-            font-size: 4rem;
-            font-weight: 800;
-            color: #1a1a1a;
-            line-height: 1.1;
-            margin-bottom: 2rem;
-            letter-spacing: -0.03em;
-        }
-
-        .hero-subtitle {
-            font-size: 1.25rem;
-            color: #6b7280;
-            margin-bottom: 3rem;
-            line-height: 1.6;
-            font-weight: 400;
-        }
-
-        .hero-visual {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .laptop-container {
-            position: relative;
-            perspective: 1000px;
-        }
-
-        .laptop {
-            width: 500px;
-            height: 320px;
-            position: relative;
-            transform: rotateX(-10deg) rotateY(15deg);
-            transition: transform 0.3s ease;
-        }
-
-        .laptop:hover {
-            transform: rotateX(-5deg) rotateY(10deg);
-        }
-
-        .laptop-base {
-            width: 100%;
-            height: 20px;
-            background: linear-gradient(135deg, #374151, #4b5563);
-            border-radius: 0 0 20px 20px;
-            position: absolute;
-            bottom: 0;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .laptop-screen {
-            width: 100%;
-            height: 300px;
-            background: #1f2937;
-            border-radius: 12px 12px 0 0;
-            border: 8px solid #374151;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .screen-content {
-            width: 100%;
-            height: 100%;
-            background: #0f172a;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .screen-image {
-            width: 90%;
-            height: 90%;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .screen-elements {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        .floating-dot {
-            position: absolute;
-            border-radius: 50%;
-            animation: screenFloat 4s ease-in-out infinite;
-        }
-
-        .dot-1 {
-            width: 12px;
-            height: 12px;
-            background: #f59e0b;
-            top: 20%;
-            left: 15%;
-            animation-delay: 0s;
-        }
-
-        .dot-2 {
-            width: 8px;
-            height: 8px;
-            background: #0891b2;
-            top: 60%;
-            right: 20%;
-            animation-delay: 1s;
-        }
-
-        .dot-3 {
-            width: 10px;
-            height: 10px;
-            background: #6ee7b7;
-            bottom: 30%;
-            left: 25%;
-            animation-delay: 2s;
-        }
-
-        .dot-4 {
-            width: 6px;
-            height: 6px;
-            background: #059669;
-            top: 40%;
-            right: 30%;
-            animation-delay: 3s;
-        }
-
-        .background-elements {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .bg-shape {
-            position: absolute;
-            border-radius: 50%;
-            animation: bgFloat 8s ease-in-out infinite;
-        }
-
-        .shape-1 {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
-            top: 15%;
-            right: 10%;
-            animation-delay: 0s;
-        }
-
-        .shape-2 {
-            width: 150px;
-            height: 150px;
-            background: linear-gradient(135deg, rgba(8, 145, 178, 0.15), rgba(8, 145, 178, 0.08));
-            bottom: 25%;
-            left: 8%;
-            animation-delay: 2s;
-        }
-
-        .shape-3 {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, rgba(110, 231, 183, 0.2), rgba(110, 231, 183, 0.1));
-            top: 50%;
-            left: 15%;
-            animation-delay: 4s;
-        }
-
-        @keyframes screenFloat {
-            0%, 100% { transform: translateY(0px) translateX(0px); }
-            25% { transform: translateY(-10px) translateX(5px); }
-            50% { transform: translateY(-5px) translateX(-3px); }
-            75% { transform: translateY(-8px) translateX(2px); }
-        }
-
-        @keyframes bgFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-30px) rotate(10deg); }
-        }
-
-        .footer {
-            text-align: center;
-            padding: 3rem 2rem;
-            background: #f8fafc;
-            color: #6b7280;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .footer .logo-text {
-            color: #059669;
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .footer p {
-            margin-bottom: 0.5rem;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 1rem 1.5rem;
-            }
-            
-            .hero {
-                padding: 0 1.5rem;
-            }
-            
-            .hero-container {
-                grid-template-columns: 1fr;
-                gap: 3rem;
-                text-align: center;
-            }
-            
-            .hero-title {
-                font-size: 2.5rem;
-            }
-
-            .laptop {
-                width: 350px;
-                height: 224px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/landing-page.css" />
 </head>
 <body>
-    <header class="header">
-        <div class="logo-container">
-            <img src="/assets/temp-logo.png" alt="Conductor Logo" class="logo-img">
-            <div class="logo-text">conductor</div>
-        </div>
-        <a class="login-btn" href="/auth/google">Login</a>
-    </header>
-
-    <section class="hero">
-        <div class="background-elements">
-            <div class="bg-shape shape-1"></div>
-            <div class="bg-shape shape-2"></div>
-            <div class="bg-shape shape-3"></div>
-        </div>
-        
-        <div class="hero-container">
-            <div class="hero-content">
-                <div class="hero-eyebrow">UCSD Software Engineering</div>
-                <h1 class="hero-title">Transform Your Learning Experience</h1>
-                <p class="hero-subtitle">
-                    Conductor brings together everything you need for software engineering success. 
-                    Track attendance, manage your work journal, and connect with your class—all in one beautiful platform.
-                </p>
+    <div class="laptop-frame">
+        <div class="browser-window">
+            <!-- Browser Header -->
+            <div class="browser-header">
+                <div class="browser-controls">
+                    <div class="control-btn close"></div>
+                    <div class="control-btn minimize"></div>
+                    <div class="control-btn maximize"></div>
+                </div>
+                <div class="address-bar">conductor.ucsd.edu - Your Learning Companion</div>
             </div>
-            
-            <div class="hero-visual">
-                <div class="laptop-container">
-                    <div class="laptop">
-                        <div class="laptop-screen">
-                            <div class="screen-content">
-                                <img class="screen-image" src="/assets/welcome.png" alt="Welcome students" />
-                                <div class="screen-elements">
-                                    <div class="floating-dot dot-1"></div>
-                                    <div class="floating-dot dot-2"></div>
-                                    <div class="floating-dot dot-3"></div>
-                                    <div class="floating-dot dot-4"></div>
+
+            <!-- Browser Content -->
+            <div class="browser-content">
+                <div class="main-content">
+                    <div class="content-grid">
+                        <div class="hero-content">
+                            <div class="hero-eyebrow">UCSD Software Engineering</div>
+                            <h1 class="hero-title">Transform Your Learning Experience</h1>
+                            <p class="hero-subtitle">
+                                Conductor brings together everything you need for software engineering success. 
+                                Track attendance, manage your work journal, and connect with your class—all in one beautiful platform.
+                            </p>
+                            <a href="/auth/google" class="cta-button">Get Started</a>
+                        </div>
+                        
+                        <div class="hero-visual">
+                            <div class="polaroid-container">
+                                <div class="polaroid">
+                                    <img class="polaroid-image" src="/assets/welcome.png" alt="Welcome students" />
+                                    <div class="polaroid-caption">Welcome to Conductor!</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="laptop-base"></div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-
-    <footer class="footer">
-        <div class="logo-text">conductor</div>
-        <p>The modern platform for teaching software engineering. Built by students, for students.</p>
-        <p>&copy; 2025 Conductor @ The Agents UCSD. All rights reserved. Built for A11y.</p>
-    </footer>
+    </div>
 
     <script src="/js/app.js"></script>
 </body>
