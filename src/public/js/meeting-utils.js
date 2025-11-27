@@ -11,27 +11,32 @@
 export function determineMeetingStatus(meeting) {
   const now = new Date();
   
-  // Priority 1: Check if attendance has been explicitly opened
-  if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
-    // Both timestamps are set
+  // Priority 1: If attendance has been explicitly opened, ignore scheduled time
+  if (meeting.attendance_opened_at) {
     const openTime = new Date(meeting.attendance_opened_at);
-    const closeTime = new Date(meeting.attendance_closed_at);
     
-    if (now >= openTime && now < closeTime) {
-      return 'open'; // Meeting is currently open
-    } else if (now >= closeTime) {
-      return 'closed'; // Meeting has ended
+    // Check if there's a close time
+    if (meeting.attendance_closed_at) {
+      const closeTime = new Date(meeting.attendance_closed_at);
+      if (now >= closeTime) {
+        return 'closed';
+      }
+      if (now >= openTime && now < closeTime) {
+        return 'open';
+      }
+      // Current time is before open time - should not happen but treat as pending
+      return 'pending';
     }
-  } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
-    // Only open time is set - meeting is open
     
-    // Check if end time has passed
+    // No close time set - check if code has expired
     if (meeting.code_expires_at) {
       const endTime = new Date(meeting.code_expires_at);
       if (endTime < now) {
         return 'closed';
       }
     }
+    
+    // Attendance is opened and not closed - always open
     return 'open';
   }
   
