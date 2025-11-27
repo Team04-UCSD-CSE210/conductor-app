@@ -82,12 +82,10 @@ describe('Attendance Calculation Logic', () => {
     });
 
     it('should return closed for past scheduled meeting without attendance timestamps', () => {
-      const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 1); // Yesterday
-      
+      // Use a fixed past date to ensure test always passes
       const meeting = {
-        session_date: pastDate.toISOString(),
-        session_time: '14:00:00'
+        session_date: '2025-01-15T00:00:00Z', // January 15, 2025 (definitely in the past)
+        session_time: '10:00:00'
       };
       
       expect(determineMeetingStatus(meeting)).toBe('closed');
@@ -116,17 +114,12 @@ describe('Attendance Calculation Logic', () => {
     });
 
     it('should return closed when attendance is opened and closed', () => {
-      const openDate = new Date();
-      openDate.setHours(openDate.getHours() - 2); // 2 hours ago
-      
-      const closeDate = new Date();
-      closeDate.setHours(closeDate.getHours() - 1); // 1 hour ago
-      
+      // Use fixed past dates to ensure test always passes
       const meeting = {
-        session_date: openDate.toISOString(),
-        session_time: '14:00:00',
-        attendance_opened_at: openDate.toISOString(),
-        attendance_closed_at: closeDate.toISOString()
+        session_date: '2025-01-15T00:00:00Z', // January 15, 2025
+        session_time: '10:00:00',
+        attendance_opened_at: '2025-01-15T10:00:00Z', // 10:00 AM
+        attendance_closed_at: '2025-01-15T11:00:00Z'  // 11:00 AM (closed 1 hour later)
       };
       
       expect(determineMeetingStatus(meeting)).toBe('closed');
@@ -158,17 +151,12 @@ describe('Attendance Calculation Logic', () => {
     });
 
     it('should return closed when code_expires_at has passed', () => {
-      const openDate = new Date();
-      openDate.setHours(openDate.getHours() - 2); // 2 hours ago
-      
-      const expireDate = new Date();
-      expireDate.setHours(expireDate.getHours() - 1); // 1 hour ago
-      
+      // Use fixed past dates to ensure test always passes
       const meeting = {
-        session_date: openDate.toISOString(),
-        session_time: '14:00:00',
-        attendance_opened_at: openDate.toISOString(),
-        code_expires_at: expireDate.toISOString()
+        session_date: '2025-01-15T00:00:00Z', // January 15, 2025
+        session_time: '10:00:00',
+        attendance_opened_at: '2025-01-15T10:00:00Z', // 10:00 AM
+        code_expires_at: '2025-01-15T11:00:00Z'       // 11:00 AM (expired)
       };
       
       expect(determineMeetingStatus(meeting)).toBe('closed');
