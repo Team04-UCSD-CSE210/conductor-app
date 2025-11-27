@@ -24,6 +24,7 @@ import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
 import journalRoutes from "./routes/journal-routes.js";
+import classDirectoryRoutes from "./routes/class-directory-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -228,7 +229,8 @@ const enrollUserInCourse = async (userId, offeringId, courseRole = 'student') =>
 };
 
 // Get user's enrollment role for dashboard routing (uses active course offering)
-const getUserEnrollmentRole = async (userId) => {
+// Get user's enrollment role for the active course offering
+const getUserEnrollmentRoleForActiveOffering = async (userId) => {
   const offering = await getActiveCourseOffering();
   if (!offering) return null;
   
@@ -275,17 +277,28 @@ const isUserTeamLead = async (userId) => {
     (result.rows[0].leader_id === userId || result.rows[0].role === 'leader');
 };
 
-// Note: getUserEnrollmentRoleForOffering functionality is available in src/middleware/auth.js
-// as getUserEnrollmentRole(userId, offeringId) - no need to duplicate here
+// Note: For getting enrollment role for a specific offering, use getUserEnrollmentRole(userId, offeringId) 
+// from src/middleware/auth.js
 
 const safeLogout = (req, callback = () => {}) => {
-  if (typeof req.logout === "function" && req.session) {
-    req.logout(callback);
-    return;
+  // Check if session exists before trying to use passport logout
+  if (typeof req.logout === "function" && req.session && typeof req.session.regenerate === "function") {
+    try {
+      req.logout((err) => {
+        if (err) {
+          console.warn("Logout error:", err);
+        }
+        callback(err);
+      });
+      return;
+    } catch (err) {
+      console.warn("Logout exception:", err);
+      // Fall through to manual cleanup
+    }
   }
   // Clear any lingering user data when session is already gone
   if (req.user) req.user = null;
-  if (req.session && req.session.passport) {
+  if (req.session?.passport) {
     delete req.session.passport;
   }
   callback();
@@ -357,6 +370,21 @@ let redisConnected = false;
 // Redis completely disabled
 console.log("⚠️ Redis disabled, running without Redis");
 
+// In-memory login attempt tracking (since Redis is disabled)
+const loginAttempts = new Map();
+
+const cleanupExpiredAttempts = () => {
+  const now = Date.now();
+  for (const [key, data] of loginAttempts.entries()) {
+    if (now > data.expiresAt) {
+      loginAttempts.delete(key);
+    }
+  }
+};
+
+// Clean up expired attempts every minute
+setInterval(cleanupExpiredAttempts, 60000);
+
 const extractIpAddress = (req) => {
   const forwarded = req?.headers?.["x-forwarded-for"];
   if (forwarded) {
@@ -400,47 +428,90 @@ const getLoginIdentifier = (email, req) => {
 const getLoginAttemptKey = (identifier) => `${LOGIN_ATTEMPT_KEY_PREFIX}${identifier}`;
 
 const getLoginAttemptStatus = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) {
+  if (!identifier) {
     return { attempts: 0, blocked: false };
   }
-  try {
-    const rawAttempts = await redisClient.get(getLoginAttemptKey(identifier));
-    const attempts = rawAttempts ? Number.parseInt(rawAttempts, 10) : 0;
-    if (Number.isNaN(attempts)) {
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      const rawAttempts = await redisClient.get(getLoginAttemptKey(identifier));
+      const attempts = rawAttempts ? Number.parseInt(rawAttempts, 10) : 0;
+      if (Number.isNaN(attempts)) {
+        return { attempts: 0, blocked: false };
+      }
+      return {
+        attempts,
+        blocked: attempts >= LOGIN_FAILURE_THRESHOLD
+      };
+    } catch (error) {
+      console.error("Unable to read login attempt count", error);
       return { attempts: 0, blocked: false };
     }
-    return {
-      attempts,
-      blocked: attempts >= LOGIN_FAILURE_THRESHOLD
-    };
-  } catch (error) {
-    console.error("Unable to read login attempt count", error);
+  }
+  
+  // Use in-memory storage as fallback
+  cleanupExpiredAttempts();
+  const data = loginAttempts.get(identifier);
+  if (!data || Date.now() > data.expiresAt) {
     return { attempts: 0, blocked: false };
   }
+  
+  return {
+    attempts: data.attempts,
+    blocked: data.attempts >= LOGIN_FAILURE_THRESHOLD
+  };
 };
 
 const recordFailedLoginAttempt = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) return 0;
-  try {
-    const key = getLoginAttemptKey(identifier);
-    const attempts = await redisClient.incr(key);
-    if (attempts === 1) {
-      await redisClient.pexpire(key, LOGIN_FAILURE_WINDOW_MS);
+  if (!identifier) return 0;
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      const key = getLoginAttemptKey(identifier);
+      const attempts = await redisClient.incr(key);
+      if (attempts === 1) {
+        await redisClient.pexpire(key, LOGIN_FAILURE_WINDOW_MS);
+      }
+      return attempts;
+    } catch (error) {
+      console.error("Unable to record failed login attempt", error);
+      return 0;
     }
-    return attempts;
-  } catch (error) {
-    console.error("Unable to record failed login attempt", error);
-    return 0;
   }
+  
+  // Use in-memory storage as fallback
+  cleanupExpiredAttempts();
+  const now = Date.now();
+  const expiresAt = now + LOGIN_FAILURE_WINDOW_MS;
+  
+  const existing = loginAttempts.get(identifier);
+  if (!existing || now > existing.expiresAt) {
+    loginAttempts.set(identifier, { attempts: 1, expiresAt });
+    return 1;
+  }
+  
+  existing.attempts++;
+  existing.expiresAt = expiresAt; // Reset expiry on new attempt
+  return existing.attempts;
 };
 
 const clearLoginAttempts = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) return;
-  try {
-    await redisClient.del(getLoginAttemptKey(identifier));
-  } catch (error) {
-    console.error("Unable to clear login attempts", error);
+  if (!identifier) return;
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      await redisClient.del(getLoginAttemptKey(identifier));
+    } catch (error) {
+      console.error("Unable to clear login attempts", error);
+    }
+    return;
   }
+  
+  // Use in-memory storage as fallback
+  loginAttempts.delete(identifier);
 };
 
 // ensureAuthenticated is imported from middleware/auth.js
@@ -551,7 +622,7 @@ passport.use(new GoogleStrategy({
         });
 
         // ✅ Whitelisted users should be created as 'unregistered' on first login
-        // They will be redirected to register.html to choose their role
+        // They will be redirected to access-denied if not enrolled in roster
         console.log(`[TRACE] Creating or finding whitelisted user for email: ${email}`);
         await findOrCreateUser(email, {
           name: profile.displayName,
@@ -672,7 +743,7 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
     }
 
     // Get enrollment role for TA/student routing
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     
     // Route based on primary_role and enrollment role
     if (user.primary_role === 'admin') {
@@ -701,13 +772,13 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
     
     // Unregistered users not in roster - show error
     if (user.primary_role === 'unregistered') {
-      req.session.notInRosterEmail = user.email;
-      return res.redirect("/not-in-roster.html");
+      req.session.accessDeniedEmail = user.email;
+      return res.redirect("/access-denied");
     }
     
     // Default fallback - not in roster
-    req.session.notInRosterEmail = user.email;
-    return res.redirect("/not-in-roster.html");
+    req.session.accessDeniedEmail = user.email;
+    return res.redirect("/access-denied");
   } catch (error) {
     console.error("Error in /dashboard routing:", error);
     return res.redirect("/login");
@@ -770,7 +841,7 @@ app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
     }
 
     // Check if user is enrolled as TA or tutor
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
       return res.sendFile(buildFullViewPath("ta-dashboard.html"));
     }
@@ -779,6 +850,37 @@ app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
     return res.status(403).send("Forbidden: You must be enrolled as a TA or tutor to access this dashboard");
   } catch (error) {
     console.error("Error accessing TA dashboard:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Admin and instructor can access team lead dashboard (for viewing)
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
+    }
+
+    // Check if user is a team lead
+    const isTeamLead = await isUserTeamLead(user.id);
+    if (!isTeamLead) {
+      // Not a team lead, redirect to student dashboard
+      return res.redirect("/student-dashboard");
+    }
+
+    return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
+  } catch (error) {
+    console.error("Error accessing team lead dashboard:", error);
     return res.status(500).send("Internal server error");
   }
 });
@@ -807,7 +909,7 @@ app.get("/student-dashboard", ensureAuthenticated, async (req, res) => {
     }
 
     // Check if user is enrolled as student or has student primary_role
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student') {
       return res.sendFile(buildFullViewPath("student-dashboard.html"));
     }
@@ -816,45 +918,6 @@ app.get("/student-dashboard", ensureAuthenticated, async (req, res) => {
     return res.status(403).send("Forbidden: You must be enrolled as a student to access this dashboard");
   } catch (error) {
     console.error("Error accessing student dashboard:", error);
-    return res.status(500).send("Internal server error");
-  }
-});
-
-// Team Lead Dashboard - accessible only to team leads
-app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
-  try {
-    const email = req.user?.emails?.[0]?.value;
-    if (!email) {
-      return res.redirect("/login");
-    }
-
-    const user = await findUserByEmail(email);
-    if (!user) {
-      return res.redirect("/login");
-    }
-
-    // Admin and instructor can access team lead dashboard (for viewing)
-    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
-      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
-    }
-
-    // Check if user is a team lead
-    const isTeamLead = await isUserTeamLead(user.id);
-    if (!isTeamLead) {
-      // If not a team lead, redirect to student dashboard
-      return res.redirect("/student-dashboard");
-    }
-
-    // Check if user is enrolled as student or team-lead
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
-    if (enrollmentRole === 'student' || enrollmentRole === 'team-lead' || user.primary_role === 'student') {
-      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
-    }
-
-    // Not authorized
-    return res.status(403).send("Forbidden: You must be a team lead to access this dashboard");
-  } catch (error) {
-    console.error("Error accessing team lead dashboard:", error);
     return res.status(500).send("Internal server error");
   }
 });
@@ -899,6 +962,22 @@ app.get("/courses/:courseId/roster", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("roster.html"));
 });
 
+// Class Directory route - similar permissions to roster
+const classDirectoryMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
+
+app.get("/class-directory", ...classDirectoryMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("class-directory.html"));
+});
+
+app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("class-directory.html"));
+});
+
+// Course selection page
+app.get("/course-selection", ensureAuthenticated, (req, res) => {
+  res.sendFile(buildFullViewPath("course-selection.html"));
+});
+
 /**
  * Student Lecture Response
  * Students can respond to lecture questions after checking in
@@ -918,7 +997,7 @@ app.get("/student-lecture-response", ensureAuthenticated, async (req, res) => {
     }
 
     // Allow students, admins, and instructors (for testing/viewing)
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student' || 
         user.primary_role === 'admin' || user.primary_role === 'instructor') {
       return res.sendFile(buildFullViewPath("student-lecture-response.html"));
@@ -950,7 +1029,7 @@ app.get("/lecture-attendance-student", ensureAuthenticated, async (req, res) => 
     }
 
     // Allow students, admins, and instructors (for testing/viewing)
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student' || 
         user.primary_role === 'admin' || user.primary_role === 'instructor') {
       return res.sendFile(buildFullViewPath("lecture-attendance-student.html"));
@@ -989,7 +1068,7 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     }
 
     // Check if user is a team lead - check enrollment role first, then team leadership
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     const isTeamLeadByEnrollment = enrollmentRole === 'team-lead';
     
     // Also check if user is a team leader
@@ -1010,7 +1089,7 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     const isTeamLead = isTeamLeadByEnrollment || isTeamLeadByTeam;
 
     // Allow students, team-leads, admins, and instructors (for testing/viewing)
-    const enrollmentRoleForAccess = await getUserEnrollmentRole(user.id);
+    const enrollmentRoleForAccess = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRoleForAccess === 'student' || enrollmentRoleForAccess === 'team-lead' || 
         user.primary_role === 'student' || user.primary_role === 'admin' || 
         user.primary_role === 'instructor') {
@@ -1073,12 +1152,14 @@ app.get("/meetings/team-lead", ensureAuthenticated, async (req, res) => {
 // serve all your static files (HTML, CSS, JS, etc.) - serve project root for any other static files
 app.use(express.static(path.join(__dirname, "..")));
 
-// Serve blocked page with injected email (before static middleware)
-app.get("/blocked.html", (req, res) => {
-  const email = req.session.blockedEmail || "";
-  delete req.session.blockedEmail; // Clear after use
+// Removed blocked.html - now using access-denied.html instead
 
-  const filePath = path.join(__dirname, "views", "blocked.html");
+// Serve access-denied page with injected email
+app.get("/access-denied", (req, res) => {
+  const email = req.session.accessDeniedEmail || req.user?.emails?.[0]?.value || "";
+  delete req.session.accessDeniedEmail; // Clear after use
+
+  const filePath = path.join(__dirname, "views", "access-denied.html");
   fs.readFile(filePath, "utf8", (err, data) => {
     if (err) return res.status(500).send("Error loading page");
     const modified = data.replace(
@@ -1089,30 +1170,23 @@ app.get("/blocked.html", (req, res) => {
   });
 });
 
-// Serve not-in-roster page with injected email
+// Legacy routes for backward compatibility
+app.get("/not-in-roster", (req, res) => {
+  res.redirect("/access-denied");
+});
+
 app.get("/not-in-roster.html", (req, res) => {
-  const email = req.session.notInRosterEmail || req.user?.emails?.[0]?.value || "";
-  delete req.session.notInRosterEmail; // Clear after use
-
-  const filePath = path.join(__dirname, "views", "not-in-roster.html");
-  fs.readFile(filePath, "utf8", (err, data) => {
-    if (err) return res.status(500).send("Error loading page");
-    const modified = data.replace(
-      "</body>",
-      `<script>window.prefilledEmail=${JSON.stringify(email)};</script></body>`
-    );
-    res.send(modified);
-  });
-});
-
-// Serve /blocked for legacy routes
-app.get("/blocked", (req, res) => {
-  res.sendFile(buildFullViewPath("blocked.html"));
+  res.redirect("/access-denied");
 });
 
 
 
 // -------------------- ROUTES --------------------
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+  res.sendFile(buildFullViewPath("index.html"));
+});
 
 // Handle Google OAuth errors (e.g., org_internal)
 app.get("/auth/error", (req, res) => {
@@ -1132,9 +1206,9 @@ app.get("/auth/error", (req, res) => {
     metadata: { query: req.query }
   });
 
-  // Redirect user to blocked page with their email if available
-  req.session.blockedEmail = attemptedEmail;
-  res.redirect("/blocked.html");
+  // Redirect user to access-denied page with their email if available
+  req.session.accessDeniedEmail = attemptedEmail;
+  res.redirect("/access-denied");
 });
 
 // Always force account chooser on each login attempt
@@ -1191,12 +1265,18 @@ app.get(
         metadata: { provider: "google" },
       });
 
-      // Check if user is in roster (has enrollment) - students must be enrolled
+      // Unregistered users not in roster - show access denied
+      if (user.primary_role === 'unregistered') {
+        console.log(`[DEBUG] User ${email} is unregistered, checking enrollment status`);
+        // Will check enrollment below and redirect to access-denied if not enrolled
+      }
+
+      // Dashboard routing based on enrollment role (TA comes from enrollments table)
       let enrollmentRole = null;
       try {
-        enrollmentRole = await getUserEnrollmentRole(user.id);
+        enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
       } catch (error) {
-        console.log(`[DEBUG] Database error getting enrollment role (non-critical): ${error.message}`);
+        console.log(`[DEBUG] Database error getting enrollments (non-critical): ${error.message}`);
       }
       
       const offering = await getActiveCourseOffering();
@@ -1206,8 +1286,8 @@ app.get(
         if (!enrollmentRole && offering) {
           // User is not in roster - show error page
           console.log(`[DEBUG] User ${email} is not enrolled in roster, showing error`);
-          req.session.notInRosterEmail = email;
-          return res.redirect("/not-in-roster.html");
+          req.session.accessDeniedEmail = email;
+          return res.redirect("/access-denied");
         }
         
         // If unregistered but enrolled, update to student
@@ -1220,18 +1300,20 @@ app.get(
       // Unregistered users not in roster - show error
       if (user.primary_role === 'unregistered') {
         console.log(`[DEBUG] User ${email} is unregistered and not in roster, showing error`);
-        req.session.notInRosterEmail = email;
-        return res.redirect("/not-in-roster.html");
+        req.session.accessDeniedEmail = email;
+        return res.redirect("/access-denied");
       }
 
       // Dashboard routing based on enrollment role (TA comes from enrollments table)
       
-      // Check primary_role for admin/instructor, enrollment for TA/student
+      // Admin and instructor get their dashboards directly
       if (user.primary_role === 'admin') {
+        console.log(`[DEBUG] User ${email} is admin, redirecting to admin dashboard`);
         return res.redirect("/admin-dashboard");
       }
       
       if (user.primary_role === 'instructor') {
+        console.log(`[DEBUG] User ${email} is instructor, redirecting to instructor dashboard`);
         return res.redirect("/instructor-dashboard");
       }
       
@@ -1240,21 +1322,15 @@ app.get(
         return res.redirect("/ta-dashboard");
       }
       
-      // Check if user is a team lead - redirect to team lead dashboard
-      const isTeamLead = await isUserTeamLead(user.id);
-      if (isTeamLead && (enrollmentRole === 'student' || user.primary_role === 'student')) {
-        return res.redirect("/team-lead-dashboard");
-      }
-      
       // Students (only if they have student primary_role, not unregistered)
       if (enrollmentRole === 'student' || user.primary_role === 'student') {
         return res.redirect("/student-dashboard");
       }
       
-      // Default fallback - not in roster
-      console.log(`[DEBUG] No role match for ${email}, user not in roster`);
-      req.session.notInRosterEmail = email;
-      return res.redirect("/not-in-roster.html");
+      // Default fallback - should not reach here, but send to access-denied
+      console.log(`[DEBUG] No role match for ${email}, redirecting to access-denied`);
+      req.session.accessDeniedEmail = email;
+      return res.redirect("/access-denied");
     } catch (error) {
       console.error("Error in /auth/google/callback handler:", error);
       await logAuthEvent("LOGIN_CALLBACK_ERROR", {
@@ -1293,10 +1369,10 @@ app.get("/auth/failure", async (req, res) => {
   // Clear the session email after reading it
   if (req.session) {
     delete req.session.userEmail;
-    req.session.blockedEmail = email;
+    req.session.accessDeniedEmail = email;
   }
   
-  res.redirect("/blocked.html");
+  res.redirect("/access-denied");
 });
 
 
@@ -1337,22 +1413,36 @@ app.get("/health", async (req, res) => {
   }
 });
 
-app.get("/api/user", ensureAuthenticated, (req, res) => {
+app.get("/api/user", ensureAuthenticated, async (req, res) => {
   const email = req.user?.emails?.[0]?.value;
   const name = req.user?.displayName;
   const picture = req.user?.photos?.[0]?.value || null;
   
-  logAuthEvent("PROFILE_ACCESSED", {
-    req,
-    message: "Retrieved authenticated user info",
-    userEmail: email,
-    userId: req.user?.id
-  });
-  res.json({
-    name: name,
-    email: email,
-    picture: picture
-  });
+  try {
+    // Fetch user ID from database
+    const user = await findUserByEmail(email);
+    
+    logAuthEvent("PROFILE_ACCESSED", {
+      req,
+      message: "Retrieved authenticated user info",
+      userEmail: email,
+      userId: user?.id
+    });
+    
+    res.json({
+      id: user?.id,
+      name: name,
+      email: email,
+      picture: picture
+    });
+  } catch (error) {
+    console.error('Error fetching user info:', error);
+    res.json({
+      name: name,
+      email: email,
+      picture: picture
+    });
+  }
 });
 
 app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) => {
@@ -1367,13 +1457,31 @@ app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) =
       return res.status(404).json({ error: "User not found" });
     }
 
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     const isTeamLead = await isUserTeamLead(user.id);
+
+    // Determine display role
+    let displayRole = user.primary_role;
+    if (enrollmentRole === 'ta') {
+      displayRole = 'TA';
+    } else if (enrollmentRole === 'tutor') {
+      displayRole = 'Tutor';
+    } else if (isTeamLead || enrollmentRole === 'team-lead') {
+      displayRole = 'Team Lead';
+    } else if (user.primary_role === 'instructor') {
+      displayRole = 'Instructor';
+    } else if (user.primary_role === 'admin') {
+      displayRole = 'Admin';
+    } else if (user.primary_role === 'student') {
+      displayRole = 'Student';
+    }
 
     res.json({
       primary_role: user.primary_role,
       enrollment_role: enrollmentRole,
-      is_team_lead: isTeamLead
+      is_team_lead: isTeamLead,
+      name: user.name || user.preferred_name || 'User',
+      display_role: displayRole
     });
   } catch (error) {
     console.error("Failed to fetch navigation context:", error);
@@ -1389,12 +1497,13 @@ app.use("/api/offerings", offeringRoutes);
 app.use("/api/interactions", interactionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
-app.use("/api/journals", journalRoutes);
+app.use("/api/journals", ensureAuthenticated, journalRoutes);
 app.use("/api/class", courseOfferingRoutes);
+app.use("/api/class-directory", classDirectoryRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {
-  const email = req.user?.emails?.[0]?.value || null;
+  const email = req.user?.emails?.[0]?.value || req.session?.blockedEmail || null;
   const identifier = getLoginIdentifier(email, req);
   const status = await getLoginAttemptStatus(identifier);
   const threshold = LOGIN_FAILURE_THRESHOLD;
@@ -1410,7 +1519,7 @@ app.get('/api/login-attempts', async (req, res) => {
   });
 });
 
-app.get("/logout", ensureAuthenticated, (req, res, next) => {
+app.get("/logout", (req, res, next) => {
   const email = req.user?.emails?.[0]?.value || "unknown";
   const userId = req.user?.id || null;
 
@@ -1443,8 +1552,8 @@ app.get("/logout", ensureAuthenticated, (req, res, next) => {
         userId
       });
 
-      // ✅ Just go back to login page
-      res.redirect("/login");
+      // ✅ Redirect to landing page
+      res.redirect("/");
     });
   });
 });
@@ -1472,16 +1581,6 @@ app.use((req, res, next) => {
 
 // Registration removed - users must be added to roster by admin/instructor
 // Show error page instead
-app.get("/register.html", (req, res) => {
-  return res.redirect("/not-in-roster.html");
-});
-
-app.post("/register/submit", (req, res) => {
-  // Registration disabled - users must be added to roster
-  return res.status(403).json({ 
-    error: "Registration is disabled. Please contact your instructor or administrator to be added to the course roster." 
-  });
-});
 
 // --- Access Request Submission ---
 app.post("/request-access", async (req, res) => {
@@ -1830,6 +1929,47 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user courses:', error);
     res.status(500).json({ error: 'Failed to fetch courses' });
+  }
+});
+
+// Select active course for user session
+app.post('/api/select-course', ensureAuthenticated, express.json(), async (req, res) => {
+  try {
+    const { offering_id } = req.body;
+    const email = req.user?.emails?.[0]?.value;
+    
+    if (!email || !offering_id) {
+      return res.status(400).json({ error: 'Missing email or offering_id' });
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify user is enrolled in this offering
+    const enrollment = await pool.query(
+      `SELECT course_role FROM enrollments 
+       WHERE user_id = $1::uuid AND offering_id = $2::uuid AND status = 'enrolled'::enrollment_status_enum`,
+      [user.id, offering_id]
+    );
+
+    if (enrollment.rows.length === 0) {
+      return res.status(403).json({ error: 'Not enrolled in this course' });
+    }
+
+    // Store selected course in session
+    req.session.selectedOfferingId = offering_id;
+    req.session.selectedRole = enrollment.rows[0].course_role;
+
+    res.json({ 
+      success: true, 
+      offering_id,
+      role: enrollment.rows[0].course_role 
+    });
+  } catch (error) {
+    console.error('Error selecting course:', error);
+    res.status(500).json({ error: 'Failed to select course' });
   }
 });
 

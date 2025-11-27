@@ -220,10 +220,12 @@ const loadOfferings = async () => {
 };
 
 // Helper function to validate UUID format
-const isValidUUID = (str) => {
+// UUID validation - use shared utility if available, otherwise define locally
+const isValidUUID = window.isValidUUID || ((str) => {
+  if (!str || typeof str !== 'string') return false;
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(str);
-};
+});
 
 const loadRoster = async () => {
   if (!state.offeringId) {
@@ -319,12 +321,14 @@ const loadRoster = async () => {
     const endIndex = startIndex + state.pagination.limit;
     state.roster = allRoster.slice(startIndex, endIndex);
     state.stats = data.stats || state.stats;
+    state.instructor = data.instructor || null;
 
     // Clear selections when roster changes
     state.selectedItems.clear();
     
     renderRoster();
     renderStats();
+    renderInstructor();
     renderPagination();
     updateFilterCount();
     
@@ -355,10 +359,23 @@ const renderStats = () => {
   elements.statTutorsMeta.textContent = '';
 };
 
+const renderInstructor = () => {
+  const instructorDisplay = document.getElementById('instructorDisplay');
+  if (!instructorDisplay) return;
+  
+  if (state.instructor && state.instructor.name) {
+    instructorDisplay.textContent = `Instructor: ${state.instructor.name}`;
+    instructorDisplay.style.display = 'inline';
+  } else {
+    instructorDisplay.textContent = '';
+    instructorDisplay.style.display = 'none';
+  }
+};
+
 const showSkeletonLoader = () => {
   // Show checkbox column in skeleton only if user can select (matches actual roster rows)
   const checkboxCol = state.canSelect ? '<td class="checkbox-cell"><div class="skeleton skeleton-cell" style="width: 24px;"></div></td>' : '';
-  const skeletonRows = Array(5).fill(0).map(() => `
+  const skeletonRows = new Array(5).fill(0).map(() => `
     <tr>
       ${checkboxCol}
       <td><div class="skeleton skeleton-avatar"></div></td>
@@ -669,7 +686,7 @@ const handleBulkEmail = () => {
   const entries = state.roster.filter(entry => selected.includes(entry.enrollment_id));
   const emails = entries
     .map(entry => entry.user?.email)
-    .filter(email => email)
+    .filter(Boolean)
     .join(',');
   
   if (emails) {
