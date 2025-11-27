@@ -952,14 +952,68 @@ app.get("/lecture-responses", ...protectAny(['attendance.view', 'session.manage'
   res.sendFile(buildFullViewPath("lecture-responses.html"));
 });
 
-// Roster page - accessible to all authenticated users (view-only)
-// Editing (import/export) is restricted to instructors/admins via frontend and API permissions
-app.get("/roster", ensureAuthenticated, (req, res) => {
-  res.sendFile(buildFullViewPath("roster.html"));
+// Roster page - accessible only to instructors, TAs, and admins
+// Students and team leads cannot access roster
+app.get("/roster", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("roster.html"));
+    }
+
+    // Check if user is enrolled as TA or tutor
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("roster.html"));
+    }
+
+    // Students and team leads are not allowed
+    return res.status(403).send("Forbidden: Only instructors, TAs, and administrators can access the roster");
+  } catch (error) {
+    console.error("Error accessing roster:", error);
+    return res.status(500).send("Internal server error");
+  }
 });
 
-app.get("/courses/:courseId/roster", ensureAuthenticated, (req, res) => {
-  res.sendFile(buildFullViewPath("roster.html"));
+app.get("/courses/:courseId/roster", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("roster.html"));
+    }
+
+    // Check if user is enrolled as TA or tutor
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("roster.html"));
+    }
+
+    // Students and team leads are not allowed
+    return res.status(403).send("Forbidden: Only instructors, TAs, and administrators can access the roster");
+  } catch (error) {
+    console.error("Error accessing roster:", error);
+    return res.status(500).send("Internal server error");
+  }
 });
 
 // Class Directory route - similar permissions to roster
