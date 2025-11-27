@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXISTS work_journal_logs (
     UNIQUE (user_id, date)
 );
 
-CREATE INDEX IF NOT EXISTS idx_work_journal_logs ON enrollments(user_id);
+CREATE INDEX IF NOT EXISTS idx_work_journal_logs_user_id ON work_journal_logs(user_id);

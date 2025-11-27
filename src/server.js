@@ -622,7 +622,7 @@ passport.use(new GoogleStrategy({
         });
 
         // ✅ Whitelisted users should be created as 'unregistered' on first login
-        // They will be redirected to register.html to choose their role
+        // They will be redirected to access-denied if not enrolled in roster
         console.log(`[TRACE] Creating or finding whitelisted user for email: ${email}`);
         await findOrCreateUser(email, {
           name: profile.displayName,
@@ -1238,10 +1238,10 @@ app.get(
         metadata: { provider: "google" },
       });
 
-      // Unregistered users MUST register first - check this BEFORE enrollments
+      // Unregistered users not in roster - show access denied
       if (user.primary_role === 'unregistered') {
-        console.log(`[DEBUG] User ${email} is unregistered, redirecting to register page`);
-        return res.redirect("/register.html");
+        console.log(`[DEBUG] User ${email} is unregistered, checking enrollment status`);
+        // Will check enrollment below and redirect to access-denied if not enrolled
       }
 
       // Dashboard routing based on enrollment role (TA comes from enrollments table)
@@ -1300,9 +1300,10 @@ app.get(
         return res.redirect("/student-dashboard");
       }
       
-      // Default fallback - should not reach here, but send to register just in case
-      console.log(`[DEBUG] No role match for ${email}, redirecting to register`);
-      return res.redirect("/register.html");
+      // Default fallback - should not reach here, but send to access-denied
+      console.log(`[DEBUG] No role match for ${email}, redirecting to access-denied`);
+      req.session.accessDeniedEmail = email;
+      return res.redirect("/access-denied");
     } catch (error) {
       console.error("Error in /auth/google/callback handler:", error);
       await logAuthEvent("LOGIN_CALLBACK_ERROR", {
@@ -1553,16 +1554,6 @@ app.use((req, res, next) => {
 
 // Registration removed - users must be added to roster by admin/instructor
 // Show error page instead
-app.get("/register.html", (req, res) => {
-  return res.redirect("/access-denied");
-});
-
-app.post("/register/submit", (req, res) => {
-  // Registration disabled - users must be added to roster
-  return res.status(403).json({ 
-    error: "Registration is disabled. Please contact your instructor or administrator to be added to the course roster." 
-  });
-});
 
 // --- Access Request Submission ---
 app.post("/request-access", async (req, res) => {

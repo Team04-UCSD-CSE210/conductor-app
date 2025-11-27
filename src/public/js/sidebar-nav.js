@@ -14,7 +14,8 @@
         text: "Attendance",
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
-      { href: "/roster", text: "Roster" }
+      { href: "/roster", text: "Roster" },
+      { href: "/class-directory", text: "Class Directory" }
     ],
     instructor: [
       { href: "/instructor-dashboard", text: "Dashboard" },
@@ -25,6 +26,7 @@
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
       { href: "/roster", text: "Roster" },
+      { href: "/class-directory", text: "Class Directory" },
       { href: "/instructor-meetings", text: "Team Meetings" }
     ],
     ta: [
@@ -46,6 +48,7 @@
       },
       { href: "/meetings/team-lead", text: "Team Meetings" },
       { href: "/roster", text: "Roster" },
+      { href: "/class-directory", text: "Class Directory" },
       {
         href: "/work-journal",
         text: "Work Journal",
@@ -62,6 +65,7 @@
       },
       { href: "/meetings", text: "Meetings" },
       { href: "/roster", text: "Roster" },
+      { href: "/class-directory", text: "Class Directory" },
       {
         href: "/work-journal",
         text: "Work Journal",
