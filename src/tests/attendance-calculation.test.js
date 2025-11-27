@@ -97,9 +97,13 @@ describe('Attendance Calculation Logic', () => {
       const pastDate = new Date();
       pastDate.setHours(pastDate.getHours() - 1); // 1 hour ago
       
+      const hours = String(pastDate.getHours()).padStart(2, '0');
+      const minutes = String(pastDate.getMinutes()).padStart(2, '0');
+      const sessionTime = `${hours}:${minutes}:00`;
+      
       const meeting = {
         session_date: pastDate.toISOString(),
-        session_time: '14:00:00',
+        session_time: sessionTime,
         attendance_opened_at: pastDate.toISOString()
       };
       
@@ -130,9 +134,13 @@ describe('Attendance Calculation Logic', () => {
       const closeDate = new Date();
       closeDate.setHours(closeDate.getHours() + 1); // 1 hour from now
       
+      const hours = String(openDate.getHours()).padStart(2, '0');
+      const minutes = String(openDate.getMinutes()).padStart(2, '0');
+      const sessionTime = `${hours}:${minutes}:00`;
+      
       const meeting = {
         session_date: openDate.toISOString(),
-        session_time: '14:00:00',
+        session_time: sessionTime,
         attendance_opened_at: openDate.toISOString(),
         attendance_closed_at: closeDate.toISOString()
       };
