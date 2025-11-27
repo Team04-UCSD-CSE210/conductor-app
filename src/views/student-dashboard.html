@@ -19,21 +19,24 @@
     <span class="hamburger-line"></span>
   </button>
 
-  <!-- Sidebar Navigation (reuse instructor styling) -->
-  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+  <!-- Sidebar Navigation (reuse professor styling) -->
+    <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
-    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    <p class="sidebar-user">Jordan Lee<br><span class="sidebar-user-role">Student</span></p>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/attendance">Attendance</a>
+      <a href="/work-journal">Work Journal</a>
+      <a href="/my-team">My Team</a>
+    </nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
   </header>
+
 
   <!-- Main Content -->
   <main class="main-container" id="main">
