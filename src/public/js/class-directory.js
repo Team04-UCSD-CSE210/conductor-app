@@ -48,19 +48,19 @@ const initializeElements = () => {
 // API Functions
 const api = {
   async getActiveOffering() {
-    const response = await fetch('/api/offerings/active');
+    const response = await fetch('/api/offerings/active', { credentials: 'include' });
     if (!response.ok) throw new Error('Failed to fetch active offering');
     return response.json();
   },
 
   async getClassDirectory(offeringId) {
-    const response = await fetch(`/api/class-directory?offering_id=${offeringId}`);
+    const response = await fetch(`/api/class-directory?offering_id=${offeringId}`, { credentials: 'include' });
     if (!response.ok) throw new Error('Failed to fetch class directory');
     return response.json();
   },
 
   async getUserActivity(userId, days = 30) {
-    const response = await fetch(`/api/class-directory/users/${userId}/activity?days=${days}`);
+    const response = await fetch(`/api/class-directory/users/${userId}/activity?days=${days}`, { credentials: 'include' });
     if (!response.ok) return { activity: [], attendance: {} };
     return response.json();
   }

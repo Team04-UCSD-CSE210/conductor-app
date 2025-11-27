@@ -3,17 +3,9 @@ import { EnrollmentService } from '../services/enrollment-service.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import { protect } from '../middleware/permission-middleware.js';
 import { PermissionService } from '../services/permission-service.js';
+import { isUuid } from '../utils/validation.js';
 
 const router = Router();
-
-/**
- * Validate if a string is a valid UUID format
- */
-function isValidUUID(str) {
-  if (!str || typeof str !== 'string') return false;
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(str);
-}
 
 /**
  * Create a new enrollment
@@ -46,10 +38,10 @@ router.get(
       const { offeringId, userId } = req.params;
 
       // Validate UUIDs
-      if (!offeringId || offeringId === 'undefined' || !isValidUUID(offeringId)) {
+      if (!offeringId || offeringId === 'undefined' || !isUuid(offeringId)) {
         return res.status(400).json({ error: 'Invalid offering ID' });
       }
-      if (!userId || userId === 'undefined' || !isValidUUID(userId)) {
+      if (!userId || userId === 'undefined' || !isUuid(userId)) {
         return res.status(400).json({ error: 'Invalid user ID' });
       }
 

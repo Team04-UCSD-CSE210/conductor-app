@@ -220,10 +220,12 @@ const loadOfferings = async () => {
 };
 
 // Helper function to validate UUID format
-const isValidUUID = (str) => {
+// UUID validation - use shared utility if available, otherwise define locally
+const isValidUUID = window.isValidUUID || ((str) => {
+  if (!str || typeof str !== 'string') return false;
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(str);
-};
+});
 
 const loadRoster = async () => {
   if (!state.offeringId) {

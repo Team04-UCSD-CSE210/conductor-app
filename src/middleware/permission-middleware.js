@@ -51,14 +51,7 @@ export function skipAuthForPublic(req, res, next) {
   return authenticate(req, res, next);
 }
 
-/**
- * Validate if a string is a valid UUID format
- */
-function isValidUUID(str) {
-  if (!str || typeof str !== 'string') return false;
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(str);
-}
+import { isUuid } from '../utils/validation.js';
 
 /**
  * Get the active course offering ID
@@ -101,7 +94,7 @@ async function getAuthContext(req, scope) {
       
       // Validate that offeringId is a valid UUID
       if (rawOfferingId) {
-        if (isValidUUID(rawOfferingId)) {
+        if (isUuid(rawOfferingId)) {
           offeringId = rawOfferingId;
         } else {
           console.error('[PermissionMiddleware] Invalid offeringId format (expected UUID):', rawOfferingId);
