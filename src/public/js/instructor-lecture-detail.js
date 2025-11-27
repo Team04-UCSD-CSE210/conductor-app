@@ -15,6 +15,9 @@
   let sessionId = null;
   let lecture = null;
   let isLoading = false;
+  let autoRefreshInterval = null;
+  let currentQuestionId = null;
+  const REFRESH_INTERVAL_MS = 5000; // Refresh every 5 seconds
 
   // Get session ID from URL params or data attribute
   function getSessionId() {
@@ -150,11 +153,13 @@
     const container = document.createElement('div');
     container.className = 'pulse-results-container';
 
-    // Get question options (the pulse labels)
-    const options = question.options || ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree'];
+    // Get question options (the pulse labels) - Use only 3 options
+    const options = question.options || ['Confident', 'Neutral', 'Not Confident'];
     console.log('Pulse options:', options);
     
-    const emojis = ['very_happy.svg', 'happy.svg', 'neutral.svg', 'sad.svg', 'angry.svg'];
+    // Only use 1st, 3rd, and 5th emoji (very_happy, neutral, angry)
+    const emojis = ['very_happy.svg', 'neutral.svg', 'angry.svg'];
+    const emojiColors = ['#86efac', '#fde047', '#ef4444']; // green, yellow, red
     
     // Count responses for each option
     const counts = {};
@@ -170,51 +175,196 @@
 
     console.log('Counts:', counts);
     
-    const totalResponses = responses.length;
-    const maxCount = Math.max(...Object.values(counts), 1);
+    const totalResponses = Object.values(counts).reduce((a, b) => a + b, 0);
 
-    // Create bar graph rows
+    // Create horizontal segmented bar at top
+    const topBar = document.createElement('div');
+    topBar.style.display = 'flex';
+    topBar.style.width = '100%';
+    topBar.style.height = '60px';
+    topBar.style.marginBottom = '30px';
+    topBar.style.borderRadius = '30px';
+    topBar.style.overflow = 'hidden';
+    topBar.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+
     options.forEach((option, index) => {
       const count = counts[option] || 0;
-      const percentage = totalResponses > 0 ? Math.round((count / totalResponses) * 100) : 0;
-      const barWidth = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+      const percentage = totalResponses > 0 ? (count / totalResponses) * 100 : 0;
 
-      const row = document.createElement('div');
-      row.className = 'pulse-bar-row';
+      if (count > 0) {
+        const segment = document.createElement('div');
+        segment.style.width = `${percentage}%`;
+        segment.style.backgroundColor = emojiColors[index];
+        segment.style.display = 'flex';
+        segment.style.alignItems = 'center';
+        segment.style.justifyContent = 'center';
+        segment.style.position = 'relative';
+        segment.style.transition = 'all 0.3s ease';
 
-      // Emoji
-      const emoji = document.createElement('div');
-      emoji.className = 'pulse-bar-emoji';
-      const img = document.createElement('img');
-      img.src = `/assets/${emojis[index]}`;
-      img.alt = '';
-      img.setAttribute('aria-hidden', 'true');
-      emoji.appendChild(img);
+        const emojiImg = document.createElement('img');
+        emojiImg.src = `/assets/${emojis[index]}`;
+        emojiImg.alt = option;
+        emojiImg.style.width = '32px';
+        emojiImg.style.height = '32px';
 
-      // Label
-      const label = document.createElement('div');
-      label.className = 'pulse-bar-label';
-      label.textContent = option;
-
-      // Bar container
-      const barContainer = document.createElement('div');
-      barContainer.className = 'pulse-bar-container';
-      
-      const bar = document.createElement('div');
-      bar.className = 'pulse-bar';
-      bar.style.width = `${barWidth}%`;
-      bar.setAttribute('data-count', count);
-      
-      barContainer.appendChild(bar);
-
-      // Count display
-      const countDisplay = document.createElement('div');
-      countDisplay.className = 'pulse-bar-count';
-      countDisplay.textContent = `${count} (${percentage}%)`;
-
-      row.append(emoji, label, barContainer, countDisplay);
-      container.appendChild(row);
+        segment.appendChild(emojiImg);
+        topBar.appendChild(segment);
+      }
     });
+
+    container.appendChild(topBar);
+
+    // Create response count labels below
+    const labelsContainer = document.createElement('div');
+    labelsContainer.style.display = 'flex';
+    labelsContainer.style.justifyContent = 'space-around';
+    labelsContainer.style.marginTop = '10px';
+
+    options.forEach((option, index) => {
+      const count = counts[option] || 0;
+
+      if (count > 0) {
+        const labelDiv = document.createElement('div');
+        labelDiv.style.textAlign = 'center';
+        labelDiv.style.flex = '1';
+
+        const emojiImg = document.createElement('img');
+        emojiImg.src = `/assets/${emojis[index]}`;
+        emojiImg.alt = option;
+        emojiImg.style.width = '24px';
+        emojiImg.style.height = '24px';
+        emojiImg.style.display = 'block';
+        emojiImg.style.margin = '0 auto 5px';
+
+        const countText = document.createElement('div');
+        countText.textContent = `${count} response${count !== 1 ? 's' : ''}`;
+        countText.style.fontSize = '14px';
+        countText.style.color = '#6b7280';
+
+        labelDiv.appendChild(emojiImg);
+        labelDiv.appendChild(countText);
+        labelsContainer.appendChild(labelDiv);
+      }
+    });
+
+    container.appendChild(labelsContainer);
+
+    return container;
+  }
+
+  function createMultipleChoiceBarGraph(responses, question) {
+    console.log('createMultipleChoiceBarGraph called with:', { responses, question });
+    
+    const container = document.createElement('div');
+    container.className = 'multiple-choice-results-container';
+
+    // Get question options
+    const options = question.options || [];
+    console.log('Multiple choice options:', options);
+    
+    const colors = ['#60a5fa', '#a78bfa', '#f472b6', '#fb923c', '#34d399', '#fbbf24'];
+    
+    // Count responses for each option
+    const counts = {};
+    options.forEach(opt => counts[opt] = 0);
+    
+    responses.forEach(response => {
+      const answer = response.response || response.response_text || response.response_option;
+      console.log('Response answer:', answer);
+      if (answer && counts[answer] !== undefined) {
+        counts[answer]++;
+      }
+    });
+
+    console.log('Counts:', counts);
+    
+    const totalResponses = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    // Helper function to truncate text
+    function truncateText(text, maxLength = 20) {
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength - 3) + '...';
+    }
+
+    // Create horizontal segmented bar at top
+    const topBar = document.createElement('div');
+    topBar.style.display = 'flex';
+    topBar.style.width = '100%';
+    topBar.style.height = '60px';
+    topBar.style.marginBottom = '30px';
+    topBar.style.borderRadius = '30px';
+    topBar.style.overflow = 'hidden';
+    topBar.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+
+    options.forEach((option, index) => {
+      const count = counts[option] || 0;
+      const percentage = totalResponses > 0 ? (count / totalResponses) * 100 : 0;
+
+      if (count > 0) {
+        const segment = document.createElement('div');
+        segment.style.width = `${percentage}%`;
+        segment.style.backgroundColor = colors[index % colors.length];
+        segment.style.display = 'flex';
+        segment.style.alignItems = 'center';
+        segment.style.justifyContent = 'center';
+        segment.style.position = 'relative';
+        segment.style.transition = 'all 0.3s ease';
+        segment.style.padding = '0 8px';
+        segment.style.overflow = 'hidden';
+
+        const optionText = document.createElement('span');
+        optionText.textContent = truncateText(option, 15);
+        optionText.style.color = '#ffffff';
+        optionText.style.fontSize = '13px';
+        optionText.style.fontWeight = '600';
+        optionText.style.textAlign = 'center';
+        optionText.style.whiteSpace = 'nowrap';
+        optionText.title = option; // Full text on hover
+
+        segment.appendChild(optionText);
+        topBar.appendChild(segment);
+      }
+    });
+
+    container.appendChild(topBar);
+
+    // Create response count labels below
+    const labelsContainer = document.createElement('div');
+    labelsContainer.style.display = 'flex';
+    labelsContainer.style.justifyContent = 'space-around';
+    labelsContainer.style.marginTop = '10px';
+    labelsContainer.style.flexWrap = 'wrap';
+    labelsContainer.style.gap = '15px';
+
+    options.forEach((option, index) => {
+      const count = counts[option] || 0;
+
+      if (count > 0) {
+        const labelDiv = document.createElement('div');
+        labelDiv.style.textAlign = 'center';
+        labelDiv.style.flex = '1';
+        labelDiv.style.minWidth = '100px';
+
+        const optionLabel = document.createElement('div');
+        optionLabel.textContent = truncateText(option, 25);
+        optionLabel.title = option; // Full text on hover
+        optionLabel.style.fontSize = '13px';
+        optionLabel.style.color = '#374151';
+        optionLabel.style.fontWeight = '500';
+        optionLabel.style.marginBottom = '5px';
+
+        const countText = document.createElement('div');
+        countText.textContent = `${count} response${count !== 1 ? 's' : ''}`;
+        countText.style.fontSize = '14px';
+        countText.style.color = '#6b7280';
+
+        labelDiv.appendChild(optionLabel);
+        labelDiv.appendChild(countText);
+        labelsContainer.appendChild(labelDiv);
+      }
+    });
+
+    container.appendChild(labelsContainer);
 
     return container;
   }
@@ -258,9 +408,13 @@
         console.log("Creating pulse graph!", responses);
         const pulseGraph = createPulseBarGraph(responses, currentQuestion);
         selectors.responseList.appendChild(pulseGraph);
+      } else if (questionType === 'multiple_choice') {
+        console.log("Creating multiple choice graph!", responses);
+        const mcqGraph = createMultipleChoiceBarGraph(responses, currentQuestion);
+        selectors.responseList.appendChild(mcqGraph);
       } else {
-        console.log('Not a pulse question, showing response cards');
-        // For text and mcq questions, show response cards
+        console.log('Text question, showing response cards');
+        // For text questions, show response cards
     responses.forEach((response) => {
       selectors.responseList.appendChild(createResponseCard(response));
     });
@@ -276,12 +430,39 @@
     }
   }
 
+  function startAutoRefresh(questionId) {
+    // Clear any existing interval
+    stopAutoRefresh();
+    
+    currentQuestionId = questionId;
+    
+    // Set up new interval for auto-refresh
+    autoRefreshInterval = setInterval(() => {
+      if (!isLoading && currentQuestionId) {
+        console.log('Auto-refreshing responses...');
+        renderResponses(currentQuestionId);
+      }
+    }, REFRESH_INTERVAL_MS);
+    
+    console.log('Auto-refresh started (every 5 seconds)');
+  }
+
+  function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+      clearInterval(autoRefreshInterval);
+      autoRefreshInterval = null;
+      console.log('Auto-refresh stopped');
+    }
+  }
+
   function initQuestionSelect() {
     if (!selectors.questionSelect || selectors.questionSelect.disabled) return;
     
     selectors.questionSelect.addEventListener('change', (event) => {
       if (!isLoading) {
-      renderResponses(event.target.value);
+        const questionId = event.target.value;
+        renderResponses(questionId);
+        startAutoRefresh(questionId);
       }
     });
     
@@ -290,6 +471,7 @@
       const firstQuestionId = lecture.questions[0].id;
       selectors.questionSelect.value = firstQuestionId;
       renderResponses(firstQuestionId);
+      startAutoRefresh(firstQuestionId);
     }
   }
 
@@ -338,6 +520,9 @@
   function init() {
     initBackButton();
     hydrate();
+    
+    // Stop auto-refresh when user leaves the page
+    window.addEventListener('beforeunload', stopAutoRefresh);
   }
 
   if (document.readyState === 'loading') {
