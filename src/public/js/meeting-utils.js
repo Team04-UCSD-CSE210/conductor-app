@@ -11,23 +11,7 @@
 export function determineMeetingStatus(meeting) {
   const now = new Date();
   
-  // Check scheduled time first - only matters if in future
-  let scheduledStartTime = null;
-  if (meeting.session_date && meeting.session_time) {
-    const sessionDate = new Date(meeting.session_date);
-    const year = sessionDate.getFullYear();
-    const month = sessionDate.getMonth();
-    const day = sessionDate.getDate();
-    const [hours, minutes] = meeting.session_time.split(':').map(Number);
-    scheduledStartTime = new Date(year, month, day, hours, minutes);
-    
-    // If scheduled start time is in the future, it's always pending
-    if (scheduledStartTime > now) {
-      return 'pending';
-    }
-  }
-  
-  // Scheduled time has passed or doesn't exist - check attendance timestamps
+  // Priority 1: Check if attendance has been explicitly opened
   if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
     // Both timestamps are set
     const openTime = new Date(meeting.attendance_opened_at);
@@ -51,8 +35,20 @@ export function determineMeetingStatus(meeting) {
     return 'open';
   }
   
-  // No attendance timestamps but scheduled time has passed - closed
-  if (scheduledStartTime && scheduledStartTime <= now) {
+  // Priority 2: Check scheduled time for meetings without explicit attendance timestamps
+  if (meeting.session_date && meeting.session_time) {
+    const sessionDate = new Date(meeting.session_date);
+    const year = sessionDate.getFullYear();
+    const month = sessionDate.getMonth();
+    const day = sessionDate.getDate();
+    const [hours, minutes] = meeting.session_time.split(':').map(Number);
+    const scheduledStartTime = new Date(year, month, day, hours, minutes);
+    
+    // If scheduled start time is in the future, it's pending
+    if (scheduledStartTime > now) {
+      return 'pending';
+    }
+    // Scheduled time has passed but no attendance opened - closed
     return 'closed';
   }
   
