@@ -1,11 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutor Dashboard</title>
+
+  <link rel="stylesheet" href="../public/global.css">
+  <link rel="stylesheet" href="../public/dashboard-global.css">
+  <link rel="stylesheet" href="../public/tutor-dashboard.css">
 </head>
-<body>
-    
+
+<body class="dashboard-page">
+
+  <!-- Hamburger Menu Button (mobile only, same as professor & student) -->
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <!-- Sidebar Navigation (same structure as student dashboard) -->
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="../assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <p class="sidebar-user">Jordan Lee<br><span class="sidebar-user-role">Tutor</span></p>
+    <nav aria-label="Dashboard navigation">
+      <a href="/courses">Courses</a>
+      <a href="/attendance">Attendance</a>
+      <a href="/work-journal">Work Journal</a>
+      <a href="/my-team">My Team</a>
+    </nav>
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </footer>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container" id="main">
+    <h2 class="page-title">Dashboard</h2>
+
+    <section class="frame" role="region" aria-label="Tutor dashboard content">
+      <section class="content">
+
+        <!-- TOP ROW: Course info (left) + On Duty (right) -->
+        <section class="top-cards-wrapper">
+
+          <!-- Course Info (same structure as student course card) -->
+          <article class="card card-course-info" aria-label="Course information">
+            <strong class="course-code">CSE 210</strong>
+            <p class="course-title">Software Engineering</p>
+            <p class="course-term">Fall 2025</p>
+
+            <dl class="course-schedule">
+              <dt>Lectures</dt>
+              <dd>Tue/Thu 5:00–6:20 pm</dd>
+
+              <dt>Office Hours</dt>
+              <dd>Tue 2–4 pm</dd>
+            </dl>
+
+            <figure class="course-stats">
+              <figcaption class="stat-item">
+                <span class="stat-value">2</span>
+                <span class="stat-label">Students enrolled</span>
+              </figcaption>
+              <figcaption class="stat-item">
+                <span class="stat-value">4</span>
+                <span class="stat-label">Sessions this week</span>
+              </figcaption>
+              <figcaption class="stat-item">
+                <span class="stat-value">1</span>
+                <span class="stat-label">Assignment due</span>
+              </figcaption>
+            </figure>
+          </article>
+
+          <!-- On Duty (top-right card, similar to student's "Recent Activity" layout) -->
+          <article class="card tutor-on-duty-card" aria-label="On duty schedule">
+            <h3>On Duty</h3>
+            <section class="tutor-card-body">
+              <ul class="on-duty-list">
+                <li class="on-duty-item">
+                  <span class="on-duty-day">Tuesday</span>
+                  <span class="on-duty-time">1–3 pm</span>
+                </li>
+                <li class="on-duty-item">
+                  <span class="on-duty-day">Friday</span>
+                  <span class="on-duty-time">2–5 pm</span>
+                </li>
+                <li class="on-duty-item">
+                  <span class="on-duty-day">Thursday</span>
+                  <span class="on-duty-time">10–11 am</span>
+                </li>
+              </ul>
+            </section>
+          </article>
+
+        </section>
+
+        <!-- MIDDLE ROW: Queue + Recent Updates (side-by-side, aligned under top row) -->
+        <section class="content-row tutor-mid-row" aria-label="Queue and recent updates">
+
+          <!-- Queue -->
+          <article class="card tutor-queue-card" aria-label="Student queue">
+            <h3>Queue</h3>
+            <section class="tutor-card-body">
+              <ol class="queue-list">
+                <li class="queue-item">
+                  <span class="queue-student">Student 1</span>:
+                  <span class="queue-concern">Concern 1, etc.</span>
+                </li>
+                <li class="queue-item">
+                  <span class="queue-student">Student 2</span>:
+                  <span class="queue-concern">Concern 2, etc.</span>
+                </li>
+                <li class="queue-item">
+                  <span class="queue-student">Student 3</span>:
+                  <span class="queue-concern">Concern 3, etc.</span>
+                </li>
+              </ol>
+            </section>
+          </article>
+
+          <!-- Recent Updates (yellow note-style, like professor screenshot) -->
+          <article class="card wide recent-updates tutor-recent-updates-card" aria-label="Recent updates">
+            <h3>Recent Updates</h3>
+            <section class="tutor-card-body">
+              <ul class="tutor-recent-updates-list">
+                <li>Sprint 2 deliverables graded</li>
+                <li>New TA assigned to Lab 3</li>
+                <li>Reminder sent for project proposals</li>
+              </ul>
+            </section>
+          </article>
+
+        </section>
+
+        <!-- BOTTOM ROW: Report Interaction (same form pattern as professor) -->
+        <section class="card wide tutor-report-card" aria-label="Report interaction">
+          <h3>Report Interaction</h3>
+          <aside class="report-box" role="region" aria-label="Report interaction form">
+            <form class="interaction-form">
+              <fieldset class="interaction-row">
+                <legend class="sr-only">Team and Student Selection</legend>
+
+                <section class="interaction-col">
+                  <label for="tutor-team-select" class="interaction-label">Team</label>
+                  <select id="tutor-team-select" name="team" class="interaction-select is-placeholder">
+                    <option value="">Select team</option>
+                    <option value="team1">Team 1</option>
+                    <option value="team2">Team 2</option>
+                    <option value="team3">Team 3</option>
+                  </select>
+                </section>
+
+                <section class="interaction-col">
+                  <label for="tutor-student-select" class="interaction-label">Student</label>
+                  <select id="tutor-student-select" name="student" class="interaction-select is-placeholder">
+                    <option value="">Select student</option>
+                    <option value="student1">Student 1</option>
+                    <option value="student2">Student 2</option>
+                    <option value="student3">Student 3</option>
+                  </select>
+                </section>
+
+              </fieldset>
+
+              <fieldset class="interaction-details">
+                <legend class="interaction-label">Interaction Details</legend>
+                <textarea
+                  id="tutor-interaction-notes"
+                  name="notes"
+                  rows="4"
+                  class="interaction-textarea"
+                  placeholder="Report details of your interaction with a specific team or student here"
+                ></textarea>
+              </fieldset>
+
+              <footer class="interaction-submit-row">
+                <button type="submit" class="btn btn-primary">
+                  Submit Report
+                </button>
+              </footer>
+            </form>
+          </aside>
+        </section>
+
+      </section>
+    </section>
+  </main>
+
+  <!-- Reuse same JS for hamburger/menu + interaction buttons -->
+  <script src="../public/professor-dashboard.js" defer></script>
 </body>
 </html>

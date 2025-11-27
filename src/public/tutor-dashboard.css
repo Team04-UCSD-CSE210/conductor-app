@@ -1,0 +1,99 @@
+/* Tutor dashboard overrides and layout tweaks.
+   Base layout, colors, and card styles come from global.css and dashboard-global.css. */
+.sidebar-user {
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--gray-700, #374151);
+}
+
+.sidebar-user-role {
+  color: var(--teal-600, #0d9488);
+  font-weight: 600;
+}
+
+.tutor-on-duty-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.tutor-card-body {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--gray-700, #374151);
+}
+
+/* On Duty list */
+
+.on-duty-list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.on-duty-item {
+  margin-bottom: 0.3rem;
+}
+
+.on-duty-day {
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.on-duty-time {
+  font-weight: 400;
+}
+
+/* Middle row: queue + recent updates side-by-side */
+
+.tutor-mid-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tutor-queue-card {
+  flex: 1 1 250px;
+}
+
+.tutor-recent-updates-card {
+  flex: 1 1 250px;
+}
+
+/* Recent updates list inside yellow card */
+
+.tutor-recent-updates-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.8rem;
+}
+
+/* Queue styling */
+
+.queue-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.8rem;
+}
+
+.queue-item {
+  margin-bottom: 0.35rem;
+  line-height: 1.4;
+}
+
+.queue-student {
+  font-weight: 600;
+}
+
+/* Report Interaction card height tweak */
+
+.tutor-report-card {
+  min-height: 260px;
+}
+
+/* Responsive tweaks to stack cards nicely on smaller screens */
+
+@media (max-width: 768px) {
+  .tutor-mid-row {
+    flex-direction: column;
+  }
+}

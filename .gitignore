@@ -3,4 +3,10 @@ AGENTS.md
 **/.DS_Store
 node_modules
 certs/
+.envpublic/
 .env
+.vercel
+.env.vercel
+package-lock.json
+.idea
+certs

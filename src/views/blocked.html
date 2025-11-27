@@ -80,61 +80,40 @@
   </style>
 </head>
 <body>
-  <div class="card">
-   <h2>Access Restricted</h2>
-<p>Only UCSD or approved users can access Conductor IAM.</p>
+    <!-- Hero Section -->
+    <section class="hero">
+        <span class="blob blob-1"></span>
+        <span class="blob blob-2"></span>
 
-<form action="/request-access" method="POST" id="accessRequestForm">
-  <label for="email">Your Email:</label>
-  <input type="email" name="email" id="email" required style="background:#2a2a2a;color:#fff;">
-  <label for="reason">Reason (optional):</label>
-  <input type="text" name="reason" id="reason" placeholder="Why you need access">
-  <button type="submit">Request Access</button>
-</form>
-<p>Your request will be reviewed by the admin.</p>
-    <a href="/login">🔁 Return to Login</a>
-  </div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  let requestSubmitted = false;
-  const form = document.getElementById('accessRequestForm');
-  const submitButton = form.querySelector('button[type="submit"]');
+        <article class="hero-layout">
+            <!-- Show for attempts 1-2 -->
+            <div id="attemptContent">
+                <header>
+                    <h1 class="hero-title">Login Failed</h1>
+                    <p class="attempt-description">Invalid email or unauthorized access</p>
+                    <p class="attempt-info">Only UCSD or approved users can access Conductor</p>
+                    <div class="attempt-counter">
+                        Attempt <span id="attemptNum">1</span> of 3
+                    </div>
+                    <a class="btn btn-primary" href="/">Try Again</a>
+                </header>
+            </div>
 
-  form.addEventListener('submit', async function(event) {
-    event.preventDefault();
-    if (requestSubmitted) return; // Prevent multiple submissions
+            <!-- Show when blocked (3+ attempts) -->
+            <div id="blockedContent">
+                <header>
+                    <h1 class="hero-title">Access Temporarily Blocked</h1>
+                    <p class="blocked-description">Too many failed login attempts</p>
+                    <p class="blocked-info">For security reasons, your access has been temporarily restricted</p>
+                    <div id="countdown" class="countdown">
+                        Please wait 15 minutes before trying again
+                    </div>
+                    <a class="btn btn-primary" href="/">Return Home</a>
+                </header>
+            </div>
+        </article>
+    </section>
 
-    const formData = new URLSearchParams(new FormData(this));
-    const email = document.getElementById('email').value;
-
-    try {
-      const res = await fetch('/request-access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData
-      });
-
-      const text = await res.text();
-      if (text.includes('Already Requested')) {
-        alert(`⚠️ Access for ${email} has already been requested. Please wait for admin approval.`);
-        requestSubmitted = true;
-        submitButton.disabled = true;
-        submitButton.style.background = "#555";
-        submitButton.textContent = "Already Requested";
-      } else if (res.ok) {
-        alert(`✅ Access request for ${email} submitted successfully! Admin will review it shortly.`);
-        requestSubmitted = true;
-        submitButton.disabled = true;
-        submitButton.style.background = "#555";
-        submitButton.textContent = "Request Submitted";
-      } else {
-        alert('⚠️ Failed to submit request. Please try again.');
-      }
-    } catch (err) {
-      alert('❌ Error submitting request. Check network or server logs.');
-    }
-  });
-});
-</script>
+    <script src="/js/blocked.js"></script>
 </body>
 </html>

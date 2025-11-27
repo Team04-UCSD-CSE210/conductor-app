@@ -1,0 +1,54 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: ["**"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Build Docker image
+        run: |
+          BRANCH_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+          docker build -f .github/docker/Dockerfile -t conductor-app:${{ github.sha }} .
+          docker tag conductor-app:${{ github.sha }} conductor-app:${BRANCH_TAG}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to Render
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      
+      - name: Notify team
+        run: |
+          echo "Production Deployed!"
+          echo "URL: https://conductor-app.onrender.com"
+
+  notify:
+    needs: [build, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack of Pipeline Status
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: |
+            :${{ contains(needs.*.result, 'failure') && 'x' || 'white_check_mark' }}: CD Pipeline for Conductor App ${{ contains(needs.*.result, 'failure') && 'FAILED' || 'PASSED' }}
+            Branch: ${{ github.ref_name }}
+            Docker Image: conductor-app:${{ github.sha }}
+            ${{ github.ref == 'refs/heads/main' && 'Deployed to: https://conductor-app.onrender.com' || 'Feature branch build completed' }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

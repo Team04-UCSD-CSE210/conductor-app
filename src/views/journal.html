@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Work Journal</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    /* TEMP minimal page overrides (keeps your theme) */
+    .journal-container {
+      padding: 2rem;
+      margin-left: 220px; /* matches your sidebar width */
+    }
+
+    h1 {
+      color: #0FA393;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    button {
+      background: #0FA393;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .previous-entries {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    .entry {
+      padding: 10px;
+      background: white;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border-left: 4px solid #0FA393;
+    }
+
+    .entry-date {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .entry-menu {
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .entry-dropdown {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      position: absolute;
+      right: 20px;
+      margin-top: 5px;
+      z-index: 10;
+    }
+
+    .entry-dropdown.hidden {
+      display: none;
+    }
+
+    .entry-dropdown div {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .entry-dropdown div:hover {
+      background: #f0f0f0;
+    }
+    .edited-label {
+      color: #0fa393;
+      font-size: 0.85em;
+      margin-left: 6px;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.35s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TEMP: Sidebar placeholder (teammate will replace later) -->
+  <div class="sidebar" style="
+    width: 200px; 
+    background:#0FA393;
+    position: fixed; 
+    top:0; 
+    left:0; 
+    height: 100vh;
+    padding: 20px;
+    color:white;">
+    <h2>Menu</h2>
+    <a href="/student-dashboard" style="color:white;">Dashboard</a><br>
+    <a href="/journal-ui" style="color:white;font-weight:bold;">Work Journal</a>
+  </div>
+
+  <div class="journal-container">
+    <h1>Daily Work Journal</h1>
+
+    <!-- Journal Form -->
+    <div>
+      <textarea id="done" placeholder="What have you accomplished since yesterday?"></textarea>
+      <textarea id="today" placeholder="What are you working on today?"></textarea>
+      <textarea id="blockers" placeholder="Any blockers?"></textarea>
+      <textarea id="feelings" placeholder="How are you feeling today?"></textarea>
+
+      <button onclick="submitJournal()">Save Entry</button>
+    </div>
+
+    <!-- Previous Entries -->
+    <div class="previous-entries">
+      <h2>Previous Entries</h2>
+      <div id="entries"></div>
+    </div>
+  </div>
+
+  <script src="/journal.js"></script>
+</body>
+</html>

@@ -53,6 +53,31 @@
         const perms = rolePermissions[role] || [];
         document.getElementById("permList").innerHTML =
           perms.map(p => `<li>${p}</li>`).join("");
+
+        // Quick links based on role
+        const quickLinks = {
+          "Admin": [
+            { text: "Admin Dashboard", href: "/admin-dashboard" },
+            { text: "User Management", href: "/api/users" }
+          ],
+          "Instructor": [
+            { text: "Instructor Dashboard", href: "/instructor-dashboard" },
+            { text: "My Courses", href: "/api/my-courses" }
+          ],
+          "Teaching Assistant": [
+            { text: "TA Dashboard", href: "/ta-dashboard" },
+            { text: "My Courses", href: "/api/my-courses" }
+          ],
+          "Student": [
+            { text: "Student Dashboard", href: "/student-dashboard" },
+            { text: "My Courses", href: "/api/my-courses" }
+          ]
+        };
+        
+        const links = quickLinks[role] || quickLinks["Student"];
+        document.getElementById("linksContainer").innerHTML =
+          links.map(link => `<a href="${link.href}" class="link-button">${link.text}</a>`).join("");
+
       } catch (err) {
         console.error("Fetch failed", err);
         window.location.href = "/login.html";

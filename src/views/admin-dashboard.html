@@ -2,16 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Conductor</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
   <style>
     body { font-family: sans-serif; background: #f0f8ff; padding: 2rem; }
     h1 { color: #003366; }
   </style>
 </head>
 <body>
-  <h1>Welcome, Admin!</h1>
-  <p>You have access to manage users and system settings.</p>
-  <a href="/logout">Logout</a>
+  <div class="dashboard-container">
+    <h1>🔐 Admin Dashboard</h1>
+    <p>Welcome! You have full access to manage users and system settings.</p>
+
+    <div class="admin-section">
+      <h2>User Management</h2>
+      <div class="admin-links">
+        <a href="/api/users" class="admin-link">
+          <strong>View All Users</strong>
+          <p>Manage user accounts and roles</p>
+        </a>
+        <a href="/admin/whitelist" class="admin-link">
+          <strong>Whitelist Management</strong>
+          <p>Approve access requests</p>
+        </a>
+        <a href="/api/users/roster/export/csv" class="admin-link">
+          <strong>Export Roster</strong>
+          <p>Download user data as CSV</p>
+        </a>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h2>System Administration</h2>
+      <div class="admin-links">
+        <a href="/api/login-attempts" class="admin-link">
+          <strong>Login Attempts</strong>
+          <p>View authentication logs</p>
+        </a>
+        <a href="/dashboard" class="admin-link">
+          <strong>Main Dashboard</strong>
+          <p>Return to main dashboard</p>
+        </a>
+      </div>
+    </div>
+
+    <a href="/logout" class="logout-btn">Logout</a>
+  </div>
+
+  <script src="/js/dashboard.service.js"></script>
+  <script src="/js/admin-dashboard.js" defer></script>
 </body>
 </html>
 

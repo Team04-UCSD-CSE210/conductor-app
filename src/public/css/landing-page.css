@@ -1,0 +1,122 @@
+/* Landing Page Specific Styles */
+
+/* Hero Section */
+.hero {
+  position: relative;
+  padding: 10rem 1rem;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #f0fdf4, #fff);
+}
+
+/* Animated background blobs */
+.blob {
+  position: absolute;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 50%;
+  filter: blur(64px);
+  opacity: 0.2;
+  mix-blend-mode: multiply;
+  animation: blob 7s infinite;
+}
+
+.blob-1 {
+  background: var(--yellow-200, #fef08a);
+  top: 5rem;
+  right: 2.5rem;
+}
+
+.blob-2 {
+  background: var(--emerald-200, #a7f3d0);
+  bottom: 5rem;
+  left: 2.5rem;
+  animation-delay: 2s;
+}
+
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+/* Hero Layout */
+.hero-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-layout header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--gray-900, #111827);
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+}
+
+.hero-description {
+  font-size: 1rem;
+  color: var(--gray-600, #4b5563);
+  line-height: 1.75;
+  margin-bottom: 1.25rem;
+}
+
+.hero-image-wrapper {
+  position: relative;
+}
+
+.hero-image-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--emerald-200, #a7f3d0), var(--teal-500, #14b8a6));
+  border-radius: 1.5rem;
+  transform: rotate(3deg);
+}
+
+.hero-image {
+  position: relative;
+  border-radius: 2rem;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Responsive Design - Landing Page Specific */
+@media (width >= 1024px) {
+  .hero-layout {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4rem;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (width >= 1280px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+}
