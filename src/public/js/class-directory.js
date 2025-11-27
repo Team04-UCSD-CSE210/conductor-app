@@ -71,32 +71,6 @@ const getInitials = (name) => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
 
-const formatAvailability = (availability) => {
-  if (!availability) return 'Not specified';
-  if (typeof availability === 'string') return availability;
-  return Object.entries(availability)
-    .map(([day, hours]) => `${day}: ${hours}`)
-    .join(', ');
-};
-
-const generateActivityChart = (activity) => {
-  const days = [];
-  const today = new Date();
-  
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
-    
-    const dayActivity = activity.find(a => a.date === dateStr);
-    const level = dayActivity ? Math.min(Math.floor(dayActivity.count / 5), 4) : 0;
-    
-    days.push(`<div class="activity-day level-${level}" title="${dateStr}: ${dayActivity?.count || 0} activities"></div>`);
-  }
-  
-  return days.join('');
-};
-
 // Render Functions
 const renderPersonCard = (person, type) => {
   const isActive = person.last_activity && 

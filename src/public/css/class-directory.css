@@ -1,9 +1,9 @@
 /* Class Directory Styles */
 
 .class-directory-page {
-  --card-bg: #ffffff;
+  --card-bg: #fff;
   --card-border: #e5e7eb;
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 1px 3px rgb(0 0 0 / 10%);
   --avatar-size: 48px;
   --avatar-size-large: 80px;
 }
@@ -110,7 +110,7 @@
 }
 
 .person-card:hover, .group-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
   transform: translateY(-2px);
 }
 
@@ -135,7 +135,7 @@
 }
 
 .person-info h4 {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.25rem;
   font-size: 1.1rem;
   font-weight: 600;
   color: #111827;
@@ -195,10 +195,6 @@
   background-color: #ef4444;
 }
 
-.group-card {
-  padding: 1.5rem;
-}
-
 .group-header {
   display: flex;
   align-items: center;
@@ -220,7 +216,7 @@
 }
 
 .group-info h4 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
   font-size: 1.2rem;
   font-weight: 600;
   color: #111827;
@@ -293,7 +289,7 @@
 }
 
 .person-header .person-info h2 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
   font-size: 1.5rem;
 }
 
@@ -317,7 +313,7 @@
 }
 
 .info-section h4 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1rem;
   font-size: 1.1rem;
   font-weight: 600;
   color: #111827;
@@ -442,7 +438,7 @@
   border-radius: 4px;
 }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .cards-grid, .groups-grid {
     grid-template-columns: 1fr;
   }

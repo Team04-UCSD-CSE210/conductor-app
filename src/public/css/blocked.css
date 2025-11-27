@@ -9,7 +9,7 @@
     max-width: none !important;
 }
 
-#attemptContent, #blockedContent {
+#attempt-content, #blocked-content {
     display: none;
 }
 
