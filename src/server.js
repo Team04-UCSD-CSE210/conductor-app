@@ -229,7 +229,8 @@ const enrollUserInCourse = async (userId, offeringId, courseRole = 'student') =>
 };
 
 // Get user's enrollment role for dashboard routing (uses active course offering)
-const getUserEnrollmentRole = async (userId) => {
+// Get user's enrollment role for the active course offering
+const getUserEnrollmentRoleForActiveOffering = async (userId) => {
   const offering = await getActiveCourseOffering();
   if (!offering) return null;
   
@@ -276,8 +277,8 @@ const isUserTeamLead = async (userId) => {
     (result.rows[0].leader_id === userId || result.rows[0].role === 'leader');
 };
 
-// Note: getUserEnrollmentRoleForOffering functionality is available in src/middleware/auth.js
-// as getUserEnrollmentRole(userId, offeringId) - no need to duplicate here
+// Note: For getting enrollment role for a specific offering, use getUserEnrollmentRole(userId, offeringId) 
+// from src/middleware/auth.js
 
 const safeLogout = (req, callback = () => {}) => {
   // Check if session exists before trying to use passport logout
@@ -721,7 +722,7 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
     }
 
     // Get enrollment role for TA/student routing
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     
     // Route based on primary_role and enrollment role
     if (user.primary_role === 'admin') {
@@ -819,7 +820,7 @@ app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
     }
 
     // Check if user is enrolled as TA or tutor
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
       return res.sendFile(buildFullViewPath("ta-dashboard.html"));
     }
@@ -828,6 +829,37 @@ app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
     return res.status(403).send("Forbidden: You must be enrolled as a TA or tutor to access this dashboard");
   } catch (error) {
     console.error("Error accessing TA dashboard:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Admin and instructor can access team lead dashboard (for viewing)
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
+    }
+
+    // Check if user is a team lead
+    const isTeamLead = await isUserTeamLead(user.id);
+    if (!isTeamLead) {
+      // Not a team lead, redirect to student dashboard
+      return res.redirect("/student-dashboard");
+    }
+
+    return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
+  } catch (error) {
+    console.error("Error accessing team lead dashboard:", error);
     return res.status(500).send("Internal server error");
   }
 });
@@ -856,7 +888,7 @@ app.get("/student-dashboard", ensureAuthenticated, async (req, res) => {
     }
 
     // Check if user is enrolled as student or has student primary_role
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student') {
       return res.sendFile(buildFullViewPath("student-dashboard.html"));
     }
@@ -944,7 +976,7 @@ app.get("/student-lecture-response", ensureAuthenticated, async (req, res) => {
     }
 
     // Allow students, admins, and instructors (for testing/viewing)
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student' || 
         user.primary_role === 'admin' || user.primary_role === 'instructor') {
       return res.sendFile(buildFullViewPath("student-lecture-response.html"));
@@ -976,7 +1008,7 @@ app.get("/lecture-attendance-student", ensureAuthenticated, async (req, res) => 
     }
 
     // Allow students, admins, and instructors (for testing/viewing)
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student' || 
         user.primary_role === 'admin' || user.primary_role === 'instructor') {
       return res.sendFile(buildFullViewPath("lecture-attendance-student.html"));
@@ -1015,7 +1047,7 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     }
 
     // Check if user is a team lead - check enrollment role first, then team leadership
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     const isTeamLeadByEnrollment = enrollmentRole === 'team-lead';
     
     // Also check if user is a team leader
@@ -1036,7 +1068,7 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     const isTeamLead = isTeamLeadByEnrollment || isTeamLeadByTeam;
 
     // Allow students, team-leads, admins, and instructors (for testing/viewing)
-    const enrollmentRoleForAccess = await getUserEnrollmentRole(user.id);
+    const enrollmentRoleForAccess = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRoleForAccess === 'student' || enrollmentRoleForAccess === 'team-lead' || 
         user.primary_role === 'student' || user.primary_role === 'admin' || 
         user.primary_role === 'instructor') {
@@ -1215,7 +1247,7 @@ app.get(
       // Dashboard routing based on enrollment role (TA comes from enrollments table)
       let enrollmentRole = null;
       try {
-        enrollmentRole = await getUserEnrollmentRole(user.id);
+        enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
       } catch (error) {
         console.log(`[DEBUG] Database error getting enrollments (non-critical): ${error.message}`);
       }
@@ -1397,7 +1429,7 @@ app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) =
       return res.status(404).json({ error: "User not found" });
     }
 
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     const isTeamLead = await isUserTeamLead(user.id);
 
     // Determine display role

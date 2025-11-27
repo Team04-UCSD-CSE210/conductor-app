@@ -35,3 +35,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('blocked-content').style.display = 'none';
     }
   });
+
