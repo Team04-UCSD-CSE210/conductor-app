@@ -568,6 +568,7 @@ body.lecture-builder-page :where(
 
 .btn-primary:hover:not(:disabled) {
   background: var(--teal-700, #0f766e);
+  color: white;
   box-shadow: 0 4px 12px rgb(13 148 136 / 30%);
   transform: translateY(-1px);
 }

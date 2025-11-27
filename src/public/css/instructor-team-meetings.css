@@ -103,18 +103,29 @@ body {
 }
 
 .overall-attendance {
+  background: white;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 1rem;
+  padding: 1.75rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  min-width: 220px;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--teal-600, #0d9488);
   position: absolute;
   top: 1.5rem;
   right: 2.5rem;
-  min-width: 180px;
-  text-align: right;
-  font-size: 1.15rem;
-  font-weight: 500;
-  color: #2a7a2a;
-  background: #f6fff6;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  box-shadow: 0 1px 4px rgba(0 0 0 / 4%);
+  z-index: 2;
+}
+
+#overall-attendance-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--teal-600, #0d9488);
+  margin-bottom: 0.5rem;
+  line-height: 1;
+  display: block;
 }
 
 .attendance-label {
