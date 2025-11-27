@@ -107,6 +107,28 @@ router.get('/my-statistics/:offeringId', ensureAuthenticated, async (req, res) =
 });
 
 /**
+ * Get attendance for a specific user in a session
+ * GET /api/sessions/:sessionId/attendance/:userId
+ * Requires: Authentication - Team members can view their own team's attendance
+ */
+router.get('/sessions/:sessionId/attendance/:userId', ensureAuthenticated, async (req, res) => {
+  try {
+    const attendance = await AttendanceModel.findBySessionAndUser(
+      req.params.sessionId,
+      req.params.userId
+    );
+    
+    if (!attendance) {
+      return res.status(404).json({ error: 'Attendance record not found' });
+    }
+    
+    res.json(attendance);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
  * Get attendance for a session
  * GET /api/attendance/sessions/:sessionId?status=present
  * Requires: attendance.view permission (course scope) - Professor/Instructor/TA

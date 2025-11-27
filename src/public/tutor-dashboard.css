@@ -92,7 +92,7 @@
 
 /* Responsive tweaks to stack cards nicely on smaller screens */
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .tutor-mid-row {
     flex-direction: column;
   }

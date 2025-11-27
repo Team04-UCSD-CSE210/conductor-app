@@ -20,14 +20,13 @@
       <img src="../assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/courses">Courses</a>
-      <a href="/attendance">Attendance</a>
-      <a href="/work-journal" class="active">Work Journal</a>
-      <a href="/my-team">My Team</a>
-    </nav>
+    <p class="sidebar-user" id="sidebarUser">
+      <span class="sidebar-user-name">Loading...</span><br>
+      <span class="sidebar-user-role">Loading...</span>
+    </p>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
   </header>
 
@@ -237,5 +236,6 @@
       </p>
     </section>
   </aside>
+  <script src="/js/sidebar-nav.js" defer></script>
 </body>
 </html>

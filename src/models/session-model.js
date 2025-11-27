@@ -5,6 +5,56 @@ import { pool } from '../db.js';
  */
 export class SessionModel {
   /**
+   * Get all sessions for a specific team in an offering
+   */
+  static async findByTeamId(offeringId, teamId, options = {}) {
+    const { limit = 50, offset = 0, is_active } = options;
+    let query = `
+      SELECT s.*,
+             TO_CHAR(s.session_date, 'YYYY-MM-DD') as session_date_str,
+             TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str,
+             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status IN ('present', 'late')) as attendance_count,
+             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent') as absent_count,
+             COUNT(DISTINCT sr.user_id) as response_count,
+             (SELECT COUNT(*) FROM team_members WHERE team_id = s.team_id) as team_member_count
+      FROM sessions s
+      LEFT JOIN attendance a ON s.id = a.session_id
+      LEFT JOIN session_responses sr ON s.id IN (
+        SELECT sq.session_id FROM session_questions sq WHERE sq.id = sr.question_id
+      )
+      WHERE s.offering_id = $1 AND s.team_id = $2
+    `;
+    const params = [offeringId, teamId];
+    let paramIndex = 3;
+    if (is_active !== undefined) {
+      query += ` AND s.is_active = $${paramIndex}`;
+      params.push(is_active);
+      paramIndex++;
+    }
+    query += `
+      GROUP BY s.id
+      ORDER BY s.session_date DESC, s.session_time DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    params.push(limit, offset);
+    const result = await pool.query(query, params);
+    return result.rows.map(row => {
+      if (row.session_date_str) row.session_date = row.session_date_str;
+      if (row.session_time_str) row.session_time = row.session_time_str;
+      const teamMemberCount = Number.parseInt(row.team_member_count) || 0;
+      const presentCount = Number.parseInt(row.attendance_count) || 0;
+      const attendance_percent = teamMemberCount > 0 
+        ? Math.round((presentCount / teamMemberCount) * 100) 
+        : 0;
+      return {
+        ...row,
+        attendance_percent,
+        team_member_count: teamMemberCount,
+        attendance_count: presentCount
+      };
+    });
+  }
+  /**
    * Create a new session
    */
   static async create(sessionData) {
@@ -18,17 +68,21 @@ export class SessionModel {
       code_expires_at,
       is_active = true,
       team_id = null,
+      attendance_opened_at = null,
+      attendance_closed_at = null,
       created_by
     } = sessionData;
 
     const result = await pool.query(
       `INSERT INTO sessions 
        (offering_id, title, description, session_date, session_time, 
-        access_code, code_expires_at, is_active, team_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
+        access_code, code_expires_at, is_active, team_id, 
+        attendance_opened_at, attendance_closed_at, created_by, updated_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12)
        RETURNING *`,
       [offering_id, title, description, session_date, session_time, 
-       access_code, code_expires_at, is_active, team_id, created_by]
+       access_code, code_expires_at, is_active, team_id, 
+       attendance_opened_at, attendance_closed_at, created_by]
     );
 
     return result.rows[0];
@@ -148,8 +202,8 @@ export class SessionModel {
         row.session_time = row.session_time_str;
       }
       
-      const totalStudents = parseInt(row.total_students) || 0;
-      const presentCount = parseInt(row.attendance_count) || 0;
+      const totalStudents = Number.parseInt(row.total_students) || 0;
+      const presentCount = Number.parseInt(row.attendance_count) || 0;
       const attendance_percent = totalStudents > 0 
         ? Math.round((presentCount / totalStudents) * 100) 
         : 0;
@@ -174,13 +228,16 @@ export class SessionModel {
       SELECT s.*,
              TO_CHAR(s.session_date, 'YYYY-MM-DD') as session_date_str,
              TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str,
-             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present') as attendance_count,
+             COUNT(DISTINCT a.user_id) FILTER (WHERE a.status IN ('present', 'late')) as attendance_count,
              COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent') as absent_count,
              COUNT(DISTINCT sr.user_id) as response_count,
-             (SELECT COUNT(*) FROM enrollments 
-              WHERE offering_id = s.offering_id 
-              AND status = 'enrolled' 
-              AND course_role = 'student') as total_students
+             CASE 
+               WHEN s.team_id IS NOT NULL THEN (SELECT COUNT(*) FROM team_members WHERE team_id = s.team_id)
+               ELSE (SELECT COUNT(*) FROM enrollments 
+                     WHERE offering_id = s.offering_id 
+                     AND status = 'enrolled' 
+                     AND course_role = 'student')
+             END as total_students
       FROM sessions s
       LEFT JOIN attendance a ON s.id = a.session_id
       LEFT JOIN session_responses sr ON s.id IN (
@@ -227,8 +284,8 @@ export class SessionModel {
         row.session_time = row.session_time_str;
       }
       
-      const totalStudents = parseInt(row.total_students) || 0;
-      const presentCount = parseInt(row.attendance_count) || 0;
+      const totalStudents = Number.parseInt(row.total_students) || 0;
+      const presentCount = Number.parseInt(row.attendance_count) || 0;
       const attendance_percent = totalStudents > 0 
         ? Math.round((presentCount / totalStudents) * 100) 
         : 0;
@@ -237,6 +294,7 @@ export class SessionModel {
         ...row,
         attendance_percent,
         total_students: totalStudents,
+        team_member_count: totalStudents, // For team meetings, this is team member count
         attendance_count: presentCount
       };
     });
@@ -358,7 +416,7 @@ export class SessionModel {
          s.session_date,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present') as present_count,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent') as absent_count,
-         COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'late') as late_count,
+         0 as late_count,
          COUNT(DISTINCT a.user_id) as total_attendance_records,
          COUNT(DISTINCT sq.id) as question_count,
          COUNT(DISTINCT sr.id) as response_count,
@@ -380,8 +438,8 @@ export class SessionModel {
     }
 
     const stats = result.rows[0];
-    const totalStudents = parseInt(stats.enrolled_students) || 0;
-    const presentCount = parseInt(stats.present_count) || 0;
+    const totalStudents = Number.parseInt(stats.enrolled_students) || 0;
+    const presentCount = Number.parseInt(stats.present_count) || 0;
     const attendance_percent = totalStudents > 0 
       ? Math.round((presentCount / totalStudents) * 100) 
       : 0;

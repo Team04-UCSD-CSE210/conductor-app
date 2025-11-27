@@ -390,7 +390,7 @@ Missing Name,invalid-email-${timestamp},student,active`;
       const result = await RosterService.exportRosterToCsv();
 
       expect(typeof result).toBe('string');
-      expect(result).toContain('name,email,primary_role,status,institution_type,created_at,updated_at');
+      expect(result).toContain('name,email,primary_role,status,institution_type,team_name,team_number,team_lead_name,is_team_lead,created_at,updated_at');
       const lines = result.trim().split('\n').filter(line => line.length > 0); // Filter empty lines
       expect(lines.length).toBe(1); // Only header row
     });
@@ -400,7 +400,7 @@ Missing Name,invalid-email-${timestamp},student,active`;
 
       const result = await RosterService.exportRosterToCsv();
 
-      expect(result).toContain('name,email,primary_role,status,institution_type,created_at,updated_at');
+      expect(result).toContain('name,email,primary_role,status,institution_type,team_name,team_number,team_lead_name,is_team_lead,created_at,updated_at');
       expect(result).toContain('CSV User');
       expect(result).toContain('csv@ucsd.edu');
       expect(result).toContain('student');
@@ -616,7 +616,7 @@ Missing Name,invalid-email-${timestamp},student,active`;
 
     it('should return empty CSV header for empty array', async () => {
       const csv = await RosterService.exportImportedUsersToCsv([]);
-      expect(csv).toBe('name,email,primary_role,status,institution_type,created_at,updated_at\n');
+      expect(csv).toBe('name,email,primary_role,status,institution_type,team_name,team_number,team_lead_name,is_team_lead,created_at,updated_at\n');
     });
 
     it('should handle users not found gracefully', async () => {
@@ -626,7 +626,7 @@ Missing Name,invalid-email-${timestamp},student,active`;
 
       const csv = await RosterService.exportImportedUsersToCsv(fakeUsers);
       // Should return empty CSV if no users found
-      expect(csv).toBe('name,email,primary_role,status,institution_type,created_at,updated_at\n');
+      expect(csv).toBe('name,email,primary_role,status,institution_type,team_name,team_number,team_lead_name,is_team_lead,created_at,updated_at\n');
     });
   });
 

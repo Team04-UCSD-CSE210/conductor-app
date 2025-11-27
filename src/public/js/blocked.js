@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await response.json();
       
       if (data.blocked) {
-        document.getElementById('blockedContent').style.display = 'block';
-        document.getElementById('attemptContent').style.display = 'none';
+        document.getElementById('blocked-content').style.display = 'block';
+        document.getElementById('attempt-content').style.display = 'none';
         
         let timeLeft = 15 * 60;
         const countdownElement = document.getElementById('countdown');
@@ -25,13 +25,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         updateCountdown();
       } else {
-        document.getElementById('attemptContent').style.display = 'block';
-        document.getElementById('blockedContent').style.display = 'none';
+        document.getElementById('attempt-content').style.display = 'block';
+        document.getElementById('blocked-content').style.display = 'none';
         document.getElementById('attemptNum').textContent = data.attempts || 1;
       }
     } catch (error) {
       console.error('Error fetching login attempts:', error);
-      document.getElementById('attemptContent').style.display = 'block';
-      document.getElementById('blockedContent').style.display = 'none';
+      document.getElementById('attempt-content').style.display = 'block';
+      document.getElementById('blocked-content').style.display = 'none';
     }
   });
+

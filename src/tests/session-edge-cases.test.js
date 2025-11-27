@@ -598,7 +598,7 @@ describe('Session Edge Cases and Error Handling', () => {
         });
         expect.fail('Should have thrown unique constraint error');
       } catch (error) {
-        expect(error.message).toMatch(/unique|duplicate/i);
+        expect(error.message).toMatch(/unique|duplicate|重复键违反唯一约束/i);
       }
     });
 

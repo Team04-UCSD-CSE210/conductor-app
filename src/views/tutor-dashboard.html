@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tutor Dashboard</title>
 
-  <link rel="stylesheet" href="../public/global.css">
-  <link rel="stylesheet" href="../public/dashboard-global.css">
-  <link rel="stylesheet" href="../public/tutor-dashboard.css">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/tutor-dashboard.css">
 </head>
 
 <body class="dashboard-page">
@@ -22,18 +22,16 @@
   <!-- Sidebar Navigation (same structure as student dashboard) -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
-      <img src="../assets/temp-logo.png" alt="Conductor logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user">Jordan Lee<br><span class="sidebar-user-role">Tutor</span></p>
-    <nav aria-label="Dashboard navigation">
-      <a href="/courses">Courses</a>
-      <a href="/attendance">Attendance</a>
-      <a href="/work-journal">Work Journal</a>
-      <a href="/my-team">My Team</a>
-    </nav>
+    <p class="sidebar-user" id="sidebarUser">
+      <span class="sidebar-user-name">Loading...</span><br>
+      <span class="sidebar-user-role">Loading...</span>
+    </p>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
   </header>
 
@@ -192,7 +190,8 @@
     </section>
   </main>
 
-  <!-- Reuse same JS for hamburger/menu + interaction buttons -->
-  <script src="../public/professor-dashboard.js" defer></script>
+  <script src="/js/dashboard.service.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/tutor-dashboard.js" defer></script>
 </body>
 </html>
