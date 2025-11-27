@@ -1,9 +1,29 @@
 /* Lecture Builder - Professional Design Matching Instructor Lectures */
 
 /* Page-specific scroll fix for lecture builder */
+body.lecture-builder-page {
+  color: var(--gray-900, #111827);
+  background: var(--gray-50, #f9fafb);
+}
+
 body.lecture-builder-page .main-container {
   overflow-y: scroll !important;
   -webkit-overflow-scrolling: touch;
+}
+
+body.lecture-builder-page :where(
+  .builder-shell,
+  .builder-shell p,
+  .builder-shell label,
+  .builder-shell h1,
+  .builder-shell h2,
+  .builder-shell h3,
+  .builder-shell span,
+  .builder-shell input,
+  .builder-shell select,
+  .builder-shell textarea
+) {
+  color: inherit;
 }
 
 .builder-shell {

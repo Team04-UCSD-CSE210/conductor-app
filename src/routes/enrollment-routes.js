@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { EnrollmentService } from '../services/enrollment-service.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
-import { protect, protectAny } from '../middleware/permission-middleware.js';
+import { protect } from '../middleware/permission-middleware.js';
 import { PermissionService } from '../services/permission-service.js';
+import { isUuid } from '../utils/validation.js';
 
 const router = Router();
 
@@ -35,6 +36,14 @@ router.get(
   async (req, res) => {
     try {
       const { offeringId, userId } = req.params;
+
+      // Validate UUIDs
+      if (!offeringId || offeringId === 'undefined' || !isUuid(offeringId)) {
+        return res.status(400).json({ error: 'Invalid offering ID' });
+      }
+      if (!userId || userId === 'undefined' || !isUuid(userId)) {
+        return res.status(400).json({ error: 'Invalid user ID' });
+      }
 
       // Load the enrollment first
       const enrollment = await EnrollmentService.getEnrollmentByOfferingAndUser(
@@ -86,9 +95,9 @@ router.get(
 /**
  * Get TAs for an offering
  * GET /enrollments/offering/:offeringId/tas?limit=50&offset=0
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view)
  */
-router.get('/offering/:offeringId/tas', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId/tas', ensureAuthenticated, async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -104,9 +113,9 @@ router.get('/offering/:offeringId/tas', ...protectAny(['roster.view', 'course.ma
 /**
  * Get tutors for an offering
  * GET /enrollments/offering/:offeringId/tutors?limit=50&offset=0
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view)
  */
-router.get('/offering/:offeringId/tutors', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId/tutors', ensureAuthenticated, async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -122,9 +131,9 @@ router.get('/offering/:offeringId/tutors', ...protectAny(['roster.view', 'course
 /**
  * Get students for an offering
  * GET /enrollments/offering/:offeringId/students?limit=50&offset=0
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view)
  */
-router.get('/offering/:offeringId/students', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId/students', ensureAuthenticated, async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -140,20 +149,32 @@ router.get('/offering/:offeringId/students', ...protectAny(['roster.view', 'cour
 /**
  * Get detailed roster (with user information and summary stats) for an offering
  * GET /enrollments/offering/:offeringId/roster
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view roster)
+ * Note: Editing (import/export) is restricted via separate permissions
+ * Students can only see enrolled students
  */
-router.get('/offering/:offeringId/roster', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId/roster', ensureAuthenticated, async (req, res) => {
   try {
     const parseNumber = (value, fallback) => {
       const parsed = Number.parseInt(value, 10);
       return Number.isFinite(parsed) ? parsed : fallback;
     };
 
+    // Check if current user is a student in this offering
+    const userEnrollment = await EnrollmentService.getEnrollmentByOfferingAndUser(
+      req.params.offeringId,
+      req.currentUser.id
+    );
+
+    // If user is a student, restrict to enrolled students only
+    const isStudent = userEnrollment?.course_role === 'student' || 
+                      (userEnrollment?.course_role === 'team-lead' && req.currentUser.primary_role === 'student');
+
     const options = {
       limit: parseNumber(req.query.limit, 50),
       offset: parseNumber(req.query.offset, 0),
-      course_role: req.query.course_role || undefined,
-      status: req.query.status || undefined,
+      course_role: isStudent ? 'student' : (req.query.course_role || undefined),
+      status: isStudent ? 'enrolled' : (req.query.status || undefined),
       search: req.query.search || undefined,
       sort: req.query.sort || undefined,
     };
@@ -168,9 +189,9 @@ router.get('/offering/:offeringId/roster', ...protectAny(['roster.view', 'course
 /**
  * Get all enrollments for a course offering
  * GET /enrollments/offering/:offeringId?limit=50&offset=0&course_role=ta&status=enrolled
- * Requires: roster.view or course.manage permission
+ * Requires: Authentication (all authenticated users can view enrollments)
  */
-router.get('/offering/:offeringId', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/offering/:offeringId', ensureAuthenticated, async (req, res) => {
   try {
     const options = {
       limit: Number(req.query.limit ?? 50),
@@ -323,8 +344,8 @@ router.put('/offering/:offeringId/user/:userId/role', ...protect('enrollment.man
   try {
     const updatedBy = req.currentUser.id;
     const { course_role } = req.body;
-    if (!course_role || !['student', 'ta', 'tutor'].includes(course_role)) {
-      return res.status(400).json({ error: 'Invalid course_role. Must be student, ta, or tutor' });
+    if (!course_role || !['student', 'ta', 'tutor', 'team-lead'].includes(course_role)) {
+      return res.status(400).json({ error: 'Invalid course_role. Must be student, ta, tutor, or team-lead' });
     }
     const updated = await EnrollmentService.updateCourseRole(
       req.params.offeringId,

@@ -247,7 +247,7 @@ export class AttendanceModel {
          s.session_date,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present')::INTEGER as present_count,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent')::INTEGER as absent_count,
-         COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'late')::INTEGER as late_count,
+         0::INTEGER as late_count,
          COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'excused')::INTEGER as excused_count,
          COUNT(DISTINCT a.user_id)::INTEGER as total_marked,
          (SELECT COUNT(*)::INTEGER FROM enrollments 
@@ -280,20 +280,20 @@ export class AttendanceModel {
       `SELECT 
          u.id as user_id,
          u.name as user_name,
-         COUNT(DISTINCT s.id)::INTEGER as total_sessions,
-         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present')::INTEGER as sessions_present,
-         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'absent')::INTEGER as sessions_absent,
-         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'late')::INTEGER as sessions_late,
-         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'excused')::INTEGER as sessions_excused,
+         COUNT(DISTINCT s.id) FILTER (WHERE s.team_id IS NULL)::INTEGER as total_sessions,
+         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present' AND s.team_id IS NULL)::INTEGER as sessions_present,
+         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'absent' AND s.team_id IS NULL)::INTEGER as sessions_absent,
+         0::INTEGER as sessions_late,
+         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'excused' AND s.team_id IS NULL)::INTEGER as sessions_excused,
          ROUND(
-           COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present')::NUMERIC / 
-           NULLIF(COUNT(DISTINCT s.id), 0) * 100,
+           COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present' AND s.team_id IS NULL)::NUMERIC / 
+           NULLIF(COUNT(DISTINCT s.id) FILTER (WHERE s.team_id IS NULL), 0) * 100,
            2
          )::FLOAT as attendance_percentage
        FROM users u
        CROSS JOIN sessions s
        LEFT JOIN attendance a ON s.id = a.session_id AND a.user_id = u.id
-       WHERE u.id = $1 AND s.offering_id = $2
+       WHERE u.id = $1 AND s.offering_id = $2 AND s.team_id IS NULL
        GROUP BY u.id`,
       [userId, offeringId]
     );
@@ -314,7 +314,7 @@ export class AttendanceModel {
          COUNT(DISTINCT s.id) as total_sessions,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present') as sessions_present,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'absent') as sessions_absent,
-         COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'late') as sessions_late,
+         0 as sessions_late,
          COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'excused') as sessions_excused,
          ROUND(
            COUNT(DISTINCT a.session_id) FILTER (WHERE a.status = 'present')::NUMERIC / 

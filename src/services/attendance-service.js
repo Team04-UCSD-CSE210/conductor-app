@@ -21,16 +21,30 @@ export class AttendanceService {
 
     const session = verification.session;
 
-    // Check if student is enrolled in the course
-    const enrollmentCheck = await pool.query(
-      `SELECT * FROM enrollments 
-       WHERE user_id = $1 AND offering_id = $2 
-       AND status = 'enrolled' AND course_role = 'student'`,
-      [userId, session.offering_id]
-    );
+    // For team meetings, check if user is a team member
+    // For regular sessions, check if user is enrolled as a student
+    if (session.team_id) {
+      // Team meeting - check team membership
+      const teamCheck = await pool.query(
+        `SELECT * FROM team_members WHERE team_id = $1 AND user_id = $2`,
+        [session.team_id, userId]
+      );
 
-    if (enrollmentCheck.rows.length === 0) {
-      throw new Error('You are not enrolled in this course');
+      if (teamCheck.rows.length === 0) {
+        throw new Error('You are not a member of this team');
+      }
+    } else {
+      // Regular session - check enrollment
+      const enrollmentCheck = await pool.query(
+        `SELECT * FROM enrollments 
+         WHERE user_id = $1 AND offering_id = $2 
+         AND status = 'enrolled' AND course_role = 'student'`,
+        [userId, session.offering_id]
+      );
+
+      if (enrollmentCheck.rows.length === 0) {
+        throw new Error('You are not enrolled in this course');
+      }
     }
 
     // Check if already checked in
@@ -49,40 +63,8 @@ export class AttendanceService {
       return existing; // Already checked in
     }
 
-    // Determine status (late if past certain time, otherwise present)
-    let status = 'present';
-    
-    if (session.session_date && session.session_time) {
-      try {
-        // Parse date and time in local timezone to avoid timezone conversion issues
-        // session_date should be YYYY-MM-DD string, session_time should be HH:MM:SS string
-        let dateStr = String(session.session_date).split('T')[0].split(' ')[0];
-        let timeStr = String(session.session_time).split('.')[0]; // Remove milliseconds if present
-        
-        // Ensure time is in HH:MM:SS format
-        let timeParts = timeStr.split(':');
-        if (timeParts.length === 2) {
-          timeStr = `${timeStr}:00`;
-          timeParts = timeStr.split(':');
-        }
-        
-        // Create date in local timezone using date components
-        const [year, month, day] = dateStr.split('-').map(Number);
-        timeParts = timeStr.split(':').map(Number);
-        const [hours, minutes] = timeParts;
-        const seconds = timeParts[2] || 0;
-        
-        const sessionDateTime = new Date(year, month - 1, day, hours, minutes, seconds);
-        const lateThreshold = new Date(sessionDateTime.getTime() + 15 * 60 * 1000); // 15 minutes
-        
-        if (!isNaN(sessionDateTime.getTime()) && new Date() > lateThreshold) {
-          status = 'late';
-        }
-      } catch (error) {
-        // If parsing fails, default to 'present'
-        console.warn('[AttendanceService] Error parsing session date/time for late check:', error);
-      }
-    }
+    // All check-ins are marked as present
+    const status = 'present';
 
     // Create attendance record
     return await AttendanceModel.create({

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instructor Meetings Overview</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/instructor-meetings.css">
+</head>
+<body class="dashboard-page">
+  <!-- Hamburger Menu Button (mobile only) -->
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <!-- Sidebar Navigation -->
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <p class="sidebar-user" id="sidebarUser">
+      <span class="sidebar-user-name">Loading...</span><br>
+      <span class="sidebar-user-role">Loading...</span>
+    </p>
+    <nav aria-label="Dashboard navigation" id="sidebarNav">
+      <!-- Navigation will be dynamically populated based on user role -->
+    </nav>
+    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
+      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    </footer>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container" id="main">
+    <h2 class="page-title" style="text-align:center; margin-top:2rem;">Team Meetings Overview</h2>
+    <section class="team-list" id="team-list">
+      <!-- Team rows will be injected here -->
+    </section>
+  </main>
+  <script src="/js/sidebar-nav.js" defer></script>
+  <script type="module" src="/js/instructor-meetings.js?v=7" defer></script>
+</body>
+</html>

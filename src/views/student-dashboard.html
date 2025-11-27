@@ -25,16 +25,13 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/student-dashboard">Dashboard</a>
-      <a href="/lecture-attendance-student">Lectures</a>
-      <a href="/meetings">Meetings</a>
-      <a href="/work-journal">Work Journal</a>
-      <a href="/my-team">My Team</a>
-      <a href="/class-directory">Class Directory</a>
-    </nav>
+    <p class="sidebar-user" id="sidebarUser">
+      <span class="sidebar-user-name">Loading...</span><br>
+      <span class="sidebar-user-role">Loading...</span>
+    </p>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
   </header>
 
@@ -159,7 +156,7 @@
   </main>
 
   <script src="/js/dashboard.service.js"></script>
-  <script src="/js/student-nav.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/student-dashboard.js" defer></script>
 </body>
 </html>

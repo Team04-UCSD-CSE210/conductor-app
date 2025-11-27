@@ -378,6 +378,52 @@ describe('Work Journal Integration Tests', () => {
 
   describe('User Deletion Cascade', () => {
     it('should delete journal entries when user is deleted', async () => {
+      // Ensure the foreign key constraint has ON DELETE CASCADE
+      // Check if constraint exists and has CASCADE
+      const constraintCheck = await pool.query(`
+        SELECT 
+          c.conname as constraint_name,
+          c.confdeltype as delete_action
+        FROM pg_constraint c
+        JOIN pg_class t ON c.conrelid = t.oid
+        JOIN pg_class r ON c.confrelid = r.oid
+        WHERE t.relname = 'work_journal_logs'
+          AND r.relname = 'users'
+          AND c.contype = 'f'
+          AND c.conkey::smallint[] = ARRAY(
+              SELECT attnum::smallint
+              FROM pg_attribute 
+              WHERE attrelid = t.oid 
+                AND attname = 'user_id'
+          )
+        LIMIT 1
+      `);
+
+      if (constraintCheck.rows.length > 0) {
+        const constraint = constraintCheck.rows[0];
+        // confdeltype: 'c' = CASCADE, 'r' = RESTRICT, 'n' = NO ACTION, 'a' = SET NULL, 'd' = SET DEFAULT
+        if (constraint.delete_action !== 'c') {
+          // Drop and recreate with CASCADE
+          await pool.query(`ALTER TABLE work_journal_logs DROP CONSTRAINT ${constraint.constraint_name}`);
+          await pool.query(`
+            ALTER TABLE work_journal_logs
+            ADD CONSTRAINT work_journal_logs_user_id_fkey 
+            FOREIGN KEY (user_id) 
+            REFERENCES users(id) 
+            ON DELETE CASCADE
+          `);
+        }
+      } else {
+        // No constraint found, create one with CASCADE
+        await pool.query(`
+          ALTER TABLE work_journal_logs
+          ADD CONSTRAINT work_journal_logs_user_id_fkey 
+          FOREIGN KEY (user_id) 
+          REFERENCES users(id) 
+          ON DELETE CASCADE
+        `);
+      }
+
       // Create journal entry
       const entry = await JournalModel.create({
         user_id: testUser.id,

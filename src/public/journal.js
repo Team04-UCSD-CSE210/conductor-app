@@ -2,11 +2,14 @@
 window.editingId = null;
 window.currentLogs = [];
 
+// These functions are used in HTML onclick handlers
+// eslint-disable-next-line no-unused-vars
 function toggleMenu(id) {
   const menu = document.getElementById(`menu-${id}`);
   menu.classList.toggle("hidden");
 }
 
+// eslint-disable-next-line no-unused-vars
 async function deleteEntry(id) {
   if (!confirm("Delete this entry?")) return;
 
@@ -14,6 +17,7 @@ async function deleteEntry(id) {
   loadEntries();
 }
 
+// eslint-disable-next-line no-unused-vars
 function editEntry(id) {
   const entry = window.currentLogs.find((e) => e.id === id);
   if (!entry) return;
@@ -33,6 +37,8 @@ function clearForm() {
   document.getElementById("feelings").value = "";
 }
 
+// This function is used in HTML onclick handlers
+// eslint-disable-next-line no-unused-vars
 async function submitJournal() {
   const payload = {
     date: new Date().toISOString().split("T")[0],

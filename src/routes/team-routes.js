@@ -19,6 +19,62 @@ async function getTeamWithOffering(teamId) {
 }
 
 /**
+ * Get current user's team for an offering
+ * GET /api/teams/my-team?offering_id=:id
+ * Access: Any authenticated user
+ */
+router.get('/my-team', ensureAuthenticated, async (req, res) => {
+  try {
+    const { offering_id } = req.query;
+    if (!offering_id) {
+      return res
+        .status(400)
+        .json({ error: 'offering_id query parameter is required' });
+    }
+
+    const userId = req.currentUser.id;
+
+    // Find team where user is either leader or member
+    // Use LEFT JOIN to include teams where user is leader but not in team_members
+    // Prioritize teams where user is the leader
+    const result = await pool.query(
+      `SELECT 
+        t.id,
+        t.name,
+        t.team_number,
+        t.leader_id,
+        t.status,
+        t.formed_at,
+        t.created_at,
+        u.name as leader_name,
+        u.email as leader_email,
+        tm.role as user_role,
+        CASE WHEN t.leader_id = $1 THEN 1 ELSE 2 END as priority
+      FROM team t
+      LEFT JOIN users u ON t.leader_id = u.id
+      LEFT JOIN team_members tm 
+        ON t.id = tm.team_id 
+        AND tm.user_id = $1 
+        AND tm.left_at IS NULL
+      WHERE t.offering_id = $2
+        AND (tm.user_id = $1 OR t.leader_id = $1)
+      ORDER BY priority, t.team_number
+      LIMIT 1`,
+      [userId, offering_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User is not assigned to a team in this offering' });
+    }
+
+    res.json({ team: result.rows[0] });
+  } catch (err) {
+    console.error('Error fetching user team:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * Get all teams for an offering
  * GET /api/teams?offering_id=:id
  * Access:

@@ -109,6 +109,15 @@ async function checkAndAutoOpenSession(session) {
  */
 export class SessionService {
   /**
+   * Get all sessions for a specific team in an offering
+   */
+  static async getSessionsByTeam(offeringId, teamId, options = {}) {
+    const sessions = await SessionModel.findByTeamId(offeringId, teamId, options);
+    // Optionally batch auto-open sessions if needed
+    // await this._batchAutoOpenSessions(sessions);
+    return sessions;
+  }
+  /**
    * Generate a unique access code
    */
   static generateAccessCode(length = 6) {
@@ -160,32 +169,76 @@ export class SessionService {
       sessionData.offering_id = offeringId;
     }
 
-    const canCreate = await this.userCanCreateSession(createdBy, offeringId);
-    if (!canCreate) {
+    // Authorization check and team_id handling
+    const userRes = await pool.query('SELECT primary_role FROM users WHERE id = $1', [createdBy]);
+    if (userRes.rows.length === 0) {
+      throw new Error('User not found');
+    }
+    const primaryRole = userRes.rows[0].primary_role;
+    const isInstructor = primaryRole === 'instructor' || primaryRole === 'admin';
+
+    // Check if team_id was explicitly set to null (trying to create course-wide session)
+    const teamIdExplicitlyNull = 'team_id' in sessionData && sessionData.team_id === null;
+    
+    // If team_id not provided and user is not an instructor, auto-detect their team
+    if (!sessionData.team_id && !isInstructor && !teamIdExplicitlyNull) {
+      const teamRes = await pool.query(
+        `SELECT t.id 
+         FROM team t
+         LEFT JOIN team_members tm ON tm.team_id = t.id
+         WHERE t.offering_id = $1 
+           AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
+         LIMIT 1`,
+        [offeringId, createdBy]
+      );
+      
+      if (teamRes.rows.length > 0) {
+        sessionData.team_id = teamRes.rows[0].id;
+      } else {
+        // User is not an instructor and not a team leader
+        throw new Error('Not authorized to create sessions for this offering');
+      }
+    }
+    
+    // If still no team_id and not an instructor, they cannot create sessions
+    if (!sessionData.team_id && !isInstructor) {
       throw new Error('Not authorized to create sessions for this offering');
     }
 
-    // Auto-set team_id if creator is a team leader (not instructor)
-    if (!sessionData.team_id) {
-      const userRes = await pool.query('SELECT primary_role FROM users WHERE id = $1', [createdBy]);
-      const primaryRole = userRes.rows[0]?.primary_role;
+    // Validate team_id if provided (either explicitly or auto-detected)
+    if (sessionData.team_id) {
+      // Verify team belongs to the offering and user has permission
+      const teamCheck = await pool.query(
+        `SELECT t.id, t.offering_id,
+                EXISTS(
+                  SELECT 1 FROM team_members tm 
+                  WHERE tm.team_id = t.id AND tm.user_id = $2 AND tm.role = 'leader'
+                  UNION
+                  SELECT 1 WHERE t.leader_id = $2
+                ) as is_leader
+         FROM team t
+         WHERE t.id = $1`,
+        [sessionData.team_id, createdBy]
+      );
       
-      // If not an instructor, check if they're a team leader and set team_id
-      if (primaryRole !== 'instructor' && primaryRole !== 'admin') {
-        const teamRes = await pool.query(
-          `SELECT t.id FROM team t
-           LEFT JOIN team_members tm ON tm.team_id = t.id
-           WHERE t.offering_id = $1 AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
-           LIMIT 1`,
-          [offeringId, createdBy]
-        );
-        
-        if (teamRes.rows.length > 0) {
-          sessionData.team_id = teamRes.rows[0].id;
-        }
+      if (teamCheck.rows.length === 0) {
+        throw new Error('Team not found');
       }
-      // If instructor/admin, team_id stays null (course-wide lecture)
+      
+      const team = teamCheck.rows[0];
+      
+      // Verify team belongs to the specified offering
+      if (team.offering_id !== offeringId) {
+        throw new Error('Team does not belong to the specified course offering');
+      }
+      
+      // Team leaders can only create sessions for their own team
+      // Instructors can create sessions for any team
+      if (!isInstructor && !team.is_leader) {
+        throw new Error('You can only create sessions for teams where you are a leader');
+      }
     }
+    // If team_id is null at this point, it's a course-wide session (instructor only)
 
     const accessCode = await this.generateUniqueAccessCode();
     
@@ -315,12 +368,23 @@ export class SessionService {
           if (sessionStart <= now && !session.attendance_opened_at) {
             console.log('[SessionService] Auto-opening attendance for session:', session.id);
             await SessionModel.openAttendance(session.id, createdBy);
-            // Refresh session to get updated attendance_opened_at
+            // Refresh session to get updated attendance_opened_at (and ensure attendance_closed_at is NULL)
             const updatedSession = await SessionModel.findById(session.id);
             if (updatedSession) {
               Object.assign(session, updatedSession);
-              console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at);
+              console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at, 'attendance_closed_at:', updatedSession.attendance_closed_at);
             }
+          }
+          
+          // For team meetings, ensure attendance_closed_at is NULL even if auto-open didn't run
+          // Team meetings should only be closed manually by the team leader
+          if (session.team_id && session.attendance_closed_at) {
+            console.log('[SessionService] Removing auto-close for team meeting:', session.id);
+            await pool.query(
+              'UPDATE sessions SET attendance_closed_at = NULL WHERE id = $1',
+              [session.id]
+            );
+            session.attendance_closed_at = null;
           }
         }
       } catch (error) {
@@ -478,10 +542,12 @@ export class SessionService {
             try {
               const updatedBy = session.created_by || '00000000-0000-0000-0000-000000000000';
               await SessionModel.openAttendance(session.id, updatedBy);
-              // Refresh session data
+              // Refresh only the attendance timestamps, not the statistics
               const updatedSession = await SessionModel.findById(session.id);
               if (updatedSession) {
-                Object.assign(session, updatedSession);
+                // Only update attendance-related timestamps, preserve statistics
+                session.attendance_opened_at = updatedSession.attendance_opened_at;
+                session.attendance_closed_at = updatedSession.attendance_closed_at;
               }
             } catch (error) {
               console.error('[SessionService] Error auto-opening session:', session.id, error);

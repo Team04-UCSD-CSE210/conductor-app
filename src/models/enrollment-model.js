@@ -1,7 +1,7 @@
 import { pool } from '../db.js';
 
 // Course roles for enrollments
-const COURSE_ROLES = ['student', 'ta', 'tutor'];
+const COURSE_ROLES = ['student', 'ta', 'tutor', 'team-lead'];
 const ENROLLMENT_STATUSES = ['enrolled', 'waitlisted', 'dropped', 'completed'];
 
 /**
@@ -61,6 +61,7 @@ export class EnrollmentModel {
         dropped_at,
         final_grade,
         grade_marks,
+        team_id,
         created_by,
         updated_by
       )
@@ -74,7 +75,8 @@ export class EnrollmentModel {
         $7,
         $8,
         $9::uuid,
-        $10::uuid
+        $10::uuid,
+        $11::uuid
       )
       RETURNING
         id,
@@ -86,6 +88,7 @@ export class EnrollmentModel {
         dropped_at,
         final_grade,
         grade_marks,
+        team_id,
         created_at,
         updated_at,
         created_by,
@@ -101,6 +104,7 @@ export class EnrollmentModel {
       data.dropped_at ?? null,
       data.final_grade ?? null,
       data.grade_marks ?? null,
+      data.team_id ?? null,
       data.created_by ?? null,
       data.updated_by ?? null,
     ]);
@@ -140,6 +144,11 @@ export class EnrollmentModel {
    * Find enrollment by offering_id and user_id
    */
   static async findByOfferingAndUser(offeringId, userId) {
+    // Validate inputs
+    if (!offeringId || !userId || offeringId === 'undefined' || userId === 'undefined') {
+      return null;
+    }
+
     const { rows } = await pool.query(
       `
       SELECT
@@ -152,6 +161,7 @@ export class EnrollmentModel {
         dropped_at,
         final_grade,
         grade_marks,
+        team_id,
         created_at,
         updated_at,
         created_by,
@@ -198,6 +208,7 @@ export class EnrollmentModel {
         dropped_at,
         final_grade,
         grade_marks,
+        team_id,
         created_at,
         updated_at,
         created_by,
@@ -231,6 +242,7 @@ export class EnrollmentModel {
         dropped_at,
         final_grade,
         grade_marks,
+        team_id,
         created_at,
         updated_at,
         created_by,
@@ -348,6 +360,35 @@ export class EnrollmentModel {
         u.phone_number,
         u.created_at AS user_created_at,
         u.updated_at AS user_updated_at,
+        t.id AS team_id,
+        t.name AS team_name,
+        t.team_number,
+        t.leader_id AS team_leader_id,
+        (
+          SELECT STRING_AGG(SPLIT_PART(u_lead.name, ' ', 1), ', ' ORDER BY u_lead.name)
+          FROM (
+            SELECT DISTINCT u_lead.id, u_lead.name
+            FROM users u_lead
+            WHERE u_lead.id IN (
+              SELECT leader_id FROM team WHERE id = t.id AND leader_id IS NOT NULL
+              UNION
+              SELECT tm_lead.user_id FROM team_members tm_lead
+              WHERE tm_lead.team_id = t.id 
+                AND tm_lead.role = 'leader'::team_member_role_enum 
+                AND tm_lead.left_at IS NULL
+            )
+            AND u_lead.id NOT IN (
+              SELECT e_lead.user_id FROM enrollments e_lead
+              WHERE e_lead.offering_id = e.offering_id
+                AND e_lead.course_role IN ('ta'::enrollment_role_enum, 'tutor'::enrollment_role_enum)
+                AND e_lead.status = 'enrolled'::enrollment_status_enum
+            )
+          ) u_lead
+        ) AS team_lead_name,
+        CASE WHEN tm.role = 'leader' THEN TRUE ELSE FALSE END AS is_team_lead,
+        co.instructor_id,
+        u_instructor.name AS instructor_name,
+        u_instructor.email AS instructor_email,
         COUNT(*) OVER()::INTEGER AS total_count,
         SUM(CASE WHEN e.course_role = 'student' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_students,
         SUM(CASE WHEN e.course_role = 'ta' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_tas,
@@ -358,6 +399,10 @@ export class EnrollmentModel {
         SUM(CASE WHEN e.status = 'completed' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_completed
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
+      LEFT JOIN course_offerings co ON e.offering_id = co.id
+      LEFT JOIN users u_instructor ON co.instructor_id = u_instructor.id
+      LEFT JOIN team_members tm ON u.id = tm.user_id AND tm.left_at IS NULL
+      LEFT JOIN team t ON tm.team_id = t.id AND t.offering_id = e.offering_id
       ${whereClause}
       ${orderClause}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -412,15 +457,28 @@ export class EnrollmentModel {
         phone_number: row.phone_number,
         created_at: row.user_created_at,
         updated_at: row.user_updated_at,
+        team_id: row.team_id,
+        team_name: row.team_name,
+        team_number: row.team_number,
+        team_lead_name: row.team_lead_name,
+        is_team_lead: row.is_team_lead || false,
       },
     }));
 
     const totalPages = stats.total === 0 ? 1 : Math.max(1, Math.ceil(stats.total / limit));
     const page = stats.total === 0 ? 1 : Math.floor(offset / limit) + 1;
 
+    // Get instructor info from first row (same for all rows in same offering)
+    const instructorInfo = rows.length > 0 ? {
+      id: rows[0].instructor_id,
+      name: rows[0].instructor_name,
+      email: rows[0].instructor_email,
+    } : null;
+
     return {
       results,
       stats,
+      instructor: instructorInfo,
       pagination: {
         limit,
         offset,
@@ -494,6 +552,11 @@ export class EnrollmentModel {
       params.push(merged.grade_marks);
     }
     
+    if (merged.team_id !== undefined) {
+      setClauses.push(`team_id = $${paramIndex++}::uuid`);
+      params.push(merged.team_id);
+    }
+    
     if (merged.updated_by !== undefined) {
       setClauses.push(`updated_by = $${paramIndex++}::uuid`);
       params.push(merged.updated_by);
@@ -517,6 +580,7 @@ export class EnrollmentModel {
         dropped_at,
         final_grade,
         grade_marks,
+        team_id,
         created_at,
         updated_at,
         created_by,

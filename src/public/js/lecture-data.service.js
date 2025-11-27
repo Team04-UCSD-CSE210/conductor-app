@@ -202,31 +202,42 @@
       }
     }
 
-    // Determine status based on attendance_opened_at, attendance_closed_at, and endsAt
+    // Determine status based on attendance_opened_at, attendance_closed_at, and current time
     let status = 'closed';
     const now = new Date();
     
-    if (!session.attendance_opened_at) {
-      // Session hasn't been explicitly opened yet
-      // Check if start time has passed - if so, it should be open (will be auto-opened on next fetch)
-      if (startsAt && new Date(startsAt) <= now) {
-        // Start time has passed - session should be open (pending auto-open on backend)
+    if (session.attendance_opened_at && session.attendance_closed_at) {
+      // Both timestamps are set (this is the normal case for scheduled meetings)
+      const openTime = new Date(session.attendance_opened_at);
+      const closeTime = new Date(session.attendance_closed_at);
+      
+      if (now < openTime) {
+        status = 'pending';
+      } else if (now >= openTime && now < closeTime) {
         status = 'open';
       } else {
-        // Start time hasn't arrived yet - show as pending/not opened
-      status = 'pending';
-      }
-    } else if (session.attendance_closed_at) {
-      // Attendance has been explicitly closed
-      status = 'closed';
-    } else {
-      // Attendance is opened but not closed - check if end time has passed
-      if (endsAt && new Date(endsAt) < now) {
-        // End time has passed, session should be closed
         status = 'closed';
+      }
+    } else if (session.attendance_opened_at && !session.attendance_closed_at) {
+      // Only open time is set (meeting was manually opened, no scheduled end)
+      const openTime = new Date(session.attendance_opened_at);
+      
+      if (now < openTime) {
+        status = 'pending';
       } else {
-        // Session is still within its time window
-      status = 'open';
+        // Check if end time has passed
+        if (endsAt && new Date(endsAt) < now) {
+          status = 'closed';
+        } else {
+          status = 'open';
+        }
+      }
+    } else {
+      // No attendance timestamps set - fall back to session_date/session_time
+      if (startsAt && new Date(startsAt) <= now) {
+        status = 'open';
+      } else {
+        status = 'pending';
       }
     }
 
@@ -241,6 +252,7 @@
       id: session.id,
       courseId: session.offering_id, // Keep for compatibility
       offering_id: session.offering_id,
+      team_id: session.team_id || null,
       label: session.title || session.label,
       title: session.title,
       description: session.description,
@@ -637,7 +649,10 @@
         });
 
         // Transform and combine
-        return sessionsArray.map(session => {
+        // FILTER: Only show lectures (team_id IS NULL), exclude team meetings
+        return sessionsArray
+          .filter(session => !session.team_id) // Only lectures, not team meetings
+          .map(session => {
           const transformed = transformSession(session);
           const attendanceStatus = attendanceMap[session.id] || 'absent';
           const sessionState = transformed.status;
@@ -654,7 +669,9 @@
             status,
             sessionState,
             startsAt: transformed.startsAt,
-            endsAt: transformed.endsAt
+            endsAt: transformed.endsAt,
+            team_id: transformed.team_id,
+            accessCode: transformed.accessCode
           };
         }).sort((a, b) => {
           // Handle null/undefined dates safely
@@ -742,6 +759,12 @@
         console.error('Error getting student statistics:', error);
         return null;
       }
-    }
+    },
+
+    /**
+     * Transform a raw session object into a formatted session
+     * Exposed for use by other modules
+     */
+    transformSession: transformSession
   };
 })();

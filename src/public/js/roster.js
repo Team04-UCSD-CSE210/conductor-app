@@ -7,10 +7,14 @@ const state = {
     roles: { student: 0, ta: 0, tutor: 0 },
     statuses: { enrolled: 0, waitlisted: 0, dropped: 0, completed: 0 },
   },
-  pagination: { limit: 100, page: 1, totalPages: 1, total: 0 },
-  filters: { course_role: null, status: null, search: '', sort: 'name' },
+  pagination: { limit: 10, page: 1, totalPages: 1, total: 0 },
+  filters: { course_role: null, status: null, team: null, search: '', sort: 'name' },
+  teams: [], // Available teams for filtering
   lastImport: null,
   roleEditing: null,
+  canEdit: false, // Whether user can edit roster (instructor/admin only)
+  canSelect: false, // Whether user can select/email/drop (admin/instructor/TA only)
+  selectedItems: new Set(), // Track selected enrollment IDs
 };
 
 // Elements will be initialized when DOM is ready
@@ -29,15 +33,26 @@ const initializeElements = () => {
   statTAsMeta: document.getElementById('statTAsMeta'),
   statTutors: document.getElementById('statTutors'),
   statTutorsMeta: document.getElementById('statTutorsMeta'),
-  searchInput: document.getElementById('searchInput'),
+  searchInput: document.getElementById('search-input'),
   sortSelect: document.getElementById('sortSelect'),
   roleFilters: document.querySelectorAll('[data-role-filter]'),
   statusFilters: document.querySelectorAll('[data-status-filter]'),
+  teamFilterWrapper: document.getElementById('teamFilterWrapper'),
+  teamFilterSelect: document.getElementById('teamFilterSelect'),
   prevPage: document.getElementById('prevPage'),
   nextPage: document.getElementById('nextPage'),
   pageNumber: document.getElementById('pageNumber'),
   totalPages: document.getElementById('totalPages'),
+  showingStart: document.getElementById('showingStart'),
+  showingEnd: document.getElementById('showingEnd'),
+  showingTotal: document.getElementById('showingTotal'),
   pageSize: document.getElementById('pageSize'),
+  clearFilters: document.getElementById('clearFilters'),
+  selectAll: document.getElementById('select-all'),
+  bulkActions: document.getElementById('bulkActions'),
+  selectedCount: document.getElementById('selectedCount'),
+  bulkEmailBtn: document.getElementById('bulkEmailBtn'),
+  bulkDropBtn: document.getElementById('bulkDropBtn'),
   toastContainer: document.getElementById('toastContainer'),
   addPersonOverlay: document.getElementById('addPersonOverlay'),
   addPersonForm: document.getElementById('addPersonForm'),
@@ -49,6 +64,10 @@ const initializeElements = () => {
   roleSelect: document.getElementById('roleSelect'),
   roleStudentName: document.getElementById('roleStudentName'),
     exportFormat: document.getElementById('exportFormat'),
+  btnAddPerson: document.getElementById('btnAddPerson'),
+  btnImportModal: document.getElementById('btnImportModal'),
+  btnExport: document.getElementById('btnExport'),
+  rosterActions: document.querySelector('.roster-actions'),
   };
 };
 
@@ -67,6 +86,7 @@ const toggleOverlay = (overlay, open) => {
 
 const fetchJSON = async (url, options = {}) => {
   const res = await fetch(url, {
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });
@@ -200,10 +220,12 @@ const loadOfferings = async () => {
 };
 
 // Helper function to validate UUID format
-const isValidUUID = (str) => {
+// UUID validation - use shared utility if available, otherwise define locally
+const isValidUUID = window.isValidUUID || ((str) => {
+  if (!str || typeof str !== 'string') return false;
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(str);
-};
+});
 
 const loadRoster = async () => {
   if (!state.offeringId) {
@@ -218,31 +240,108 @@ const loadRoster = async () => {
     return;
   }
   
+  // Fetch all results (with high limit) to enable proper client-side pagination after filtering
   const params = new URLSearchParams({
-    limit: state.pagination.limit,
-    offset: (state.pagination.page - 1) * state.pagination.limit,
+    limit: 10000, // Fetch all results for client-side pagination
+    offset: 0,
   });
   if (state.filters.search) params.set('search', state.filters.search);
   if (state.filters.course_role) params.set('course_role', state.filters.course_role);
   if (state.filters.status) params.set('status', state.filters.status);
   if (state.filters.sort) params.set('sort', state.filters.sort);
+  
+  // Note: Team filtering and pagination are done client-side after fetching
 
   try {
-    elements.rosterTableBody.innerHTML = '<tr><td colspan="5" style="padding: 2rem; text-align:center;">Loading roster…</td></tr>';
+    // Show skeleton loader
+    showSkeletonLoader();
     const data = await fetchJSON(`/api/enrollments/offering/${state.offeringId}/roster?${params.toString()}`);
-    state.roster = data.results || [];
+    let allRoster = data.results || [];
+    
+    // Extract unique teams for filtering
+    const teamsMap = new Map();
+    allRoster.forEach(entry => {
+      if (entry.user?.team_name && entry.user?.team_number) {
+        const key = `${entry.user.team_number}:${entry.user.team_name}`;
+        if (!teamsMap.has(key)) {
+          teamsMap.set(key, {
+            number: entry.user.team_number,
+            name: entry.user.team_name,
+            key: key
+          });
+        }
+      }
+    });
+    // Sort teams by number
+    state.teams = Array.from(teamsMap.values()).sort((a, b) => a.number - b.number);
+    
+    // Update team filter controls
+    updateTeamFilterControls();
+    
+    // If filtering by team-lead role, exclude TAs and tutors (they cannot be team leads)
+    if (state.filters.course_role === 'team-lead') {
+      allRoster = allRoster.filter(entry => {
+        // TAs and tutors cannot be team leads
+        if (entry.course_role === 'ta' || entry.course_role === 'tutor') {
+          return false;
+        }
+        // Only show entries with team-lead role or is_team_lead flag
+        return entry.course_role === 'team-lead' || entry.user?.is_team_lead === true;
+      });
+    }
+    
+    // Apply team filter client-side
+    if (state.filters.team === 'team-leads') {
+      // Filter by team leads - check both is_team_lead flag and enrollment role
+      // Exclude TAs and tutors from team leads filter
+      allRoster = allRoster.filter(entry => {
+        // TAs and tutors cannot be team leads
+        if (entry.course_role === 'ta' || entry.course_role === 'tutor') {
+          return false;
+        }
+        const isTeamLeadByFlag = entry.user?.is_team_lead === true;
+        const isTeamLeadByRole = entry.course_role === 'team-lead';
+        return isTeamLeadByFlag || isTeamLeadByRole;
+      });
+    } else if (state.filters.team && state.filters.team !== 'all') {
+      // Filter by specific team (format: "number:name")
+      const [teamNum, teamName] = state.filters.team.split(':');
+      allRoster = allRoster.filter(entry => 
+        entry.user?.team_number == teamNum && entry.user?.team_name === teamName
+      );
+    }
+    
+    // Calculate pagination based on filtered results
+    state.pagination.total = allRoster.length;
+    state.pagination.totalPages = Math.max(1, Math.ceil(allRoster.length / state.pagination.limit));
+    state.pagination.page = Math.min(state.pagination.totalPages, state.pagination.page);
+    
+    // Apply pagination - slice the filtered results for current page
+    const startIndex = (state.pagination.page - 1) * state.pagination.limit;
+    const endIndex = startIndex + state.pagination.limit;
+    state.roster = allRoster.slice(startIndex, endIndex);
     state.stats = data.stats || state.stats;
-    state.pagination.total = data.pagination?.total ?? state.stats.total ?? 0;
-    state.pagination.totalPages = Math.max(1, data.pagination?.totalPages ?? 1);
-    state.pagination.page = Math.min(state.pagination.totalPages, data.pagination?.page ?? state.pagination.page);
+    state.instructor = data.instructor || null;
 
+    // Clear selections when roster changes
+    state.selectedItems.clear();
+    
     renderRoster();
     renderStats();
+    renderInstructor();
     renderPagination();
+    updateFilterCount();
+    
+    // Only scroll to top when page changes or filters change, not on initial load
+    if (state.pagination.page > 1 || state.filters.search || state.filters.course_role || state.filters.status || state.filters.team) {
+      scrollToTop();
+    }
   } catch (error) {
     console.error('Failed to load roster', error);
-    elements.rosterTableBody.innerHTML = '<tr><td colspan="5" style="padding: 2rem; text-align:center; color: var(--rose-500);">Unable to load roster.</td></tr>';
+    const colspan = state.canSelect ? '7' : '6';
+    elements.rosterTableBody.innerHTML = `<tr><td colspan="${colspan}" style="padding: 2rem; text-align:center; color: var(--rose-500);">Unable to load roster.</td></tr>`;
     showToast(error.message || 'Failed to load roster', 'error');
+    updateFilterCount();
   }
 };
 
@@ -260,11 +359,83 @@ const renderStats = () => {
   elements.statTutorsMeta.textContent = '';
 };
 
+const renderInstructor = () => {
+  const instructorDisplay = document.getElementById('instructorDisplay');
+  if (!instructorDisplay) return;
+  
+  if (state.instructor && state.instructor.name) {
+    instructorDisplay.textContent = `Instructor: ${state.instructor.name}`;
+    instructorDisplay.style.display = 'inline';
+  } else {
+    instructorDisplay.textContent = '';
+    instructorDisplay.style.display = 'none';
+  }
+};
+
+const showSkeletonLoader = () => {
+  // Show checkbox column in skeleton only if user can select (matches actual roster rows)
+  const checkboxCol = state.canSelect ? '<td class="checkbox-cell"><div class="skeleton skeleton-cell" style="width: 24px;"></div></td>' : '';
+  const skeletonRows = new Array(5).fill(0).map(() => `
+    <tr>
+      ${checkboxCol}
+      <td><div class="skeleton skeleton-avatar"></div></td>
+      <td><div class="skeleton skeleton-cell" style="width: 200px;"></div></td>
+      <td><div class="skeleton skeleton-pill" style="width: 100px;"></div></td>
+      <td><div class="skeleton skeleton-cell" style="width: 120px;"></div></td>
+      <td><div class="skeleton skeleton-cell" style="width: 150px;"></div></td>
+      <td><div class="skeleton skeleton-cell" style="width: 100px;"></div></td>
+    </tr>
+  `).join('');
+  elements.rosterTableBody.innerHTML = skeletonRows;
+};
+
+const updateFilterCount = () => {
+  let hasFilters = false;
+  if (state.filters.search) hasFilters = true;
+  if (state.filters.course_role) hasFilters = true;
+  if (state.filters.status) hasFilters = true;
+  if (state.filters.team) hasFilters = true;
+  
+  if (hasFilters && elements.clearFilters) {
+    elements.clearFilters.style.display = 'inline-block';
+  } else {
+    if (elements.clearFilters) elements.clearFilters.style.display = 'none';
+  }
+};
+
+const clearAllFilters = () => {
+  state.filters.search = '';
+  state.filters.course_role = null;
+  state.filters.status = null;
+  state.filters.team = null;
+  state.pagination.page = 1;
+  
+  // Reset UI
+  if (elements.searchInput) elements.searchInput.value = '';
+  elements.roleFilters.forEach(btn => {
+    btn.dataset.active = btn.dataset.roleFilter === 'all' ? 'true' : 'false';
+  });
+  elements.statusFilters.forEach(btn => {
+    btn.dataset.active = btn.dataset.statusFilter === 'all' ? 'true' : 'false';
+  });
+  if (elements.teamFilterSelect) elements.teamFilterSelect.value = 'all';
+  
+  updateFilterCount();
+  loadRoster();
+};
+
 const renderPagination = () => {
   elements.pageNumber.textContent = state.pagination.page;
   elements.totalPages.textContent = state.pagination.totalPages;
   elements.prevPage.disabled = state.pagination.page <= 1;
   elements.nextPage.disabled = state.pagination.page >= state.pagination.totalPages;
+  
+  // Update showing info
+  const start = state.pagination.total === 0 ? 0 : (state.pagination.page - 1) * state.pagination.limit + 1;
+  const end = Math.min(state.pagination.page * state.pagination.limit, state.pagination.total);
+  if (elements.showingStart) elements.showingStart.textContent = start;
+  if (elements.showingEnd) elements.showingEnd.textContent = end;
+  if (elements.showingTotal) elements.showingTotal.textContent = state.pagination.total;
 };
 
 const formatDate = (value) => {
@@ -274,10 +445,93 @@ const formatDate = (value) => {
   return date.toLocaleDateString();
 };
 
+const scrollToTop = () => {
+  // Scroll page to top smoothly
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const updateBulkActions = () => {
+  const count = state.selectedItems.size;
+  if (elements.selectedCount) {
+    elements.selectedCount.textContent = count;
+  }
+  if (elements.bulkActions) {
+    elements.bulkActions.style.display = (count > 0 && state.canSelect) ? 'flex' : 'none';
+  }
+  if (elements.selectAll && state.roster.length > 0 && state.canSelect) {
+    const selectableEntries = state.roster.filter(entry => 
+      entry.enrollment_status !== 'dropped' || state.canEdit
+    );
+    const selectedSelectable = selectableEntries.filter(entry => 
+      state.selectedItems.has(entry.enrollment_id)
+    );
+    const allSelected = selectableEntries.length > 0 && 
+      selectedSelectable.length === selectableEntries.length;
+    const someSelected = selectedSelectable.length > 0 && !allSelected;
+    elements.selectAll.checked = allSelected;
+    elements.selectAll.indeterminate = someSelected;
+  } else if (elements.selectAll) {
+    elements.selectAll.checked = false;
+    elements.selectAll.indeterminate = false;
+  }
+};
+
+const handleSelectAll = (checked) => {
+  if (checked) {
+    // Select all non-dropped entries (or all if can edit)
+    state.roster.forEach(entry => {
+      if (entry.enrollment_status !== 'dropped' || state.canEdit) {
+        state.selectedItems.add(entry.enrollment_id);
+      }
+    });
+  } else {
+    // Deselect all
+    state.selectedItems.clear();
+  }
+  
+  // Update checkboxes and row visual states without full re-render
+  document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+    const enrollmentId = checkbox.dataset.enrollmentId;
+    const isSelected = state.selectedItems.has(enrollmentId);
+    checkbox.checked = isSelected;
+    const row = checkbox.closest('tr');
+    if (row) {
+      if (isSelected) {
+        row.classList.add('row-selected');
+      } else {
+        row.classList.remove('row-selected');
+      }
+    }
+  });
+  
+  updateBulkActions();
+};
+
+const handleRowSelect = (enrollmentId, checked) => {
+  if (checked) {
+    state.selectedItems.add(enrollmentId);
+  } else {
+    state.selectedItems.delete(enrollmentId);
+  }
+  
+  // Update row visual state
+  const row = document.querySelector(`tr[data-enrollment-id="${enrollmentId}"]`);
+  if (row) {
+    if (checked) {
+      row.classList.add('row-selected');
+    } else {
+      row.classList.remove('row-selected');
+    }
+  }
+  
+  updateBulkActions();
+};
+
 const renderRoster = () => {
   if (!state.roster.length) {
     elements.rosterTableBody.innerHTML = '';
     elements.emptyState.hidden = false;
+    updateBulkActions();
     return;
   }
 
@@ -292,12 +546,53 @@ const renderRoster = () => {
     const role = entry.course_role || 'student';
     const status = entry.enrollment_status || 'enrolled';
     const institution = entry.user?.institution_type === 'extension' ? 'Extension' : 'UCSD';
+    const teamName = entry.user?.team_name || null;
+    const teamNumber = entry.user?.team_number || null;
+    const teamLead = entry.user?.team_lead_name || null;
+    const isTeamLead = entry.user?.is_team_lead || false;
+    
+    // Format team display with badge
+    let teamDisplay = '<span class="team-empty">No team</span>';
+    if (teamName && teamNumber) {
+      teamDisplay = `<span class="team-badge">Team ${teamNumber}: ${teamName}</span>`;
+    } else if (teamName) {
+      teamDisplay = `<span class="team-badge">${teamName}</span>`;
+    } else if (teamNumber) {
+      teamDisplay = `<span class="team-badge">Team ${teamNumber}</span>`;
+    }
+    
+    // Format role display - show role with team lead indicator if applicable
+    let roleClass = role;
+    let roleDisplay;
+    if (role === 'team-lead' || (isTeamLead && role === 'student')) {
+      roleDisplay = 'Team Lead';
+      roleClass = 'team-lead';
+    } else if (role === 'ta') {
+      roleDisplay = 'TA';
+    } else {
+      // Capitalize first letter for other roles (student, tutor)
+      roleDisplay = role.charAt(0).toUpperCase() + role.slice(1);
+    }
+    
+    // Show edit role button only if user can edit (Drop button is in actions column)
+    const editRoleButton = state.canEdit ? `
+      <button class="role-btn text-btn" data-action="edit-role" data-user-id="${entry.user_id}" data-name="${entry.user?.name || entry.user?.email || 'Unknown'}" data-role="${role}">
+        Change role
+      </button>
+    ` : '';
+    
+    const isSelected = state.selectedItems.has(entry.enrollment_id);
+    const canSelect = state.canSelect && (status !== 'dropped' || state.canEdit); // Can select only if user has permission AND (not dropped or can edit)
+    
     return `
-      <tr>
+      <tr data-enrollment-id="${entry.enrollment_id}" ${isSelected ? 'class="row-selected"' : ''}>
+        ${canSelect ? `<td class="checkbox-cell">
+          <input type="checkbox" class="row-checkbox" data-enrollment-id="${entry.enrollment_id}" data-user-id="${entry.user_id}" data-email="${entry.user?.email || ''}" data-name="${entry.user?.name || 'Unknown'}" ${isSelected ? 'checked' : ''} aria-label="Select ${entry.user?.name || 'Unknown'}">
+        </td>` : ''}
         <td>
           <div class="name-cell">
             <div class="avatar" aria-hidden="true">${initials}</div>
-            <div>
+            <div class="name-info">
               <div class="person-name">${entry.user?.name || 'Unknown'}</div>
               <div class="person-email">${entry.user?.email || ''}</div>
             </div>
@@ -305,30 +600,110 @@ const renderRoster = () => {
         </td>
         <td>
           <div class="role-chip">
-            <span class="role-pill ${role}">${role}</span>
-            <button class="role-btn text-btn" data-action="edit-role" data-user-id="${entry.user_id}" data-name="${entry.user?.name || entry.user?.email || 'Unknown'}" data-role="${role}">
-              Change role
-            </button>
+            <span class="role-pill ${roleClass}">${roleDisplay}</span>
+            ${editRoleButton}
           </div>
         </td>
         <td>
-          <span class="status-pill ${status}">${status}</span>
-          <div class="status-meta">Since ${formatDate(entry.enrolled_at)}</div>
+          <div class="status-cell">
+            <span class="status-pill ${status}">${status}</span>
+            <div class="status-meta">Since ${formatDate(entry.enrolled_at)}</div>
+          </div>
         </td>
         <td>
-          <div class="institution-name">${institution}</div>
-          <div class="institution-meta">${entry.user?.ucsd_pid || 'PID —'}</div>
+          <div class="institution-cell">
+            <div class="institution-name">${institution}</div>
+            <div class="institution-meta">${entry.user?.ucsd_pid || 'PID —'}</div>
+          </div>
+        </td>
+        <td>
+          <div class="team-cell">
+            ${entry.user?.team_name ? `
+              <div class="team-name">${teamDisplay}</div>
+              ${entry.user?.team_lead_name && !isTeamLead ? `<div class="team-lead-meta">Lead: ${teamLead}</div>` : ''}
+            ` : teamDisplay}
+          </div>
         </td>
         <td class="actions-cell">
-          <button class="icon-btn" title="Email ${entry.user?.name}" data-action="email" data-email="${entry.user?.email || ''}">✉️</button>
-          <button class="btn btn-danger btn-icon" title="Drop from roster" data-action="drop" data-id="${entry.enrollment_id}">Drop</button>
+          ${state.canSelect ? `<button class="icon-btn" title="Email ${entry.user?.name}" data-action="email" data-email="${entry.user?.email || ''}" aria-label="Email ${entry.user?.name}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </button>` : ''}
+          ${state.canSelect && status !== 'dropped' ? `<button class="btn btn-danger btn-icon" title="Mark as dropped" data-action="drop" data-id="${entry.enrollment_id}" data-user-id="${entry.user_id}" aria-label="Mark ${entry.user?.name} as dropped">Drop</button>` : ''}
         </td>
       </tr>
     `;
   }).join('');
+  
+  updateBulkActions();
+};
+
+const handleBulkDrop = async () => {
+  const selected = Array.from(state.selectedItems);
+  if (selected.length === 0) return;
+  
+  const confirmMessage = `Mark ${selected.length} person${selected.length > 1 ? 's' : ''} as dropped? They will no longer be able to access the course.`;
+  if (!confirm(confirmMessage)) return;
+  
+  const entries = state.roster.filter(entry => selected.includes(entry.enrollment_id));
+  let successCount = 0;
+  let failCount = 0;
+  
+  for (const entry of entries) {
+    try {
+      if (!isValidUUID(state.offeringId) || !isValidUUID(entry.user_id)) {
+        failCount++;
+        continue;
+      }
+      await fetchJSON(`/api/enrollments/offering/${state.offeringId}/user/${entry.user_id}/drop`, { 
+        method: 'POST' 
+      });
+      successCount++;
+    } catch (error) {
+      console.error('Failed to drop person', entry.user?.name, error);
+      failCount++;
+    }
+  }
+  
+  // Clear selections
+  state.selectedItems.clear();
+  updateBulkActions();
+  
+  if (successCount > 0) {
+    showToast(`Marked ${successCount} person${successCount > 1 ? 's' : ''} as dropped${failCount > 0 ? `, ${failCount} failed` : ''}`);
+    loadRoster();
+  } else {
+    showToast('Failed to drop selected people', 'error');
+  }
+};
+
+const handleBulkEmail = () => {
+  const selected = Array.from(state.selectedItems);
+  if (selected.length === 0) return;
+  
+  const entries = state.roster.filter(entry => selected.includes(entry.enrollment_id));
+  const emails = entries
+    .map(entry => entry.user?.email)
+    .filter(Boolean)
+    .join(',');
+  
+  if (emails) {
+    window.location.href = `mailto:${emails}`;
+  } else {
+    showToast('No valid email addresses found for selected people', 'error');
+  }
 };
 
 const handleActionClick = async (event) => {
+  // Handle checkbox clicks
+  if (event.target.type === 'checkbox' && event.target.classList.contains('row-checkbox')) {
+    const enrollmentId = event.target.dataset.enrollmentId;
+    handleRowSelect(enrollmentId, event.target.checked);
+    return;
+  }
+  
   const button = event.target.closest('[data-action]');
   if (!button) return;
   const action = button.dataset.action;
@@ -338,18 +713,34 @@ const handleActionClick = async (event) => {
   }
   if (action === 'drop') {
     const enrollmentId = button.dataset.id;
-    if (!enrollmentId) return;
-    const confirmDrop = confirm('Drop this person from the roster? This will delete all enrollment and attendance records for this person.');
+    const userId = button.dataset.userId;
+    if (!enrollmentId || !userId) return;
+    
+    // Find the enrollment entry to get user name
+    const entry = state.roster.find(e => e.enrollment_id === enrollmentId);
+    const userName = entry?.user?.name || 'this person';
+    
+    const confirmDrop = confirm(`Mark ${userName} as dropped? They will no longer be able to access the course, but will remain visible in the roster.`);
     if (!confirmDrop) return;
+    
     try {
-      // Validate UUID before making API call
-      if (!isValidUUID(enrollmentId)) {
-        console.error('Invalid enrollmentId format (expected UUID):', enrollmentId);
-        showToast('Invalid enrollment ID', 'error');
+      // Validate UUIDs before making API call
+      if (!isValidUUID(state.offeringId)) {
+        console.error('Invalid offeringId format (expected UUID):', state.offeringId);
+        showToast('Invalid offering ID. Please refresh the page.', 'error');
         return;
       }
-      await fetchJSON(`/api/enrollments/${enrollmentId}`, { method: 'DELETE' });
-      showToast('Person dropped and all records deleted');
+      if (!isValidUUID(userId)) {
+        console.error('Invalid userId format (expected UUID):', userId);
+        showToast('Invalid user ID', 'error');
+        return;
+      }
+      
+      // Use the drop endpoint which sets status to 'dropped' instead of deleting
+      await fetchJSON(`/api/enrollments/offering/${state.offeringId}/user/${userId}/drop`, { 
+        method: 'POST' 
+      });
+      showToast(`${userName} has been marked as dropped`);
       loadRoster();
     } catch (error) {
       console.error('Failed to drop person', error);
@@ -394,7 +785,7 @@ const handleSaveRole = async (event) => {
   const formData = new FormData(elements.roleForm);
   const newRole = formData.get('course_role');
   
-  if (!newRole || !['student', 'ta', 'tutor'].includes(newRole)) {
+  if (!newRole || !['student', 'ta', 'tutor', 'team-lead'].includes(newRole)) {
     showToast('Invalid role selected', 'error');
     return;
   }
@@ -611,57 +1002,39 @@ const exportRoster = async () => {
   const format = elements.exportFormat?.value || 'csv';
   
   try {
-    // Fetch all roster data (with a high limit)
-    const params = new URLSearchParams({
-      limit: '10000',
+    // Use the API endpoint which checks permissions
+    const endpoint = format === 'csv' 
+      ? `/api/users/roster/export/csv`
+      : `/api/users/roster/export/json`;
+    
+    const response = await fetch(endpoint, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
     });
-    const data = await fetchJSON(`/api/enrollments/offering/${state.offeringId}/roster?${params.toString()}`);
-    const roster = data.results || [];
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || error.error || 'Export failed - you may not have permission to export');
+    }
     
     if (format === 'csv') {
-      // Convert to CSV
-      const headers = ['Name', 'Email', 'PID', 'Course Role', 'Status', 'Institution Type', 'Enrolled At'];
-      const rows = roster.map(entry => [
-        entry.user?.name || '',
-        entry.user?.email || '',
-        entry.user?.ucsd_pid || '',
-        entry.course_role || '',
-        entry.enrollment_status || '',
-        entry.user?.institution_type || '',
-        entry.enrolled_at || ''
-      ]);
-      
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-      ].join('\n');
-      
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+      const csv = await response.text();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
       link.download = `roster-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
-      // Export JSON
-      const exportData = roster.map(entry => ({
-    name: entry.user?.name,
-    email: entry.user?.email,
-    pid: entry.user?.ucsd_pid,
-    course_role: entry.course_role,
-    status: entry.enrollment_status,
-    institution_type: entry.user?.institution_type,
-        enrolled_at: entry.enrolled_at
-  }));
-      
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+      const json = await response.json();
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
       link.download = `roster-${new Date().toISOString().split('T')[0]}.json`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
     showToast(`Roster exported as ${format.toUpperCase()}`);
   } catch (error) {
@@ -672,20 +1045,179 @@ const exportRoster = async () => {
 
 // Removed exportFiltered - using main export function with current filters
 
+const allowTeamFilter = () => (
+  state.filters.course_role === null || state.filters.course_role === 'student'
+);
+
+const updateTeamFilterControls = () => {
+  if (!elements.teamFilterWrapper || !elements.teamFilterSelect) return;
+
+  if (!allowTeamFilter()) {
+    elements.teamFilterWrapper.hidden = true;
+    state.filters.team = null;
+    elements.teamFilterSelect.value = 'all';
+    return;
+  }
+
+  elements.teamFilterWrapper.hidden = false;
+
+  const prevValue = state.filters.team || 'all';
+  const select = elements.teamFilterSelect;
+  select.innerHTML = `
+    <option value="all">All teams</option>
+    <option value="team-leads">Team Leads</option>
+  `;
+
+  state.teams.forEach((team) => {
+    const option = document.createElement('option');
+    option.value = team.key;
+    option.textContent = `Team ${team.number}`;
+    select.appendChild(option);
+  });
+
+  if ([...select.options].some((opt) => opt.value === prevValue)) {
+    select.value = prevValue;
+  } else {
+    state.filters.team = null;
+    select.value = 'all';
+  }
+};
+
+const checkEditPermissions = async () => {
+  try {
+    // Check if user can import roster (instructor/admin only)
+    const response = await fetch('/api/users/roster/export/json', {
+      credentials: 'include',
+      method: 'HEAD' // Use HEAD to check permissions without downloading
+    });
+    
+    // If we get 200 or 403, we know the permission status
+    // 200 = has permission, 403 = no permission
+    state.canEdit = response.ok || response.status === 200;
+    
+    // Check if user can select/email/drop (admin/instructor/TA only)
+    try {
+      const navContextResponse = await fetch('/api/users/navigation-context', {
+        credentials: 'include'
+      });
+      if (navContextResponse.ok) {
+        const navContext = await navContextResponse.json();
+        const primaryRole = navContext.primary_role;
+        const enrollmentRole = navContext.enrollment_role;
+        // Allow admin, instructor, or TA (enrollment role)
+        state.canSelect = primaryRole === 'admin' || 
+                         primaryRole === 'instructor' || 
+                         enrollmentRole === 'ta' || 
+                         enrollmentRole === 'tutor';
+      }
+    } catch (error) {
+      console.warn('Could not check select permissions:', error);
+      state.canSelect = state.canEdit; // Fallback to canEdit
+    }
+    
+    // Update UI to hide/show edit buttons
+    if (elements.rosterActions) {
+      if (!state.canEdit) {
+        // Hide edit buttons for non-instructors/admins
+        if (elements.btnAddPerson) elements.btnAddPerson.style.display = 'none';
+        if (elements.btnImportModal) elements.btnImportModal.style.display = 'none';
+        if (elements.btnExport) elements.btnExport.style.display = 'none';
+        if (elements.exportFormat) elements.exportFormat.style.display = 'none';
+      }
+    }
+    
+    // Hide select/email/drop controls if user cannot select
+    // Note: We update the UI after roster loads, so this is just initial setup
+    if (!state.canSelect) {
+      // Hide select-all checkbox header column
+      if (elements.selectAll) {
+        const selectAllTh = elements.selectAll.closest('th');
+        if (selectAllTh) {
+          selectAllTh.style.display = 'none';
+        }
+      }
+      // Hide bulk actions bar (will be hidden by updateBulkActions anyway)
+      if (elements.bulkActions) {
+        elements.bulkActions.style.display = 'none';
+      }
+      // Hide all checkbox cells
+      setTimeout(() => {
+        document.querySelectorAll('.checkbox-cell').forEach(cell => {
+          cell.style.display = 'none';
+        });
+      }, 0);
+    } else {
+      // Show checkbox column if user can select
+      if (elements.selectAll) {
+        const selectAllTh = elements.selectAll.closest('th');
+        if (selectAllTh) {
+          selectAllTh.style.display = '';
+        }
+      }
+      setTimeout(() => {
+        document.querySelectorAll('.checkbox-cell').forEach(cell => {
+          cell.style.display = '';
+        });
+      }, 0);
+    }
+  } catch (error) {
+    console.error('Error checking edit permissions:', error);
+    state.canEdit = false;
+    state.canSelect = false;
+  }
+};
+
+// Keyboard navigation support
+const handleKeyboardNavigation = (event) => {
+  // Arrow keys for pagination
+  if (event.key === 'ArrowLeft' && event.ctrlKey) {
+    event.preventDefault();
+    if (state.pagination.page > 1) {
+      state.pagination.page -= 1;
+      loadRoster();
+    }
+  } else if (event.key === 'ArrowRight' && event.ctrlKey) {
+    event.preventDefault();
+    if (state.pagination.page < state.pagination.totalPages) {
+      state.pagination.page += 1;
+      loadRoster();
+    }
+  }
+  
+  // Escape to clear search
+  if (event.key === 'Escape' && document.activeElement === elements.searchInput) {
+    elements.searchInput.value = '';
+    state.filters.search = '';
+    updateFilterCount();
+    loadRoster();
+  }
+};
+
 const bindEvents = () => {
+  // Add keyboard navigation
+  document.addEventListener('keydown', handleKeyboardNavigation);
+  
   document.getElementById('btnRefresh').addEventListener('click', async () => {
     await loadOfferings();
     if (state.offeringId) {
       await loadRoster();
     }
   });
-  document.getElementById('btnAddPerson').addEventListener('click', () => toggleOverlay(elements.addPersonOverlay, true));
-  document.getElementById('btnImportModal').addEventListener('click', () => toggleOverlay(elements.importOverlay, true));
-  document.getElementById('btnExport').addEventListener('click', exportRoster);
+  
+  if (elements.btnAddPerson) {
+    elements.btnAddPerson.addEventListener('click', () => toggleOverlay(elements.addPersonOverlay, true));
+  }
+  if (elements.btnImportModal) {
+    elements.btnImportModal.addEventListener('click', () => toggleOverlay(elements.importOverlay, true));
+  }
+  if (elements.btnExport) {
+    elements.btnExport.addEventListener('click', exportRoster);
+  }
   document.getElementById('btnRunImport').addEventListener('click', handleImport);
   elements.searchInput.addEventListener('input', debounce((event) => {
     state.filters.search = event.target.value.trim();
     state.pagination.page = 1;
+    updateFilterCount();
     loadRoster();
   }, 300));
   elements.sortSelect.addEventListener('change', (event) => {
@@ -698,6 +1230,8 @@ const bindEvents = () => {
       button.dataset.active = 'true';
       state.filters.course_role = button.dataset.roleFilter === 'all' ? null : button.dataset.roleFilter;
       state.pagination.page = 1;
+      updateTeamFilterControls();
+      updateFilterCount();
       loadRoster();
     });
   });
@@ -707,18 +1241,35 @@ const bindEvents = () => {
       button.dataset.active = 'true';
       state.filters.status = button.dataset.statusFilter === 'all' ? null : button.dataset.statusFilter;
       state.pagination.page = 1;
+      updateFilterCount();
       loadRoster();
     });
   });
+  
+  if (elements.teamFilterSelect) {
+    elements.teamFilterSelect.addEventListener('change', (event) => {
+      const value = event.target.value;
+      state.filters.team = value === 'all' ? null : value;
+      state.pagination.page = 1;
+      updateFilterCount();
+      loadRoster();
+    });
+  }
+  
+  if (elements.clearFilters) {
+    elements.clearFilters.addEventListener('click', clearAllFilters);
+  }
   elements.prevPage.addEventListener('click', () => {
     if (state.pagination.page <= 1) return;
     state.pagination.page -= 1;
     loadRoster();
+    scrollToTop();
   });
   elements.nextPage.addEventListener('click', () => {
     if (state.pagination.page >= state.pagination.totalPages) return;
     state.pagination.page += 1;
     loadRoster();
+    scrollToTop();
   });
   elements.pageSize.addEventListener('change', (event) => {
     state.pagination.limit = Number(event.target.value);
@@ -726,6 +1277,27 @@ const bindEvents = () => {
     loadRoster();
   });
   elements.rosterTableBody.addEventListener('click', handleActionClick);
+  elements.rosterTableBody.addEventListener('change', (event) => {
+    if (event.target.type === 'checkbox' && event.target.classList.contains('row-checkbox')) {
+      const enrollmentId = event.target.dataset.enrollmentId;
+      handleRowSelect(enrollmentId, event.target.checked);
+    }
+  });
+  
+  if (elements.selectAll) {
+    elements.selectAll.addEventListener('change', (event) => {
+      handleSelectAll(event.target.checked);
+    });
+  }
+  
+  if (elements.bulkEmailBtn) {
+    elements.bulkEmailBtn.addEventListener('click', handleBulkEmail);
+  }
+  
+  if (elements.bulkDropBtn) {
+    elements.bulkDropBtn.addEventListener('click', handleBulkDrop);
+  }
+  
   elements.addPersonForm.addEventListener('submit', handleAddPerson);
   elements.roleForm.addEventListener('submit', handleSaveRole);
   document.querySelectorAll('[data-close-modal]').forEach((button) => {
@@ -753,6 +1325,7 @@ const bindEvents = () => {
 const init = async () => {
   // Initialize elements now that DOM is ready
   initializeElements();
+  updateTeamFilterControls();
   
   // Ensure elements are found before proceeding
   if (!elements.activeOfferingName) {
@@ -793,6 +1366,7 @@ const init = async () => {
   }
   
   bindEvents();
+  await checkEditPermissions();
   await loadOfferings();
   if (state.offeringId) {
   await loadRoster();
