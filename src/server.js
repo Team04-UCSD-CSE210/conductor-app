@@ -24,6 +24,7 @@ import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
 import journalRoutes from "./routes/journal-routes.js";
+import classDirectoryRoutes from "./routes/class-directory-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -368,6 +369,21 @@ let redisConnected = false;
 // Redis completely disabled
 console.log("⚠️ Redis disabled, running without Redis");
 
+// In-memory login attempt tracking (since Redis is disabled)
+const loginAttempts = new Map();
+
+const cleanupExpiredAttempts = () => {
+  const now = Date.now();
+  for (const [key, data] of loginAttempts.entries()) {
+    if (now > data.expiresAt) {
+      loginAttempts.delete(key);
+    }
+  }
+};
+
+// Clean up expired attempts every minute
+setInterval(cleanupExpiredAttempts, 60000);
+
 const extractIpAddress = (req) => {
   const forwarded = req?.headers?.["x-forwarded-for"];
   if (forwarded) {
@@ -411,47 +427,90 @@ const getLoginIdentifier = (email, req) => {
 const getLoginAttemptKey = (identifier) => `${LOGIN_ATTEMPT_KEY_PREFIX}${identifier}`;
 
 const getLoginAttemptStatus = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) {
+  if (!identifier) {
     return { attempts: 0, blocked: false };
   }
-  try {
-    const rawAttempts = await redisClient.get(getLoginAttemptKey(identifier));
-    const attempts = rawAttempts ? Number.parseInt(rawAttempts, 10) : 0;
-    if (Number.isNaN(attempts)) {
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      const rawAttempts = await redisClient.get(getLoginAttemptKey(identifier));
+      const attempts = rawAttempts ? Number.parseInt(rawAttempts, 10) : 0;
+      if (Number.isNaN(attempts)) {
+        return { attempts: 0, blocked: false };
+      }
+      return {
+        attempts,
+        blocked: attempts >= LOGIN_FAILURE_THRESHOLD
+      };
+    } catch (error) {
+      console.error("Unable to read login attempt count", error);
       return { attempts: 0, blocked: false };
     }
-    return {
-      attempts,
-      blocked: attempts >= LOGIN_FAILURE_THRESHOLD
-    };
-  } catch (error) {
-    console.error("Unable to read login attempt count", error);
+  }
+  
+  // Use in-memory storage as fallback
+  cleanupExpiredAttempts();
+  const data = loginAttempts.get(identifier);
+  if (!data || Date.now() > data.expiresAt) {
     return { attempts: 0, blocked: false };
   }
+  
+  return {
+    attempts: data.attempts,
+    blocked: data.attempts >= LOGIN_FAILURE_THRESHOLD
+  };
 };
 
 const recordFailedLoginAttempt = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) return 0;
-  try {
-    const key = getLoginAttemptKey(identifier);
-    const attempts = await redisClient.incr(key);
-    if (attempts === 1) {
-      await redisClient.pexpire(key, LOGIN_FAILURE_WINDOW_MS);
+  if (!identifier) return 0;
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      const key = getLoginAttemptKey(identifier);
+      const attempts = await redisClient.incr(key);
+      if (attempts === 1) {
+        await redisClient.pexpire(key, LOGIN_FAILURE_WINDOW_MS);
+      }
+      return attempts;
+    } catch (error) {
+      console.error("Unable to record failed login attempt", error);
+      return 0;
     }
-    return attempts;
-  } catch (error) {
-    console.error("Unable to record failed login attempt", error);
-    return 0;
   }
+  
+  // Use in-memory storage as fallback
+  cleanupExpiredAttempts();
+  const now = Date.now();
+  const expiresAt = now + LOGIN_FAILURE_WINDOW_MS;
+  
+  const existing = loginAttempts.get(identifier);
+  if (!existing || now > existing.expiresAt) {
+    loginAttempts.set(identifier, { attempts: 1, expiresAt });
+    return 1;
+  }
+  
+  existing.attempts++;
+  existing.expiresAt = expiresAt; // Reset expiry on new attempt
+  return existing.attempts;
 };
 
 const clearLoginAttempts = async (identifier) => {
-  if (!identifier || !redisClient || !redisConnected) return;
-  try {
-    await redisClient.del(getLoginAttemptKey(identifier));
-  } catch (error) {
-    console.error("Unable to clear login attempts", error);
+  if (!identifier) return;
+  
+  // Use Redis if available
+  if (redisClient && redisConnected) {
+    try {
+      await redisClient.del(getLoginAttemptKey(identifier));
+    } catch (error) {
+      console.error("Unable to clear login attempts", error);
+    }
+    return;
   }
+  
+  // Use in-memory storage as fallback
+  loginAttempts.delete(identifier);
 };
 
 // ensureAuthenticated is imported from middleware/auth.js
@@ -810,45 +869,6 @@ app.get("/student-dashboard", ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Team Lead Dashboard - accessible only to team leads
-app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
-  try {
-    const email = req.user?.emails?.[0]?.value;
-    if (!email) {
-      return res.redirect("/login");
-    }
-
-    const user = await findUserByEmail(email);
-    if (!user) {
-      return res.redirect("/login");
-    }
-
-    // Admin and instructor can access team lead dashboard (for viewing)
-    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
-      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
-    }
-
-    // Check if user is a team lead
-    const isTeamLead = await isUserTeamLead(user.id);
-    if (!isTeamLead) {
-      // If not a team lead, redirect to student dashboard
-      return res.redirect("/student-dashboard");
-    }
-
-    // Check if user is enrolled as student or team-lead
-    const enrollmentRole = await getUserEnrollmentRole(user.id);
-    if (enrollmentRole === 'student' || enrollmentRole === 'team-lead' || user.primary_role === 'student') {
-      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
-    }
-
-    // Not authorized
-    return res.status(403).send("Forbidden: You must be a team lead to access this dashboard");
-  } catch (error) {
-    console.error("Error accessing team lead dashboard:", error);
-    return res.status(500).send("Internal server error");
-  }
-});
-
 // -------------------- LECTURE ATTENDANCE ROUTES --------------------
 
 /**
@@ -887,6 +907,22 @@ app.get("/roster", ensureAuthenticated, (req, res) => {
 
 app.get("/courses/:courseId/roster", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("roster.html"));
+});
+
+// Class Directory route - similar permissions to roster
+const classDirectoryMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
+
+app.get("/class-directory", ...classDirectoryMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("class-directory.html"));
+});
+
+app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, (req, res) => {
+  res.sendFile(buildFullViewPath("class-directory.html"));
+});
+
+// Course selection page
+app.get("/course-selection", ensureAuthenticated, (req, res) => {
+  res.sendFile(buildFullViewPath("course-selection.html"));
 });
 
 /**
@@ -1094,6 +1130,11 @@ app.get("/not-in-roster.html", (req, res) => {
 
 // -------------------- ROUTES --------------------
 
+// Serve index.html for root path
+app.get('/', (req, res) => {
+  res.sendFile(buildFullViewPath("index.html"));
+});
+
 // Handle Google OAuth errors (e.g., org_internal)
 app.get("/auth/error", (req, res) => {
   console.warn("⚠️ OAuth error detected:", req.query);
@@ -1165,12 +1206,18 @@ app.get(
         metadata: { provider: "google" },
       });
 
-      // Check if user is in roster (has enrollment) - students must be enrolled
+      // Unregistered users MUST register first - check this BEFORE enrollments
+      if (user.primary_role === 'unregistered') {
+        console.log(`[DEBUG] User ${email} is unregistered, redirecting to register page`);
+        return res.redirect("/register.html");
+      }
+
+      // Dashboard routing based on enrollment role (TA comes from enrollments table)
       let enrollmentRole = null;
       try {
         enrollmentRole = await getUserEnrollmentRole(user.id);
       } catch (error) {
-        console.log(`[DEBUG] Database error getting enrollment role (non-critical): ${error.message}`);
+        console.log(`[DEBUG] Database error getting enrollments (non-critical): ${error.message}`);
       }
       
       const offering = await getActiveCourseOffering();
@@ -1200,12 +1247,14 @@ app.get(
 
       // Dashboard routing based on enrollment role (TA comes from enrollments table)
       
-      // Check primary_role for admin/instructor, enrollment for TA/student
+      // Admin and instructor get their dashboards directly
       if (user.primary_role === 'admin') {
+        console.log(`[DEBUG] User ${email} is admin, redirecting to admin dashboard`);
         return res.redirect("/admin-dashboard");
       }
       
       if (user.primary_role === 'instructor') {
+        console.log(`[DEBUG] User ${email} is instructor, redirecting to instructor dashboard`);
         return res.redirect("/instructor-dashboard");
       }
       
@@ -1214,21 +1263,14 @@ app.get(
         return res.redirect("/ta-dashboard");
       }
       
-      // Check if user is a team lead - redirect to team lead dashboard
-      const isTeamLead = await isUserTeamLead(user.id);
-      if (isTeamLead && (enrollmentRole === 'student' || user.primary_role === 'student')) {
-        return res.redirect("/team-lead-dashboard");
-      }
-      
       // Students (only if they have student primary_role, not unregistered)
       if (enrollmentRole === 'student' || user.primary_role === 'student') {
         return res.redirect("/student-dashboard");
       }
       
-      // Default fallback - not in roster
-      console.log(`[DEBUG] No role match for ${email}, user not in roster`);
-      req.session.accessDeniedEmail = email;
-      return res.redirect("/access-denied");
+      // Default fallback - should not reach here, but send to register just in case
+      console.log(`[DEBUG] No role match for ${email}, redirecting to register`);
+      return res.redirect("/register.html");
     } catch (error) {
       console.error("Error in /auth/google/callback handler:", error);
       await logAuthEvent("LOGIN_CALLBACK_ERROR", {
@@ -1395,12 +1437,13 @@ app.use("/api/offerings", offeringRoutes);
 app.use("/api/interactions", interactionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
-app.use("/api/journals", journalRoutes);
+app.use("/api/journals", ensureAuthenticated, journalRoutes);
 app.use("/api/class", courseOfferingRoutes);
+app.use("/api/class-directory", classDirectoryRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {
-  const email = req.user?.emails?.[0]?.value || null;
+  const email = req.user?.emails?.[0]?.value || req.session?.blockedEmail || null;
   const identifier = getLoginIdentifier(email, req);
   const status = await getLoginAttemptStatus(identifier);
   const threshold = LOGIN_FAILURE_THRESHOLD;
@@ -1836,6 +1879,47 @@ app.get('/api/my-courses', ensureAuthenticated, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user courses:', error);
     res.status(500).json({ error: 'Failed to fetch courses' });
+  }
+});
+
+// Select active course for user session
+app.post('/api/select-course', ensureAuthenticated, express.json(), async (req, res) => {
+  try {
+    const { offering_id } = req.body;
+    const email = req.user?.emails?.[0]?.value;
+    
+    if (!email || !offering_id) {
+      return res.status(400).json({ error: 'Missing email or offering_id' });
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify user is enrolled in this offering
+    const enrollment = await pool.query(
+      `SELECT course_role FROM enrollments 
+       WHERE user_id = $1::uuid AND offering_id = $2::uuid AND status = 'enrolled'::enrollment_status_enum`,
+      [user.id, offering_id]
+    );
+
+    if (enrollment.rows.length === 0) {
+      return res.status(403).json({ error: 'Not enrolled in this course' });
+    }
+
+    // Store selected course in session
+    req.session.selectedOfferingId = offering_id;
+    req.session.selectedRole = enrollment.rows[0].course_role;
+
+    res.json({ 
+      success: true, 
+      offering_id,
+      role: enrollment.rows[0].course_role 
+    });
+  } catch (error) {
+    console.error('Error selecting course:', error);
+    res.status(500).json({ error: 'Failed to select course' });
   }
 });
 

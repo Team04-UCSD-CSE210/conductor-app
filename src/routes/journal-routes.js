@@ -30,11 +30,6 @@ router.get("/", ensureAuthenticated, async (req, res) => {
     res.status(500).json({ error: "Something went wrong!" });  }
 });
 
-// Serve journal UI
-router.get("/journal-ui", ensureAuthenticated, (req, res) => {
-  res.sendFile("journal-temp.html", { root: "src/views" });
-});
-
 // Update a journal entry (only if belongs to current user)
 router.put("/:id", ensureAuthenticated, async (req, res) => {
   try {

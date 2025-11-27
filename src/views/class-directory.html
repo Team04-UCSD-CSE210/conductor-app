@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conductor · Class Directory</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/class-directory.css">
+</head>
+<body class="dashboard-page class-directory-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <nav aria-label="Dashboard navigation">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/roster">Roster</a>
+      <a href="/class-directory" class="active">Class Directory</a>
+    </nav>
+    <footer class="sidebar-footer">
+      <a href="/logout" class="btn btn-ghost btn-footer">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <div class="directory-header">
+      <h2 class="page-title">Class Directory</h2>
+      <div class="active-offering-display">
+        <span class="offering-label">Active Offering:</span>
+        <span class="offering-name" id="activeOfferingName">Loading...</span>
+      </div>
+    </div>
+
+    <div class="directory-tabs">
+      <button class="tab-btn active" data-tab="professors">Professors</button>
+      <button class="tab-btn" data-tab="tas">TAs</button>
+      <button class="tab-btn" data-tab="students">Students</button>
+      <button class="tab-btn" data-tab="groups">Groups</button>
+    </div>
+
+    <!-- Professors Section -->
+    <section id="professors-section" class="directory-section active">
+      <div class="section-header">
+        <h3>Professors</h3>
+        <div class="section-controls">
+          <input type="search" id="prof-search" class="search-input" placeholder="Search professors...">
+        </div>
+      </div>
+      <div class="cards-grid" id="professors-grid">
+        <div class="loading-state">Loading professors...</div>
+      </div>
+    </section>
+
+    <!-- TAs Section -->
+    <section id="tas-section" class="directory-section">
+      <div class="section-header">
+        <h3>Teaching Assistants</h3>
+        <div class="section-controls">
+          <input type="search" id="ta-search" class="search-input" placeholder="Search TAs...">
+          <div class="activity-filter">
+            <label for="ta-activity">Activity:</label>
+            <select id="ta-activity" class="search-input">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="cards-grid" id="tas-grid">
+        <div class="loading-state">Loading TAs...</div>
+      </div>
+    </section>
+
+    <!-- Students Section -->
+    <section id="students-section" class="directory-section">
+      <div class="section-header">
+        <h3>Students</h3>
+        <div class="section-controls">
+          <input type="search" id="student-search" class="search-input" placeholder="Search students...">
+          <div class="filter-group">
+            <select id="student-group" class="search-input">
+              <option value="all">All Groups</option>
+            </select>
+            <select id="student-activity" class="search-input">
+              <option value="all">All Activity</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="cards-grid" id="students-grid">
+        <div class="loading-state">Loading students...</div>
+      </div>
+    </section>
+
+    <!-- Groups Section -->
+    <section id="groups-section" class="directory-section">
+      <div class="section-header">
+        <h3>Groups</h3>
+        <div class="section-controls">
+          <input type="search" id="group-search" class="search-input" placeholder="Search groups...">
+        </div>
+      </div>
+      <div class="cards-grid groups-grid" id="groups-grid">
+        <div class="loading-state">Loading groups...</div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="/js/class-directory.js" defer></script>
+</body>
+</html>
