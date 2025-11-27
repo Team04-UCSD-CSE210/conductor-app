@@ -617,6 +617,27 @@ console.log("✅ OAuth callback configured for:", CALLBACK_URL);
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
+// Middleware to ensure session methods exist (fix passport session regeneration issue)
+app.use((req, res, next) => {
+  if (req.session) {
+    // Ensure regenerate method exists
+    if (!req.session.regenerate) {
+      req.session.regenerate = (cb) => {
+        console.warn('⚠️ Session regenerate called but not available, skipping');
+        cb();
+      };
+    }
+    // Ensure save method exists
+    if (!req.session.save) {
+      req.session.save = (cb) => {
+        console.warn('⚠️ Session save called but not available, skipping');
+        cb();
+      };
+    }
+  }
+  next();
+});
+
 // -------------------- MIDDLEWARE --------------------
 
 // Test route to verify sessions work
@@ -1142,6 +1163,12 @@ app.get(
     const email = req.user?.emails?.[0]?.value || "unknown";
 
     try {
+      // Ensure session exists before proceeding
+      if (!req.session) {
+        console.error("❌ Session undefined in callback, creating new session");
+        return res.redirect("/auth/failure?error=session_error");
+      }
+
       // DEBUG LOGS
       console.log("🔐 New login detected:");
       console.log("   Session ID:", req.sessionID);
