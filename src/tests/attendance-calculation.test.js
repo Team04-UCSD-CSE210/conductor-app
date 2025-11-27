@@ -16,7 +16,7 @@ describe('Attendance Calculation Logic', () => {
     function determineMeetingStatus(meeting) {
       const now = new Date();
       
-      // Check scheduled time first - only matters if in future
+      // FIRST: Check if scheduled time is in the future - always return pending for future meetings
       let scheduledStartTime = null;
       if (meeting.session_date && meeting.session_time) {
         const sessionDate = new Date(meeting.session_date);
@@ -32,9 +32,9 @@ describe('Attendance Calculation Logic', () => {
         }
       }
       
-      // Scheduled time has passed or doesn't exist - check attendance timestamps
+      // Scheduled time is NOT in future - now check attendance timestamps
       if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
-        // Both timestamps are set
+        // Both timestamps are set - check time range
         const openTime = new Date(meeting.attendance_opened_at);
         const closeTime = new Date(meeting.attendance_closed_at);
         
@@ -44,20 +44,25 @@ describe('Attendance Calculation Logic', () => {
           return 'closed'; // Meeting has ended
         }
       } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
-        // Only open time is set - meeting is open
+        // Only open time is set - meeting is currently open
+        const openTime = new Date(meeting.attendance_opened_at);
         
-        // Check if end time has passed
-        if (meeting.code_expires_at) {
-          const endTime = new Date(meeting.code_expires_at);
-          if (endTime < now) {
-            return 'closed';
+        // Check if it's past the open time
+        if (now >= openTime) {
+          // Check if end time has passed
+          if (meeting.code_expires_at) {
+            const endTime = new Date(meeting.code_expires_at);
+            if (endTime < now) {
+              return 'closed';
+            }
           }
+          return 'open';
         }
-        return 'open';
       }
       
-      // No attendance timestamps but scheduled time has passed - closed
+      // No attendance timestamps or they're in the future - check scheduled time
       if (scheduledStartTime && scheduledStartTime <= now) {
+        // Scheduled time has passed without attendance being opened
         return 'closed';
       }
       
