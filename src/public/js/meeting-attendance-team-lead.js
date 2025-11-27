@@ -91,58 +91,52 @@
     return badge;
   }
 
-  function determineMeetingStatus(meeting) {
-    const now = new Date();
+function determineMeetingStatus(meeting) {
+  const now = new Date();
+  
+  // Priority 1: Check if attendance has been explicitly opened
+  if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
+    // Both timestamps are set
+    const openTime = new Date(meeting.attendance_opened_at);
+    const closeTime = new Date(meeting.attendance_closed_at);
     
-    // Check scheduled time first - only matters if in future
-    let scheduledStartTime = null;
-    if (meeting.session_date && meeting.session_time) {
-      const sessionDate = new Date(meeting.session_date);
-      const year = sessionDate.getFullYear();
-      const month = sessionDate.getMonth();
-      const day = sessionDate.getDate();
-      const [hours, minutes] = meeting.session_time.split(':').map(Number);
-      scheduledStartTime = new Date(year, month, day, hours, minutes);
-      
-      // If scheduled start time is in the future, it's always pending
-      if (scheduledStartTime > now) {
-        return 'pending';
+    if (now >= openTime && now < closeTime) {
+      return 'open'; // Meeting is currently open
+    } else if (now >= closeTime) {
+      return 'closed'; // Meeting has ended
+    }
+  } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
+    // Only open time is set - meeting is open
+    
+    // Check if end time has passed
+    if (meeting.code_expires_at) {
+      const endTime = new Date(meeting.code_expires_at);
+      if (endTime < now) {
+        return 'closed';
       }
     }
-    
-    // Scheduled time has passed or doesn't exist - check attendance timestamps
-    if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
-      // Both timestamps are set
-      const openTime = new Date(meeting.attendance_opened_at);
-      const closeTime = new Date(meeting.attendance_closed_at);
-      
-      if (now >= openTime && now < closeTime) {
-        return 'open'; // Meeting is currently open
-      } else if (now >= closeTime) {
-        return 'closed'; // Meeting has ended
-      }
-    } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
-      // Only open time is set - meeting is open
-      
-      // Check if end time has passed
-      if (meeting.code_expires_at) {
-        const endTime = new Date(meeting.code_expires_at);
-        if (endTime < now) {
-          return 'closed';
-        }
-      }
-      return 'open';
-    }
-    
-    // No attendance timestamps but scheduled time has passed - closed
-    if (scheduledStartTime && scheduledStartTime <= now) {
-      return 'closed';
-    }
-    
-    return 'pending';
+    return 'open';
   }
-
-  async function buildMeetingRow(meeting) {
+  
+  // Priority 2: Check scheduled time for meetings without explicit attendance timestamps
+  if (meeting.session_date && meeting.session_time) {
+    const sessionDate = new Date(meeting.session_date);
+    const year = sessionDate.getFullYear();
+    const month = sessionDate.getMonth();
+    const day = sessionDate.getDate();
+    const [hours, minutes] = meeting.session_time.split(':').map(Number);
+    const scheduledStartTime = new Date(year, month, day, hours, minutes);
+    
+    // If scheduled start time is in the future, it's pending
+    if (scheduledStartTime > now) {
+      return 'pending';
+    }
+    // Scheduled time has passed but no attendance opened - closed
+    return 'closed';
+  }
+  
+  return 'pending';
+}  async function buildMeetingRow(meeting) {
     const row = document.createElement('article');
     row.className = 'lecture-item';
     
