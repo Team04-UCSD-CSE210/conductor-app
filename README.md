@@ -4,7 +4,7 @@ Final project for CSE 210.
 
 ## Wiki
 
-For detailed documentation, guides, and team resources, visit our [project wiki](https://github.com/helenahundhausen/conductor-app/wiki).
+For detailed documentation, guides, and team resources, visit our [project wiki](https://github.com/Team04-UCSD-CSE210/conductor-app/wiki).
 
 ## Pipeline
 
