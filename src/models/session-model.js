@@ -41,8 +41,8 @@ export class SessionModel {
     return result.rows.map(row => {
       if (row.session_date_str) row.session_date = row.session_date_str;
       if (row.session_time_str) row.session_time = row.session_time_str;
-      const teamMemberCount = parseInt(row.team_member_count) || 0;
-      const presentCount = parseInt(row.attendance_count) || 0;
+      const teamMemberCount = Number.parseInt(row.team_member_count) || 0;
+      const presentCount = Number.parseInt(row.attendance_count) || 0;
       const attendance_percent = teamMemberCount > 0 
         ? Math.round((presentCount / teamMemberCount) * 100) 
         : 0;
@@ -202,8 +202,8 @@ export class SessionModel {
         row.session_time = row.session_time_str;
       }
       
-      const totalStudents = parseInt(row.total_students) || 0;
-      const presentCount = parseInt(row.attendance_count) || 0;
+      const totalStudents = Number.parseInt(row.total_students) || 0;
+      const presentCount = Number.parseInt(row.attendance_count) || 0;
       const attendance_percent = totalStudents > 0 
         ? Math.round((presentCount / totalStudents) * 100) 
         : 0;
@@ -284,8 +284,8 @@ export class SessionModel {
         row.session_time = row.session_time_str;
       }
       
-      const totalStudents = parseInt(row.total_students) || 0;
-      const presentCount = parseInt(row.attendance_count) || 0;
+      const totalStudents = Number.parseInt(row.total_students) || 0;
+      const presentCount = Number.parseInt(row.attendance_count) || 0;
       const attendance_percent = totalStudents > 0 
         ? Math.round((presentCount / totalStudents) * 100) 
         : 0;
@@ -438,8 +438,8 @@ export class SessionModel {
     }
 
     const stats = result.rows[0];
-    const totalStudents = parseInt(stats.enrolled_students) || 0;
-    const presentCount = parseInt(stats.present_count) || 0;
+    const totalStudents = Number.parseInt(stats.enrolled_students) || 0;
+    const presentCount = Number.parseInt(stats.present_count) || 0;
     const attendance_percent = totalStudents > 0 
       ? Math.round((presentCount / totalStudents) * 100) 
       : 0;

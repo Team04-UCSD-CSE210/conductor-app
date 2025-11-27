@@ -1,5 +1,18 @@
 /* Dashboard Global Shared Styles extracted from original instructor-dashboard.css */
 
+/* Sidebar User Display - Name and Role */
+.sidebar-user {
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--gray-700);
+  line-height: 1.4;
+}
+
+.sidebar-user-role {
+  color: var(--teal-600);
+  font-weight: 600;
+}
+
 /* Interaction report selections */
 .interaction-btn.selected {
   box-shadow: 0 0 0 2px var(--emerald-400, #34d399);

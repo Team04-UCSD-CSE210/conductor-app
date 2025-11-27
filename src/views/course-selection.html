@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conductor · Select Course</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/course-selection.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <span class="logo-text">conductor</span>
+    <a href="/" class="btn btn-outline">Sign out</a>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+
+    <div class="hero-layout">
+      <div class="welcome-section">
+        <h1 class="hero-title">Welcome back!</h1>
+        <p class="hero-description">Select a course to continue your learning journey.</p>
+      </div>
+
+      <div class="courses-grid" id="coursesGrid">
+        <div class="loading-state">Loading your courses...</div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/js/course-selection.js" defer></script>
+</body>
+</html>

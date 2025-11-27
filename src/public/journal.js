@@ -1,21 +1,24 @@
-
 // Global trackers for editing
 window.editingId = null;
 window.currentLogs = [];
 
-window.toggleMenu = function(id) {
+// These functions are used in HTML onclick handlers
+// eslint-disable-next-line no-unused-vars
+function toggleMenu(id) {
   const menu = document.getElementById(`menu-${id}`);
   menu.classList.toggle("hidden");
-};
+}
 
-window.deleteEntry = async function(id) {
+// eslint-disable-next-line no-unused-vars
+async function deleteEntry(id) {
   if (!confirm("Delete this entry?")) return;
 
   await fetch(`/api/journals/${id}`, { method: "DELETE", credentials: "include" });
   loadEntries();
-};
+}
 
-window.editEntry = function(id) {
+// eslint-disable-next-line no-unused-vars
+function editEntry(id) {
   const entry = window.currentLogs.find((e) => e.id === id);
   if (!entry) return;
 
@@ -25,7 +28,7 @@ window.editEntry = function(id) {
   document.getElementById("feelings").value = entry.feelings;
 
   window.editingId = id;
-};
+}
 
 function clearForm() {
   document.getElementById("done").value = "";
@@ -34,7 +37,9 @@ function clearForm() {
   document.getElementById("feelings").value = "";
 }
 
-window.submitJournal = async function() {
+// This function is used in HTML onclick handlers
+// eslint-disable-next-line no-unused-vars
+async function submitJournal() {
   const payload = {
     date: new Date().toISOString().split("T")[0],
     done_since_yesterday: document.getElementById("done").value,
@@ -47,7 +52,7 @@ window.submitJournal = async function() {
   let method = "POST";
 
   if (window.editingId) {
-    url += `/${window.editingId}`;
+    url = `/api/journals/${window.editingId}`;
     method = "PUT";
     delete payload.date;
   }
@@ -69,7 +74,7 @@ window.submitJournal = async function() {
   } else {
     alert("Failed to save entry.");
   }
-};
+}
 
 async function loadEntries() {
   const res = await fetch("/api/journals", { credentials: "include" });

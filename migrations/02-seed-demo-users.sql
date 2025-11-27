@@ -2,7 +2,11 @@
 -- Enhanced demo users for development/testing
 -- Run AFTER the users table and ENUM types are created.
 
-INSERT INTO users (
+DO $$
+DECLARE
+    extension_student_name CONSTANT TEXT := 'Noah Anderson';
+BEGIN
+    INSERT INTO users (
     email,
     ucsd_pid,
     name,
@@ -143,12 +147,12 @@ NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
 -- ============================================
 -- EXTENSION STUDENTS (Non-UCSD emails)
 -- ============================================
-('bhavikchandna@gmail.com', NULL, 'Noah Anderson', 'Noah',
+('bhavikchandna@gmail.com', NULL, extension_student_name, 'Noah',
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',
  'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
  NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
 
-('liamhardy2004@gmail.com', NULL, 'Noah Anderson', 'Noah',
+('liamhardy2004@gmail.com', NULL, extension_student_name, 'Noah',
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',
  'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
  NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
@@ -224,6 +228,7 @@ SET
     github_username = EXCLUDED.github_username,
     linkedin_url    = EXCLUDED.linkedin_url,
     updated_at      = NOW();
+END $$;
 
 -- Summary query
 SELECT 

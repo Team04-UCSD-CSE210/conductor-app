@@ -3,17 +3,9 @@ import { EnrollmentService } from '../services/enrollment-service.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import { protect } from '../middleware/permission-middleware.js';
 import { PermissionService } from '../services/permission-service.js';
+import { isUuid } from '../utils/validation.js';
 
 const router = Router();
-
-/**
- * Validate if a string is a valid UUID format
- */
-function isValidUUID(str) {
-  if (!str || typeof str !== 'string') return false;
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(str);
-}
 
 /**
  * Create a new enrollment
@@ -46,10 +38,10 @@ router.get(
       const { offeringId, userId } = req.params;
 
       // Validate UUIDs
-      if (!offeringId || offeringId === 'undefined' || !isValidUUID(offeringId)) {
+      if (!offeringId || offeringId === 'undefined' || !isUuid(offeringId)) {
         return res.status(400).json({ error: 'Invalid offering ID' });
       }
-      if (!userId || userId === 'undefined' || !isValidUUID(userId)) {
+      if (!userId || userId === 'undefined' || !isUuid(userId)) {
         return res.status(400).json({ error: 'Invalid user ID' });
       }
 
@@ -159,6 +151,7 @@ router.get('/offering/:offeringId/students', ensureAuthenticated, async (req, re
  * GET /enrollments/offering/:offeringId/roster
  * Requires: Authentication (all authenticated users can view roster)
  * Note: Editing (import/export) is restricted via separate permissions
+ * Students can only see enrolled students
  */
 router.get('/offering/:offeringId/roster', ensureAuthenticated, async (req, res) => {
   try {
@@ -167,11 +160,21 @@ router.get('/offering/:offeringId/roster', ensureAuthenticated, async (req, res)
       return Number.isFinite(parsed) ? parsed : fallback;
     };
 
+    // Check if current user is a student in this offering
+    const userEnrollment = await EnrollmentService.getEnrollmentByOfferingAndUser(
+      req.params.offeringId,
+      req.currentUser.id
+    );
+
+    // If user is a student, restrict to enrolled students only
+    const isStudent = userEnrollment?.course_role === 'student' || 
+                      (userEnrollment?.course_role === 'team-lead' && req.currentUser.primary_role === 'student');
+
     const options = {
       limit: parseNumber(req.query.limit, 50),
       offset: parseNumber(req.query.offset, 0),
-      course_role: req.query.course_role || undefined,
-      status: req.query.status || undefined,
+      course_role: isStudent ? 'student' : (req.query.course_role || undefined),
+      status: isStudent ? 'enrolled' : (req.query.status || undefined),
       search: req.query.search || undefined,
       sort: req.query.sort || undefined,
     };

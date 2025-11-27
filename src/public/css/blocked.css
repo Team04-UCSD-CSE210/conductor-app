@@ -1,0 +1,49 @@
+/* Blocked Page Styles */
+
+.hero-layout {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+#attempt-content, #blocked-content {
+    display: none;
+}
+
+.attempt-description {
+    font-size: 1.2rem;
+    color: #666;
+    margin: 1rem 0;
+}
+
+.attempt-info {
+    color: #666;
+}
+
+.attempt-counter {
+    font-size: 1.1rem;
+    color: #10b981;
+    font-weight: 600;
+    margin: 1.5rem 0;
+}
+
+.blocked-description {
+    font-size: 1.2rem;
+    color: #666;
+    margin: 1rem 0;
+}
+
+.blocked-info {
+    color: #666;
+}
+
+.countdown {
+    font-size: 1.3rem;
+    color: #10b981;
+    font-weight: 600;
+    margin: 1.5rem 0;
+}
+

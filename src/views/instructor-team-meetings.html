@@ -21,15 +21,15 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/instructor-dashboard">Dashboard</a>
-      <a href="/course-settings">Course Settings</a>
-      <a href="/instructor-lectures">Attendance</a>
-      <a href="/roster">Roster</a>
-      <a href="/instructor-meetings" class="active">Team Meetings</a>
+    <p class="sidebar-user" id="sidebarUser">
+      <span class="sidebar-user-name">Loading...</span><br>
+      <span class="sidebar-user-role">Loading...</span>
+    </p>
+    <nav aria-label="Dashboard navigation" id="sidebarNav">
+      <!-- Navigation will be dynamically populated based on user role -->
     </nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-      <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
   </header>
   <main class="main-container" id="main">
@@ -52,6 +52,6 @@
       </section>
     </div>
   </main>
-  <script src="/js/instructor-team-meetings.js"></script>
+  <script type="module" src="/js/instructor-team-meetings.js?v=5"></script>
 </body>
 </html>

@@ -42,13 +42,18 @@
   overflow: hidden;
   margin-left: 1rem;
   position: relative;
+  display: inline-block;
 }
 
 .attendance-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
   height: 100%;
   background: linear-gradient(90deg, #14b8a6 0%, #f59e0b 100%);
   border-radius: 0.5rem;
   transition: width 0.3s;
+  z-index: 0;
 }
 
 .attendance-label {
@@ -58,6 +63,7 @@
   transform: translate(-50%, -50%);
   font-size: 0.9rem;
   font-weight: 600;
-  color: #fff;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+  color: #374151;
+  text-shadow: none;
+  z-index: 1;
 }

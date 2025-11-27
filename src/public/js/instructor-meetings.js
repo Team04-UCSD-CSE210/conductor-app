@@ -1,6 +1,8 @@
 // instructor-meetings.js
 // Handles fetching and rendering team meetings and attendance stats for instructor meetings overview page
 
+import { determineMeetingStatus, fetchMeetings } from './meeting-utils.js';
+
 async function fetchTeams() {
   // 1) Use page-provided offering id (query string or meta)
   // 2) Fallback to the active-offering API (/api/offerings/active)
@@ -10,7 +12,7 @@ async function fetchTeams() {
     if (params.has('offering_id')) offeringId = params.get('offering_id');
     if (!offeringId) {
       const meta = document.querySelector('meta[name="offering-id"]');
-      if (meta && meta.content) offeringId = meta.content;
+      if (meta?.content) offeringId = meta.content;
     }
   } catch {
     // ignore and continue
@@ -47,19 +49,12 @@ async function fetchTeams() {
   return { teams: result.teams || [], offeringId };
 }
 
-async function fetchMeetings(teamId, offeringId) {
-  if (!offeringId || !teamId) return [];
-  const res = await fetch(`/api/sessions/team/${teamId}?offering_id=${offeringId}`, { credentials: 'include' });
-  if (!res.ok) return [];
-  return await res.json();
-}
 
 async function renderTeams() {
   const container = document.getElementById('team-list');
   container.innerHTML = '<p style="text-align:center; color:#888;">Loading teams...</p>';
   fetchTeams().then(({ teams, offeringId }) => {
     container.innerHTML = '';
-    console.log('There are teams:', teams);
     if (!teams || !Array.isArray(teams)) {
       container.innerHTML = '<p style="color:red;">Error: Could not fetch teams. Check your network and permissions.</p>';
       return;
@@ -78,14 +73,23 @@ async function renderTeams() {
     const teamRowPromises = teams.map(async team => {
       const meetings = await fetchMeetings(team.id, offeringId);
       const teamMeetings = meetings.filter(m => m.team_id === team.id);
+      const teamSize = Number(team.member_count || team.members?.length || 0);
       let totalAttendance = 0;
       let totalPossible = 0;
+      
+      // Only count closed meetings (same logic as team leader view)
       for (const meeting of teamMeetings) {
-        const statsRes = await fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' });
-        if (statsRes.ok) {
-          const stats = await statsRes.json();
-          totalAttendance += stats.present_count || 0;
-          totalPossible += stats.total_marked || 0;
+        const status = determineMeetingStatus(meeting);
+        
+        if (status === 'closed') {
+          const statsRes = await fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' });
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+            totalAttendance += stats.present_count || 0;
+            totalPossible += teamSize;
+          } else {
+            totalPossible += teamSize;
+          }
         }
       }
       const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
