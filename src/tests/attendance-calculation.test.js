@@ -94,17 +94,22 @@ describe('Attendance Calculation Logic', () => {
     });
 
     it('should return open when attendance is opened but not closed', () => {
-      const pastDate = new Date();
-      pastDate.setHours(pastDate.getHours() - 1); // 1 hour ago
+      // Create a session that started 2 hours ago and runs for 4 hours (still ongoing)
+      const startDate = new Date();
+      startDate.setHours(startDate.getHours() - 2); // Started 2 hours ago
       
-      const hours = String(pastDate.getHours()).padStart(2, '0');
-      const minutes = String(pastDate.getMinutes()).padStart(2, '0');
+      const sessionDate = new Date(startDate);
+      sessionDate.setHours(0, 0, 0, 0); // Start of day
+      
+      const hours = String(startDate.getHours()).padStart(2, '0');
+      const minutes = String(startDate.getMinutes()).padStart(2, '0');
       const sessionTime = `${hours}:${minutes}:00`;
       
       const meeting = {
-        session_date: pastDate.toISOString(),
+        session_date: sessionDate.toISOString(),
         session_time: sessionTime,
-        attendance_opened_at: pastDate.toISOString()
+        attendance_opened_at: startDate.toISOString()
+        // No attendance_closed_at - session is still open
       };
       
       expect(determineMeetingStatus(meeting)).toBe('open');
@@ -128,21 +133,25 @@ describe('Attendance Calculation Logic', () => {
     });
 
     it('should return open when between open and close timestamps', () => {
-      const openDate = new Date();
-      openDate.setHours(openDate.getHours() - 1); // 1 hour ago
+      // Create a long session: started 2 hours ago, ends 2 hours from now (4 hour session)
+      const startDate = new Date();
+      startDate.setHours(startDate.getHours() - 2); // Started 2 hours ago
       
-      const closeDate = new Date();
-      closeDate.setHours(closeDate.getHours() + 1); // 1 hour from now
+      const endDate = new Date();
+      endDate.setHours(endDate.getHours() + 2); // Ends 2 hours from now
       
-      const hours = String(openDate.getHours()).padStart(2, '0');
-      const minutes = String(openDate.getMinutes()).padStart(2, '0');
+      const sessionDate = new Date(startDate);
+      sessionDate.setHours(0, 0, 0, 0); // Start of day
+      
+      const hours = String(startDate.getHours()).padStart(2, '0');
+      const minutes = String(startDate.getMinutes()).padStart(2, '0');
       const sessionTime = `${hours}:${minutes}:00`;
       
       const meeting = {
-        session_date: openDate.toISOString(),
+        session_date: sessionDate.toISOString(),
         session_time: sessionTime,
-        attendance_opened_at: openDate.toISOString(),
-        attendance_closed_at: closeDate.toISOString()
+        attendance_opened_at: startDate.toISOString(),
+        attendance_closed_at: endDate.toISOString()
       };
       
       expect(determineMeetingStatus(meeting)).toBe('open');
