@@ -11,7 +11,7 @@ body {
   background: var(--bg, #f6f7fb);
 }
 
-.sidebar {
+/* .sidebar {
   background: var(--panel, #fff);
   border-right: 1px solid var(--border, #e6e8ef);
   padding: 16px;
@@ -40,9 +40,9 @@ body {
   margin: 0;
   display: grid;
   gap: 8px;
-}
+} */
 
-.nav-item {
+/* .nav-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -56,7 +56,7 @@ body {
 .nav-item:hover {
   background: #fafafa;
   border-color: var(--border, #e6e8ef);
-}
+} */
 
 .team-container {
   max-width: 800px;
