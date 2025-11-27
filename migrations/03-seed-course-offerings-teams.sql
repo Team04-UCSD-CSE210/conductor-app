@@ -12,8 +12,8 @@ DECLARE
     ta3_id UUID;
     tutor1_id UUID;
     tutor2_id UUID;
-    active_status CONSTANT team_status_enum := active_status;
-    current_date_val DATE := current_date_val;
+    active_status CONSTANT team_status_enum := 'active'::team_status_enum;
+    current_date_val DATE := CURRENT_DATE;
 BEGIN
     -- Get instructor ID first (try multiple possible emails)
     SELECT id INTO instructor_id 
