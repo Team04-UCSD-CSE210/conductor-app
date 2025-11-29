@@ -11,6 +11,13 @@ async function getParams() {
   };
 }
 
+function initBackButton() {
+  const backBtn = document.querySelector('.header-back-button');
+  if (!backBtn) return;
+  backBtn.addEventListener('click', () => {
+    window.location.href = '/instructor-meetings';
+  });
+}
 
 function renderTeamMeta(team) {
   const meta = document.getElementById('team-meta');
@@ -167,6 +174,7 @@ function renderMeetings(meetings, teamSize) {
     const overallEl = document.getElementById('overall-attendance-value');
     if (overallEl) overallEl.textContent = `${percent}%`;
   });
+
 }
 
 async function renderPage() {
@@ -188,6 +196,7 @@ async function renderPage() {
   }
   const meetings = await fetchMeetings(teamId, offeringId);
   renderMeetings(meetings, teamSize);
+  initBackButton();
 }
 
 document.addEventListener('DOMContentLoaded', renderPage);
