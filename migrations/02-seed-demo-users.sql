@@ -144,6 +144,11 @@ NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
  'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  NULL, NULL, '+1-858-555-0308', 'miadavis', 'https://linkedin.com/in/miadavis'),
 
+('hhundhausen@ucsd.edu', 'A00001012', 'Helena Bender', 'Helena',
+ 'Computer Science', 'BS', 2025, 'Computer Science & Engineering', 'Undergraduate',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ NULL, NULL, '+1-858-555-0309', 'hhundhausen', 'https://linkedin.com/in/hhundhausen'),
+
 -- ============================================
 -- EXTENSION STUDENTS (Non-UCSD emails)
 -- ============================================
