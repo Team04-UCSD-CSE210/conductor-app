@@ -1074,12 +1074,60 @@ app.get("/courses/:courseId/roster", ensureAuthenticated, async (req, res) => {
 // Class Directory route - similar permissions to roster
 const classDirectoryMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
 
-app.get("/class-directory", ...classDirectoryMiddleware, (req, res) => {
-  res.sendFile(buildFullViewPath("class-directory.html"));
+app.get("/class-directory", ...classDirectoryMiddleware, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.sendFile(buildFullViewPath("students-directory.html"));
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.sendFile(buildFullViewPath("students-directory.html"));
+    }
+
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    
+    // Route based on role
+    if (user.primary_role === 'instructor' || user.primary_role === 'admin') {
+      return res.sendFile(buildFullViewPath("instructors-directory.html"));
+    } else if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("tutors-directory.html"));
+    } else {
+      return res.sendFile(buildFullViewPath("students-directory.html"));
+    }
+  } catch (error) {
+    console.error("Error determining class directory view:", error);
+    return res.sendFile(buildFullViewPath("students-directory.html"));
+  }
 });
 
-app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, (req, res) => {
-  res.sendFile(buildFullViewPath("class-directory.html"));
+app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.sendFile(buildFullViewPath("students-directory.html"));
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.sendFile(buildFullViewPath("students-directory.html"));
+    }
+
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    
+    // Route based on role
+    if (user.primary_role === 'instructor' || user.primary_role === 'admin') {
+      return res.sendFile(buildFullViewPath("instructors-directory.html"));
+    } else if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("tutors-directory.html"));
+    } else {
+      return res.sendFile(buildFullViewPath("students-directory.html"));
+    }
+  } catch (error) {
+    console.error("Error determining class directory view:", error);
+    return res.sendFile(buildFullViewPath("students-directory.html"));
+  }
 });
 
 // Course selection page
