@@ -24,6 +24,9 @@ import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
 import journalRoutes from "./routes/journal-routes.js";
+import instructorJournalRoutes from "./routes/instructor-journal-routes.js";
+import taJournalRoutes from "./routes/ta-journal-routes.js";
+import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1746,6 +1749,9 @@ app.use("/api/interactions", interactionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/journals", ensureAuthenticated, journalRoutes);
+app.use("/api/instructor-journals", ensureAuthenticated, instructorJournalRoutes);
+app.use("/api/ta-journals", ensureAuthenticated, taJournalRoutes);
+app.use("/api/tutor-journals", ensureAuthenticated, tutorJournalRoutes);
 app.use("/api/class", courseOfferingRoutes);
 app.use("/api/class-directory", classDirectoryRoutes);
 

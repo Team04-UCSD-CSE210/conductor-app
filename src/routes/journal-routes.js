@@ -8,14 +8,22 @@ const router = Router();
 router.post("/", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser; // authenticated user
+    console.log("POST /api/journals - User:", user ? user.id : "NO USER");
+    console.log("POST /api/journals - Body:", req.body);
+    
+    if (!user) {
+      return res.status(401).json({ error: "User not authenticated", success: false });
+    }
+    
     const entry = await JournalModel.upsert({
       user_id: user.id,
       ...req.body,
     });
+    console.log("Created/updated entry:", entry);
     res.json({ success: true, entry });
   } catch (err) {
-    console.log(err)
-    res.status(500).json({ error: "Something went wrong!" });
+    console.error("Error in POST /api/journals:", err);
+    res.status(500).json({ error: "Something went wrong!", success: false });
   }
 });
 
@@ -23,11 +31,19 @@ router.post("/", ensureAuthenticated, async (req, res) => {
 router.get("/", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser;
+    console.log("GET /api/journals - User:", user ? user.id : "NO USER");
+    
+    if (!user) {
+      return res.status(401).json({ error: "User not authenticated", success: false });
+    }
+    
     const logs = await JournalModel.findByUser(user.id);
+    console.log("Found logs:", logs ? logs.length : 0);
     res.json({ success: true, logs });
   } catch (err) {
-    console.log(err)
-    res.status(500).json({ error: "Something went wrong!" });  }
+    console.error("Error in GET /api/journals:", err);
+    res.status(500).json({ error: "Something went wrong!", success: false });
+  }
 });
 
 // Update a journal entry (only if belongs to current user)
