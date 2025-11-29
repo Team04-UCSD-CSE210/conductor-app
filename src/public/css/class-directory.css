@@ -350,12 +350,6 @@
 .activity-day.level-3 { background-color: #86efac; }
 .activity-day.level-4 { background-color: #4ade80; }
 
-.attendance-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 .attendance-item {
   display: flex;
   justify-content: space-between;

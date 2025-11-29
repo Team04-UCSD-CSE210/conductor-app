@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/css/dashboard-global.css">
   <link rel="stylesheet" href="/css/inactivity-timeout.css">
   <link rel="stylesheet" href="/css/instructor-team-meetings.css">
-  <link rel="stylesheet" href="/css/instructor-lectures.css">
+  <link rel="stylesheet" href="/css/stats.css">
 </head>
 <body class="dashboard-page">
   <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
@@ -35,16 +35,22 @@
   <main class="main-container" id="main">
     <div class="attendance-layout">
       <section class="attendance-content" data-offering-id="">
-        <div class="attendance-title">
-          <div>
+        <header class="header-container">
+          <button class="header-back-button" id="back-button" aria-label="Back to meeting list">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <header class="header-info">
             <p class="eyebrow">Team Meetings Overview</p>
-            <h2 id="team-title">Team Meetings</h2>
+            <h2 id="team-title"></h2>
             <p class="subtitle">Review all meeting attendance for this team.</p>
-          </div>
-          <div id="overall-attendance" class="overall-attendance">
-            <span id="overall-attendance-value">—</span> Attendance Overall
-          </div>
-        </div>
+          </header>
+          <header class="attendance-stats">
+            <p class="label">Attendance Overall</p>
+            <p class="value" id="overall-attendance-value">—</p>
+          </header>
+        </header>
         <div class="lecture-list" id="meeting-list" aria-live="polite"></div>
         <div class="empty-state" id="meeting-empty" hidden>
           <p>No meetings found for any team.</p>
