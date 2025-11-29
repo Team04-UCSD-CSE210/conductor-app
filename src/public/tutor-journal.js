@@ -14,8 +14,6 @@ async function submitTutorJournal(event) {
       preparation: document.getElementById("preparation").value
     };
 
-    console.log("Submitting Tutor journal:", payload);
-
     let url = "/api/tutor-journals";
     let method = "POST";
 

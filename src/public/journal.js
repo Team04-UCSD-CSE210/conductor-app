@@ -49,8 +49,6 @@ async function submitJournal() {
       feelings: document.getElementById("feelings").value
     };
 
-    console.log("Submitting journal:", payload);
-
     let url = "/api/journals";
     let method = "POST";
 
@@ -67,9 +65,7 @@ async function submitJournal() {
       body: JSON.stringify(payload)
     });
 
-    console.log("Submit response status:", res.status);
     const data = await res.json();
-    console.log("Submit response data:", data);
 
     if (data.success) {
       alert(window.editingId ? "Entry updated!" : "Entry saved!");
@@ -87,16 +83,13 @@ async function submitJournal() {
 
 async function loadEntries() {
   try {
-    console.log("Loading journal entries...");
     const res = await fetch("/api/journals", { credentials: "include" });
-    console.log("Response status:", res.status);
     
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
     
     const data = await res.json();
-    console.log("Received data:", data);
 
     const container = document.getElementById("entries");
     if (!container) {

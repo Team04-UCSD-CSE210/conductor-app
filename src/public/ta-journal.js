@@ -14,8 +14,6 @@ async function submitTAJournal(event) {
       students_to_reach: document.getElementById("students-to-reach").value
     };
 
-    console.log("Submitting TA journal:", payload);
-
     let url = "/api/ta-journals";
     let method = "POST";
 

@@ -15,8 +15,6 @@ async function submitInstructorJournal(event) {
       overall_course: document.getElementById("overall-course").value
     };
 
-    console.log("Submitting instructor journal:", payload);
-
     let url = "/api/instructor-journals";
     let method = "POST";
 
@@ -33,9 +31,7 @@ async function submitInstructorJournal(event) {
       body: JSON.stringify(payload)
     });
 
-    console.log("Submit response status:", res.status);
     const data = await res.json();
-    console.log("Submit response data:", data);
 
     if (data.success) {
       alert(window.editingId ? "Entry updated!" : "Entry saved!");
@@ -60,16 +56,13 @@ function clearForm() {
 
 async function loadInstructorEntries() {
   try {
-    console.log("Loading instructor journal entries...");
     const res = await fetch("/api/instructor-journals", { credentials: "include" });
-    console.log("Response status:", res.status);
     
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
     
     const data = await res.json();
-    console.log("Received data:", data);
 
     const container = document.querySelector(".wj-previous");
     if (!container) {

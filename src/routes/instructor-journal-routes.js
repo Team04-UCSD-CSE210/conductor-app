@@ -8,8 +8,6 @@ const router = Router();
 router.post("/", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser;
-    console.log("POST /api/instructor-journals - User:", user ? user.id : "NO USER");
-    console.log("POST /api/instructor-journals - Body:", req.body);
     
     if (!user) {
       return res.status(401).json({ error: "User not authenticated", success: false });
@@ -19,7 +17,6 @@ router.post("/", ensureAuthenticated, async (req, res) => {
       user_id: user.id,
       ...req.body,
     });
-    console.log("Created/updated instructor entry:", entry);
     res.json({ success: true, entry });
   } catch (err) {
     console.error("Error in POST /api/instructor-journals:", err);
@@ -31,14 +28,12 @@ router.post("/", ensureAuthenticated, async (req, res) => {
 router.get("/", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser;
-    console.log("GET /api/instructor-journals - User:", user ? user.id : "NO USER");
     
     if (!user) {
       return res.status(401).json({ error: "User not authenticated", success: false });
     }
     
     const logs = await InstructorJournalModel.findByUser(user.id);
-    console.log("Found instructor logs:", logs ? logs.length : 0);
     res.json({ success: true, logs });
   } catch (err) {
     console.error("Error in GET /api/instructor-journals:", err);

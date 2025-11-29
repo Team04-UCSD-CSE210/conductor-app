@@ -8,7 +8,6 @@ const router = Router();
 router.post("/", ensureAuthenticated, async (req, res) => {
   try {
     const user = req.currentUser;
-    console.log("POST /api/tutor-journals - User:", user ? user.id : "NO USER");
     
     if (!user) {
       return res.status(401).json({ error: "User not authenticated", success: false });
