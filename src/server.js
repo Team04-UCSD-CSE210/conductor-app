@@ -1258,6 +1258,150 @@ app.get("/meetings/team-lead", ensureAuthenticated, async (req, res) => {
   }
 });
 
+// -------------------- JOURNAL ROUTES --------------------
+
+/**
+ * Work Journal - Student View
+ * Students can view and edit their work journal
+ * Requires: Authentication - Students
+ */
+app.get("/work-journal", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Check if user is a team lead
+    const isTeamLead = await isUserTeamLead(user.id);
+    
+    // Allow students, admins, and instructors
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'student' || user.primary_role === 'student' || 
+        user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      // Team leads get lead journal, regular students get student journal
+      if (isTeamLead) {
+        return res.sendFile(buildFullViewPath("lead-journal.html"));
+      } else {
+        return res.sendFile(buildFullViewPath("student-journal.html"));
+      }
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a student to access the work journal");
+  } catch (error) {
+    console.error("Error accessing work journal:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * Instructor Journal
+ * Instructors can view all student journals
+ * Requires: Authentication - Instructors
+ */
+app.get("/instructor-journal", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow instructors and admins
+    if (user.primary_role === 'instructor' || user.primary_role === 'admin') {
+      return res.sendFile(buildFullViewPath("instructor-journal.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: Only instructors can access this page");
+  } catch (error) {
+    console.error("Error accessing instructor journal:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * TA Journal
+ * TAs can view student journals
+ * Requires: Authentication - TAs
+ */
+app.get("/ta-journal", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("ta-journal.html"));
+    }
+
+    // Check if user is enrolled as TA
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'ta') {
+      return res.sendFile(buildFullViewPath("ta-journal.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a TA to access this page");
+  } catch (error) {
+    console.error("Error accessing TA journal:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * Tutor Journal
+ * Tutors can view student journals
+ * Requires: Authentication - Tutors
+ */
+app.get("/tutor-journal", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("tutor-journal.html"));
+    }
+
+    // Check if user is enrolled as tutor
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("tutor-journal.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a tutor to access this page");
+  } catch (error) {
+    console.error("Error accessing tutor journal:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
 // serve all your static files (HTML, CSS, JS, etc.) - serve project root for any other static files
 app.use(express.static(path.join(__dirname, "..")));
 

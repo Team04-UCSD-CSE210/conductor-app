@@ -6,10 +6,10 @@
   <title>Work Journal / Stand-up</title>
 
   <!-- Shared styles -->
-  <link rel="stylesheet" href="../public/global.css" />
-  <link rel="stylesheet" href="../public/dashboard-global.css" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/dashboard-global.css" />
   <!-- Page-specific -->
-  <link rel="stylesheet" href="../public/student-journal.css" />
+  <link rel="stylesheet" href="/student-journal.css" />
 </head>
 
 <body class="dashboard-page">
@@ -17,7 +17,7 @@
   <!-- Sidebar Navigation (uses existing dashboard-global.css) -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
-      <img src="../assets/temp-logo.png" alt="Conductor logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     <nav aria-label="Dashboard navigation">
@@ -41,13 +41,13 @@
     <section class="wj-card" aria-label="Logging activity">
       <h2 class="wj-section-title">Logging Activity:</h2>
 
-      <form class="wj-form">
+      <form class="wj-form" id="journalForm" onsubmit="event.preventDefault(); submitJournal();">
         <fieldset class="wj-fieldset">
           <legend class="wj-legend">
             What have you done since yesterday?
           </legend>
           <textarea
-            id="done-since-yesterday"
+            id="done"
             name="done_since_yesterday"
             rows="3"
             aria-describedby="done-since-help"
@@ -63,7 +63,7 @@
             What will you work on today?
           </legend>
           <textarea
-            id="working-on"
+            id="today"
             name="working_on"
             rows="3"
             placeholder="Outline your plans for today..."
@@ -106,7 +106,12 @@
     <section class="wj-card wj-previous" aria-label="Previous activity">
       <h2 class="wj-section-title">Previous Activity:</h2>
 
-      <!-- Entry 1 -->
+      <div id="entries">
+        <p>Loading...</p>
+      </div>
+
+      <!-- Entry 1 (keeping as template/example) -->
+      <!--
       <article class="wj-entry">
         <header class="wj-entry-header">
           <span class="wj-entry-icon" aria-hidden="true">
@@ -175,6 +180,7 @@
           <dd>Excited to start the implementation phase</dd>
         </dl>
       </article>
+      -->
     </section>
   </main>
 
@@ -244,5 +250,9 @@
       </symbol>
     </defs>
   </svg>
+
+  <script src="/js/dashboard.service.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/journal.js"></script>
 </body>
 </html>

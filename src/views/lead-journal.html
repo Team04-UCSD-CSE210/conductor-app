@@ -6,18 +6,18 @@
   <title>Work Journal / Stand-up – Team Lead</title>
 
   <!-- Shared styles -->
-  <link rel="stylesheet" href="../public/global.css" />
-  <link rel="stylesheet" href="../public/dashboard-global.css" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/dashboard-global.css" />
   <!-- Reuse same page-specific styles + a few extra rules -->
-  <link rel="stylesheet" href="../public/student-journal.css" />
-    <link rel="stylesheet" href="../public/lead-journal.css" />
+  <link rel="stylesheet" href="/student-journal.css" />
+    <link rel="stylesheet" href="/lead-journal.css" />
 </head>
 
 <body class="dashboard-page">
   <!-- Sidebar Navigation -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
-      <img src="../assets/temp-logo.png" alt="Conductor logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     <p class="sidebar-user" id="sidebarUser">
@@ -134,13 +134,13 @@
     <section class="wj-card" aria-label="Logging activity">
       <h2 class="wj-section-title">Logging Activity:</h2>
 
-      <form class="wj-form">
+      <form class="wj-form" id="journalForm" onsubmit="event.preventDefault(); submitJournal();">
         <fieldset class="wj-fieldset">
           <legend class="wj-legend">
             What have you done since yesterday?
           </legend>
           <textarea
-            id="done-since-yesterday"
+            id="done"
             name="done_since_yesterday"
             rows="3"
             aria-describedby="done-since-help"
@@ -156,7 +156,7 @@
             What will you work on today?
           </legend>
           <textarea
-            id="working-on"
+            id="today"
             name="working_on"
             rows="3"
             placeholder="Outline your plans for today..."
@@ -199,7 +199,12 @@
     <section class="wj-card wj-previous" aria-label="Previous activity">
       <h2 class="wj-section-title">Previous Activity:</h2>
 
-      <article class="wj-entry">
+      <div id="entries">
+        <p>Loading...</p>
+      </div>
+
+      <!-- Template entries (keeping as example) -->
+      <!--
         <header class="wj-entry-header">
           <span class="wj-entry-icon" aria-hidden="true">
             <!-- Calendar SVG -->
@@ -329,6 +334,8 @@
       </p>
     </section>
   </aside>
+  <script src="/js/dashboard.service.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/journal.js"></script>
 </body>
 </html>
