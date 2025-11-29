@@ -6,18 +6,18 @@
   <title>Work Journal / Stand-up – Team Lead</title>
 
   <!-- Shared styles -->
-  <link rel="stylesheet" href="../public/global.css" />
-  <link rel="stylesheet" href="../public/dashboard-global.css" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/dashboard-global.css" />
   <!-- Reuse same page-specific styles + a few extra rules -->
-  <link rel="stylesheet" href="../public/student-journal.css" />
-    <link rel="stylesheet" href="../public/lead-journal.css" />
+  <link rel="stylesheet" href="/student-journal.css" />
+    <link rel="stylesheet" href="/lead-journal.css" />
 </head>
 
 <body class="dashboard-page">
   <!-- Sidebar Navigation -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
-      <img src="../assets/temp-logo.png" alt="Conductor logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     <p class="sidebar-user" id="sidebarUser">
@@ -134,13 +134,13 @@
     <section class="wj-card" aria-label="Logging activity">
       <h2 class="wj-section-title">Logging Activity:</h2>
 
-      <form class="wj-form">
+      <form class="wj-form" id="journalForm" onsubmit="event.preventDefault(); submitJournal();">
         <fieldset class="wj-fieldset">
           <legend class="wj-legend">
             What have you done since yesterday?
           </legend>
           <textarea
-            id="done-since-yesterday"
+            id="done"
             name="done_since_yesterday"
             rows="3"
             aria-describedby="done-since-help"
@@ -156,7 +156,7 @@
             What will you work on today?
           </legend>
           <textarea
-            id="working-on"
+            id="today"
             name="working_on"
             rows="3"
             placeholder="Outline your plans for today..."
@@ -195,83 +195,13 @@
       </form>
     </section>
 
-    <!-- Previous Activity (same as student view) -->
+    <!-- Previous Activity -->
     <section class="wj-card wj-previous" aria-label="Previous activity">
       <h2 class="wj-section-title">Previous Activity:</h2>
 
-      <article class="wj-entry">
-        <header class="wj-entry-header">
-          <span class="wj-entry-icon" aria-hidden="true">
-            <!-- Calendar SVG -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              role="img"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <rect x="3" y="4" width="18" height="17" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
-              <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.6" />
-              <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.6" />
-              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.6" />
-            </svg>
-          </span>
-          <p class="wj-entry-date">November 15, 2025</p>
-        </header>
-
-        <dl class="wj-entry-details">
-          <dt>Done since yesterday:</dt>
-          <dd>Completed API integration for user authentication, fixed bug in dashboard rendering</dd>
-
-          <dt>Working on:</dt>
-          <dd>Work on team presentation slides, review PR from teammate</dd>
-
-          <dt>Blockers:</dt>
-          <dd>Waiting for design assets from UI team</dd>
-
-          <dt>Feelings:</dt>
-          <dd>Feeling good about progress, team collaboration has been excellent</dd>
-        </dl>
-      </article>
-
-      <article class="wj-entry">
-        <header class="wj-entry-header">
-          <span class="wj-entry-icon" aria-hidden="true">
-            <!-- Calendar SVG -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              role="img"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <rect x="3" y="4" width="18" height="17" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
-              <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.6" />
-              <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.6" />
-              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.6" />
-            </svg>
-          </span>
-          <p class="wj-entry-date">November 14, 2025</p>
-        </header>
-
-        <dl class="wj-entry-details">
-          <dt>Done since yesterday:</dt>
-          <dd>Set up project repository, completed initial research on authentication methods</dd>
-
-          <dt>Working on:</dt>
-          <dd>Begin API integration, attend team standup</dd>
-
-          <dt>Blockers:</dt>
-          <dd>None at the moment</dd>
-
-          <dt>Feelings:</dt>
-          <dd>Excited to start the implementation phase</dd>
-        </dl>
-      </article>
+      <div id="entries">
+        <p>Loading...</p>
+      </div>
     </section>
   </main>
 
@@ -329,6 +259,8 @@
       </p>
     </section>
   </aside>
+  <script src="/js/dashboard.service.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/journal.js"></script>
 </body>
 </html>

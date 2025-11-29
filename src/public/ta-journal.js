@@ -2,58 +2,23 @@
 window.editingId = null;
 window.currentLogs = [];
 
-// These functions are used in HTML onclick handlers
-// eslint-disable-next-line no-unused-vars
-function toggleMenu(id) {
-  const menu = document.getElementById(`menu-${id}`);
-  menu.classList.toggle("hidden");
-}
-
-// eslint-disable-next-line no-unused-vars
-async function deleteEntry(id) {
-  if (!confirm("Delete this entry?")) return;
-
-  await fetch(`/api/journals/${id}`, { method: "DELETE", credentials: "include" });
-  loadEntries();
-}
-
-// eslint-disable-next-line no-unused-vars
-function editEntry(id) {
-  const entry = window.currentLogs.find((e) => e.id === id);
-  if (!entry) return;
-
-  document.getElementById("done").value = entry.done_since_yesterday;
-  document.getElementById("today").value = entry.working_on_today;
-  document.getElementById("blockers").value = entry.blockers;
-  document.getElementById("feelings").value = entry.feelings;
-
-  window.editingId = id;
-}
-
-function clearForm() {
-  document.getElementById("done").value = "";
-  document.getElementById("today").value = "";
-  document.getElementById("blockers").value = "";
-  document.getElementById("feelings").value = "";
-}
-
-// This function is used in HTML onclick handlers
-// eslint-disable-next-line no-unused-vars
-async function submitJournal() {
+// Form submission for TA journal
+async function submitTAJournal(event) {
+  event.preventDefault();
+  
   try {
     const payload = {
       date: new Date().toISOString().split("T")[0],
-      done_since_yesterday: document.getElementById("done").value,
-      working_on_today: document.getElementById("today").value,
-      blockers: document.getElementById("blockers").value,
-      feelings: document.getElementById("feelings").value
+      interactions: document.getElementById("interactions").value,
+      groups_with_concerns: document.getElementById("groups-with-concerns").value,
+      students_to_reach: document.getElementById("students-to-reach").value
     };
 
-    let url = "/api/journals";
+    let url = "/api/ta-journals";
     let method = "POST";
 
     if (window.editingId) {
-      url = `/api/journals/${window.editingId}`;
+      url = `/api/ta-journals/${window.editingId}`;
       method = "PUT";
       delete payload.date;
     }
@@ -71,19 +36,25 @@ async function submitJournal() {
       alert(window.editingId ? "Entry updated!" : "Entry saved!");
       window.editingId = null;
       clearForm();
-      loadEntries();
+      loadTAEntries();
     } else {
       alert("Failed to save entry: " + (data.error || "Unknown error"));
     }
   } catch (error) {
-    console.error("Error submitting journal:", error);
+    console.error("Error submitting TA journal:", error);
     alert("Error submitting journal. Check console for details.");
   }
 }
 
-async function loadEntries() {
+function clearForm() {
+  document.getElementById("interactions").value = "";
+  document.getElementById("groups-with-concerns").value = "";
+  document.getElementById("students-to-reach").value = "";
+}
+
+async function loadTAEntries() {
   try {
-    const res = await fetch("/api/journals", { credentials: "include" });
+    const res = await fetch("/api/ta-journals", { credentials: "include" });
     
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
@@ -91,31 +62,38 @@ async function loadEntries() {
     
     const data = await res.json();
 
-    const container = document.getElementById("entries");
+    const container = document.querySelector(".wj-previous");
     if (!container) {
-      console.error("Container #entries not found!");
+      console.error("Container .wj-previous not found!");
       return;
     }
     
+    // Clear existing entries but keep the title
+    const title = container.querySelector(".wj-section-title");
     container.innerHTML = "";
+    if (title) {
+      container.appendChild(title);
+    } else {
+      container.innerHTML = '<h2 class="wj-section-title">Previous Activity:</h2>';
+    }
 
     if (!data.logs || data.logs.length === 0) {
-      container.innerHTML = "<p>No previous entries yet.</p>";
+      const noEntries = document.createElement("p");
+      noEntries.textContent = "No previous entries yet.";
+      container.appendChild(noEntries);
       return;
     }
 
-    // Sort latest first (use updated_at/updatedAt, then created_at/createdAt, fallback to date)
+    // Sort latest first
     data.logs.sort((a, b) => {
       const tb = new Date(b.updated_at || b.updatedAt || b.created_at || b.createdAt || b.date);
       const ta = new Date(a.updated_at || a.updatedAt || a.created_at || a.createdAt || a.date);
       return tb - ta;
     });
 
-    // Save logs globally for editing
     window.currentLogs = data.logs;
 
     data.logs.forEach((log) => {
-      // Format date properly
       const dateObj = new Date(log.date || log.created_at || log.createdAt);
       const dateLabel = dateObj.toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -139,29 +117,33 @@ async function loadEntries() {
         </header>
 
         <dl class="wj-entry-details">
-          <dt>Done since yesterday:</dt>
-          <dd>${log.done_since_yesterday || 'N/A'}</dd>
+          <dt>Interactions:</dt>
+          <dd>${log.interactions || 'N/A'}</dd>
 
-          <dt>Working on:</dt>
-          <dd>${log.working_on_today || 'N/A'}</dd>
+          <dt>Groups with Concerns:</dt>
+          <dd>${log.groups_with_concerns || 'N/A'}</dd>
 
-          <dt>Blockers:</dt>
-          <dd>${log.blockers || 'N/A'}</dd>
-
-          <dt>Feelings:</dt>
-          <dd>${log.feelings || 'N/A'}</dd>
+          <dt>Students to Reach:</dt>
+          <dd>${log.students_to_reach || 'N/A'}</dd>
         </dl>
       `;
       container.appendChild(article);
     });
   } catch (error) {
-    console.error("Error loading entries:", error);
-    const container = document.getElementById("entries");
+    console.error("Error loading TA entries:", error);
+    const container = document.querySelector(".wj-previous");
     if (container) {
-      container.innerHTML = "<p>Error loading entries. Check console for details.</p>";
+      container.innerHTML = '<h2 class="wj-section-title">Previous Activity:</h2><p>Error loading entries. Check console for details.</p>';
     }
   }
 }
 
-// Load entries on page load
-window.onload = loadEntries;
+// Attach form submission handler
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('.wj-form');
+  if (form) {
+    form.addEventListener('submit', submitTAJournal);
+  }
+  
+  loadTAEntries();
+});
