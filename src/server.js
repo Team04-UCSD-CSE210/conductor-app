@@ -110,16 +110,7 @@ app.use(
 );
 
 app.use(passport.initialize());
-
-// Custom wrapper for passport.session() to handle missing sessions gracefully
-app.use((req, res, next) => {
-  // Only run passport.session() if session exists
-  if (req.session) {
-    return passport.session()(req, res, next);
-  }
-  // If no session, just continue (for static files, etc.)
-  next();
-});
+app.use(passport.session());
 
 if (!DATABASE_URL || DATABASE_URL.includes("localhost")) {
   console.log("⚠️ Database not configured or using localhost, running without database features");
