@@ -1493,21 +1493,8 @@ app.get("/auth/failure", async (req, res) => {
 
 // Login route - redirect to Google OAuth
 app.get("/login", (req, res) => {
-  // Clear any existing session and redirect to Google OAuth
-  safeLogout(req, (logoutErr) => {
-    if (logoutErr) {
-      console.error("⚠️ Error during logout on /login:", logoutErr);
-    }
-    
-    safeDestroySession(req, (destroyErr) => {
-      if (destroyErr) {
-        console.error("⚠️ Error destroying session on /login:", destroyErr);
-      }
-      
-      // Redirect to Google OAuth to start login flow
-      res.redirect("/auth/google");
-    });
-  });
+  // Redirect to Google OAuth
+  res.redirect("/auth/google");
 });
 
 // Health check endpoint (public, no authentication required)
