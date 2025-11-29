@@ -1088,11 +1088,9 @@ app.get("/class-directory", ...classDirectoryMiddleware, async (req, res) => {
 
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     
-    // Route based on role
-    if (user.primary_role === 'instructor' || user.primary_role === 'admin') {
+    // Route based on role - consolidated tutor with instructor roles
+    if (user.primary_role === 'instructor' || user.primary_role === 'admin' || enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
       return res.sendFile(buildFullViewPath("instructors-directory.html"));
-    } else if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
-      return res.sendFile(buildFullViewPath("tutors-directory.html"));
     } else {
       return res.sendFile(buildFullViewPath("students-directory.html"));
     }
@@ -1116,11 +1114,9 @@ app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, async
 
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     
-    // Route based on role
-    if (user.primary_role === 'instructor' || user.primary_role === 'admin') {
+    // Route based on role - consolidated tutor with instructor roles
+    if (user.primary_role === 'instructor' || user.primary_role === 'admin' || enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
       return res.sendFile(buildFullViewPath("instructors-directory.html"));
-    } else if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
-      return res.sendFile(buildFullViewPath("tutors-directory.html"));
     } else {
       return res.sendFile(buildFullViewPath("students-directory.html"));
     }
