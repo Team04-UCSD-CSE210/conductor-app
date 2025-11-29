@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["sh", "-c",  "npm run db:reset && npm run db:init && npm run db:seed && npm start"]
