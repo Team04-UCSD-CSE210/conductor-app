@@ -53,38 +53,79 @@ async function fetchTeams() {
 async function renderTeams() {
   const container = document.getElementById('team-list');
   container.innerHTML = '<p style="text-align:center; color:#888;">Loading teams...</p>';
-  fetchTeams().then(({ teams, offeringId }) => {
+  
+  try {
+    const { teams, offeringId } = await fetchTeams();
     container.innerHTML = '';
+    
     if (!teams || !Array.isArray(teams)) {
       container.innerHTML = '<p style="color:red;">Error: Could not fetch teams. Check your network and permissions.</p>';
       return;
     }
+    
     if (!teams.length) {
       container.innerHTML = '<p style="text-align:center; color:#888;">No teams found.</p>';
       return;
     }
+    
     // Sort teams by team_number ascending
     teams.sort((a, b) => {
       const numA = a.team_number ?? 0;
       const numB = b.team_number ?? 0;
       return numA - numB;
     });
-    // Collect all team row promises
-    const teamRowPromises = teams.map(async team => {
-      const meetings = await fetchMeetings(team.id, offeringId);
+    
+    // Fetch all meetings for all teams in parallel
+    const teamMeetingsPromises = teams.map(team => fetchMeetings(team.id, offeringId));
+    const allMeetings = await Promise.all(teamMeetingsPromises);
+    
+    // Collect all closed session IDs for batch statistics fetch
+    const closedSessionIds = [];
+    const teamMeetingsMap = new Map();
+    
+    teams.forEach((team, index) => {
+      const meetings = allMeetings[index] || [];
       const teamMeetings = meetings.filter(m => m.team_id === team.id);
+      teamMeetingsMap.set(team.id, teamMeetings);
+      
+      // Collect closed session IDs
+      teamMeetings.forEach(meeting => {
+        const status = determineMeetingStatus(meeting);
+        if (status === 'closed') {
+          closedSessionIds.push(meeting.id);
+        }
+      });
+    });
+    
+    // Batch fetch all statistics in ONE request
+    let statsMap = {};
+    if (closedSessionIds.length > 0) {
+      const statsRes = await fetch(
+        `/api/attendance/sessions/batch/statistics?session_ids=${closedSessionIds.join(',')}`,
+        { credentials: 'include' }
+      );
+      
+      if (statsRes.ok) {
+        statsMap = await statsRes.json();
+      } else {
+        console.warn('Failed to fetch batch statistics:', statsRes.status);
+      }
+    }
+    
+    // Render all team rows with pre-fetched statistics
+    for (const team of teams) {
+      const teamMeetings = teamMeetingsMap.get(team.id) || [];
       const teamSize = Number(team.member_count || team.members?.length || 0);
       let totalAttendance = 0;
       let totalPossible = 0;
       
-      // Only count closed meetings (same logic as team leader view)
+      // Calculate attendance from batch stats
       for (const meeting of teamMeetings) {
         const status = determineMeetingStatus(meeting);
         
         if (status === 'closed') {
-          const statsRes = await fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' });
-          if (statsRes.ok) {
-            const stats = await statsRes.json();
+          const stats = statsMap[meeting.id];
+          if (stats) {
             totalAttendance += stats.present_count || 0;
             totalPossible += teamSize;
           } else {
@@ -92,7 +133,9 @@ async function renderTeams() {
           }
         }
       }
+      
       const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
+      
       const row = document.createElement('a');
       row.className = 'team-row';
       row.href = `/instructor-team-meetings.html?team_id=${encodeURIComponent(team.id)}&offering_id=${encodeURIComponent(offeringId)}`;
@@ -111,15 +154,12 @@ async function renderTeams() {
           </span>
         </div>
       `;
-      return row;
-    });
-    Promise.all(teamRowPromises).then(rows => {
-      container.innerHTML = '';
-      for (const row of rows) {
-        container.appendChild(row);
-      }
-    });
-  });
+      
+      container.appendChild(row);
+    }
+  } catch (error) {
+    console.error('Error rendering teams:', error);
+    container.innerHTML = '<p style="color:red;">Error loading teams. Please try again.</p>';
+  }
 }
 document.addEventListener('DOMContentLoaded', renderTeams);
-// End of file
