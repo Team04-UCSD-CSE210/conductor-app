@@ -273,6 +273,41 @@ export class AttendanceModel {
   }
 
   /**
+   * Get attendance statistics for multiple sessions (batch)
+   * Returns an object with session_id as keys
+   */
+  static async getBatchSessionStatistics(sessionIds) {
+    if (!sessionIds || sessionIds.length === 0) {
+      return {};
+    }
+
+    const result = await pool.query(
+      `SELECT 
+         s.id as session_id,
+         s.title,
+         s.session_date,
+         COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present')::INTEGER as present_count,
+         COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'absent')::INTEGER as absent_count,
+         0::INTEGER as late_count,
+         COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'excused')::INTEGER as excused_count,
+         COUNT(DISTINCT a.user_id)::INTEGER as total_marked
+       FROM sessions s
+       LEFT JOIN attendance a ON s.id = a.session_id
+       WHERE s.id = ANY($1::UUID[])
+       GROUP BY s.id`,
+      [sessionIds]
+    );
+
+    // Convert array to object with session_id as key
+    const statsMap = {};
+    for (const row of result.rows) {
+      statsMap[row.session_id] = row;
+    }
+
+    return statsMap;
+  }
+
+  /**
    * Get attendance statistics for a user in a course
    */
   static async getUserStatistics(userId, offeringId) {
