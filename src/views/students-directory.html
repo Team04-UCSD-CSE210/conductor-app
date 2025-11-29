@@ -33,14 +33,6 @@
   </header>
 
   <main class="main-container" id="main">
-    <div class="directory-header">
-      <h2 class="page-title">Class Directory</h2>
-      <div class="active-offering-display">
-        <span class="offering-label">Active Offering:</span>
-        <span class="offering-name" id="activeOfferingName">Loading...</span>
-      </div>
-    </div>
-
     <div class="directory-tabs">
       <button class="tab-btn active" data-tab="professors">Professors</button>
       <button class="tab-btn" data-tab="tas">TAs</button>
@@ -121,6 +113,42 @@
   </main>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Profile Edit Modal -->
+  <div id="profileModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Profile</h3>
+        <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+      </div>
+      <form id="profileForm">
+        <div class="form-group">
+          <label for="preferredName">Preferred Name:</label>
+          <input type="text" id="preferredName" name="preferred_name">
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone:</label>
+          <input type="tel" id="phone" name="phone">
+        </div>
+        <div class="form-group">
+          <label for="pronouns">Pronouns:</label>
+          <input type="text" id="pronouns" name="pronouns" placeholder="e.g., she/her, he/him, they/them">
+        </div>
+        <div class="form-group">
+          <label for="availability">Availability:</label>
+          <textarea id="availability" name="availability" rows="3" placeholder="When are you typically available?"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="profilePicture">Profile Picture URL:</label>
+          <input type="url" id="profilePicture" name="profile_picture" placeholder="https://...">
+        </div>
+        <div class="modal-actions">
+          <button type="button" onclick="closeProfileModal()">Cancel</button>
+          <button type="submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/class-directory.js" defer></script>

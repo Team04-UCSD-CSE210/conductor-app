@@ -2,15 +2,19 @@
 
 const state = {
   offeringId: null,
+  currentUserId: null,
   professors: [],
   tas: [],
+  tutors: [],
   students: [],
   groups: [],
   currentTab: 'professors',
+  currentUserRole: 'student',
   filters: {
     professors: { search: '' },
-    tas: { search: '', activity: 'all' },
-    students: { search: '', group: 'all', activity: 'all' },
+    tas: { search: '' },
+    tutors: { search: '' },
+    students: { search: '', group: 'all' },
     groups: { search: '' }
   }
 };
@@ -19,26 +23,25 @@ let elements = {};
 
 const initializeElements = () => {
   elements = {
-    activeOfferingName: document.getElementById('activeOfferingName'),
     tabBtns: document.querySelectorAll('.tab-btn'),
     sections: document.querySelectorAll('.directory-section'),
     
     // Grids
     professorsGrid: document.getElementById('professors-grid'),
     tasGrid: document.getElementById('tas-grid'),
+    tutorsGrid: document.getElementById('tutors-grid'),
     studentsGrid: document.getElementById('students-grid'),
     groupsGrid: document.getElementById('groups-grid'),
     
     // Search inputs
     profSearch: document.getElementById('prof-search'),
     taSearch: document.getElementById('ta-search'),
+    tutorSearch: document.getElementById('tutor-search'),
     studentSearch: document.getElementById('student-search'),
     groupSearch: document.getElementById('group-search'),
     
     // Filters
-    taActivity: document.getElementById('ta-activity'),
     studentGroup: document.getElementById('student-group'),
-    studentActivity: document.getElementById('student-activity'),
     
     // Modals
     toastContainer: document.getElementById('toastContainer')
@@ -63,6 +66,23 @@ const api = {
     const response = await fetch(`/api/class-directory/users/${userId}/activity?days=${days}`, { credentials: 'include' });
     if (!response.ok) return { activity: [], attendance: {} };
     return response.json();
+  },
+
+  async getMyProfile() {
+    const response = await fetch('/api/class-directory/my-profile', { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to fetch profile');
+    return response.json();
+  },
+
+  async updateProfile(profileData) {
+    const response = await fetch('/api/class-directory/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(profileData)
+    });
+    if (!response.ok) throw new Error('Failed to update profile');
+    return response.json();
   }
 };
 
@@ -76,34 +96,45 @@ const renderPersonCard = (person, type) => {
   const isActive = person.last_activity && 
     new Date(person.last_activity) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   
+  const displayName = person.preferred_name || person.name;
+  const profileImage = person.profile_picture ? 
+    `<img src="${person.profile_picture}" alt="${displayName}" class="person-photo">` :
+    `<div class="person-avatar">${getInitials(displayName)}</div>`;
+  
+  // Check if this is current user's card
+  const isCurrentUser = state.currentUserId === person.id;
+  
   return `
     <div class="person-card" data-person-id="${person.id}" data-type="${type}">
       <div class="person-header">
-        <div class="person-avatar">${getInitials(person.name)}</div>
+        ${profileImage}
         <div class="person-info">
-          <h4>${person.name}</h4>
-          <div class="person-role">${person.course_role || person.primary_role}</div>
-          ${person.pronouns ? `<div class="person-pronouns">${person.pronouns}</div>` : ''}
+          <h4 class="person-name">${displayName}</h4>
+          ${person.pronouns ? `<div class="person-pronouns">(${person.pronouns})</div>` : ''}
+          <div class="person-status">
+            <div class="status-indicator ${isActive ? 'active' : 'inactive'}"></div>
+            <span>${isActive ? 'Active' : 'Inactive'}</span>
+          </div>
         </div>
+        ${isCurrentUser ? '<button class="edit-profile-btn" onclick="openProfileModal()">Edit</button>' : ''}
       </div>
-      <div class="person-details">
-        <div class="detail-item">
-          <span class="detail-label">Email:</span>
-          <span class="detail-value">${person.email}</span>
+      <div class="person-contact">
+        <div class="contact-item">
+          <span class="contact-label">Email:</span>
+          <a href="mailto:${person.email}" class="contact-value">${person.email}</a>
         </div>
         ${person.phone ? `
-          <div class="detail-item">
-            <span class="detail-label">Phone:</span>
-            <span class="detail-value">${person.phone}</span>
+          <div class="contact-item">
+            <span class="contact-label">Phone:</span>
+            <a href="tel:${person.phone}" class="contact-value">${person.phone}</a>
           </div>
         ` : ''}
-        <div class="detail-item">
-          <span class="detail-label">Status:</span>
-          <div class="activity-indicator">
-            <div class="activity-dot ${isActive ? 'active' : 'inactive'}"></div>
-            <span class="detail-value">${isActive ? 'Active' : 'Inactive'}</span>
+        ${person.availability ? `
+          <div class="contact-item">
+            <span class="contact-label">Available:</span>
+            <span class="contact-value">${person.availability}</span>
           </div>
-        </div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -188,6 +219,17 @@ const renderTAsGrid = () => {
   elements.tasGrid.innerHTML = filtered.map(ta => renderPersonCard(ta, 'ta')).join('');
 };
 
+const renderTutorsGrid = () => {
+  const filtered = filterPeople(state.tutors, state.filters.tutors);
+  
+  if (filtered.length === 0) {
+    elements.tutorsGrid.innerHTML = '<div class="empty-state">No tutors found</div>';
+    return;
+  }
+  
+  elements.tutorsGrid.innerHTML = filtered.map(tutor => renderPersonCard(tutor, 'tutor')).join('');
+};
+
 const renderStudentsGrid = () => {
   const filtered = filterPeople(state.students, state.filters.students);
   
@@ -242,6 +284,13 @@ const setupEventListeners = () => {
     renderTAsGrid();
   });
   
+  if (elements.tutorSearch) {
+    elements.tutorSearch.addEventListener('input', (e) => {
+      state.filters.tutors.search = e.target.value;
+      renderTutorsGrid();
+    });
+  }
+  
   elements.studentSearch.addEventListener('input', (e) => {
     state.filters.students.search = e.target.value;
     renderStudentsGrid();
@@ -253,20 +302,12 @@ const setupEventListeners = () => {
   });
   
   // Filter dropdowns
-  elements.taActivity.addEventListener('change', (e) => {
-    state.filters.tas.activity = e.target.value;
-    renderTAsGrid();
-  });
-  
-  elements.studentGroup.addEventListener('change', (e) => {
-    state.filters.students.group = e.target.value;
-    renderStudentsGrid();
-  });
-  
-  elements.studentActivity.addEventListener('change', (e) => {
-    state.filters.students.activity = e.target.value;
-    renderStudentsGrid();
-  });
+  if (elements.studentGroup) {
+    elements.studentGroup.addEventListener('change', (e) => {
+      state.filters.students.group = e.target.value;
+      renderStudentsGrid();
+    });
+  }
 };
 
 // Initialize
@@ -275,15 +316,40 @@ const loadData = async () => {
     // Get active offering
     const offering = await api.getActiveOffering();
     state.offeringId = offering.id;
-    elements.activeOfferingName.textContent = `${offering.code} - ${offering.name}`;
     
     // Get class directory data
     const directoryData = await api.getClassDirectory(offering.id);
     
+    console.log('Directory data received:', directoryData); // Debug log
+    console.log('Current user role:', directoryData.current_user_role); // Debug log
+    
     state.professors = directoryData.professors || [];
     state.tas = directoryData.tas || [];
+    state.tutors = directoryData.tutors || [];
     state.students = directoryData.students || [];
     state.groups = directoryData.groups || [];
+    state.currentUserRole = directoryData.current_user_role || 'student';
+
+    console.log('Professors:', state.professors.length); // Debug log
+    console.log('TAs:', state.tas.length); // Debug log
+    console.log('Tutors:', state.tutors.length); // Debug log
+
+    // Hide students tab for students
+    console.log('Hiding students tab for role:', state.currentUserRole); // Debug log
+    if (state.currentUserRole === 'student') {
+      const studentsTab = document.querySelector('[data-tab="students"]');
+      const studentsSection = document.getElementById('students-section');
+      console.log('Students tab element:', studentsTab); // Debug log
+      console.log('Students section element:', studentsSection); // Debug log
+      if (studentsTab) {
+        studentsTab.style.display = 'none';
+        console.log('Hidden students tab'); // Debug log
+      }
+      if (studentsSection) {
+        studentsSection.style.display = 'none';
+        console.log('Hidden students section'); // Debug log
+      }
+    }
     
     // Populate group filter for students
     const groupOptions = state.groups.map(group => 
@@ -294,12 +360,18 @@ const loadData = async () => {
     // Render initial data
     renderProfessorsGrid();
     renderTAsGrid();
-    renderStudentsGrid();
+    renderTutorsGrid();
+    if (state.currentUserRole !== 'student') {
+      renderStudentsGrid();
+    }
     renderGroupsGrid();
     
   } catch (error) {
     console.error('Failed to load class directory data:', error);
-    elements.activeOfferingName.textContent = 'Error loading data';
+    // Show error in professors grid since that's the default tab
+    if (elements.professorsGrid) {
+      elements.professorsGrid.innerHTML = '<div class="empty-state">Error loading data</div>';
+    }
   }
 };
 
@@ -308,4 +380,50 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeElements();
   setupEventListeners();
   loadData();
+});
+
+// Profile Modal Functions
+window.openProfileModal = async () => {
+  try {
+    const profile = await api.getMyProfile();
+    state.currentUserId = profile.id;
+    
+    document.getElementById('preferredName').value = profile.preferred_name || '';
+    document.getElementById('phone').value = profile.phone || '';
+    document.getElementById('pronouns').value = profile.pronouns || '';
+    document.getElementById('availability').value = profile.availability || '';
+    document.getElementById('profilePicture').value = profile.profile_picture || '';
+    
+    document.getElementById('profileModal').style.display = 'block';
+  } catch (error) {
+    showToast('Failed to load profile', 'error');
+  }
+};
+
+window.closeProfileModal = () => {
+  document.getElementById('profileModal').style.display = 'none';
+};
+
+// Profile form submission
+document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const profileData = {
+    preferred_name: formData.get('preferred_name'),
+    phone: formData.get('phone'),
+    pronouns: formData.get('pronouns'),
+    availability: formData.get('availability'),
+    profile_picture: formData.get('profile_picture'),
+    social_links: {}
+  };
+  
+  try {
+    await api.updateProfile(profileData);
+    showToast('Profile updated successfully!', 'success');
+    closeProfileModal();
+    loadData(); // Reload to show changes
+  } catch (error) {
+    showToast('Failed to update profile', 'error');
+  }
 });
