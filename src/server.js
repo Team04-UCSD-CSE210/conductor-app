@@ -145,10 +145,14 @@ const findOrCreateUser = async (email, defaults = {}) => {
     let user = await findUserByEmail(email);
     
     if (!user) {
-      // Simple user creation with primary_role defaulting to 'unregistered'
+      // Simple user creation with sensible defaults:
+      // - primary_role defaults to 'unregistered'
+      // - status defaults to 'active' to satisfy NOT NULL constraint
       const result = await pool.query(
-        `INSERT INTO users (email, name, primary_role) VALUES ($1, $2, $3) 
-         ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name 
+        `INSERT INTO users (email, name, primary_role, status) 
+         VALUES ($1, $2, $3, 'active'::user_status_enum) 
+         ON CONFLICT (email) DO UPDATE SET 
+           name = EXCLUDED.name 
          RETURNING *`,
         [
           email,
