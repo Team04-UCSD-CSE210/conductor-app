@@ -25,7 +25,10 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user">Jordan Lee<br><span class="sidebar-user-role">Student</span></p>
+    <div class="sidebar-user" id="sidebarUser">
+      <span class="sidebar-user-name">Loading...</span><br>
+      <span class="sidebar-user-role">Student</span>
+    </div>
     <nav aria-label="Dashboard navigation">
       <a href="/courses">Courses</a>
       <a href="/attendance">Attendance</a>
@@ -161,5 +164,23 @@
   <script src="/js/dashboard.service.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/student-dashboard.js" defer></script>
+  <script>
+    // Debug: Check if navigation context is working
+    setTimeout(async () => {
+      try {
+        const response = await fetch('/api/users/navigation-context', { credentials: 'include' });
+        const data = await response.json();
+        console.log('Navigation context response:', data);
+        
+        // Manually update the name if the sidebar script failed
+        const nameEl = document.querySelector('.sidebar-user-name');
+        if (nameEl && data.name) {
+          nameEl.textContent = data.name;
+        }
+      } catch (error) {
+        console.error('Navigation context error:', error);
+      }
+    }, 1000);
+  </script>
 </body>
 </html>
