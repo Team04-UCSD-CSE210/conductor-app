@@ -31,6 +31,11 @@ const __dirname = path.dirname(__filename);
 // Since server.js is in src/, views are in src/views relative to project root, but "views" relative to src/
 const VIEW_DIR = process.env.VERCEL ? "public" : "views"
 
+// Helper function to build full path to view files
+function buildFullViewPath(viewFileName){
+  return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
+}
+
 dotenv.config();
 
 // SSL certificate and key (optional for local dev)
@@ -1486,21 +1491,10 @@ app.get("/auth/failure", async (req, res) => {
 });
 
 
-function buildFullViewPath(viewFileName){
-  return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
-}
-
-// Reset any leftover session before showing login page
+// Login route - redirect to Google OAuth
 app.get("/login", (req, res) => {
-  // Clear Passport user and Redis session if any
-  try {
-    safeLogout(req);
-    safeDestroySession(req);
-  } catch (err) {
-    console.error("⚠️ Error while resetting session on /login:", err);
-  }
-
-  res.sendFile(buildFullViewPath("login.html"));
+  // Redirect to Google OAuth
+  res.redirect("/auth/google");
 });
 
 // Health check endpoint (public, no authentication required)
