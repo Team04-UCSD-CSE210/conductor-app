@@ -249,12 +249,12 @@
 .progress-placeholder {
   text-align: center;
   padding: 12px;
-  margin: 8px;
+  margin: 2px;
   color: #0F766E;
   background: #F0FDFA;
   border-radius: 8px;
   border: 2px dashed #99F6E4;
-  height: calc(100% - 32px);
+  height: calc(100% - 8px);
   display: flex;
   align-items: center;
   justify-content: center;
