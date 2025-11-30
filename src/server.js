@@ -918,7 +918,7 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
 
     // Admin and instructor can access team lead dashboard (for viewing)
     if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
-      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
+      return res.sendFile(buildFullViewPath("student-dashboard.html"));
     }
 
     // Check if user is a team lead
@@ -936,7 +936,7 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
       return res.redirect("/student-dashboard");
     }
 
-    return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
+    return res.sendFile(buildFullViewPath("student-dashboard.html"));
   } catch (error) {
     console.error("Error accessing team lead dashboard:", error);
     return res.status(500).send("Internal server error");
@@ -1205,9 +1205,8 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     if (enrollmentRoleForAccess === 'student' || enrollmentRoleForAccess === 'team-lead' || 
         user.primary_role === 'student' || user.primary_role === 'admin' || 
         user.primary_role === 'instructor') {
-      // Serve team lead view if user is a team lead, otherwise student view
+      // Team leads get the enhanced team lead dashboard with create meeting functionality
       if (isTeamLead) {
-        // Team leads get the enhanced team lead dashboard
         return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
       } else {
         // Regular students get the student view
@@ -1287,12 +1286,8 @@ app.get("/work-journal", ensureAuthenticated, async (req, res) => {
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student' || 
         user.primary_role === 'admin' || user.primary_role === 'instructor') {
-      // Team leads get lead journal, regular students get student journal
-      if (isTeamLead) {
-        return res.sendFile(buildFullViewPath("lead-journal.html"));
-      } else {
-        return res.sendFile(buildFullViewPath("student-journal.html"));
-      }
+      // Both team leads and regular students get the same student journal page
+      return res.sendFile(buildFullViewPath("student-journal.html"));
     }
 
     // Not authorized

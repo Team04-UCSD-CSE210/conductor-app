@@ -125,6 +125,8 @@
       <span class="sidebar-user-name">Loading...</span><br>
       <span class="sidebar-user-role">Loading...</span>
     </p>
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav">
       <!-- Navigation will be dynamically populated based on user role -->
     </nav>
@@ -167,12 +169,12 @@
       </section>
 
       <aside class="attendance-sidebar">
-        <div class="stats-box flip-card" id="attendance-card" style="background-color: var(--yellow-50, #fefce8); border-left: 4px solid var(--yellow-500, #eab308);">
+        <div class="stats-box flip-card" id="attendance-card" style="background-color: #f0fdfa; border: 1px solid #d1d5db; padding: 2rem; min-height: 250px;">
           <div class="flip-card-inner">
             <!-- Front: Team Average -->
             <div class="flip-card-front">
               <div style="position: relative;">
-                <h3 style="margin: 0; text-align: center; margin-bottom: 0.5rem;">Team Attendance</h3>
+                <h3 style="margin: 0; text-align: center; margin-bottom: 1rem; color: #000000; font-size: 1.5rem;">Team Attendance</h3>
                 <button class="flip-button" id="flip-to-members" aria-label="View individual attendance" title="View individual attendance" style="position: absolute; top: 0; right: 0;">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M14 8H2M14 8L10 4M14 8L10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -199,14 +201,13 @@
           </div>
         </div>
 
-        <div class="help-box team-lead-card">
+        <div class="help-box team-lead-card" style="background-color: #f0fdfa; border: 1px solid #d1d5db; padding: 1.5rem; overflow: hidden; width: 100%; max-width: 300px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-            <h3 style="margin: 0;">Create Team Meeting</h3>
-            <span style="font-size: 0.85rem; color: var(--gray-500);">Quick Setup</span>
+            <h3 style="margin: 0; color: #000000; font-size: 1.2rem;">Create Team Meeting</h3>
           </div>
-          <form id="create-meeting-form" style="display: flex; flex-direction: column; gap: 1rem;">
+          <form id="create-meeting-form" style="display: flex; flex-direction: column; gap: 0.75rem; background: transparent;">
             <div class="form-field">
-              <label for="meeting-name">
+              <label for="meeting-name" style="font-size: 0.9rem;">
                 Meeting Name
                 <span class="required-indicator" aria-label="required">*</span>
               </label>
@@ -218,11 +219,12 @@
                 class="text-input"
                 required
                 aria-required="true"
+                style="font-size: 0.9rem; padding: 0.5rem;"
               >
             </div>
 
             <div class="form-field">
-              <label for="meeting-date">
+              <label for="meeting-date" style="font-size: 0.9rem;">
                 Date
                 <span class="required-indicator" aria-label="required">*</span>
               </label>
@@ -233,12 +235,13 @@
                 class="date-picker"
                 required
                 aria-required="true"
+                style="font-size: 0.9rem; padding: 0.5rem;"
               >
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
               <div class="form-field" style="margin: 0;">
-                <label for="meeting-start">
+                <label for="meeting-start" style="font-size: 0.9rem;">
                   Start Time
                   <span class="required-indicator" aria-label="required">*</span>
                 </label>
@@ -249,11 +252,12 @@
                   class="time-picker"
                   required
                   aria-required="true"
+                  style="font-size: 0.9rem; padding: 0.5rem;"
                 >
               </div>
 
               <div class="form-field" style="margin: 0;">
-                <label for="meeting-end">
+                <label for="meeting-end" style="font-size: 0.9rem;">
                   End Time
                   <span class="required-indicator" aria-label="required">*</span>
                 </label>
@@ -264,14 +268,18 @@
                   class="time-picker"
                   required
                   aria-required="true"
+                  style="font-size: 0.9rem; padding: 0.5rem;"
                 >
               </div>
             </div>
 
             <button 
               type="submit" 
-              class="btn-contact btn-primary" 
+              class="btn btn-primary" 
               id="create-meeting-btn"
+              style="background: #83d7cf; color: #000000; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 0.75rem; font-size: 0.9rem;"
+              onmouseover="this.style.background='#67d3c8'"
+              onmouseout="this.style.background='#83d7cf'"
             >
               Create Meeting
             </button>

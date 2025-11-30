@@ -6,6 +6,8 @@
   font-size: 0.85rem;
   color: var(--gray-700);
   line-height: 1.4;
+  /* Hide team lead name and info */
+  display: none;
 }
 
 .sidebar-user-role {

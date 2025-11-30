@@ -40,22 +40,30 @@
       { href: "/class-directory", text: "Directory" }
     ],
     teamLead: [
-      { href: "/team-lead-dashboard", text: "Courses" },
+      { 
+        href: "/student-dashboard", 
+        text: "Courses",
+        match: ["/student-dashboard", "/team-lead-dashboard"]
+      },
       {
         href: "/lecture-attendance-student",
         text: "Lectures",
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
-      { href: "/meetings/team-lead", text: "Meetings" },
+      { href: "/meetings", text: "Meetings" },
       {
         href: "/work-journal",
         text: "Work Journal",
-        match: ["/work-journal", "/lead-journal"]
+        match: ["/work-journal", "/student-work-journal", "/lead-journal"]
       },
       { href: "/class-directory", text: "Directory" }
     ],
     student: [
-      { href: "/student-dashboard", text: "Courses" },
+      { 
+        href: "/student-dashboard", 
+        text: "Courses",
+        match: ["/student-dashboard", "/team-lead-dashboard"]
+      },
       {
         href: "/lecture-attendance-student",
         text: "Lectures",
