@@ -40,36 +40,34 @@
       { href: "/class-directory", text: "Class Directory" }
     ],
     teamLead: [
-      { href: "/team-lead-dashboard", text: "Dashboard" },
+      { href: "/team-lead-dashboard", text: "Courses" },
       {
         href: "/lecture-attendance-student",
         text: "Lectures",
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
-      { href: "/meetings/team-lead", text: "Team Meetings" },
-      { href: "/class-directory", text: "Class Directory" },
+      { href: "/meetings/team-lead", text: "Meetings" },
       {
         href: "/work-journal",
         text: "Work Journal",
         match: ["/work-journal", "/lead-journal"]
       },
-      { href: "/my-team", text: "My Team" }
+      { href: "/class-directory", text: "Class Directory" }
     ],
     student: [
-      { href: "/student-dashboard", text: "Dashboard" },
+      { href: "/student-dashboard", text: "Courses" },
       {
         href: "/lecture-attendance-student",
         text: "Lectures",
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
       { href: "/meetings", text: "Meetings" },
-      { href: "/class-directory", text: "Class Directory" },
       {
         href: "/work-journal",
         text: "Work Journal",
         match: ["/work-journal", "/student-work-journal", "/lead-journal"]
       },
-      { href: "/my-team", text: "My Team" }
+      { href: "/class-directory", text: "Class Directory" }
     ]
   };
 
