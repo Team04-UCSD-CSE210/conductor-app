@@ -31,116 +31,146 @@
   </header>
 
   <main class="main-container" id="main">
-    <div class="top-bar">
-      <div class="user-profile-icon">👤</div>
+    <!-- Top Bar with User Icon -->
+    <div class="dashboard-header">
+      <img src="/assets/user.png" alt="User Profile" class="user-profile-icon">
     </div>
 
-    <div class="welcome-banner">
-      <h2>Welcome, Helena Bender!</h2>
-      <p>See what happened with your cours</p>
+    <!-- Welcome Banner with Polaroid -->
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <h2>Welcome, Helena Bender!</h2>
+        <p>See what happened with your course and team!</p>
+      </div>
+      <div class="polaroid-container">
+        <div class="polaroid">
+          <div class="polaroid-tape"></div>
+          <div class="course-info">
+            <h3>CSE 210: Software Engineering</h3>
+            <p>Insert course description<br>& team information</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="course-info-banner">
-      <h3>CSE 210: Software Engineering</h3>
-      <p>Insert course description<br>& team information</p>
-    </div>
-
+    <!-- Dashboard Grid -->
     <div class="dashboard-grid">
+      <!-- Left Column -->
       <div class="left-column">
-        <div class="card attendance-card">
+        <!-- Attendance Card -->
+        <div class="dashboard-card attendance-card">
           <h4>Attendance</h4>
-          <div class="attendance-row">
-            <span>Lecture</span>
-            <div class="progress-bar">
-              <div class="progress-fill"></div>
+          <div class="attendance-item">
+            <span class="attendance-label">Lecture</span>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 75%"></div>
+              </div>
+              <span class="progress-percentage">75%</span>
             </div>
           </div>
-          <div class="attendance-row">
-            <span>Team Meetings</span>
-            <div class="progress-bar">
-              <div class="progress-fill"></div>
+          <div class="attendance-item">
+            <span class="attendance-label">Team Meetings</span>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 90%"></div>
+              </div>
+              <span class="progress-percentage">90%</span>
             </div>
           </div>
         </div>
 
-        <div class="card course-status-card">
+        <!-- Course Status Card -->
+        <div class="dashboard-card course-status-card">
           <h4>Course Status</h4>
           <div class="status-content">
             <div class="circular-progress">
-              <svg width="120" height="120">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" stroke-width="8"/>
-                <circle cx="60" cy="60" r="50" fill="none" stroke="#22c55e" stroke-width="8" 
-                        stroke-dasharray="314" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+              <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#83D7CF" stroke-width="5"/>
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#0F766E" stroke-width="5" 
+                        stroke-dasharray="188" stroke-dashoffset="47" transform="rotate(-90 40 40)"/>
               </svg>
-              <div class="progress-text">100 %</div>
+              <div class="progress-text">75%</div>
             </div>
-            <div class="legend">
+            <div class="status-legend">
               <div class="legend-item">
-                <span class="dot completed"></span>
+                <span class="legend-dot completed"></span>
                 <span>Completed</span>
-              </div>
-              <div class="legend-item">
-                <span class="dot in-progress"></span>
+                <span class="legend-dot in-progress"></span>
                 <span>In-Progress</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="card recent-progress-card">
+        <!-- Recent Progress Card -->
+        <div class="dashboard-card recent-progress-card">
           <h4>Recent Progress</h4>
-          <p>Chart with recent exams, team meetings</p>
+          <div class="progress-placeholder">
+            <p>Chart with recent exams, team meetings</p>
+          </div>
         </div>
       </div>
 
+      <!-- Middle Column -->
       <div class="middle-column">
-        <div class="card announcements-card">
+        <!-- Announcements Card -->
+        <div class="dashboard-card announcements-card">
           <h4>Announcements</h4>
-          <div class="announcement">
-            <div class="date-badge">10/10/25</div>
-            <div class="announcement-content">
-              <h5>Upcoming Final Exam</h5>
-              <p>Dear Students please prepare for the final exam occurring this week covering software engineering...</p>
+          <div class="announcements-list">
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Upcoming Final Exam</h5>
+                <p>Prepare for final exam this week...</p>
+              </div>
             </div>
-          </div>
-          <div class="announcement">
-            <div class="date-badge">10/10/25</div>
-            <div class="announcement-content">
-              <h5>Team Meeting</h5>
-              <p>Dear Students please prepare for the final exam occurring this week covering software engineering...</p>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Team Meeting</h5>
+                <p>Weekly team standup scheduled...</p>
+              </div>
             </div>
-          </div>
-          <div class="announcement">
-            <div class="date-badge">10/10/25</div>
-            <div class="announcement-content">
-              <h5>Upcoming Final Exam</h5>
-              <p>Dear Students please prepare for the final exam occurring this week covering software engineering...</p>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Project Deadline</h5>
+                <p>Final project due next Friday...</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Right Column -->
       <div class="right-column">
-        <div class="card todo-card">
+        <!-- TODO Card -->
+        <div class="dashboard-card todo-card">
           <h4>TODO</h4>
-          <div class="todo-item">
-            <div class="checkbox"></div>
-            <span>Item One</span>
-          </div>
-          <div class="todo-item">
-            <div class="checkbox"></div>
-            <span>Item Two</span>
-          </div>
-          <div class="todo-item">
-            <div class="checkbox"></div>
-            <span>Item Three</span>
+          <div class="todo-list">
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item One</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item Two</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item Three</span>
+            </div>
           </div>
         </div>
 
-        <div class="card journal-card">
+        <!-- Journal Entries Card -->
+        <div class="dashboard-card journal-card">
           <h4>Journal Entries</h4>
-          <div class="journal-entry">Nov 22nd</div>
-          <div class="journal-entry">Oct 12th</div>
+          <div class="journal-list">
+            <div class="journal-entry">Nov 22nd</div>
+            <div class="journal-entry">Oct 12th</div>
+          </div>
         </div>
       </div>
     </div>
