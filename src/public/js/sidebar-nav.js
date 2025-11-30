@@ -15,7 +15,7 @@
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
       { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" }
+      { href: "/class-directory", text: "Directory" }
     ],
     instructor: [
       { href: "/instructor-dashboard", text: "Dashboard" },
@@ -26,7 +26,7 @@
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
       { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" },
+      { href: "/class-directory", text: "Directory" },
       { href: "/instructor-meetings", text: "Team Meetings" }
     ],
     ta: [
@@ -37,7 +37,7 @@
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
       { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" }
+      { href: "/class-directory", text: "Directory" }
     ],
     teamLead: [
       { href: "/team-lead-dashboard", text: "Courses" },
@@ -52,7 +52,7 @@
         text: "Work Journal",
         match: ["/work-journal", "/lead-journal"]
       },
-      { href: "/class-directory", text: "Class Directory" }
+      { href: "/class-directory", text: "Directory" }
     ],
     student: [
       { href: "/student-dashboard", text: "Courses" },
@@ -67,7 +67,7 @@
         text: "Work Journal",
         match: ["/work-journal", "/student-work-journal", "/lead-journal"]
       },
-      { href: "/class-directory", text: "Class Directory" }
+      { href: "/class-directory", text: "Directory" }
     ]
   };
 

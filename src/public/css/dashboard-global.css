@@ -186,6 +186,15 @@ body.dashboard-page {
   height: auto;
 }
 
+.main-menu-header {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-600, #4b5563);
+  margin: 1rem 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .sidebar nav {
   display: flex;
   flex-direction: column;
@@ -195,22 +204,56 @@ body.dashboard-page {
 .sidebar nav a {
   text-decoration: none;
   color: var(--gray-700, #374151);
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
   transition: all 0.15s;
-  display: block;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.sidebar nav a::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.sidebar nav a[href*="dashboard"]::before,
+.sidebar nav a[href*="courses"]::before {
+  background-image: url('/assets/home.png');
+}
+
+.sidebar nav a[href*="lecture"]::before {
+  background-image: url('/assets/online-education.png');
+}
+
+.sidebar nav a[href*="meeting"]::before {
+  background-image: url('/assets/talk.png');
+}
+
+.sidebar nav a[href*="journal"]::before {
+  background-image: url('/assets/journal.png');
+}
+
+.sidebar nav a[href*="directory"]::before {
+  background-image: url('/assets/directory.png');
 }
 
 .sidebar nav a:hover {
   background: var(--emerald-50, #ecfdf5);
   color: var(--teal-600, #0d9488);
-  padding-left: 1rem;
 }
 
 .sidebar nav a.active {
-  background: var(--emerald-50, #ecfdf5);
-  color: var(--teal-600, #0d9488);
+  background: var(--emerald-100, #d1fae5);
+  color: var(--teal-700, #0f766e);
   font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar footer {
