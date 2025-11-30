@@ -204,13 +204,13 @@
   border-radius: 50%;
   padding: 2px;
   box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
 }
 
 .progress-text {
   position: absolute;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: #0F766E;
 }
