@@ -1,8 +1,9 @@
 # 🎯 Load Testing & E2E Testing Results
+
 ## Conductor App - Testing Summary
 
 **Test Date**: December 1, 2025  
-**Server**: http://localhost:8443  
+**Server**: <http://localhost:8443>  
 **Database**: PostgreSQL with 168 users seeded
 
 ---
@@ -10,6 +11,7 @@
 ## ✅ Load Testing Results
 
 ### Test Configuration
+
 - **Student Connections**: 150 concurrent users
 - **Professor Connections**: 5 concurrent users  
 - **Test Duration**: 30 seconds per scenario
@@ -28,24 +30,28 @@
 #### ✅ **Excellent Performance Across All Tests**
 
 **Test 1: User List API - Student Load**
+
 - **27,222 requests in 30 seconds** (907.40 req/sec)
 - **Average latency: 164.56ms** (P50: 160ms, P95: 251ms, P99: 299ms)
 - **Throughput: 24.46 MB/s**
 - **100% success rate** with 150 concurrent connections
 
 **Test 2: Dashboard - Realistic Load**
+
 - **164,072 requests in 30 seconds** (5,469.34 req/sec)
 - **Average latency: 15.95ms** (P50: 15ms, P95: 26ms, P99: 30ms)
 - **Throughput: 36.20 MB/s**
 - **100% success rate** with 90 concurrent connections
 
 **Test 3: Spike Test - Sudden High Load**
+
 - **8,453 requests in 15 seconds** (563.54 req/sec)
 - **Average latency: 352.92ms** (P50: 319ms, P95: 595ms, P99: 609ms)
 - **Throughput: 15.19 MB/s**
 - **100% success rate** with 200 concurrent connections
 
 ### Overall Load Test Metrics
+
 ```
 📊 Total Requests Processed: 199,747
 📊 Total Errors: 0
@@ -57,6 +63,7 @@
 ```
 
 ### System Capacity Demonstrated
+
 ✅ **Handles 150+ concurrent student users**  
 ✅ **Handles 200 concurrent users in spike test**  
 ✅ **Sub-second response times** (177ms average)  
@@ -69,6 +76,7 @@
 ## 🎭 End-to-End (E2E) Testing
 
 ### Test Infrastructure
+
 - **Framework**: Playwright
 - **Browser**: Chromium
 - **Test Suites**: 5 comprehensive suites
@@ -77,6 +85,7 @@
 ### Test Coverage
 
 #### 1. Authentication Flow Tests (6 tests)
+
 - ✅ Login page rendering
 - ✅ Google OAuth button presence
 - ✅ Session management
@@ -84,6 +93,7 @@
 - ✅ Logout functionality
 
 #### 2. Dashboard Tests (9 tests)  
+
 - ✅ Page loading and structure
 - ✅ Navigation functionality
 - ✅ Responsive design (mobile/tablet/desktop)
@@ -91,6 +101,7 @@
 - ✅ Resource loading
 
 #### 3. Student Workflow Tests (8 tests)
+
 - ✅ Attendance viewing
 - ✅ Team information access
 - ✅ Session list display
@@ -98,6 +109,7 @@
 - ✅ Complete user journey
 
 #### 4. Professor Workflow Tests (8 tests)
+
 - ✅ Instructor dashboard access
 - ✅ Attendance management
 - ✅ Student roster operations
@@ -105,6 +117,7 @@
 - ✅ Analytics and reporting
 
 #### 5. API Endpoint Tests (15 tests)
+
 - ✅ Health checks
 - ✅ RESTful API functionality
 - ✅ Error handling validation
@@ -130,21 +143,25 @@
 ### Performance Grading
 
 **User List API**: 🌟 **EXCELLENT**
+
 - 100% success rate
 - 164ms average latency with 150 connections
 - 27,222 requests handled successfully
 
 **Dashboard**: 🌟 **EXCELLENT**
+
 - 100% success rate
 - 16ms average latency
 - 164,072 requests with 90 concurrent users
 
 **Spike Test**: 🌟 **EXCELLENT**
+
 - 100% success rate
 - 353ms average latency with 200 concurrent users
 - No crashes or failures under sudden load
 
 **Server Stability**: ✅ **ROBUST**
+
 - No crashes under heavy load
 - Handles spike traffic (200 concurrent)
 - Maintains consistent performance
@@ -156,26 +173,31 @@
 To enable automated load testing, authentication was temporarily bypassed using the `BYPASS_AUTH=true` environment variable.
 
 ### Test Configuration
+
 - **Environment Variable**: `BYPASS_AUTH=true` in `.env`
 - **Mock User**: Admin account (UUID: `963f7bb3-438d-4dea-ae8c-995e23aecf5c`)
 - **Purpose**: Allow automated testing without OAuth interaction
 
 ### Security Note
+
 ⚠️ **IMPORTANT**: Authentication bypass is **ONLY** for testing purposes and must be **disabled in production**.
 
 ### Available Test Accounts (from seed data)
 
 **Administrators:**
-- admin@ucsd.edu (A00000001)
-- bchandna@ucsd.edu (A00000003)
+
+- <admin@ucsd.edu> (A00000001)
+- <bchandna@ucsd.edu> (A00000003)
 
 **Instructors:**
-- bhchandna@ucsd.edu (A00001234 - Dr. Alice Smith)
-- lhardy@ucsd.edu (A00011234)
-- zhkan@ucsd.edu (A10331111 - Dr. G)
-- haxing@ucsd.edu (A10331112 - Dr. Haiyi)
+
+- <bhchandna@ucsd.edu> (A00001234 - Dr. Alice Smith)
+- <lhardy@ucsd.edu> (A00011234)
+- <zhkan@ucsd.edu> (A10331111 - Dr. G)
+- <haxing@ucsd.edu> (A10331112 - Dr. Haiyi)
 
 **Students:**
+
 - 160+ student accounts available
 
 ---
@@ -206,6 +228,7 @@ To enable automated load testing, authentication was temporarily bypassed using 
 ### 📈 **Test Infrastructure Value**
 
 This testing setup demonstrates **enterprise-grade quality assurance**:
+
 - Professional load testing tools (Autocannon)
 - Industry-standard E2E framework (Playwright)
 - Realistic user simulation (150+ students + professors)
@@ -217,7 +240,7 @@ This testing setup demonstrates **enterprise-grade quality assurance**:
 
 ## 🚀 Production Deployment Notes
 
-### Before Deploying to Production:
+### Before Deploying to Production
 
 1. **Disable Authentication Bypass**:
    - Remove `BYPASS_AUTH=true` from `.env`

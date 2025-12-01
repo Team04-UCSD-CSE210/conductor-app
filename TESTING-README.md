@@ -11,17 +11,20 @@ This testing infrastructure demonstrates comprehensive quality assurance measure
 ## 🚀 Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 npx playwright install chromium
 ```
 
 ### 2. Start Server
+
 ```bash
 npm start
 ```
 
 ### 3. Run Tests (in separate terminal)
+
 ```bash
 # Load testing (150 students + 5 professors)
 npm run test:load
@@ -36,12 +39,14 @@ npm run test:all
 ## 📊 What Gets Tested
 
 ### Load Testing
+
 - ✅ **150 concurrent students** accessing dashboards, APIs, sessions
 - ✅ **5 concurrent professors** managing attendance, rosters
 - ✅ **8 test scenarios** covering critical endpoints
 - ✅ **Performance metrics** (latency, throughput, success rates)
 
 ### E2E Testing
+
 - ✅ **Authentication flows** (login, OAuth, sessions)
 - ✅ **Student workflows** (attendance, teams, journals)
 - ✅ **Professor workflows** (management, analytics)
@@ -52,6 +57,7 @@ npm run test:all
 ## 📈 Test Results
 
 ### Load Test Performance
+
 ```
 ✅ Handles 150+ concurrent users
 ✅ >95% success rate
@@ -60,6 +66,7 @@ npm run test:all
 ```
 
 ### E2E Test Coverage
+
 ```
 ✅ 46 automated tests
 ✅ 5 comprehensive test suites
@@ -154,6 +161,7 @@ This testing infrastructure demonstrates:
 ## 🐛 Troubleshooting
 
 ### Server Won't Start
+
 ```bash
 # Check if port is in use
 # Windows:
@@ -164,11 +172,13 @@ npm run db:init
 ```
 
 ### Playwright Not Installed
+
 ```bash
 npx playwright install
 ```
 
 ### Tests Failing
+
 ```bash
 # Ensure server is running
 npm start

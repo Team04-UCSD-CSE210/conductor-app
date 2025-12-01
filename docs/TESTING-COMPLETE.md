@@ -70,6 +70,7 @@ conductor-app/
 ### Purpose
 
 Load testing simulates real-world traffic with 100-200 concurrent student users and professors accessing the system simultaneously to verify:
+
 - Response time under load
 - System stability
 - Throughput capacity
@@ -80,18 +81,21 @@ Load testing simulates real-world traffic with 100-200 concurrent student users 
 The load testing suite includes 3 core test scenarios:
 
 #### Test 1: User List API - Student Load
+
 - **Endpoint**: `GET /api/users?limit=50&offset=0`
 - **Connections**: 150 concurrent students
 - **Duration**: 30 seconds
 - **Purpose**: Simulate students accessing user list/roster data
 
 #### Test 2: Dashboard - Realistic Load
+
 - **Endpoint**: `GET /dashboard.html`
 - **Connections**: 90 concurrent users
 - **Duration**: 30 seconds
 - **Purpose**: Simulate typical dashboard access patterns
 
 #### Test 3: Spike Test - Sudden High Load
+
 - **Endpoint**: `GET /api/users`
 - **Connections**: 200 concurrent users
 - **Duration**: 15 seconds
@@ -153,6 +157,7 @@ npm run test:load
 ### Purpose
 
 E2E tests validate complete user workflows using browser automation to ensure:
+
 - All UI components render correctly
 - User interactions work as expected
 - Page navigation functions properly
@@ -162,9 +167,11 @@ E2E tests validate complete user workflows using browser automation to ensure:
 ### Test Suites
 
 #### 1. API Tests (7 tests)
+
 **File**: `e2e/api.spec.js`
 
 Tests API endpoints for:
+
 - User list retrieval
 - Pagination handling
 - Error responses (404s, malformed requests)
@@ -173,9 +180,11 @@ Tests API endpoints for:
 - Performance (successive requests)
 
 #### 2. Authentication Flow Tests (7 tests)
+
 **File**: `e2e/auth.spec.js`
 
 Tests authentication system:
+
 - Login page display
 - Google OAuth button presence
 - OAuth redirect behavior
@@ -185,9 +194,11 @@ Tests authentication system:
 - Logout functionality
 
 #### 3. Dashboard Tests (6 tests)
+
 **File**: `e2e/dashboard.spec.js`
 
 Tests dashboard interface:
+
 - Page loading
 - Proper structure/layout
 - JavaScript error handling
@@ -198,9 +209,11 @@ Tests dashboard interface:
 - Critical resource loading
 
 #### 4. Professor Workflow Tests (13 tests)
+
 **File**: `e2e/professor-workflow.spec.js`
 
 Tests instructor-specific features:
+
 - Professor dashboard access
 - Instructor-specific UI elements
 - Attendance management access
@@ -213,9 +226,11 @@ Tests instructor-specific features:
 - Complete workflow integration
 
 #### 5. Student Workflow Tests (12 tests)
+
 **File**: `e2e/student-workflow.spec.js`
 
 Tests student-specific features:
+
 - Attendance page access
 - Attendance data display
 - Teams page access
@@ -232,6 +247,7 @@ Tests student-specific features:
 **Configuration File**: `playwright.config.js`
 
 Browsers tested:
+
 - ✅ Chromium (primary)
 - ✅ Firefox
 - ✅ WebKit (Safari)
@@ -239,6 +255,7 @@ Browsers tested:
 - ✅ Mobile Safari
 
 Test settings:
+
 - Base URL: `http://localhost:8443`
 - Timeout: 30 seconds
 - Retries: 2 (on CI)
@@ -275,6 +292,7 @@ npx playwright show-report
 | **TOTAL** | **46** | **46** | **100%** ✅ |
 
 #### Test Execution Time
+
 - Total Duration: 8.0 seconds
 - Parallel Workers: 16
 - Average Test Time: ~1.5 seconds
@@ -352,6 +370,7 @@ Status: Active
 ⚠️ **CRITICAL**: Authentication bypass is **ONLY** for testing environments.
 
 **Before production deployment:**
+
 1. Remove `BYPASS_AUTH=true` from `.env`
 2. Or explicitly set `BYPASS_AUTH=false`
 3. Verify OAuth is working properly
@@ -482,7 +501,7 @@ test.describe('Feature Name', () => {
 });
 ```
 
-3. Run tests to verify:
+1. Run tests to verify:
 
 ```bash
 npm run test:e2e:chromium
@@ -527,7 +546,7 @@ npm run init-db
 SELECT * FROM users WHERE email = 'admin@ucsd.edu';
 ```
 
-3. Verify middleware files have bypass logic
+1. Verify middleware files have bypass logic
 
 ---
 

@@ -19,7 +19,7 @@
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:md",
     "lint:js": "eslint . --config config/eslint.config.js",
     "lint:css": "stylelint \"src/**/*.css\" --config config/.stylelintrc.json || echo 'No CSS files found'",
-    "lint:html": "htmlhint \"**/*.html\" --config config/.htmlhintrc --ignore \"**/coverage/**\" || echo 'No HTML files found'",
+    "lint:html": "htmlhint \"**/*.html\" --config config/.htmlhintrc --ignore \"**/coverage/**\" --ignore \"**/playwright-report/**\" || echo 'No HTML files found'",
     "lint:md": "markdownlint \"**/*.md\" --config config/.markdownlint.json --ignore node_modules --ignore coverage",
     "docs": "jsdoc -d docs .",
     "perf:db": "node scripts/perf-db.cjs",

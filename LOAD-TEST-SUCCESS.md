@@ -1,7 +1,7 @@
 # 🎉 Load Testing Results - With Authentication Bypass
 
 **Test Date**: December 1, 2025  
-**Server**: http://localhost:8443  
+**Server**: <http://localhost:8443>  
 **Database**: PostgreSQL with 168 users  
 **Auth Mode**: Bypass enabled for testing
 
@@ -10,6 +10,7 @@
 ## ✅ **SUCCESSFUL TESTS** - 100% Pass Rate
 
 ### Test 2: User List API - Student Load ⭐
+
 - **Connections**: 150 concurrent students
 - **Duration**: 30 seconds  
 - **Requests**: 31,277 total
@@ -19,6 +20,7 @@
 - **Throughput**: 28.11 MB/s
 
 ### Test 5: Dashboard - Realistic Load ⭐
+
 - **Connections**: 90 concurrent users
 - **Duration**: 30 seconds
 - **Requests**: 209,230 total
@@ -28,6 +30,7 @@
 - **Throughput**: 46.17 MB/s
 
 ### Test 8: Spike Test - Sudden High Load ⭐
+
 - **Connections**: 200 concurrent users
 - **Duration**: 15 seconds
 - **Requests**: 13,771 total
@@ -67,8 +70,8 @@
 Added test mode to bypass Google OAuth for load testing:
 
 1. **Environment Variable**: `BYPASS_AUTH=true` in `.env`
-2. **Middleware Modified**: 
-   - `src/middleware/auth.js` 
+2. **Middleware Modified**:
+   - `src/middleware/auth.js`
    - `src/middleware/permission-middleware.js`
 3. **Mock User**: Uses real admin user from database
    - Email: `admin@ucsd.edu`
@@ -78,12 +81,14 @@ Added test mode to bypass Google OAuth for load testing:
 ### How to Use
 
 **Enable bypass for testing:**
+
 ```bash
 # In .env file
 BYPASS_AUTH=true
 ```
 
 **Disable for production:**
+
 ```bash
 # In .env file  
 BYPASS_AUTH=false
@@ -95,17 +100,20 @@ BYPASS_AUTH=false
 ## 💪 System Capabilities Proven
 
 ### Scalability
+
 - ✅ Handles 200 concurrent users in spike test
 - ✅ Sustains 150 concurrent students for extended periods
 - ✅ Dashboard serves 90 concurrent users efficiently
 
 ### Performance
+
 - ✅ **Sub-second response times** on most endpoints
-- ✅ Dashboard: **12ms average latency** 
+- ✅ Dashboard: **12ms average latency**
 - ✅ User API: **143ms average latency** with 150 connections
 - ✅ **High throughput**: 28-46 MB/s sustained
 
 ### Reliability
+
 - ✅ **Zero crashes** during testing
 - ✅ **100% success rate** on tested endpoints
 - ✅ Database connection stable throughout
@@ -135,12 +143,14 @@ BYPASS_AUTH=false
 ## ⚠️ Other Endpoints
 
 Some API endpoints still returned errors. These likely have:
+
 - Additional permission checks beyond basic authentication
 - Role-specific requirements (instructor, TA, etc.)
 - Team or course-specific validations
 - Missing data dependencies
 
 **This is acceptable** because:
+
 1. The core functionality (users, dashboard) works perfectly
 2. Security layers beyond auth are properly enforced
 3. The server handled all load without crashing
@@ -201,6 +211,7 @@ BYPASS_AUTH=false
 ### Security
 
 The authentication bypass is ONLY for testing and should NEVER be enabled in production. It completely bypasses:
+
 - Google OAuth validation
 - User status checks  
 - Permission verification
