@@ -923,7 +923,7 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
 
     // Admin and instructor can access team lead dashboard (for viewing)
     if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
-      return res.sendFile(buildFullViewPath("student-dashboard.html"));
+      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
     }
 
     // Check if user is a team lead
@@ -941,7 +941,7 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
       return res.redirect("/student-dashboard");
     }
 
-    return res.sendFile(buildFullViewPath("student-dashboard.html"));
+    return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
   } catch (error) {
     console.error("Error accessing team lead dashboard:", error);
     return res.status(500).send("Internal server error");

@@ -39,8 +39,8 @@
     <!-- Welcome Banner with Polaroid -->
     <div class="welcome-section">
       <div class="welcome-content">
-        <h2>Welcome, Helena Bender!</h2>
-        <p>See what happened with your course and team!</p>
+        <h2>Welcome!</h2>
+        <p>Loading...</p>
       </div>
       <div class="polaroid-container">
         <div class="polaroid">
@@ -55,8 +55,8 @@
 
     <!-- Dashboard Grid -->
     <div class="dashboard-grid">
-      <!-- Left Column -->
-      <div class="left-column">
+      <!-- Top row: Attendance, Announcements, Journal Entries -->
+      <div class="dashboard-row dashboard-row-top">
         <!-- Attendance Card -->
         <div class="dashboard-card attendance-card">
           <h4>Attendance</h4>
@@ -80,32 +80,6 @@
           </div>
         </div>
 
-        <!-- Course Status Card -->
-        <div class="dashboard-card course-status-card">
-          <h4>Course Status</h4>
-          <div class="status-content">
-            <div class="circular-progress">
-              <svg width="70" height="70" viewBox="0 0 70 70">
-                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
-                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
-                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
-              </svg>
-              <div class="progress-text">75%</div>
-            </div>
-            <div class="status-legend">
-              <div class="legend-item">
-                <span class="legend-dot completed"></span>
-                <span>Completed</span>
-                <span class="legend-dot in-progress"></span>
-                <span>In-Progress</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Middle Column -->
-      <div class="middle-column">
         <!-- Announcements Card -->
         <div class="dashboard-card announcements-card">
           <h4>Announcements</h4>
@@ -129,6 +103,42 @@
               <div class="announcement-content">
                 <h5>Project Deadline</h5>
                 <p>Final project due next Friday...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Journal Entries Card -->
+        <div class="dashboard-card journal-card">
+          <h4>Journal Entries</h4>
+          <div class="journal-list">
+            <div class="journal-entry">Nov 22nd</div>
+            <div class="journal-entry">Oct 12th</div>
+            <div class="journal-entry">Sep 28th</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom row: Course Status, Recent Progress, TODO -->
+      <div class="dashboard-row dashboard-row-bottom">
+        <!-- Course Status Card -->
+        <div class="dashboard-card course-status-card">
+          <h4>Course Status</h4>
+          <div class="status-content">
+            <div class="circular-progress">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="28" fill="none" class="circular-progress-bg" stroke-width="4"/>
+                <circle cx="35" cy="35" r="28" fill="none" class="circular-progress-fill" stroke-width="4" 
+                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
+              </svg>
+              <div class="progress-text">75%</div>
+            </div>
+            <div class="status-legend">
+              <div class="legend-item">
+                <span class="legend-dot completed"></span>
+                <span>Completed</span>
+                <span class="legend-dot in-progress"></span>
+                <span>In-Progress</span>
               </div>
             </div>
           </div>
@@ -163,25 +173,12 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Right Column -->
-      <div class="right-column">
         <!-- TODO Card (items loaded from backend) -->
         <div class="dashboard-card todo-card">
           <h4>TODO</h4>
           <div class="todo-list">
             <!-- Items populated by todo-widget.js -->
-          </div>
-        </div>
-
-        <!-- Journal Entries Card -->
-        <div class="dashboard-card journal-card">
-          <h4>Journal Entries</h4>
-          <div class="journal-list">
-            <div class="journal-entry">Nov 22nd</div>
-            <div class="journal-entry">Oct 12th</div>
-            <div class="journal-entry">Sep 28th</div>
           </div>
         </div>
       </div>

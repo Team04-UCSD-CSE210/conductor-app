@@ -1,4 +1,4 @@
-// Student Dashboard Page Scripts
+// Student Leader (Team Lead) Dashboard Page Scripts
 
 (function() {
   // Wait for DashboardService to be available
@@ -12,9 +12,8 @@
   let offeringId = null;
   let refreshInterval = null;
 
-  // Get current user ID (from window or extract from session)
+  // Get current user ID
   function getCurrentUserId() {
-    // This would typically come from the session or a global variable set by the server
     return window.currentUserId || null;
   }
 
@@ -36,34 +35,17 @@
       updateCourseInfo(offering);
       updateCourseProgress(offering);
 
-      // Get user's enrollment to find their team
-      const userId = getCurrentUserId();
-      let enrollment = null;
-      if (userId) {
-        enrollment = await getUserEnrollment(offeringId, userId);
-      }
-      
-      const stats = {};
-      
-        // Group Members - get from user's team
-      if (enrollment) {
-        // Get user's team (this would need team membership endpoint)
-        // For now, placeholder - would need backend to get team members
-        stats['Group Members'] = 0;
-      } else {
-        stats['Group Members'] = 0;
-      }
-      
-      // Assignments Due - would need assignments endpoint
-      stats['Assignments Due'] = 0;
-      
-      // Weeks Left - calculate from term dates (placeholder)
-      stats['Weeks Left'] = 4;
-      
-      updateStats(stats);
-
       // Load attendance statistics for the current student
       await updateStudentAttendance(offeringId);
+      
+      // Load announcements
+      await loadAnnouncements(offeringId);
+      
+      // Load journal entries
+      await loadJournalEntries();
+      
+      // Load recent progress
+      await loadRecentProgress(offeringId);
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
@@ -78,8 +60,13 @@
       const res = await fetch(`/api/attendance/my-statistics/${currentOfferingId}`, {
         credentials: 'include'
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.warn('Failed to load attendance statistics');
+        return;
+      }
       const stats = await res.json();
+      
+      console.log('[Team Lead Dashboard] Attendance stats from backend:', stats);
 
       // Get lecture and team meeting percentages separately if available
       const lecturePercentage = typeof stats.lecture_percentage === 'number'
@@ -89,6 +76,8 @@
       const teamMeetingPercentage = typeof stats.team_meeting_percentage === 'number'
         ? Math.round(stats.team_meeting_percentage)
         : 0;
+      
+      console.log('[Team Lead Dashboard] Lecture:', lecturePercentage + '%', 'Team Meetings:', teamMeetingPercentage + '%');
 
       const items = card.querySelectorAll('.attendance-item');
       if (!items.length) return;
@@ -118,6 +107,62 @@
       });
     } catch (error) {
       console.error('Error loading student attendance statistics:', error);
+    }
+  }
+
+  // Helper function to escape HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Load announcements from backend
+  async function loadAnnouncements(offeringId) {
+    const announcementsList = document.querySelector('.announcements-list');
+    if (!announcementsList || !offeringId) return;
+
+    try {
+      // Try to fetch announcements - if no endpoint exists, show empty state
+      const res = await fetch(`/api/offerings/${offeringId}/announcements`, {
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        // If endpoint doesn't exist, show empty state
+        announcementsList.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">No announcements available</p>';
+        return;
+      }
+      
+      const data = await res.json();
+      const announcements = Array.isArray(data) ? data : (data.announcements || []);
+      
+      if (!announcements.length) {
+        announcementsList.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">No announcements</p>';
+        return;
+      }
+
+      // Render announcements
+      announcementsList.innerHTML = announcements.slice(0, 5).map(announcement => {
+        const date = new Date(announcement.created_at || announcement.date || Date.now());
+        const dateStr = date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' });
+        const title = announcement.title || announcement.subject || 'Announcement';
+        const content = announcement.content || announcement.body || announcement.message || '';
+        const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        
+        return `
+          <div class="announcement-item">
+            <div class="announcement-date">${escapeHtml(dateStr)}</div>
+            <div class="announcement-content">
+              <h5>${escapeHtml(title)}</h5>
+              <p>${escapeHtml(preview)}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (error) {
+      console.error('Error loading announcements:', error);
+      announcementsList.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Error loading announcements</p>';
     }
   }
 
@@ -153,13 +198,6 @@
         })
         .slice(0, 5);
 
-      // Helper function to escape HTML
-      function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
       journalList.innerHTML = sortedEntries.map(entry => {
         const date = new Date(entry.created_at || entry.date || Date.now());
         const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -173,11 +211,83 @@
     }
   }
 
+  // Load recent progress (weeks timeline)
+  async function loadRecentProgress(offeringId) {
+    const weeksTimeline = document.querySelector('.weeks-timeline');
+    if (!weeksTimeline || !offeringId) return;
+
+    try {
+      // Fetch offering to get start/end dates
+      const offering = await getOfferingWithStats(offeringId);
+      if (!offering || !offering.start_date || !offering.end_date) {
+        weeksTimeline.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Progress information not available</p>';
+        return;
+      }
+
+      const startDate = new Date(offering.start_date);
+      const endDate = new Date(offering.end_date);
+      const now = new Date();
+
+      // Calculate weeks
+      const weeks = [];
+      let currentWeekStart = new Date(startDate);
+      let weekNumber = 1;
+
+      while (currentWeekStart < endDate) {
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        
+        if (weekEnd > endDate) {
+          weekEnd.setTime(endDate.getTime());
+        }
+
+        const isCurrentWeek = now >= currentWeekStart && now <= weekEnd;
+        const isPastWeek = now > weekEnd;
+        const isUpcoming = now < currentWeekStart;
+
+        const statusClass = isCurrentWeek ? 'current' : '';
+        const statusText = isPastWeek ? 'completed' : (isCurrentWeek ? 'in-progress' : 'upcoming');
+        
+        const dateRange = `${currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        
+        weeks.push({
+          weekNumber,
+          dateRange,
+          statusClass,
+          statusText,
+          startDate: new Date(currentWeekStart),
+          endDate: new Date(weekEnd)
+        });
+
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+        weekNumber++;
+      }
+
+      // Show last 3 weeks (or all if less than 3)
+      const displayWeeks = weeks.slice(-3).reverse();
+
+      weeksTimeline.innerHTML = displayWeeks.map(week => {
+        return `
+          <div class="week-item ${week.statusClass}">
+            <div class="week-header">
+              <div class="week-number">Week ${week.weekNumber}</div>
+              <div class="week-dates">${week.dateRange}</div>
+            </div>
+            <div class="week-status ${week.statusText}">${week.statusText === 'completed' ? 'Completed' : (week.statusText === 'in-progress' ? 'In Progress' : 'Upcoming')}</div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading recent progress:', error);
+      weeksTimeline.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Error loading progress</p>';
+    }
+  }
+
   // Initialize dashboard
   async function initDashboard() {
     await loadDashboardStats();
     await loadWelcomeName();
-    await loadJournalEntries();
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {
@@ -292,3 +402,4 @@
     initDashboard();
   }
 })();
+

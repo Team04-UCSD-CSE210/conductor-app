@@ -1,0 +1,84 @@
+/* Student Leader (Team Lead) Dashboard */
+
+/* Import shared student dashboard styles */
+@import url('/css/student-dashboard.css');
+
+/* Override dashboard row layouts for team lead specific ordering */
+.dashboard-page .dashboard-row-top {
+  grid-template-columns: 1fr 1.5fr 1fr !important;
+}
+
+.dashboard-page .dashboard-row-bottom {
+  grid-template-columns: 1fr 1.5fr 0.8fr !important;
+}
+
+/* Fix all text colors to use palette variables */
+.attendance-label {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.progress-percentage {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.announcement-content h5 {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.announcement-content p {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.journal-entry {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.progress-text {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.legend-item span:not(.legend-dot) {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.week-number {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.week-status {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+/* Responsive Design */
+@media (width < 1200px) {
+  .dashboard-row-top,
+  .dashboard-row-bottom {
+    grid-template-columns: 1fr; /* Stack all cards in a single column */
+  }
+}
+
+@media (width < 768px) {
+  .dashboard-grid {
+    gap: 16px;
+  }
+  
+  .dashboard-row-top,
+  .dashboard-row-bottom {
+    gap: 16px;
+  }
+  
+  .dashboard-card {
+    padding: 16px;
+  }
+}
+
+@media (width < 480px) {
+  .dashboard-card h4 {
+    font-size: 16px;
+  }
+  
+  .welcome-content h2 {
+    font-size: 22px;
+  }
+}
+

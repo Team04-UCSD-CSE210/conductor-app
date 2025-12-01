@@ -128,14 +128,49 @@ router.post('/color-palette', ...protectAny(['course.manage'], 'course'), async 
 /**
  * Get offering details
  * GET /api/offerings/:offeringId
- * Requires: roster.view or course.manage permission (course scope)
+ * Requires: roster.view or course.manage permission (course scope), OR enrollment in the offering
  */
-router.get('/:offeringId', ...protectAny(['roster.view', 'course.manage'], 'course'), async (req, res) => {
+router.get('/:offeringId', ensureAuthenticated, async (req, res) => {
   try {
     const { offeringId } = req.params;
+    const userId = req.currentUser?.id;
 
-    const result = await pool.query(
-      `SELECT 
+    // Check if user has permission OR is enrolled in the offering
+    let hasPermission = false;
+    let isEnrolled = false;
+
+    // First check permissions
+    try {
+      const { PermissionService } = await import('../services/permission-service.js');
+      const hasRosterView = await PermissionService.hasPermission(userId, 'roster.view', offeringId, null);
+      const hasCourseManage = await PermissionService.hasPermission(userId, 'course.manage', offeringId, null);
+      hasPermission = hasRosterView || hasCourseManage;
+    } catch (permError) {
+      // Permission check failed, will check enrollment
+      console.warn('Permission check failed, checking enrollment:', permError);
+    }
+
+    // If no permission, check if user is enrolled
+    if (!hasPermission && userId) {
+      const enrollmentCheck = await pool.query(
+        `SELECT 1 FROM enrollments 
+         WHERE offering_id = $1 AND user_id = $2 AND status = 'enrolled' 
+         LIMIT 1`,
+        [offeringId, userId]
+      );
+      isEnrolled = enrollmentCheck.rows.length > 0;
+    }
+
+    if (!hasPermission && !isEnrolled) {
+      return res.status(403).json({ error: 'Forbidden: You must be enrolled in this course to view its details' });
+    }
+
+    // Build query based on permissions
+    let query;
+    if (hasPermission) {
+      // Full details for users with permissions
+      query = `
+        SELECT 
         co.*,
         COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role::text = 'student' AND e.status = 'enrolled') as student_count,
         COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role::text = 'ta' AND e.status = 'enrolled') as ta_count,
@@ -145,9 +180,28 @@ router.get('/:offeringId', ...protectAny(['roster.view', 'course.manage'], 'cour
       LEFT JOIN enrollments e ON co.id = e.offering_id
       LEFT JOIN team t ON co.id = t.offering_id
       WHERE co.id = $1
-      GROUP BY co.id`,
-      [offeringId]
-    );
+        GROUP BY co.id
+      `;
+    } else {
+      // Basic info for enrolled students (no sensitive stats)
+      query = `
+        SELECT 
+          co.id,
+          co.code,
+          co.name,
+          co.term,
+          co.start_date,
+          co.end_date,
+          co.is_active,
+          co.color_palette,
+          co.created_at,
+          co.updated_at
+        FROM course_offerings co
+        WHERE co.id = $1
+      `;
+    }
+
+    const result = await pool.query(query, [offeringId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Offering not found' });

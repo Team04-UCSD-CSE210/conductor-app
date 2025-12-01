@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/dashboard-global.css">
   <link rel="stylesheet" href="/css/student-dashboard.css">
+  <link rel="stylesheet" href="/css/student-leader-dashboard.css">
 </head>
 
 <body class="dashboard-page">
@@ -39,8 +40,8 @@
     <!-- Welcome Banner with Polaroid -->
     <div class="welcome-section">
       <div class="welcome-content">
-        <h2>Welcome, Helena Bender!</h2>
-        <p>See what happened with your course and team!</p>
+        <h2>Welcome!</h2>
+        <p>Loading...</p>
       </div>
       <div class="polaroid-container">
         <div class="polaroid">
@@ -55,8 +56,8 @@
 
     <!-- Dashboard Grid -->
     <div class="dashboard-grid">
-      <!-- Left Column -->
-      <div class="left-column">
+      <!-- Top row: Attendance, Announcements, Journal Entries -->
+      <div class="dashboard-row dashboard-row-top">
         <!-- Attendance Card -->
         <div class="dashboard-card attendance-card">
           <h4>Attendance</h4>
@@ -64,33 +65,52 @@
             <span class="attendance-label">Lecture</span>
             <div class="progress-container">
               <div class="progress-bar">
-                <div class="progress-fill" style="width: 96%"></div>
+                <div class="progress-fill" style="width: 0%"></div>
               </div>
-              <span class="progress-percentage">96%</span>
+              <span class="progress-percentage">0%</span>
             </div>
           </div>
           <div class="attendance-item">
             <span class="attendance-label">Team Meetings</span>
             <div class="progress-container">
               <div class="progress-bar">
-                <div class="progress-fill" style="width: 100%"></div>
+                <div class="progress-fill" style="width: 0%"></div>
               </div>
-              <span class="progress-percentage">100%</span>
+              <span class="progress-percentage">0%</span>
             </div>
           </div>
         </div>
 
+        <!-- Announcements Card -->
+        <div class="dashboard-card announcements-card">
+          <h4>Announcements</h4>
+          <div class="announcements-list">
+            <p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Loading announcements...</p>
+          </div>
+        </div>
+
+        <!-- Journal Entries Card -->
+        <div class="dashboard-card journal-card">
+          <h4>Journal Entries</h4>
+          <div class="journal-list">
+            <p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Loading journal entries...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom row: Course Status, Recent Progress, TODO -->
+      <div class="dashboard-row dashboard-row-bottom">
         <!-- Course Status Card -->
         <div class="dashboard-card course-status-card">
           <h4>Course Status</h4>
           <div class="status-content">
             <div class="circular-progress">
               <svg width="70" height="70" viewBox="0 0 70 70">
-                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
-                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
-                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
+                <circle cx="35" cy="35" r="28" fill="none" class="circular-progress-bg" stroke-width="4"/>
+                <circle cx="35" cy="35" r="28" fill="none" class="circular-progress-fill" stroke-width="4" 
+                        stroke-dasharray="176" stroke-dashoffset="176" transform="rotate(-90 35 35)"/>
               </svg>
-              <div class="progress-text">75%</div>
+              <div class="progress-text">0%</div>
             </div>
             <div class="status-legend">
               <div class="legend-item">
@@ -108,80 +128,16 @@
           <h4>Recent Progress</h4>
           <div class="progress-placeholder">
             <div class="weeks-timeline">
-              <div class="week-item current">
-                <div class="week-header">
-                  <div class="week-number">Week 10</div>
-                  <div class="week-dates">Nov 25 - Dec 01</div>
-                </div>
-                <div class="week-status upcoming">Upcoming: Team lead meeting, Sprint planning</div>
-              </div>
-              <div class="week-item">
-                <div class="week-header">
-                  <div class="week-number">Week 9</div>
-                  <div class="week-dates">Nov 18 - Nov 24</div>
-                </div>
-                <div class="week-status completed">Completed: Performance reviews, Team retrospective</div>
-              </div>
-              <div class="week-item">
-                <div class="week-header">
-                  <div class="week-number">Week 8</div>
-                  <div class="week-dates">Nov 11 - Nov 17</div>
-                </div>
-                <div class="week-status completed">Completed: Code reviews, Team coordination</div>
-              </div>
+              <p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Loading recent progress...</p>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Middle Column -->
-      <div class="middle-column">
-        <!-- Announcements Card -->
-        <div class="dashboard-card announcements-card">
-          <h4>Announcements</h4>
-          <div class="announcements-list">
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Team Sprint Review</h5>
-                <p>Team leads please prepare sprint review presentations for this Friday's meeting...</p>
-              </div>
-            </div>
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Code Review Deadline</h5>
-                <p>All code reviews must be completed by Wednesday EOD for the upcoming release...</p>
-              </div>
-            </div>
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Team Building Event</h5>
-                <p>Optional team building lunch this Thursday. Please RSVP by Tuesday...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column -->
-      <div class="right-column">
         <!-- TODO Card (items loaded from backend) -->
         <div class="dashboard-card todo-card">
           <h4>TODO</h4>
           <div class="todo-list">
             <!-- Items populated by todo-widget.js -->
-          </div>
-        </div>
-
-        <!-- Journal Entries Card -->
-        <div class="dashboard-card journal-card">
-          <h4>Journal Entries</h4>
-          <div class="journal-list">
-            <div class="journal-entry">Nov 22nd - Sprint Retrospective</div>
-            <div class="journal-entry">Oct 12th - Team Formation</div>
-            <div class="journal-entry">Sep 28th - Project Kickoff</div>
           </div>
         </div>
       </div>
@@ -193,6 +149,6 @@
   <script src="/js/todo-widget.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/colorblind-mode.js" defer></script>
-  <script src="/js/student-dashboard.js" defer></script>
+  <script src="/js/student-leader-dashboard.js" defer></script>
 </body>
 </html>

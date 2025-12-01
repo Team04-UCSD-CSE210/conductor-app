@@ -1,4 +1,4 @@
-/* TA Dashboard - Two Row Layout */
+/* Tutor Dashboard */
 
 /* Dashboard Grid - Two Row Layout */
 .dashboard-grid {
@@ -12,14 +12,19 @@
   gap: 16px;
 }
 
-/* Top row: Course Info, Teams, TODOs */
+/* Top row: Course Info, On Duty, TODOs */
 .dashboard-row-top {
-  grid-template-columns: 0.8fr 1.2fr 0.8fr;
+  grid-template-columns: 0.8fr 0.8fr 0.8fr;
 }
 
-/* Bottom row: Recent Updates, Report Interaction */
+/* Bottom row: Queue, Recent Updates, Report Interaction */
 .dashboard-row-bottom {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Make Report Interaction span full width in bottom row */
+.tutor-report-card {
+  grid-column: 1 / -1;
 }
 
 /* Ensure cards have consistent minimum heights */
@@ -37,6 +42,10 @@
   .dashboard-row-bottom {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .tutor-report-card {
+    grid-column: 1;
   }
 
   .dashboard-row-top .card {
@@ -67,12 +76,6 @@
     min-width: 100%;
   }
 
-  .interaction-btn {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 8px;
-  }
-
   /* Adjust course stats for mobile */
   .card-course-info .course-stats {
     grid-template-columns: 1fr;
@@ -99,3 +102,4 @@
     padding: 12px;
   }
 }
+

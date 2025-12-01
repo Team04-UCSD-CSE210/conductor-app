@@ -37,101 +37,66 @@
 
   <!-- Main Content -->
   <main class="main-container" id="main">
-    <h2 class="page-title">Dashboard</h2>
+    <!-- Welcome Banner -->
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <h2>Welcome!</h2>
+        <p>Loading...</p>
+      </div>
+    </div>
 
-    <section class="frame" role="region" aria-label="Dashboard content">
-      <section class="content">
-        
-        <!-- Top Cards Container -->
-        <section class="top-cards-wrapper">
-          <article class="card card-course-info" aria-label="Course information card">
-            <strong class="course-code">CSE 210</strong>
-            <p class="course-title">Software Engineering</p>
-            <p class="course-term">Fall 2025</p>
-            <dl class="course-schedule">
-              <dt>Lectures</dt>
-              <dd>Mon/Wed 10:00–11:20 am</dd>
-              <dt>Office Hours</dt>
-              <dd>Tue 2–4 pm</dd>
-            </dl>
-            <figure class="course-stats">
-              <figcaption class="stat-item">
-                <span class="stat-value">4</span>
-                <span class="stat-label">Teams Assigned</span>
-              </figcaption>
-              <figcaption class="stat-item">
-                <span class="stat-value">12</span>
-                <span class="stat-label">To Grade</span>
-              </figcaption>
-            </figure>
-          </article>
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Top row: Course Info, Journal Entries, TODOs -->
+      <div class="dashboard-row dashboard-row-top">
+        <article class="card card-course-info" aria-label="Course information card">
+          <strong class="course-code">CSE 210</strong>
+          <p class="course-title">Software Engineering</p>
+          <p class="course-term">Fall 2025</p>
+          <dl class="course-schedule">
+            <dt>Lectures</dt>
+            <dd>Mon/Wed 10:00–11:20 am</dd>
+            <dt>Office Hours</dt>
+            <dd>Tue 2–4 pm</dd>
+          </dl>
+          <figure class="course-stats">
+            <figcaption class="stat-item">
+              <span class="stat-value">4</span>
+              <span class="stat-label">Teams Assigned</span>
+            </figcaption>
+            <figcaption class="stat-item">
+              <span class="stat-value">12</span>
+              <span class="stat-label">To Grade</span>
+            </figcaption>
+          </figure>
+        </article>
 
-          <article class="card card-scrollable" aria-label="Teams card">
-            <h3>My teams</h3>
-            <nav class="teams-list">
-              <a href="/teams/1" class="team-item" aria-label="Team 1">
-                <span class="team-name">Team 1</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/2" class="team-item" aria-label="Team 2">
-                <span class="team-name">Team 2</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/3" class="team-item" aria-label="Team 3">
-                <span class="team-name">Team 3</span>
-                <span class="team-count">7 members</span>
-              </a>
-              <a href="/teams/4" class="team-item" aria-label="Team 4">
-                <span class="team-name">Team 4</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/5" class="team-item" aria-label="Team 5">
-                <span class="team-name">Team 5</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/6" class="team-item" aria-label="Team 6">
-                <span class="team-name">Team 6</span>
-                <span class="team-count">7 members</span>
-              </a>
-              <a href="/teams/7" class="team-item" aria-label="Team 7">
-                <span class="team-name">Team 7</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/8" class="team-item" aria-label="Team 8">
-                <span class="team-name">Team 8</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/9" class="team-item" aria-label="Team 9">
-                <span class="team-name">Team 9</span>
-                <span class="team-count">7 members</span>
-              </a>
-              <a href="/teams/10" class="team-item" aria-label="Team 10">
-                <span class="team-name">Team 10</span>
-                <span class="team-count">8 members</span>
-              </a>
-            </nav>
-          </article>
+        <article class="card dashboard-card journal-card" aria-label="Journal Entries card">
+          <h3>Journal Entries</h3>
+          <div class="journal-list">
+            <p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Loading journal entries...</p>
+          </div>
+        </article>
 
-          <!-- Personal TODOs (per-user, loaded from backend) -->
-          <article class="card dashboard-card todo-card" aria-label="Personal TODO list">
-            <h3>My TODOs</h3>
-            <div class="todo-list">
-              <!-- Items populated by todo-widget.js -->
-            </div>
-          </article>
+        <article class="card dashboard-card todo-card" aria-label="Personal TODO list">
+          <h3>My TODOs</h3>
+          <div class="todo-list">
+            <!-- Items populated by todo-widget.js -->
+          </div>
+        </article>
+      </div>
 
-          <!-- Recent Updates -->
-          <section class="card wide recent-updates" aria-label="Recent activity">
-            <h3>Recent Updates</h3>
-            <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-700);">
-              <li>Sprint 2 deliverables graded</li>
-              <li>New TA assigned to Lab 3</li>
-              <li>Reminder sent for project proposals</li>
-            </ul>
-          </section>
+      <!-- Bottom row: Recent Updates, Report Interaction -->
+      <div class="dashboard-row dashboard-row-bottom">
+        <section class="card wide recent-updates" aria-label="Recent activity">
+          <h3>Recent Updates</h3>
+          <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-700);">
+            <li>Sprint 2 deliverables graded</li>
+            <li>New TA assigned to Lab 3</li>
+            <li>Reminder sent for project proposals</li>
+          </ul>
         </section>
 
-        <!-- Reports Section -->
         <section class="card wide reports-analytics" aria-label="Report interaction">
           <h3>Report Interaction</h3>
           <aside class="report-box" role="region" aria-label="Report interaction form">
@@ -171,9 +136,8 @@
             </form>
           </aside>
         </section>
-
-      </section>
-    </section>
+      </div>
+    </div>
   </main>
 
   <script src="/js/dashboard.service.js"></script>

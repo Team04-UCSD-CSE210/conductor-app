@@ -255,6 +255,15 @@ button.btn-primary {
   box-shadow: 0 4px 12px rgb(0 0 0 / 12%) !important;
 }
 
+/* Circular progress SVG circles */
+.circular-progress-bg {
+  stroke: var(--palette-secondary, #83D7CF) !important;
+}
+
+.circular-progress-fill {
+  stroke: var(--palette-primary, #0F766E) !important;
+}
+
 /* ============================================================================
    INSTRUCTOR DASHBOARD SPECIFIC
    ============================================================================ */
@@ -293,4 +302,28 @@ button.btn-primary {
 .sidebar nav a.active {
   background: var(--palette-accent, var(--emerald-100, #d1fae5)) !important;
   color: var(--palette-primary, var(--teal-700, #0f766e)) !important;
+}
+
+/* ============================================================================
+   TA/TUTOR DASHBOARD SPECIFIC ELEMENTS
+   ============================================================================ */
+.team-item {
+  background: var(--palette-background, var(--gray-50, #f9fafb)) !important;
+}
+
+.team-item:hover {
+  background: var(--palette-background, var(--emerald-50, #ecfdf5)) !important;
+  border-color: var(--palette-primary, var(--teal-600, #0d9488)) !important;
+}
+
+.team-item-name {
+  color: var(--palette-primary, var(--gray-900, #111827)) !important;
+}
+
+.course-code {
+  color: var(--palette-primary, var(--teal-600, #0d9488)) !important;
+}
+
+.stat-value {
+  color: var(--palette-primary, var(--teal-600, #0d9488)) !important;
 }

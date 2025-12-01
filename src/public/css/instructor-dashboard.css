@@ -296,3 +296,135 @@
   border-bottom: none;
 }
 
+/* ============================================================================
+   MOBILE RESPONSIVE STYLES
+   ============================================================================ */
+
+/* Tablet and smaller: Stack rows vertically */
+@media (width < 1200px) {
+  .instructor-dashboard .dashboard-row-top,
+  .instructor-dashboard .dashboard-row-bottom {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .instructor-dashboard .dashboard-row-top .dashboard-card,
+  .instructor-dashboard .dashboard-row-bottom .dashboard-card {
+    min-height: 0;
+  }
+}
+
+/* Mobile: Full single column layout */
+@media (width < 768px) {
+  .instructor-dashboard .dashboard-grid {
+    gap: 12px;
+  }
+
+  .instructor-dashboard .dashboard-row-top,
+  .instructor-dashboard .dashboard-row-bottom {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .instructor-dashboard .dashboard-row-top .dashboard-card,
+  .instructor-dashboard .dashboard-row-bottom .dashboard-card {
+    min-height: 0;
+  }
+
+  /* Make attendance items stack vertically on mobile */
+  .attendance-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .attendance-item .progress-container {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  /* Compact header buttons */
+  .btn-create-announcement,
+  .btn-create-attendance {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  /* Make team list items more compact */
+  .teams-list .team-item {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  /* Adjust announcement header layout for mobile */
+  .announcements-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .announcements-card .card-header .btn-create-announcement {
+    width: 100%;
+  }
+
+  /* Adjust attendance header layout for mobile */
+  .attendance-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .attendance-card .card-header .btn-create-attendance {
+    width: 100%;
+    height: auto;
+    padding: 6px 12px;
+  }
+
+  /* Make card course info stats wrap on mobile */
+  .card-course-info .course-stats {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .card-course-info .course-stats .stat-item {
+    flex: 1 1 auto;
+    min-width: calc(50% - 0.5rem);
+  }
+
+  /* Adjust attendance title for mobile readability */
+  .attendance-title {
+    font-size: 0.85rem;
+    white-space: normal;
+  }
+}
+
+/* Very small mobile devices */
+@media (width < 480px) {
+  .instructor-dashboard .dashboard-grid {
+    gap: 10px;
+  }
+
+  .instructor-dashboard .dashboard-row-top,
+  .instructor-dashboard .dashboard-row-bottom {
+    gap: 10px;
+  }
+
+  .card-course-info .course-stats {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .card-course-info .course-stats .stat-item {
+    min-width: 100%;
+  }
+
+  /* Further reduce font sizes for very small screens */
+  .attendance-title {
+    font-size: 0.8rem;
+  }
+
+  .attendance-meta {
+    font-size: 0.7rem;
+  }
+}
+

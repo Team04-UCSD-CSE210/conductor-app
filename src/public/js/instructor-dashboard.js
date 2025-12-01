@@ -16,7 +16,6 @@
     getStudents = async () => [],
     updateCourseInfo = () => {},
     updateStats = () => {},
-    renderTeamsList = () => {},
     updateCourseProgress = () => {},
   } = DS;
   
@@ -50,14 +49,64 @@
       };
       updateStats(stats);
 
-      // Load teams list
-      const teams = await getTeams(offeringId);
-      renderTeamsList(teams);
+      // Teams list removed - replaced with journal entries
 
       // Update instructor attendance summary on the card
       await updateInstructorAttendance(offeringId);
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+    }
+  }
+
+  // Load journal entries from backend
+  async function loadJournalEntries() {
+    const journalList = document.querySelector('.journal-list');
+    if (!journalList) return;
+
+    try {
+      const res = await fetch('/api/instructor-journals', {
+        credentials: 'include'
+      });
+      
+      if (!res.ok) {
+        journalList.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">No journal entries</p>';
+        return;
+      }
+      
+      const data = await res.json();
+      const entries = Array.isArray(data.logs) ? data.logs : (Array.isArray(data) ? data : []);
+
+      if (!entries.length) {
+        journalList.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">No journal entries yet</p>';
+        return;
+      }
+
+      // Helper function to escape HTML
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Sort by date (most recent first) and show latest 5
+      const sortedEntries = entries
+        .sort((a, b) => {
+          const dateA = new Date(a.created_at || a.date || 0);
+          const dateB = new Date(b.created_at || b.date || 0);
+          return dateB - dateA;
+        })
+        .slice(0, 5);
+
+      journalList.innerHTML = sortedEntries.map(entry => {
+        const date = new Date(entry.created_at || entry.date || Date.now());
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const title = entry.title || entry.content?.substring(0, 30) || 'Journal Entry';
+        
+        return `<div class="journal-entry">${escapeHtml(dateStr)} - ${escapeHtml(title)}</div>`;
+      }).join('');
+    } catch (error) {
+      console.error('Error loading journal entries:', error);
+      journalList.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Error loading journal entries</p>';
     }
   }
 
@@ -210,6 +259,7 @@
     await loadDashboardStats();
     await loadInteractionFormData();
     await loadWelcomeName();
+    await loadJournalEntries();
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {
@@ -223,14 +273,34 @@
   // Load and populate the welcome banner with the current user's name
   async function loadWelcomeName() {
     const heading = document.querySelector('.welcome-content h2');
+    const subtitle = document.querySelector('.welcome-content p');
     if (!heading) return;
 
     try {
-      const res = await fetch('/api/user', { credentials: 'include' });
-      if (!res.ok) return;
-      const user = await res.json();
-      if (user && user.name) {
-        heading.textContent = `Welcome, ${user.name}!`;
+      // Get user name and role information from navigation context
+      const contextRes = await fetch('/api/users/navigation-context', { credentials: 'include' });
+      if (contextRes.ok) {
+        const context = await contextRes.json();
+        
+        // Update heading with user name
+        if (context.name) {
+          heading.textContent = `Welcome, ${context.name}!`;
+        }
+        
+        // Update subtitle with role information
+        if (subtitle) {
+          let roleText = 'an Instructor';
+          
+          if (context.enrollment_role === 'instructor' || context.primary_role === 'instructor') {
+            roleText = 'an Instructor';
+          } else if (context.enrollment_role === 'ta') {
+            roleText = 'a TA';
+          } else if (context.enrollment_role === 'tutor') {
+            roleText = 'a Tutor';
+          }
+          
+          subtitle.textContent = `You are registered in the course as ${roleText}.`;
+        }
       }
     } catch (error) {
       console.error('Error loading current user for instructor welcome banner:', error);
