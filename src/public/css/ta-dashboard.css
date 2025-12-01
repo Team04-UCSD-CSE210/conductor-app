@@ -1,1 +1,224 @@
-/* TA Dashboard specific overrides (none yet). */
+/* TA Dashboard specific overrides. */
+
+@import url('/css/student-dashboard.css');
+@import url('/css/instructor-dashboard.css');
+
+.card-course-info .course-stats {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+/* Prevent stat items from stretching unexpectedly in flex context */
+.card-course-info .course-stats .stat-item {
+  flex: 0 0 auto;
+  padding: 0 0.5rem; /* Slight extra horizontal breathing room */
+}
+
+/* Small tweak: slightly larger team list items for instructor view */
+.teams-list .team-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #F8FFFC;
+  border: 1px solid #E6FFFA;
+  margin-bottom: 8px;
+}
+
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+.pulse-positive { background: #10B981; }
+.pulse-warning  { background: #F59E0B; }
+.pulse-negative { background: #EF4444; }
+
+.pulse-details-card .pulse-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #FFF;
+  border: 1px solid #EDF7F5;
+  margin-bottom: 8px;
+}
+
+/* Make the teams list and pulse details scrollable when they grow too tall */
+.teams-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 8px; /* room for scrollbar */
+}
+
+/* Match the student dashboard scrollbar styling for consistency */
+.teams-list::-webkit-scrollbar,
+.pulse-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pulse-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.teams-list::-webkit-scrollbar-track,
+.pulse-list::-webkit-scrollbar-track {
+  background: #F0FDFA;
+  border-radius: 3px;
+}
+
+.teams-list::-webkit-scrollbar-thumb,
+.pulse-list::-webkit-scrollbar-thumb {
+  background: #83D7CF;
+  border-radius: 3px;
+}
+
+.teams-list::-webkit-scrollbar-thumb:hover,
+.pulse-list::-webkit-scrollbar-thumb:hover {
+  background: #0F766E;
+}
+
+/* Announcements header: align title and action button */
+.announcements-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid #99F6E4;
+  padding-bottom: 8px;
+}
+
+.btn-create-announcement {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+/* Attendance create button matches announcements */
+.btn-create-attendance {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+/* Prevent the default h4 border from showing and ensure it doesn't add extra spacing */
+.announcements-card .card-header h4,
+.attendance-card .card-header h4 {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+}
+
+/* Announcement modal fields: ensure subject and message have identical widths */
+#announcement-form {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#announcement-form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+#announcement-form input[type="text"],
+#announcement-form textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--gray-200, #e6eef0);
+  border-radius: 8px;
+  background: var(--bg-input, #fff);
+  font-size: 0.95rem;
+  color: var(--gray-900, #0f172a);
+}
+
+#announcement-form textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+#announcement-form input[type="text"]:focus,
+#announcement-form textarea:focus {
+  outline: none;
+  border-color: #83D7CF;
+  box-shadow: 0 0 0 4px rgba(131,215,207,0.12);
+}
+
+/* Attendance list scroll behaviour */
+.attendance-list {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-top: 8px;
+}
+
+.attendance-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.attendance-list::-webkit-scrollbar-track {
+  background: #F0FDFA;
+  border-radius: 3px;
+}
+
+.attendance-list::-webkit-scrollbar-thumb {
+  background: #83D7CF;
+  border-radius: 3px;
+}
+
+.attendance-list::-webkit-scrollbar-thumb:hover {
+  background: #0F766E;
+}
+
+/* Attendance card header: inline header with action button to the right */
+.attendance-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  /* match announcements header: underline on the header container */
+  border-bottom: 2px solid #99F6E4;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.attendance-card .card-header h4 {
+  margin: 0;
+  padding: 0;
+}
+
+.btn-create-attendance {
+  font-size: 13px;
+  padding: 4px 8px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+/* Make the attendance action button smaller (compact '+') */
+.attendance-card .card-header .btn-create-attendance {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+/* Ensure the header underline for attendance spans the full card header width
+   (override h4's individual underline and rely on the card-header border) */
+.attendance-card h4 {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+}
