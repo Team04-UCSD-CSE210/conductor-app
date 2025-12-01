@@ -61,6 +61,71 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 });
 
 /**
+ * Get global color palette for active course offering
+ * GET /api/offerings/color-palette
+ * Public - all authenticated users can read
+ */
+router.get('/color-palette', ensureAuthenticated, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT color_palette 
+       FROM course_offerings 
+       WHERE is_active = TRUE 
+       ORDER BY created_at DESC 
+       LIMIT 1`
+    );
+
+    const palette = result.rows.length > 0 && result.rows[0].color_palette 
+      ? result.rows[0].color_palette 
+      : 'default';
+    
+    res.json({ color_palette: palette });
+  } catch (err) {
+    console.error('Error fetching color palette:', err);
+    res.json({ color_palette: 'default' }); // Return default on error
+  }
+});
+
+/**
+ * Set global color palette for active course offering
+ * POST /api/offerings/color-palette
+ * Requires: course.manage permission (course scope) - Instructors/Admins only
+ */
+router.post('/color-palette', ...protectAny(['course.manage'], 'course'), async (req, res) => {
+  try {
+    const { color_palette } = req.body;
+    
+    // Validate palette value
+    const validPalettes = ['default', 'blue', 'purple', 'green', 'orange', 'red'];
+    if (!validPalettes.includes(color_palette)) {
+      return res.status(400).json({ error: `Invalid color palette. Must be one of: ${validPalettes.join(', ')}` });
+    }
+    
+    // Update active course offering
+    const result = await pool.query(
+      `UPDATE course_offerings 
+       SET color_palette = $1, updated_at = NOW()
+       WHERE is_active = TRUE
+       RETURNING id, color_palette`,
+      [color_palette]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No active course offering found' });
+    }
+
+    res.json({ 
+      success: true, 
+      color_palette: result.rows[0].color_palette,
+      message: 'Color palette saved successfully. Changes will apply to all users across the website.'
+    });
+  } catch (err) {
+    console.error('Error saving color palette:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * Get offering details
  * GET /api/offerings/:offeringId
  * Requires: roster.view or course.manage permission (course scope)

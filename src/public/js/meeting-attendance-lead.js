@@ -198,9 +198,23 @@
           const recentMeetings = teamMeetings.slice(0, 12);
           recentMeetings.forEach((m) => {
             const bar = document.createElement('div');
+            bar.className = 'meeting-chart-bar';
             bar.style.width = '20px';
             bar.style.height = `${m.attendancePercent || 0}%`;
-            bar.style.backgroundColor = m.attendancePercent >= 80 ? 'var(--green-500)' : 'var(--yellow-500)';
+            
+            // Use palette colors for chart bars
+            const paletteColors = window.getPaletteColors ? window.getPaletteColors() : {
+              primary: '#0F766E',
+              secondary: '#83D7CF'
+            };
+            
+            if (m.attendancePercent >= 80) {
+              bar.className += ' green';
+              bar.style.backgroundColor = paletteColors.primary;
+            } else {
+              bar.className += ' yellow';
+              bar.style.backgroundColor = 'var(--yellow-500, #eab308)';
+            }
             bar.style.borderRadius = '2px 2px 0 0';
             bar.title = `${m.label}: ${m.attendancePercent || 0}%`;
             selectors.attendanceChart.appendChild(bar);

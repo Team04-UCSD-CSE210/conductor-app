@@ -24,10 +24,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.name,
         u.email,
         u.phone_number,
-        u.pronouns,
-        u.availability,
-        u.social_links,
-        u.last_activity,
+        u.github_username,
+        u.linkedin_url,
         e.course_role,
         u.primary_role
       FROM users u
@@ -45,10 +43,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.name,
         u.email,
         u.phone_number,
-        u.pronouns,
-        u.availability,
-        u.social_links,
-        u.last_activity,
+        u.github_username,
+        u.linkedin_url,
         e.course_role,
         u.primary_role
       FROM users u
@@ -66,10 +62,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.name,
         u.email,
         u.phone_number,
-        u.pronouns,
-        u.availability,
-        u.social_links,
-        u.last_activity,
+        u.github_username,
+        u.linkedin_url,
         e.course_role,
         u.primary_role,
         tm.team_id,
@@ -90,10 +84,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       SELECT 
         t.id,
         t.name,
-        t.description as mantra,
-        t.repository_url,
-        t.slack_channel,
+        t.team_number,
         t.status,
+        t.leader_id,
         COUNT(tm.user_id) as member_count,
         JSON_AGG(
           JSON_BUILD_OBJECT(
@@ -104,10 +97,10 @@ router.get('/', ensureAuthenticated, async (req, res) => {
           ) ORDER BY u.name
         ) FILTER (WHERE u.id IS NOT NULL) as members
       FROM team t
-      LEFT JOIN team_members tm ON t.id = tm.team_id
+      LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.left_at IS NULL
       LEFT JOIN users u ON tm.user_id = u.id
       WHERE t.offering_id = $1::uuid
-      GROUP BY t.id, t.name, t.description, t.repository_url, t.slack_channel, t.status
+      GROUP BY t.id, t.name, t.team_number, t.status, t.leader_id
       ORDER BY t.name
     `;
 
@@ -119,14 +112,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       pool.query(groupsQuery, [offering_id])
     ]);
 
-    // Process groups to add links array
-    const groups = groupsResult.rows.map(group => ({
-      ...group,
-      links: [
-        group.repository_url && { name: 'Repository', url: group.repository_url },
-        group.slack_channel && { name: 'Slack', url: group.slack_channel }
-      ].filter(Boolean)
-    }));
+    // Process groups - no links array needed since those columns don't exist
+    const groups = groupsResult.rows;
 
     const response = {
       professors: professorsResult.rows,

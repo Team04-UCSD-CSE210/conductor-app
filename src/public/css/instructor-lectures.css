@@ -55,7 +55,7 @@ body.dashboard-page .main-container {
 .stat-value {
   font-size: 5.5rem;
   font-weight: 700;
-  color: var(--teal-600, #0d9488);
+  color: var(--palette-primary, var(--teal-600, #0d9488));
   margin-bottom: 0.5rem;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -111,7 +111,7 @@ body.dashboard-page .main-container {
 
 .bar-chart .bar {
   border-radius: 0.5rem 0.5rem 0 0;
-  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  background: linear-gradient(180deg, var(--palette-secondary, #83D7CF) 0%, var(--palette-primary, #0F766E) 100%);
   position: relative;
   overflow: visible;
   min-height: 8px;
@@ -161,7 +161,7 @@ body.dashboard-page .main-container {
   border: none;
   border-radius: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--teal-600, #0d9488);
+  background: var(--palette-primary, var(--teal-600, #0d9488));
   color: white;
   font-size: 0.95rem;
   font-weight: 600;
@@ -176,7 +176,7 @@ body.dashboard-page .main-container {
 }
 
 .btn-primary:hover {
-  background: var(--teal-700, #0f766e);
+  background: var(--palette-secondary, var(--teal-700, #0f766e));
   box-shadow: 0 4px 12px rgb(13 148 136 / 30%);
   transform: translateY(-1px);
 }

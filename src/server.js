@@ -814,6 +814,10 @@ app.get("/instructor-dashboard", ...protect('course.manage', 'course'), (req, re
   res.sendFile(buildFullViewPath("instructor-dashboard.html"));
 });
 
+app.get("/course-settings", ...protect('course.manage', 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("course-settings.html"));
+});
+
 app.get("/meeting-attendance", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("meeting-attendance.html"));
 });
@@ -1280,9 +1284,6 @@ app.get("/work-journal", ensureAuthenticated, async (req, res) => {
       return res.redirect("/login");
     }
 
-    // Check if user is a team lead
-    const isTeamLead = await isUserTeamLead(user.id);
-    
     // Allow students, admins, and instructors
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student' || 

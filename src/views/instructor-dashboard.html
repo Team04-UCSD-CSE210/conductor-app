@@ -24,6 +24,15 @@
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     
+    <!-- Colorblind Mode Toggle -->
+    <div class="colorblind-toggle-container">
+      <label class="colorblind-toggle-label">
+        <input type="checkbox" id="colorblindToggle" class="colorblind-toggle-input">
+        <span class="colorblind-toggle-slider"></span>
+        <span class="colorblind-toggle-text">Colorblind Mode</span>
+      </label>
+    </div>
+    
     <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
     
@@ -212,8 +221,10 @@
   </main>
 
   <script src="/js/dashboard.service.js"></script>
+  <script src="/js/palette-loader.js"></script>
   <script src="/js/todo-widget.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
   <script src="/js/instructor-dashboard.js" defer></script>
   
   <!-- Announcement Modal -->
