@@ -5,180 +5,281 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Instructor Dashboard</title>
 
-  <link rel="stylesheet" href="/css/global.css">
-  <link rel="stylesheet" href="/css/dashboard-global.css">
-  <link rel="stylesheet" href="/css/instructor-dashboard.css">
+  <link rel="stylesheet" href="../public/css/global.css">
+  <link rel="stylesheet" href="../public/css/dashboard-global.css">
+  <link rel="stylesheet" href="../public/css/instructor-dashboard.css">
+  <link rel="stylesheet" href="../public/css/student-dashboard.css">
 </head>
 
 <body class="dashboard-page">
-
-  <!-- Hamburger Menu Button (mobile only) -->
   <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
   </button>
 
-  <!-- Sidebar Navigation -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
-    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    
+    <footer>
+      <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
   </header>
 
   <!-- Main Content -->
   <main class="main-container" id="main">
-    <h2 class="page-title">Dashboard</h2>
+    <!-- Top Bar with User Icon and Title -->
+    <div class="dashboard-header">
+      <img src="/assets/user.png" alt="User Profile" class="user-profile-icon">
+    </div>
 
-    <section class="frame" role="region" aria-label="Dashboard content">
-      <section class="content">
-        
-        <!-- Top Cards Container -->
-        <section class="top-cards-wrapper">
-          <article class="card card-course-info" aria-label="Course information card">
-            <strong class="course-code">CSE 210</strong>
-            <p class="course-title">Software Engineering</p>
-            <p class="course-term">Fall 2025</p>
-            <dl class="course-schedule">
-              <dt>Lectures</dt>
-              <dd>Mon/Wed 10:00–11:20 am</dd>
-              <dt>Office Hours</dt>
-              <dd>Tue 2–4 pm</dd>
-            </dl>
-            <figure class="course-stats">
-              <figcaption class="stat-item">
-                <span class="stat-value">78</span>
-                <span class="stat-label">Students</span>
-              </figcaption>
-              <figcaption class="stat-item">
-                <span class="stat-value">10</span>
-                <span class="stat-label">Teams</span>
-              </figcaption>
-              <figcaption class="stat-item">
-                <span class="stat-value">3</span>
-                <span class="stat-label">TAs</span>
-              </figcaption>
-              <figcaption class="stat-item">
-                <span class="stat-value">5</span>
-                <span class="stat-label">Tutors</span>
-              </figcaption>
-            </figure>
-          </article>
+    <!-- Welcome Banner with Polaroid -->
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <h2>Welcome, Instructor!</h2>
+        <p>See what happened with your course and team!</p>
+      </div>
+      <div class="polaroid-container">
+        <div class="polaroid">
+          <div class="polaroid-tape"></div>
+          <div class="course-info">
+            <h3>CSE 210: Software Engineering</h3>
+            <p>Insert course description<br>& team information</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-          <article class="card card-scrollable" aria-label="Teams card">
-            <h3>Teams</h3>
-            <nav class="teams-list">
-              <a href="/teams/1" class="team-item" aria-label="Team 1">
+    <!-- Dashboard Grid (three columns) -->
+    <div class="dashboard-grid">
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Attendance Card -->
+        <div class="dashboard-card attendance-card">
+          <div class="card-header">
+            <h4>Attendance</h4>
+            <button id="createAttendanceBtn" class="btn btn-primary btn-create-attendance" aria-label="Add attendance">+</button>
+          </div>
+          <div class="attendance-list">
+            <div class="attendance-item">
+              <span class="attendance-label">Lecture 1</span>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 98%"></div>
+                </div>
+                <span class="progress-percentage">98%</span>
+              </div>
+            </div>
+            <div class="attendance-item">
+              <span class="attendance-label">Lecture 2</span>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 100%"></div>
+                </div>
+                <span class="progress-percentage">100%</span>
+              </div>
+            </div>
+            <div class="attendance-item">
+              <span class="attendance-label">Lecture 3</span>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 100%"></div>
+                </div>
+                <span class="progress-percentage">60%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Course Status Card -->
+        <div class="dashboard-card course-status-card">
+          <h4>Course Status</h4>
+          <div class="status-content">
+            <div class="circular-progress">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
+                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
+              </svg>
+              <div class="progress-text">75%</div>
+            </div>
+            <div class="status-legend">
+              <div class="legend-item">
+                <span class="legend-dot completed"></span>
+                <span>Completed</span>
+                <span class="legend-dot in-progress"></span>
+                <span>In-Progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle Column -->
+      <div class="middle-column">
+        <!-- Announcements Card -->
+        <div class="dashboard-card announcements-card">
+          <div class="card-header">
+            <h4>Announcements</h4>
+            <button id="createAnnouncementBtn" class="btn btn-primary btn-create-announcement" aria-label="Create new announcement">Create New</button>
+          </div>
+          <div class="announcements-list">
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Upcoming Final Exam</h5>
+                <p>Prepare for final exam this week...</p>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Team Meeting</h5>
+                <p>Weekly team standup scheduled...</p>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Project Deadline</h5>
+                <p>Final project due next Friday...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Progress Card -->
+        <div class="dashboard-card recent-progress-card">
+          <h4>Recent Progress</h4>
+          <div class="progress-placeholder">
+            <div class="weeks-timeline">
+              <div class="week-item current">
+                <div class="week-header">
+                  <div class="week-number">Week 10</div>
+                  <div class="week-dates">Nov 25 - Dec 01</div>
+                </div>
+                <div class="week-status upcoming">Upcoming: Final presentations, Code reviews</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 9</div>
+                  <div class="week-dates">Nov 18 - Nov 24</div>
+                </div>
+                <div class="week-status completed">Completed: Sprint retrospective, Team standup</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 8</div>
+                  <div class="week-dates">Nov 11 - Nov 17</div>
+                </div>
+                <div class="week-status completed">Completed: Unit testing, Documentation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Teams & Pulses -->
+      <div class="right-column">
+        <div class="dashboard-card teams-card">
+          <h4>Teams</h4>
+          <div class="teams-list">
+            <a href="/teams/1" class="team-item">
+              <div class="team-info">
                 <span class="team-name">Team 1</span>
                 <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/2" class="team-item" aria-label="Team 2">
+              </div>
+              <div class="team-pulse">
+                <span class="pulse-dot pulse-positive" aria-hidden="true"></span>
+              </div>
+            </a>
+            <a href="/teams/2" class="team-item">
+              <div class="team-info">
                 <span class="team-name">Team 2</span>
                 <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/3" class="team-item" aria-label="Team 3">
+              </div>
+              <div class="team-pulse">
+                <span class="pulse-dot pulse-warning" aria-hidden="true"></span>
+              </div>
+            </a>
+            <a href="/teams/3" class="team-item">
+              <div class="team-info">
                 <span class="team-name">Team 3</span>
                 <span class="team-count">7 members</span>
-              </a>
-              <a href="/teams/4" class="team-item" aria-label="Team 4">
+              </div>
+              <div class="team-pulse">
+                <span class="pulse-dot pulse-negative" aria-hidden="true"></span>
+              </div>
+            </a>
+            <a href="/teams/4" class="team-item">
+              <div class="team-info">
                 <span class="team-name">Team 4</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/5" class="team-item" aria-label="Team 5">
-                <span class="team-name">Team 5</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/6" class="team-item" aria-label="Team 6">
-                <span class="team-name">Team 6</span>
                 <span class="team-count">7 members</span>
-              </a>
-              <a href="/teams/7" class="team-item" aria-label="Team 7">
-                <span class="team-name">Team 7</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/8" class="team-item" aria-label="Team 8">
-                <span class="team-name">Team 8</span>
-                <span class="team-count">8 members</span>
-              </a>
-              <a href="/teams/9" class="team-item" aria-label="Team 9">
-                <span class="team-name">Team 9</span>
-                <span class="team-count">7 members</span>
-              </a>
-              <a href="/teams/10" class="team-item" aria-label="Team 10">
-                <span class="team-name">Team 10</span>
-                <span class="team-count">8 members</span>
-              </a>
-            </nav>
-          </article>
+              </div>
+              <div class="team-pulse">
+                <span class="pulse-dot pulse-negative" aria-hidden="true"></span>
+              </div>
+            </a>
+          </div>
+        </div>
 
-          <!-- Recent Updates -->
-          <section class="card wide recent-updates" aria-label="Recent activity">
-            <h3>Recent Updates</h3>
-            <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-700);">
-              <li>Sprint 2 deliverables graded</li>
-              <li>New TA assigned to Lab 3</li>
-              <li>Reminder sent for project proposals</li>
-            </ul>
-          </section>
-        </section>
-
-        <!-- Reports Section -->
-        <section class="card wide reports-analytics" aria-label="Report interaction">
-          <h3>Report Interaction</h3>
-          <aside class="report-box" role="region" aria-label="Report interaction form">
-            <form class="interaction-form">
-              <fieldset class="interaction-row">
-                <legend class="sr-only">Team and Student Selection</legend>
-                <section class="interaction-col">
-                  <label for="team-select" class="interaction-label">Team</label>
-                  <select id="team-select" name="team" class="interaction-select is-placeholder">
-                    <option value="">Select team</option>
-                    <option value="team1">Team 1</option>
-                    <option value="team2">Team 2</option>
-                    <option value="team3">Team 3</option>
-                    <!-- Add more teams as needed -->
-                  </select>
-                </section>
-                <section class="interaction-col">
-                  <label for="student-select" class="interaction-label">Student</label>
-                  <select id="student-select" name="student" class="interaction-select is-placeholder">
-                    <option value="">Select student</option>
-                    <option value="student1">Student 1</option>
-                    <option value="student2">Student 2</option>
-                    <option value="student3">Student 3</option>
-                    <!-- Add more students as needed -->
-                  </select>
-                </section>
-                <button type="button" class="btn btn-positive interaction-btn" id="positive-btn" aria-label="Positive Interaction">+</button>
-                <button type="button" class="btn btn-negative interaction-btn" id="negative-btn" aria-label="Negative Interaction">-</button>
-              </fieldset>
-              <fieldset class="interaction-details">
-                <legend class="interaction-label">Interaction Details</legend>
-                <textarea id="interaction-notes" name="notes" rows="4" class="interaction-textarea" placeholder="Report details of your interaction with a specific team or student here"></textarea>
-              </fieldset>
-              <footer class="interaction-submit-row">
-                <button type="submit" class="btn btn-primary">Submit Report</button>
-              </footer>
-            </form>
-          </aside>
-        </section>
-
-      </section>
-    </section>
+        <!-- TODO Card -->
+        <div class="dashboard-card todo-card">
+          <h4>TODO</h4>
+          <div class="todo-list">
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item One</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item Two</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item Three</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Complete Assignment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <script src="/js/dashboard.service.js"></script>
-  <script src="/js/sidebar-nav.js" defer></script>
-  <script src="/js/instructor-dashboard.js" defer></script>
+  <script src="../public/js/dashboard.service.js"></script>
+  <script src="../public/js/sidebar-nav.js" defer></script>
+  <script src="../public/js/instructor-dashboard.js" defer></script>
+  
+  <!-- Announcement Modal -->
+  <div id="announcementModal" class="modal-overlay" aria-hidden="true" inert>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="announcementModalTitle">
+      <header class="modal-header">
+        <h3 id="announcementModalTitle">New Announcement</h3>
+        <button class="modal-close" id="announcementModalClose" aria-label="Close">×</button>
+      </header>
+      <form id="announcement-form" class="modal-body">
+        <label for="announcement-subject">Subject</label>
+        <input id="announcement-subject" name="subject" type="text" required maxlength="200" />
+
+        <label for="announcement-body">Message</label>
+        <textarea id="announcement-body" name="body" rows="6" required></textarea>
+
+        <footer class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="announcementCancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="announcementSend">Send</button>
+        </footer>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
 
