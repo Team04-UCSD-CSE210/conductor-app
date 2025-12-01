@@ -74,25 +74,6 @@ function runLoadTest(label, opts) {
 }
 
 /**
- * Warm-up test to ensure server is ready
- */
-async function warmUp() {
-  console.log('\n🔥 Warming up server...');
-  try {
-    const response = await fetch(`${BASE_URL}/api/health`);
-    if (response.ok) {
-      console.log('✅ Server is responsive');
-    } else {
-      console.log(`⚠️  Server returned status: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('❌ Server may not be running:', error.message);
-    console.log(`   Make sure server is running at ${BASE_URL}`);
-    process.exit(1);
-  }
-}
-
-/**
  * Test database connectivity
  */
 async function testDatabase() {
@@ -157,7 +138,7 @@ async function runLoadTests() {
   let totalErrors = 0;
   let avgLatencies = [];
   
-  results.forEach((result, index) => {
+  results.forEach((result) => {
     totalRequests += result.requests.total;
     totalErrors += result.errors + result.non2xx;
     avgLatencies.push(result.latency.mean);
