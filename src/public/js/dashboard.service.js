@@ -59,6 +59,34 @@
   }
 
   /**
+   * Dashboard TODO API helpers
+   */
+  async function getDashboardTodos() {
+    const data = await apiFetch('/dashboard-todos');
+    return Array.isArray(data.todos) ? data.todos : [];
+  }
+
+  async function createDashboardTodo(title) {
+    return apiFetch('/dashboard-todos', {
+      method: 'POST',
+      body: JSON.stringify({ title })
+    });
+  }
+
+  async function updateDashboardTodo(id, updates) {
+    return apiFetch(`/dashboard-todos/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates || {})
+    });
+  }
+
+  async function deleteDashboardTodo(id) {
+    await apiFetch(`/dashboard-todos/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+  }
+
+  /**
    * Get teams for an offering
    */
   async function getTeams(offeringId) {
@@ -137,6 +165,52 @@
   }
 
   /**
+   * Calculate course progress percentage from start/end dates
+   */
+  function calculateCourseProgress(offering) {
+    if (!offering || !offering.start_date || !offering.end_date) {
+      return null;
+    }
+
+    const start = new Date(offering.start_date);
+    const end = new Date(offering.end_date);
+    const now = new Date();
+
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || start >= end) {
+      return null;
+    }
+
+    const total = end.getTime() - start.getTime();
+    const elapsedRaw = now.getTime() - start.getTime();
+    const elapsed = Math.min(Math.max(elapsedRaw, 0), total);
+
+    return Math.round((elapsed / total) * 100);
+  }
+
+  /**
+   * Update course status circular progress card, if present
+   */
+  function updateCourseProgress(offering) {
+    const percent = calculateCourseProgress(offering);
+    if (percent == null) return;
+
+    const card = document.querySelector('.course-status-card');
+    if (!card) return;
+
+    const progressText = card.querySelector('.progress-text');
+    if (progressText) {
+      progressText.textContent = `${percent}%`;
+    }
+
+    const svgCircle = card.querySelector('.circular-progress svg circle:nth-of-type(2)');
+    if (svgCircle) {
+      const circumference = 176;
+      const offset = circumference * (1 - percent / 100);
+      svgCircle.setAttribute('stroke-dashoffset', String(offset));
+    }
+  }
+
+  /**
    * Render teams list in DOM
    */
   function renderTeamsList(teams, containerSelector = '.teams-list') {
@@ -171,6 +245,12 @@
     getUserEnrollment,
     updateCourseInfo,
     updateStats,
-    renderTeamsList
+    renderTeamsList,
+    updateCourseProgress,
+    // Dashboard todos
+    getDashboardTodos,
+    createDashboardTodo,
+    updateDashboardTodo,
+    deleteDashboardTodo
   };
 })();

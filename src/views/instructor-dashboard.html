@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/css/student-dashboard.css">
 </head>
 
-<body class="dashboard-page">
+<body class="dashboard-page instructor-dashboard">
   <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
@@ -56,73 +56,20 @@
       </div>
     </div>
 
-    <!-- Dashboard Grid (three columns) -->
+    <!-- Dashboard Grid -->
     <div class="dashboard-grid">
-      <!-- Left Column -->
-      <div class="left-column">
+      <!-- Top row: Attendance, Announcements, Teams -->
+      <div class="dashboard-row dashboard-row-top">
         <!-- Attendance Card -->
         <div class="dashboard-card attendance-card">
           <div class="card-header">
             <h4>Attendance</h4>
-            <button id="createAttendanceBtn" class="btn btn-primary btn-create-attendance" aria-label="Add attendance">+</button>
           </div>
           <div class="attendance-list">
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 1</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 98%"></div>
-                </div>
-                <span class="progress-percentage">98%</span>
-              </div>
-            </div>
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 2</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 100%"></div>
-                </div>
-                <span class="progress-percentage">100%</span>
-              </div>
-            </div>
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 3</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 100%"></div>
-                </div>
-                <span class="progress-percentage">60%</span>
-              </div>
-            </div>
+            <!-- Items populated dynamically via instructor-dashboard.js -->
           </div>
         </div>
 
-        <!-- Course Status Card -->
-        <div class="dashboard-card course-status-card">
-          <h4>Course Status</h4>
-          <div class="status-content">
-            <div class="circular-progress">
-              <svg width="70" height="70" viewBox="0 0 70 70">
-                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
-                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
-                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
-              </svg>
-              <div class="progress-text">75%</div>
-            </div>
-            <div class="status-legend">
-              <div class="legend-item">
-                <span class="legend-dot completed"></span>
-                <span>Completed</span>
-                <span class="legend-dot in-progress"></span>
-                <span>In-Progress</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Middle Column -->
-      <div class="middle-column">
         <!-- Announcements Card -->
         <div class="dashboard-card announcements-card">
           <div class="card-header">
@@ -154,39 +101,7 @@
           </div>
         </div>
 
-        <!-- Recent Progress Card -->
-        <div class="dashboard-card recent-progress-card">
-          <h4>Recent Progress</h4>
-          <div class="progress-placeholder">
-            <div class="weeks-timeline">
-              <div class="week-item current">
-                <div class="week-header">
-                  <div class="week-number">Week 10</div>
-                  <div class="week-dates">Nov 25 - Dec 01</div>
-                </div>
-                <div class="week-status upcoming">Upcoming: Final presentations, Code reviews</div>
-              </div>
-              <div class="week-item">
-                <div class="week-header">
-                  <div class="week-number">Week 9</div>
-                  <div class="week-dates">Nov 18 - Nov 24</div>
-                </div>
-                <div class="week-status completed">Completed: Sprint retrospective, Team standup</div>
-              </div>
-              <div class="week-item">
-                <div class="week-header">
-                  <div class="week-number">Week 8</div>
-                  <div class="week-dates">Nov 11 - Nov 17</div>
-                </div>
-                <div class="week-status completed">Completed: Unit testing, Documentation</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column: Teams & Pulses -->
-      <div class="right-column">
+        <!-- Teams Card -->
         <div class="dashboard-card teams-card">
           <h4>Teams</h4>
           <div class="teams-list">
@@ -228,27 +143,68 @@
             </a>
           </div>
         </div>
+      </div>
 
-        <!-- TODO Card -->
+      <!-- Bottom row: Course Status, Recent Progress, TODO -->
+      <div class="dashboard-row dashboard-row-bottom">
+        <!-- Course Status Card -->
+        <div class="dashboard-card course-status-card">
+          <h4>Course Status</h4>
+          <div class="status-content">
+            <div class="circular-progress">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
+                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
+              </svg>
+              <div class="progress-text">75%</div>
+            </div>
+            <div class="status-legend">
+              <div class="legend-item">
+                <span class="legend-dot completed"></span>
+                <span>Completed</span>
+                <span class="legend-dot in-progress"></span>
+                <span>In-Progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Progress Card -->
+        <div class="dashboard-card recent-progress-card">
+          <h4>Recent Progress</h4>
+          <div class="progress-placeholder">
+            <div class="weeks-timeline">
+              <div class="week-item current">
+                <div class="week-header">
+                  <div class="week-number">Week 10</div>
+                  <div class="week-dates">Nov 25 - Dec 01</div>
+                </div>
+                <div class="week-status upcoming">Upcoming: Final presentations, Code reviews</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 9</div>
+                  <div class="week-dates">Nov 18 - Nov 24</div>
+                </div>
+                <div class="week-status completed">Completed: Sprint retrospective, Team standup</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 8</div>
+                  <div class="week-dates">Nov 11 - Nov 17</div>
+                </div>
+                <div class="week-status completed">Completed: Unit testing, Documentation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TODO Card (items loaded from backend) -->
         <div class="dashboard-card todo-card">
           <h4>TODO</h4>
           <div class="todo-list">
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item One</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item Two</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item Three</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Complete Assignment</span>
-            </div>
+            <!-- Items populated by todo-widget.js -->
           </div>
         </div>
       </div>
@@ -256,6 +212,7 @@
   </main>
 
   <script src="/js/dashboard.service.js"></script>
+  <script src="/js/todo-widget.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/instructor-dashboard.js" defer></script>
   

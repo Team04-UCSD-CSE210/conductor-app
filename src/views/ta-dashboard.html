@@ -112,6 +112,14 @@
             </nav>
           </article>
 
+          <!-- Personal TODOs (per-user, loaded from backend) -->
+          <article class="card dashboard-card todo-card" aria-label="Personal TODO list">
+            <h3>My TODOs</h3>
+            <div class="todo-list">
+              <!-- Items populated by todo-widget.js -->
+            </div>
+          </article>
+
           <!-- Recent Updates -->
           <section class="card wide recent-updates" aria-label="Recent activity">
             <h3>Recent Updates</h3>
@@ -169,6 +177,7 @@
   </main>
 
   <script src="/js/dashboard.service.js"></script>
+  <script src="/js/todo-widget.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/ta-dashboard.js" defer></script>
 </body>

@@ -7,7 +7,7 @@
     return;
   }
 
-  const { getActiveOfferingId, getOfferingWithStats, getUserEnrollment, updateCourseInfo, updateStats } = window.DashboardService;
+  const { getActiveOfferingId, getOfferingWithStats, getUserEnrollment, updateCourseInfo, updateStats, updateCourseProgress } = window.DashboardService;
   
   let offeringId = null;
   let refreshInterval = null;
@@ -18,7 +18,7 @@
     return window.currentUserId || null;
   }
 
-  // Load dashboard statistics
+  // Load dashboard statistics (including attendance)
   async function loadDashboardStats() {
     if (!offeringId) {
       offeringId = await getActiveOfferingId();
@@ -32,8 +32,9 @@
       // Fetch offering details
       const offering = await getOfferingWithStats(offeringId);
       
-      // Update course info
+      // Update course info and course progress
       updateCourseInfo(offering);
+      updateCourseProgress(offering);
 
       // Get user's enrollment to find their team
       const userId = getCurrentUserId();
@@ -41,11 +42,6 @@
       if (userId) {
         enrollment = await getUserEnrollment(offeringId, userId);
       }
-      
-      // For student dashboard, we need:
-      // - Group Members (team members count)
-      // - Assignments Due (would need assignments endpoint)
-      // - Weeks Left (calculated from term dates)
       
       const stats = {};
       
@@ -65,14 +61,60 @@
       stats['Weeks Left'] = 4;
       
       updateStats(stats);
+
+      // Load attendance statistics for the current student
+      await updateStudentAttendance(offeringId);
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+    }
+  }
+
+  // Update attendance card (Lecture / Team Meetings) from backend stats
+  async function updateStudentAttendance(currentOfferingId) {
+    const card = document.querySelector('.attendance-card');
+    if (!card || !currentOfferingId) return;
+
+    try {
+      const res = await fetch(`/api/attendance/my-statistics/${currentOfferingId}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) return;
+      const stats = await res.json();
+
+      const percentage = typeof stats.attendance_percentage === 'number'
+        ? Math.round(stats.attendance_percentage)
+        : 0;
+
+      const items = card.querySelectorAll('.attendance-item');
+      if (!items.length) return;
+
+      // For now, apply the same percentage to both lecture and team meetings
+      items.forEach((item) => {
+        const fill = item.querySelector('.progress-fill');
+        const label = item.querySelector('.attendance-label');
+        const percentageEl = item.querySelector('.progress-percentage');
+
+        if (fill) {
+          fill.style.width = `${percentage}%`;
+        }
+        if (percentageEl) {
+          percentageEl.textContent = `${percentage}%`;
+        }
+
+        // Optional: tweak label for clarity if needed in the future
+        if (label && label.textContent.includes('Lecture')) {
+          // label.textContent = 'Lecture Attendance';
+        }
+      });
+    } catch (error) {
+      console.error('Error loading student attendance statistics:', error);
     }
   }
 
   // Initialize dashboard
   async function initDashboard() {
     await loadDashboardStats();
+    await loadWelcomeName();
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {
@@ -81,6 +123,23 @@
     refreshInterval = setInterval(() => {
       loadDashboardStats();
     }, 30000); // Refresh every 30 seconds
+  }
+
+  // Load and populate welcome banner with the current user's name
+  async function loadWelcomeName() {
+    const heading = document.querySelector('.welcome-content h2');
+    if (!heading) return;
+
+    try {
+      const res = await fetch('/api/user', { credentials: 'include' });
+      if (!res.ok) return;
+      const user = await res.json();
+      if (user && user.name) {
+        heading.textContent = `Welcome, ${user.name}!`;
+      }
+    } catch (error) {
+      console.error('Error loading current user for welcome banner:', error);
+    }
   }
 
   // Set active navigation link based on current URL

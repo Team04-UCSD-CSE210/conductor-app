@@ -167,26 +167,11 @@
 
       <!-- Right Column -->
       <div class="right-column">
-        <!-- TODO Card -->
+        <!-- TODO Card (items loaded from backend) -->
         <div class="dashboard-card todo-card">
           <h4>TODO</h4>
           <div class="todo-list">
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item One</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item Two</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item Three</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Complete Assignment</span>
-            </div>
+            <!-- Items populated by todo-widget.js -->
           </div>
         </div>
 
@@ -204,6 +189,7 @@
   </main>
 
   <script src="/js/dashboard.service.js"></script>
+  <script src="/js/todo-widget.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/student-dashboard.js" defer></script>
 </body>

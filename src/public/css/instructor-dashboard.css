@@ -11,7 +11,34 @@
 
 @import url('/css/student-dashboard.css');
 
-/* Instructor-specific overrides (applied after imported student styles) */
+/* Instructor layout: two independent rows with their own column sizing */
+.instructor-dashboard .dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.instructor-dashboard .dashboard-row {
+  display: grid;
+  gap: 16px;
+}
+
+/* Top row: Attendance (wider), Announcements, Teams */
+.instructor-dashboard .dashboard-row-top {
+  grid-template-columns: 1.3fr 1.5fr 0.8fr;
+}
+
+/* Bottom row: Course Status, Recent Progress, TODO */
+.instructor-dashboard .dashboard-row-bottom {
+  grid-template-columns:
+    minmax(0, 0.8fr)
+    minmax(0, 1.4fr)
+    minmax(0, 0.63fr);
+}
+
+.instructor-dashboard .dashboard-row-bottom .recent-progress-card {
+  grid-column: auto;
+}
 .card-course-info .course-stats {
   display: flex;
   flex-flow: row nowrap;
@@ -24,6 +51,16 @@
 .card-course-info .course-stats .stat-item {
   flex: 0 0 auto;
   padding: 0 0.5rem; /* Slight extra horizontal breathing room */
+}
+
+/* Ensure top row cards (Attendance, Announcements, Teams) share the same vertical size */
+.instructor-dashboard .dashboard-row-top .dashboard-card {
+  min-height: 190px;
+}
+
+/* Ensure bottom row cards (Course Status, Recent Progress, TODO) share the same vertical size */
+.instructor-dashboard .dashboard-row-bottom .dashboard-card {
+  min-height: 260px;
 }
 
 /* Small tweak: slightly larger team list items for instructor view */
@@ -163,10 +200,11 @@
 
 /* Attendance list scroll behaviour */
 .attendance-list {
-  max-height: 180px;
+  max-height: 220px;
   overflow-y: auto;
   padding-right: 8px;
   margin-top: 8px;
+  min-height: 0; /* Prevent premature white space */
 }
 
 .attendance-list::-webkit-scrollbar {
@@ -224,6 +262,45 @@
   border-radius: 6px;
 }
 
+/* Instructor attendance items: lecture mini-chart layout */
+.attendance-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.attendance-item:last-child {
+  margin-bottom: 0;
+}
+
+.attendance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.attendance-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0F766E;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attendance-meta {
+  font-size: 0.75rem;
+  color: var(--gray-600, #4b5563);
+}
+
+.attendance-item .progress-container {
+  min-width: 120px;
+  max-width: 180px;
+}
+
 /* Ensure the header underline for attendance spans the full card header width
    (override h4's individual underline and rely on the card-header border) */
 .attendance-card h4 {
@@ -231,3 +308,4 @@
   padding: 0;
   border-bottom: none;
 }
+

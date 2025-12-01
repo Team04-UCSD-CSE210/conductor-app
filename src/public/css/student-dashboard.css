@@ -460,17 +460,82 @@
 }
 
 .todo-checkbox {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #83D7CF;
-  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 999px;
+  border: 2px solid #0F766E;
   background: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.todo-checkbox::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.15s ease, transform 0.15s ease;
+  transform: scale(0.8);
+}
+
+.todo-item.completed .todo-checkbox {
+  border-color: #0F766E;
+  background: #0F766E;
+}
+
+.todo-item.completed .todo-checkbox::before {
+  background: #A7F3D0;
+}
+
+
+.todo-delete {
+  border: none;
+  background: transparent;
+  color: #0F766E;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 999px;
+  opacity: 0.2;
+  transition: all 0.15s ease;
+}
+
+.todo-item:hover .todo-delete {
+  opacity: 1;
+}
+
+.todo-delete:hover {
+  background: rgba(15, 118, 110, 0.08);
 }
 
 .todo-item span {
   color: #0F766E;
   font-weight: 500;
   font-size: 13px;
+}
+
+.todo-add {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px dashed #99F6E4;
+  background: #ECFEFF;
+  color: #0F766E;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all 0.15s ease;
+}
+
+.todo-add:hover {
+  background: #CFFAFE;
+  border-style: solid;
 }
 
 /* Journal - Better Design */

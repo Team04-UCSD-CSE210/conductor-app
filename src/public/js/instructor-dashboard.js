@@ -17,6 +17,7 @@
     updateCourseInfo = () => {},
     updateStats = () => {},
     renderTeamsList = () => {},
+    updateCourseProgress = () => {},
   } = DS;
   
   let offeringId = null;
@@ -36,8 +37,9 @@
       // Fetch offering details with stats
       const offering = await getOfferingWithStats(offeringId);
       
-      // Update course info
+      // Update course info and course progress
       updateCourseInfo(offering);
+      updateCourseProgress(offering);
 
       // Update stats
       const stats = {
@@ -51,8 +53,121 @@
       // Load teams list
       const teams = await getTeams(offeringId);
       renderTeamsList(teams);
+
+      // Update instructor attendance summary on the card
+      await updateInstructorAttendance(offeringId);
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+    }
+  }
+
+  // Update instructor attendance card with per-lecture statistics
+  async function updateInstructorAttendance(currentOfferingId) {
+    if (!currentOfferingId) return;
+
+    const card = document.querySelector('.attendance-card');
+    if (!card) return;
+
+    const list = card.querySelector('.attendance-list');
+    if (!list) return;
+
+    try {
+      // Get recent lecture sessions for this offering
+      const sessionsRes = await fetch(
+        `/api/sessions?offering_id=${encodeURIComponent(currentOfferingId)}&limit=20`,
+        { credentials: 'include' }
+      );
+      if (!sessionsRes.ok) return;
+      const sessions = await sessionsRes.json();
+
+      const lectureSessions = (Array.isArray(sessions) ? sessions : [])
+        .filter(s => !s.team_id) // lectures only, not team meetings
+        .sort((a, b) => new Date(b.session_date) - new Date(a.session_date))
+        .slice(0, 8); // show most recent 8
+
+      if (!lectureSessions.length) return;
+
+      // Fetch attendance statistics per session in parallel
+      const statsList = await Promise.all(
+        lectureSessions.map(async (session) => {
+          try {
+            const statsRes = await fetch(
+              `/api/attendance/sessions/${encodeURIComponent(session.id)}/statistics`,
+              { credentials: 'include' }
+            );
+            if (!statsRes.ok) return null;
+            const stats = await statsRes.json();
+            return { session, stats };
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      const items = statsList.filter(Boolean);
+      if (!items.length) return;
+
+      list.innerHTML = '';
+
+      items.forEach(({ session, stats }) => {
+        const percentage = typeof stats.attendance_percentage === 'number'
+          ? Math.round(stats.attendance_percentage)
+          : 0;
+
+        const date = session.session_date ? new Date(session.session_date) : null;
+        const timeStr = session.session_time || '';
+        const dateLabel = date
+          ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+          : '';
+        const metaLabel = dateLabel && timeStr
+          ? `${dateLabel} • ${timeStr}`
+          : dateLabel || timeStr;
+
+        const title = session.title || 'Lecture';
+        const shortTitle = title.length > 26 ? `${title.slice(0, 23)}...` : title;
+
+        const itemEl = document.createElement('div');
+        itemEl.className = 'attendance-item';
+
+        const infoEl = document.createElement('div');
+        infoEl.className = 'attendance-info';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'attendance-title';
+        titleEl.textContent = shortTitle;
+
+        const metaEl = document.createElement('div');
+        metaEl.className = 'attendance-meta';
+        metaEl.textContent = metaLabel;
+
+        infoEl.appendChild(titleEl);
+        if (metaLabel) infoEl.appendChild(metaEl);
+
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'progress-container';
+
+        const progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+
+        const progressFill = document.createElement('div');
+        progressFill.className = 'progress-fill';
+        progressFill.style.width = `${percentage}%`;
+
+        const pctEl = document.createElement('span');
+        pctEl.className = 'progress-percentage';
+        pctEl.textContent = `${percentage}%`;
+
+        progressBar.appendChild(progressFill);
+        progressContainer.appendChild(progressBar);
+        progressContainer.appendChild(pctEl);
+
+        itemEl.appendChild(infoEl);
+        itemEl.appendChild(progressContainer);
+
+        list.appendChild(itemEl);
+      });
+    } catch (error) {
+      console.error('Error loading instructor attendance statistics:', error);
     }
   }
 
@@ -94,6 +209,7 @@
   async function initDashboard() {
     await loadDashboardStats();
     await loadInteractionFormData();
+    await loadWelcomeName();
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {
@@ -102,6 +218,23 @@
     refreshInterval = setInterval(() => {
       loadDashboardStats();
     }, 30000); // Refresh every 30 seconds
+  }
+
+  // Load and populate the welcome banner with the current user's name
+  async function loadWelcomeName() {
+    const heading = document.querySelector('.welcome-content h2');
+    if (!heading) return;
+
+    try {
+      const res = await fetch('/api/user', { credentials: 'include' });
+      if (!res.ok) return;
+      const user = await res.json();
+      if (user && user.name) {
+        heading.textContent = `Welcome, ${user.name}!`;
+      }
+    } catch (error) {
+      console.error('Error loading current user for instructor welcome banner:', error);
+    }
   }
 
   function initHamburger() {

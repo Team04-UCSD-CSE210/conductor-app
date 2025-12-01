@@ -42,7 +42,7 @@
     <section class="frame" role="region" aria-label="Tutor dashboard content">
       <section class="content">
 
-        <!-- TOP ROW: Course info (left) + On Duty (right) -->
+        <!-- TOP ROW: Course info (left) + On Duty (right) + Personal TODOs -->
         <section class="top-cards-wrapper">
 
           <!-- Course Info (same structure as student course card) -->
@@ -94,6 +94,14 @@
                 </li>
               </ul>
             </section>
+          </article>
+
+          <!-- Personal TODOs (per-user, loaded from backend) -->
+          <article class="card dashboard-card todo-card" aria-label="Personal TODO list">
+            <h3>My TODOs</h3>
+            <div class="todo-list">
+              <!-- Items populated by todo-widget.js -->
+            </div>
           </article>
 
         </section>
@@ -191,6 +199,7 @@
   </main>
 
   <script src="/js/dashboard.service.js"></script>
+  <script src="/js/todo-widget.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/tutor-dashboard.js" defer></script>
 </body>
