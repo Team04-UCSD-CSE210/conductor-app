@@ -192,7 +192,7 @@
     const overlay = document.getElementById('announcementModal');
     const closeBtn = document.getElementById('announcementModalClose');
     const cancelBtn = document.getElementById('announcementCancel');
-    const form = document.getElementById('announcementForm');
+  const form = document.getElementById('announcement-form');
     const subjectInput = document.getElementById('announcement-subject');
     const bodyInput = document.getElementById('announcement-body');
     const announcementsList = document.querySelector('.announcements-list');
