@@ -7,182 +7,248 @@
 
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/dashboard-global.css">
-  <link rel="stylesheet" href="/css/tutor-dashboard.css">
+  <link rel="stylesheet" href="/css/instructor-dashboard.css">
+  <link rel="stylesheet" href="/css/student-dashboard.css">
 </head>
 
 <body class="dashboard-page">
-
-  <!-- Hamburger Menu Button (mobile only, same as professor & student) -->
   <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
   </button>
 
-  <!-- Sidebar Navigation (same structure as student dashboard) -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
-    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    
+    <footer>
+      <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
   </header>
 
   <!-- Main Content -->
   <main class="main-container" id="main">
-    <!-- Welcome Banner -->
+    <!-- Top Bar with User Icon and Title -->
+    <div class="dashboard-header">
+      <img src="/assets/user.png" alt="User Profile" class="user-profile-icon">
+    </div>
+
+    <!-- Welcome Banner with Polaroid -->
     <div class="welcome-section">
       <div class="welcome-content">
-        <h2>Welcome!</h2>
-        <p>Loading...</p>
+        <h2>Welcome, Tutor!</h2>
+        <p>See what happened with your course and team!</p>
+      </div>
+      <div class="polaroid-container">
+        <div class="polaroid">
+          <div class="polaroid-tape"></div>
+          <div class="course-info">
+            <h3>CSE 210: Software Engineering</h3>
+            <p>Insert course description<br>& team information</p>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Dashboard Grid -->
+    <!-- Dashboard Grid (three columns) -->
     <div class="dashboard-grid">
-      <!-- Top row: Course Info, On Duty, TODOs -->
-      <div class="dashboard-row dashboard-row-top">
-        <article class="card card-course-info" aria-label="Course information">
-          <strong class="course-code">CSE 210</strong>
-          <p class="course-title">Software Engineering</p>
-          <p class="course-term">Fall 2025</p>
-
-          <dl class="course-schedule">
-            <dt>Lectures</dt>
-            <dd>Tue/Thu 5:00–6:20 pm</dd>
-
-            <dt>Office Hours</dt>
-            <dd>Tue 2–4 pm</dd>
-          </dl>
-
-          <figure class="course-stats">
-            <figcaption class="stat-item">
-              <span class="stat-value">2</span>
-              <span class="stat-label">Students enrolled</span>
-            </figcaption>
-            <figcaption class="stat-item">
-              <span class="stat-value">4</span>
-              <span class="stat-label">Sessions this week</span>
-            </figcaption>
-            <figcaption class="stat-item">
-              <span class="stat-value">1</span>
-              <span class="stat-label">Assignment due</span>
-            </figcaption>
-          </figure>
-        </article>
-
-        <article class="card tutor-on-duty-card" aria-label="On duty schedule">
-          <h3>On Duty</h3>
-          <section class="tutor-card-body">
-            <ul class="on-duty-list">
-              <li class="on-duty-item">
-                <span class="on-duty-day">Tuesday</span>
-                <span class="on-duty-time">1–3 pm</span>
-              </li>
-              <li class="on-duty-item">
-                <span class="on-duty-day">Friday</span>
-                <span class="on-duty-time">2–5 pm</span>
-              </li>
-              <li class="on-duty-item">
-                <span class="on-duty-day">Thursday</span>
-                <span class="on-duty-time">10–11 am</span>
-              </li>
-            </ul>
-          </section>
-        </article>
-
-        <article class="card dashboard-card todo-card" aria-label="Personal TODO list">
-          <h3>My TODOs</h3>
-          <div class="todo-list">
-            <!-- Items populated by todo-widget.js -->
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Attendance Card -->
+        <div class="dashboard-card attendance-card">
+          <div class="card-header">
+            <h4>Attendance</h4>
           </div>
-        </article>
+          <div class="attendance-list">
+            <div class="attendance-item">
+              <span class="attendance-label">Lecture 1</span>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 98%"></div>
+                </div>
+                <span class="progress-percentage">98%</span>
+              </div>
+            </div>
+            <div class="attendance-item">
+              <span class="attendance-label">Lecture 2</span>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 100%"></div>
+                </div>
+                <span class="progress-percentage">100%</span>
+              </div>
+            </div>
+            <div class="attendance-item">
+              <span class="attendance-label">Lecture 3</span>
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 100%"></div>
+                </div>
+                <span class="progress-percentage">60%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Course Status Card -->
+        <div class="dashboard-card course-status-card">
+          <h4>Course Status</h4>
+          <div class="status-content">
+            <div class="circular-progress">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
+                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
+              </svg>
+              <div class="progress-text">75%</div>
+            </div>
+            <div class="status-legend">
+              <div class="legend-item">
+                <span class="legend-dot completed"></span>
+                <span>Completed</span>
+                <span class="legend-dot in-progress"></span>
+                <span>In-Progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Bottom row: Queue, Recent Updates, Report Interaction -->
-      <div class="dashboard-row dashboard-row-bottom">
-        <article class="card tutor-queue-card" aria-label="Student queue">
-          <h3>Queue</h3>
-          <section class="tutor-card-body">
-            <ol class="queue-list">
-              <li class="queue-item">
-                <span class="queue-student">Student 1</span>:
-                <span class="queue-concern">Concern 1, etc.</span>
-              </li>
-              <li class="queue-item">
-                <span class="queue-student">Student 2</span>:
-                <span class="queue-concern">Concern 2, etc.</span>
-              </li>
-              <li class="queue-item">
-                <span class="queue-student">Student 3</span>:
-                <span class="queue-concern">Concern 3, etc.</span>
-              </li>
-            </ol>
-          </section>
-        </article>
-
-        <article class="card dashboard-card journal-card" aria-label="Journal Entries">
-          <h3>Journal Entries</h3>
-          <div class="journal-list">
-            <p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Loading journal entries...</p>
+      <!-- Middle Column -->
+      <div class="middle-column">
+        <!-- Announcements Card -->
+        <div class="dashboard-card announcements-card">
+          <div class="card-header">
+            <h4>Announcements</h4>
           </div>
-        </article>
+          <div class="announcements-list">
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Upcoming Final Exam</h5>
+                <p>Prepare for final exam this week...</p>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Team Meeting</h5>
+                <p>Weekly team standup scheduled...</p>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Project Deadline</h5>
+                <p>Final project due next Friday...</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <section class="card wide tutor-report-card" aria-label="Report interaction">
-          <h3>Report Interaction</h3>
-          <aside class="report-box" role="region" aria-label="Report interaction form">
-            <form class="interaction-form">
-              <fieldset class="interaction-row">
-                <legend class="sr-only">Team and Student Selection</legend>
+        <!-- Recent Progress Card -->
+        <div class="dashboard-card recent-progress-card">
+          <h4>Recent Progress</h4>
+          <div class="progress-placeholder">
+            <div class="weeks-timeline">
+              <div class="week-item current">
+                <div class="week-header">
+                  <div class="week-number">Week 10</div>
+                  <div class="week-dates">Nov 25 - Dec 01</div>
+                </div>
+                <div class="week-status upcoming">Upcoming: Final presentations, Code reviews</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 9</div>
+                  <div class="week-dates">Nov 18 - Nov 24</div>
+                </div>
+                <div class="week-status completed">Completed: Sprint retrospective, Team standup</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 8</div>
+                  <div class="week-dates">Nov 11 - Nov 17</div>
+                </div>
+                <div class="week-status completed">Completed: Unit testing, Documentation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                <section class="interaction-col">
-                  <label for="tutor-team-select" class="interaction-label">Team</label>
-                  <select id="tutor-team-select" name="team" class="interaction-select is-placeholder">
-                    <option value="">Select team</option>
-                    <option value="team1">Team 1</option>
-                    <option value="team2">Team 2</option>
-                    <option value="team3">Team 3</option>
-                  </select>
-                </section>
+      <!-- Right Column: Teams & Pulses -->
+      <div class="right-column">
+        <div class="dashboard-card teams-card">
+          <h4>Teams</h4>
+          <div class="teams-list">
+            <a href="/teams/1" class="team-item">
+              <div class="team-info">
+                <span class="team-name">Team 1</span>
+                <span class="team-count">8 members</span>
+              </div>
+              <div class="team-pulse">
+                <span class="pulse-dot pulse-positive" aria-hidden="true"></span>
+              </div>
+            </a>
+            <a href="/teams/2" class="team-item">
+              <div class="team-info">
+                <span class="team-name">Team 2</span>
+                <span class="team-count">8 members</span>
+              </div>
+              <div class="team-pulse">
+                <span class="pulse-dot pulse-warning" aria-hidden="true"></span>
+              </div>
+            </a>
+            <a href="/teams/3" class="team-item">
+              <div class="team-info">
+                <span class="team-name">Team 3</span>
+                <span class="team-count">7 members</span>
+              </div>
+              <div class="team-pulse">
+                <span class="pulse-dot pulse-negative" aria-hidden="true"></span>
+              </div>
+            </a>
+            <a href="/teams/4" class="team-item">
+              <div class="team-info">
+                <span class="team-name">Team 4</span>
+                <span class="team-count">7 members</span>
+              </div>
+              <div class="team-pulse">
+                <span class="pulse-dot pulse-negative" aria-hidden="true"></span>
+              </div>
+            </a>
+          </div>
+        </div>
 
-                <section class="interaction-col">
-                  <label for="tutor-student-select" class="interaction-label">Student</label>
-                  <select id="tutor-student-select" name="student" class="interaction-select is-placeholder">
-                    <option value="">Select student</option>
-                    <option value="student1">Student 1</option>
-                    <option value="student2">Student 2</option>
-                    <option value="student3">Student 3</option>
-                  </select>
-                </section>
-
-              </fieldset>
-
-              <fieldset class="interaction-details">
-                <legend class="interaction-label">Interaction Details</legend>
-                <textarea
-                  id="tutor-interaction-notes"
-                  name="notes"
-                  rows="4"
-                  class="interaction-textarea"
-                  placeholder="Report details of your interaction with a specific team or student here"
-                ></textarea>
-              </fieldset>
-
-              <footer class="interaction-submit-row">
-                <button type="submit" class="btn btn-primary">
-                  Submit Report
-                </button>
-              </footer>
-            </form>
-          </aside>
-        </section>
+        <!-- TODO Card -->
+        <div class="dashboard-card todo-card">
+          <h4>TODO</h4>
+          <div class="todo-list">
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item One</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item Two</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item Three</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Complete Assignment</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </main>
