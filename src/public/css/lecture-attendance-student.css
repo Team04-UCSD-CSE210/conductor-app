@@ -271,6 +271,14 @@
   color: var(--teal-700, #0f766e);
 }
 
+.team-lead-header h3 {
+  margin: 0;
+}
+
+.form-field {
+  margin: 0;
+}
+
 .help-box.team-lead-card {
   background: linear-gradient(135deg, var(--yellow-50, #fefce8) 0%, var(--amber-50, #fffbeb) 100%);
   border: 2px solid var(--yellow-400, #facc15);
@@ -346,18 +354,6 @@
   font-size: 1rem;
   font-weight: 600;
   color: var(--gray-700, #374151);
-}
-
-.modal-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.modal-header > h3 {
-  margin: 0 0 0.5rem;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--teal-700, #0f766e);
 }
 
 .contact-buttons {
@@ -637,10 +633,6 @@
   margin-bottom: 1rem;
 }
 
-.team-lead-header h3 {
-  margin: 0;
-}
-
 .quick-setup {
   font-size: 0.85rem;
   color: var(--gray-500);
@@ -657,8 +649,3 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
-
-.form-field {
-  margin: 0;
-}
-
