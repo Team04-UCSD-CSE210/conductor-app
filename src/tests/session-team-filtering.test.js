@@ -478,7 +478,7 @@ describe('Session Team-Based Filtering', () => {
         });
         expect.fail('Should have thrown foreign key constraint error');
       } catch (error) {
-        expect(error.message).toMatch(/foreign key constraint|violates/i);
+        expect(error.message).toMatch(/foreign key constraint|violates|违反外键约束/i);
       }
     });
 

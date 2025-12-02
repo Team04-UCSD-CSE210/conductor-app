@@ -309,8 +309,8 @@
     const emojiDisplay = document.createElement('div');
     emojiDisplay.className = 'pulse-emoji';
     
-    // Use SVG images from assets
-    const svgFiles = ['very_happy.svg', 'happy.svg', 'neutral.svg', 'sad.svg', 'angry.svg'];
+    // Use only 3 SVG images: very_happy (green), neutral (yellow), angry (red)
+    const svgFiles = ['very_happy.svg', 'neutral.svg', 'angry.svg'];
     const img = document.createElement('img');
     img.src = `/assets/${svgFiles[index]}`;
     img.alt = '';
@@ -404,15 +404,15 @@
       const pulseHeader = document.createElement('div');
       pulseHeader.className = 'pulse-header';
       pulseHeader.innerHTML = `
-        <p class="field-helper">Customize the five happiness levels for student responses.</p>
+        <p class="field-helper">Customize the three confidence levels for student responses.</p>
       `;
       
       const optionList = document.createElement('div');
       optionList.className = 'pulse-option-list';
       
-      const defaultValues = existing.length === 5
+      const defaultValues = existing.length === 3
         ? existing
-        : ['Strongly Agree', 'Agree', 'Neutral', 'Disagree', 'Strongly Disagree'];
+        : ['Confident', 'Neutral', 'Not Confident'];
       
       defaultValues.forEach((value, index) => {
         createPulseOptionRow(optionList, value, index);

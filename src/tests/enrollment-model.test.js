@@ -317,7 +317,7 @@ describe('EnrollmentModel', () => {
          VALUES ($1, $2, $3::enrollment_role_enum, $4, $4)`,
         [testOffering.id, testUser.id, 'invalid_enum', adminId]
       );
-    }).rejects.toThrow(/invalid input value for enum/);
+    }).rejects.toThrow(/invalid input value for enum|对于枚举.*的输入值无效/i);
   });
 
   it('should respect limit and offset options', async () => {

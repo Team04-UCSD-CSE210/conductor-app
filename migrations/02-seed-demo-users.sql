@@ -77,6 +77,11 @@ NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
  'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  'https://datascience.ucsd.edu/people/faculty/G-Gad', NULL, '+1-858-534-1331', 'ggag', 'https://linkedin.com/in/ggag'),
 
+ ('haxing@ucsd.edu', 'A10331112', 'Dr. Haiyi', 'Haiyi',
+ NULL, NULL, NULL, 'Computer Scienc and Engineering', NULL,
+ 'instructor'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+ 'https://cse.ucsd.edu/people/faculty/haxing', NULL, '+1-858-534-1332', 'haxing', 'https://linkedin.com/in/haxing'),
+
 -- ============================================
 -- GRADUATE STUDENTS (UCSD) - Potential TAs
 -- ============================================
@@ -107,6 +112,7 @@ NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
  'Data Science', 'BS', 2026, 'Data Science', 'Undergraduate',
  'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  NULL, NULL, '+1-858-555-0302', 'gracechen', 'https://linkedin.com/in/gracechen'),
+
 
 ('student3@ucsd.edu', 'A00004444', 'Henry Wilson', 'Henry',
  'Computer Engineering', 'BS', 2025, 'ECE', 'Undergraduate',
@@ -155,6 +161,11 @@ NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
  'Computer Science', 'PhD', 2025, 'Computer Science & Engineering', 'Graduate',
  'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
  NULL, NULL, '+1-858-555-0102', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+
+('haiyix1@gmail.com', NULL, 'Bimasdasdi', 'Bimal',
+ 'Computer Science', 'PhD', 2025, 'Computer Science & Engineering', 'Graduate',
+ 'student'::user_role_enum, 'active'::user_status_enum, 'extension'::institution_type_enum,
+ NULL, NULL, '+1-858-555-0103', 'noahanderson', 'https://linkedin.com/in/dsasdasda'),
 
 ('kanzhekanzhe1@gmail.com', NULL, 'Zhe Kan', 'Zhe',
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',

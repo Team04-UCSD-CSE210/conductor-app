@@ -16,49 +16,59 @@ describe('Attendance Calculation Logic', () => {
     function determineMeetingStatus(meeting) {
       const now = new Date();
       
-      // First check scheduled time - if meeting hasn't started yet, it's always pending
+      // FIRST: Check if scheduled time is in the future - always return pending for future meetings
+      // This takes priority over attendance timestamps for future meetings
+      let scheduledStartTime = null;
       if (meeting.session_date && meeting.session_time) {
         const sessionDate = new Date(meeting.session_date);
-        const year = sessionDate.getUTCFullYear();
-        const month = sessionDate.getUTCMonth();
-        const day = sessionDate.getUTCDate();
+        // Use local date methods to match the actual implementation
+        // When session_date is an ISO string, new Date() parses it correctly
+        const year = sessionDate.getFullYear();
+        const month = sessionDate.getMonth();
+        const day = sessionDate.getDate();
         const [hours, minutes] = meeting.session_time.split(':').map(Number);
-        const startTime = new Date(year, month, day, hours, minutes);
+        scheduledStartTime = new Date(year, month, day, hours, minutes);
         
-        // If scheduled start time is in the future, it's pending regardless of attendance timestamps
-        if (startTime > now) {
+        // If scheduled start time is in the future, it's always pending
+        if (scheduledStartTime > now) {
           return 'pending';
         }
       }
       
-      // Now check attendance timestamps for open/closed status
-      if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
-        // Both timestamps are set
+      // SECOND: Check attendance timestamps - these take priority over scheduled time for past meetings
+      // If attendance has been opened, use attendance timestamps to determine status
+      if (meeting.attendance_opened_at) {
         const openTime = new Date(meeting.attendance_opened_at);
-        const closeTime = new Date(meeting.attendance_closed_at);
         
-        if (now >= openTime && now < closeTime) {
-          return 'open'; // Meeting is currently open
-        } else if (now >= closeTime) {
-          return 'closed'; // Meeting has ended
+        // If attendance hasn't been opened yet (future), return pending
+        if (openTime > now) {
+          return 'pending';
         }
-      } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
-        // Only open time is set
         
-        // Check if end time has passed
-        if (meeting.code_expires_at) {
-          const endTime = new Date(meeting.code_expires_at);
-          if (endTime < now) {
-            return 'closed';
+        // Attendance has been opened - check if it's closed
+        if (meeting.attendance_closed_at) {
+          const closeTime = new Date(meeting.attendance_closed_at);
+          if (now >= closeTime) {
+            return 'closed'; // Meeting has ended
+          } else {
+            return 'open'; // Meeting is currently open
           }
+        } else {
+          // Only open time is set - check if code_expires_at has passed
+          if (meeting.code_expires_at) {
+            const endTime = new Date(meeting.code_expires_at);
+            if (endTime < now) {
+              return 'closed';
+            }
+          }
+          return 'open'; // Meeting is currently open
         }
-        return 'open';
-      } else {
-        // No attendance timestamps - use scheduled time
-        if (meeting.session_date && meeting.session_time) {
-          // We already checked if it's pending above, so if we're here it must be closed
-          return 'closed';
-        }
+      }
+      
+      // No attendance timestamps and scheduled time has passed - check scheduled time
+      if (scheduledStartTime && scheduledStartTime <= now) {
+        // Scheduled time has passed without attendance being opened
+        return 'closed';
       }
       
       return 'pending';
@@ -77,76 +87,81 @@ describe('Attendance Calculation Logic', () => {
     });
 
     it('should return closed for past scheduled meeting without attendance timestamps', () => {
-      const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 1); // Yesterday
-      
+      // Use a fixed past date to ensure test always passes
       const meeting = {
-        session_date: pastDate.toISOString(),
-        session_time: '14:00:00'
+        session_date: '2025-01-15T00:00:00Z', // January 15, 2025 (definitely in the past)
+        session_time: '10:00:00'
       };
       
       expect(determineMeetingStatus(meeting)).toBe('closed');
     });
 
     it('should return open when attendance is opened but not closed', () => {
-      const pastDate = new Date();
-      pastDate.setHours(pastDate.getHours() - 1); // 1 hour ago
+      // Create a session that started 2 hours ago and runs for 4 hours (still ongoing)
+      const startDate = new Date();
+      startDate.setHours(startDate.getHours() - 2); // Started 2 hours ago
+      
+      const sessionDate = new Date(startDate);
+      sessionDate.setHours(0, 0, 0, 0); // Start of day
+      
+      const hours = String(startDate.getHours()).padStart(2, '0');
+      const minutes = String(startDate.getMinutes()).padStart(2, '0');
+      const sessionTime = `${hours}:${minutes}:00`;
       
       const meeting = {
-        session_date: pastDate.toISOString(),
-        session_time: '14:00:00',
-        attendance_opened_at: pastDate.toISOString()
+        session_date: sessionDate.toISOString(),
+        session_time: sessionTime,
+        attendance_opened_at: startDate.toISOString()
+        // No attendance_closed_at - session is still open
       };
       
       expect(determineMeetingStatus(meeting)).toBe('open');
     });
 
     it('should return closed when attendance is opened and closed', () => {
-      const openDate = new Date();
-      openDate.setHours(openDate.getHours() - 2); // 2 hours ago
-      
-      const closeDate = new Date();
-      closeDate.setHours(closeDate.getHours() - 1); // 1 hour ago
-      
+      // Use fixed past dates to ensure test always passes
       const meeting = {
-        session_date: openDate.toISOString(),
-        session_time: '14:00:00',
-        attendance_opened_at: openDate.toISOString(),
-        attendance_closed_at: closeDate.toISOString()
+        session_date: '2025-01-15T00:00:00Z', // January 15, 2025
+        session_time: '10:00:00',
+        attendance_opened_at: '2025-01-15T10:00:00Z', // 10:00 AM
+        attendance_closed_at: '2025-01-15T11:00:00Z'  // 11:00 AM (closed 1 hour later)
       };
       
       expect(determineMeetingStatus(meeting)).toBe('closed');
     });
 
     it('should return open when between open and close timestamps', () => {
-      const openDate = new Date();
-      openDate.setHours(openDate.getHours() - 1); // 1 hour ago
+      // Create a long session: started 2 hours ago, ends 2 hours from now (4 hour session)
+      const startDate = new Date();
+      startDate.setHours(startDate.getHours() - 2); // Started 2 hours ago
       
-      const closeDate = new Date();
-      closeDate.setHours(closeDate.getHours() + 1); // 1 hour from now
+      const endDate = new Date();
+      endDate.setHours(endDate.getHours() + 2); // Ends 2 hours from now
+      
+      const sessionDate = new Date(startDate);
+      sessionDate.setHours(0, 0, 0, 0); // Start of day
+      
+      const hours = String(startDate.getHours()).padStart(2, '0');
+      const minutes = String(startDate.getMinutes()).padStart(2, '0');
+      const sessionTime = `${hours}:${minutes}:00`;
       
       const meeting = {
-        session_date: openDate.toISOString(),
-        session_time: '14:00:00',
-        attendance_opened_at: openDate.toISOString(),
-        attendance_closed_at: closeDate.toISOString()
+        session_date: sessionDate.toISOString(),
+        session_time: sessionTime,
+        attendance_opened_at: startDate.toISOString(),
+        attendance_closed_at: endDate.toISOString()
       };
       
       expect(determineMeetingStatus(meeting)).toBe('open');
     });
 
     it('should return closed when code_expires_at has passed', () => {
-      const openDate = new Date();
-      openDate.setHours(openDate.getHours() - 2); // 2 hours ago
-      
-      const expireDate = new Date();
-      expireDate.setHours(expireDate.getHours() - 1); // 1 hour ago
-      
+      // Use fixed past dates to ensure test always passes
       const meeting = {
-        session_date: openDate.toISOString(),
-        session_time: '14:00:00',
-        attendance_opened_at: openDate.toISOString(),
-        code_expires_at: expireDate.toISOString()
+        session_date: '2025-01-15T00:00:00Z', // January 15, 2025
+        session_time: '10:00:00',
+        attendance_opened_at: '2025-01-15T10:00:00Z', // 10:00 AM
+        code_expires_at: '2025-01-15T11:00:00Z'       // 11:00 AM (expired)
       };
       
       expect(determineMeetingStatus(meeting)).toBe('closed');
