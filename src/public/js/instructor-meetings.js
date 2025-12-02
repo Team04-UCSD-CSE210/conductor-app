@@ -100,6 +100,7 @@ async function renderTeams() {
     // Batch fetch all statistics in ONE request
     let statsMap = {};
     if (closedSessionIds.length > 0) {
+      console.log('Fetching batch statistics for sessions:', closedSessionIds);
       const statsRes = await fetch(
         `/api/attendance/sessions/batch/statistics?session_ids=${closedSessionIds.join(',')}`,
         { credentials: 'include' }
@@ -107,8 +108,10 @@ async function renderTeams() {
       
       if (statsRes.ok) {
         statsMap = await statsRes.json();
+        console.log('Batch statistics received:', statsMap);
       } else {
-        console.warn('Failed to fetch batch statistics:', statsRes.status);
+        const errorText = await statsRes.text();
+        console.warn('Failed to fetch batch statistics:', statsRes.status, errorText);
       }
     }
     
