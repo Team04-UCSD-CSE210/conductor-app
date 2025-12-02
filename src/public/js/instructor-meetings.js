@@ -53,27 +53,39 @@ async function fetchTeams() {
 async function renderTeams() {
   const container = document.getElementById('team-list');
   container.innerHTML = '<p style="text-align:center; color:#888;">Loading teams...</p>';
+<<<<<<< HEAD
   
   try {
     const { teams, offeringId } = await fetchTeams();
     container.innerHTML = '';
     
+=======
+  fetchTeams().then(({ teams, offeringId }) => {
+    container.innerHTML = '';
+>>>>>>> feature/enhance-instructor-dashboard
     if (!teams || !Array.isArray(teams)) {
       container.innerHTML = '<p style="color:red;">Error: Could not fetch teams. Check your network and permissions.</p>';
       return;
     }
+<<<<<<< HEAD
     
+=======
+>>>>>>> feature/enhance-instructor-dashboard
     if (!teams.length) {
       container.innerHTML = '<p style="text-align:center; color:#888;">No teams found.</p>';
       return;
     }
+<<<<<<< HEAD
     
+=======
+>>>>>>> feature/enhance-instructor-dashboard
     // Sort teams by team_number ascending
     teams.sort((a, b) => {
       const numA = a.team_number ?? 0;
       const numB = b.team_number ?? 0;
       return numA - numB;
     });
+<<<<<<< HEAD
     
     // Fetch all meetings for all teams in parallel
     const teamMeetingsPromises = teams.map(team => fetchMeetings(team.id, offeringId));
@@ -115,17 +127,33 @@ async function renderTeams() {
     // Render all team rows with pre-fetched statistics
     for (const team of teams) {
       const teamMeetings = teamMeetingsMap.get(team.id) || [];
+=======
+    // Collect all team row promises
+    const teamRowPromises = teams.map(async team => {
+      const meetings = await fetchMeetings(team.id, offeringId);
+      const teamMeetings = meetings.filter(m => m.team_id === team.id);
+>>>>>>> feature/enhance-instructor-dashboard
       const teamSize = Number(team.member_count || team.members?.length || 0);
       let totalAttendance = 0;
       let totalPossible = 0;
       
+<<<<<<< HEAD
       // Calculate attendance from batch stats
+=======
+      // Only count closed meetings (same logic as team leader view)
+>>>>>>> feature/enhance-instructor-dashboard
       for (const meeting of teamMeetings) {
         const status = determineMeetingStatus(meeting);
         
         if (status === 'closed') {
+<<<<<<< HEAD
           const stats = statsMap[meeting.id];
           if (stats) {
+=======
+          const statsRes = await fetch(`/api/attendance/sessions/${meeting.id}/statistics`, { credentials: 'include' });
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+>>>>>>> feature/enhance-instructor-dashboard
             totalAttendance += stats.present_count || 0;
             totalPossible += teamSize;
           } else {
@@ -133,15 +161,22 @@ async function renderTeams() {
           }
         }
       }
+<<<<<<< HEAD
       
       const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
       
       const row = document.createElement('a');
       row.className = 'attendance-card';
+=======
+      const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
+      const row = document.createElement('a');
+      row.className = 'team-row';
+>>>>>>> feature/enhance-instructor-dashboard
       row.href = `/instructor-team-meetings.html?team_id=${encodeURIComponent(team.id)}&offering_id=${encodeURIComponent(offeringId)}`;
       row.style.textDecoration = 'none';
       row.style.color = 'inherit';
       row.innerHTML = `
+<<<<<<< HEAD
         <span class="attendance-card-label">${team.name || 'Team ' + team.team_number}</span>
         <div class="attendance-card-meta">
           <span class="attendance-percent">Members: ${team.member_count || team.members?.length || 0}</span>
@@ -163,3 +198,29 @@ async function renderTeams() {
   }
 }
 document.addEventListener('DOMContentLoaded', renderTeams);
+=======
+        <span class="team-name">${team.name || 'Team ' + team.team_number}</span>
+        <div class="team-meta">
+          <span>Members: ${team.member_count || team.members?.length || 0}</span>
+          <span>Meetings: ${teamMeetings.length}</span>
+          <span style="display:flex;align-items:center;">Attendance:
+            <span class="attendance-bar">
+              <span class="attendance-fill" style="width:${percent}%"></span>
+              <span class="attendance-label">${percent}%</span>
+            </span>
+          </span>
+        </div>
+      `;
+      return row;
+    });
+    Promise.all(teamRowPromises).then(rows => {
+      container.innerHTML = '';
+      for (const row of rows) {
+        container.appendChild(row);
+      }
+    });
+  });
+}
+document.addEventListener('DOMContentLoaded', renderTeams);
+// End of file
+>>>>>>> feature/enhance-instructor-dashboard

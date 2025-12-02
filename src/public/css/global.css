@@ -387,6 +387,16 @@ body > :not(.footer) {
   display: none;
 }
 
+/* Hide modal overlay when it is marked aria-hidden to avoid it appearing by default
+   and to match programmatic aria toggles in JS. This keeps visual state in sync
+   with accessibility state. */
+.modal-overlay[aria-hidden="true"] {
+  display: none;
+}
+.modal-overlay[aria-hidden="false"] {
+  display: flex;
+}
+
 /* Modal Container */
 .modal {
   background: white;

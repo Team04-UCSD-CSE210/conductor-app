@@ -3,170 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Team Lead Dashboard</title>
-
+  <title>Student & Student Lead Dashboard</title>
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/dashboard-global.css">
-  <link rel="stylesheet" href="/css/team-lead-dashboard.css">
+  <link rel="stylesheet" href="/css/student-dashboard.css">
 </head>
 
-<body class="dashboard-page teamlead-page">
-
-  <!-- Hamburger Menu -->
+<body class="dashboard-page">
   <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
   </button>
 
-  <!-- Sidebar -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
-    <section class="sidebar-logo">
+    <div class="sidebar-logo">
       <img src="/assets/temp-logo.png" alt="Conductor logo">
-    </section>
+    </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
-
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
-
-    <footer style="margin-top:auto; border-top:1px solid var(--gray-200); padding-top:1rem;">
-      <a href="/" class="btn btn-ghost" style="font-size:0.9rem;">Sign out</a>
+    
+    <footer>
+      <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
   </header>
 
-  <!-- Main -->
   <main class="main-container" id="main">
-    <h2 class="page-title">Dashboard</h2>
+    <!-- Top Bar with User Icon -->
+    <div class="dashboard-header">
+      <img src="/assets/user.png" alt="User Profile" class="user-profile-icon">
+    </div>
 
-    <section class="frame" role="region">
+    <!-- Welcome Banner with Polaroid -->
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <h2>Welcome, Helena Bender!</h2>
+        <p>See what happened with your course and team!</p>
+      </div>
+      <div class="polaroid-container">
+        <div class="polaroid">
+          <div class="polaroid-tape"></div>
+          <div class="course-info">
+            <h3>CSE 210: Software Engineering</h3>
+            <p>Insert course description<br>& team information</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <section class="content">
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Attendance Card -->
+        <div class="dashboard-card attendance-card">
+          <h4>Attendance</h4>
+          <div class="attendance-item">
+            <span class="attendance-label">Lecture</span>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 96%"></div>
+              </div>
+              <span class="progress-percentage">96%</span>
+            </div>
+          </div>
+          <div class="attendance-item">
+            <span class="attendance-label">Team Meetings</span>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div>
+              </div>
+              <span class="progress-percentage">100%</span>
+            </div>
+          </div>
+        </div>
 
-        <!-- TOP ROW: COURSE INFO + TEAM INFO -->
-        <section class="top-cards-wrapper">
+        <!-- Course Status Card -->
+        <div class="dashboard-card course-status-card">
+          <h4>Course Status</h4>
+          <div class="status-content">
+            <div class="circular-progress">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
+                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
+              </svg>
+              <div class="progress-text">75%</div>
+            </div>
+            <div class="status-legend">
+              <div class="legend-item">
+                <span class="legend-dot completed"></span>
+                <span>Completed</span>
+                <span class="legend-dot in-progress"></span>
+                <span>In-Progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <!-- COURSE INFO (same as student dashboard) -->
-          <article class="card card-course-info" aria-label="Course Info">
-            <strong class="course-code">CSE 210</strong>
-            <p class="course-title">Software Engineering</p>
-            <p class="course-term">Fall 2025</p>
+        <!-- Recent Progress Card -->
+        <div class="dashboard-card recent-progress-card">
+          <h4>Recent Progress</h4>
+          <div class="progress-placeholder">
+            <div class="weeks-timeline">
+              <div class="week-item current">
+                <div class="week-header">
+                  <div class="week-number">Week 10</div>
+                  <div class="week-dates">Nov 25 - Dec 01</div>
+                </div>
+                <div class="week-status upcoming">Upcoming: Team lead meeting, Sprint planning</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 9</div>
+                  <div class="week-dates">Nov 18 - Nov 24</div>
+                </div>
+                <div class="week-status completed">Completed: Performance reviews, Team retrospective</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 8</div>
+                  <div class="week-dates">Nov 11 - Nov 17</div>
+                </div>
+                <div class="week-status completed">Completed: Code reviews, Team coordination</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <dl class="course-schedule">
-              <dt>Lectures</dt>
-              <dd>Tue/Thu 5:00–6:20 pm</dd>
+      <!-- Middle Column -->
+      <div class="middle-column">
+        <!-- Announcements Card -->
+        <div class="dashboard-card announcements-card">
+          <h4>Announcements</h4>
+          <div class="announcements-list">
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Team Sprint Review</h5>
+                <p>Team leads please prepare sprint review presentations for this Friday's meeting...</p>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Code Review Deadline</h5>
+                <p>All code reviews must be completed by Wednesday EOD for the upcoming release...</p>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Team Building Event</h5>
+                <p>Optional team building lunch this Thursday. Please RSVP by Tuesday...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <dt>Office Hours</dt>
-              <dd>Tue 2–4 pm</dd>
-            </dl>
+      <!-- Right Column -->
+      <div class="right-column">
+        <!-- TODO Card -->
+        <div class="dashboard-card todo-card">
+          <h4>TODO</h4>
+          <div class="todo-list">
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Review Sprint Backlog</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Schedule Team Standup</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Update Project Timeline</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Prepare Team Report</span>
+            </div>
+          </div>
+        </div>
 
-            <section class="course-stats">
-              <section class="stat-item">
-                <span class="stat-value">13</span>
-                <span class="stat-label">Group Members</span>
-              </section>
-
-              <section class="stat-item">
-                <span class="stat-value">2</span>
-                <span class="stat-label">Assignments Due</span>
-              </section>
-
-              <section class="stat-item">
-                <span class="stat-value">4</span>
-                <span class="stat-label">Weeks Left</span>
-              </section>
-            </section>
-          </article>
-
-          <!-- TEAM INFO -->
-          <article class="card wide" aria-label="Team information">
-            <h3>Team Info</h3>
-            <ul style="margin:0; padding-left:1.25rem; color:var(--gray-700); line-height:1.5;">
-              <li><strong>Members:</strong> Casey Wong, Sam Patel, Riley Anderson, Chloe Tran</li>
-              <li><strong>TA:</strong> Alex Johnson</li>
-              <li><strong>Sprint:</strong> Sprint 4 — Design Review Week</li>
-            </ul>
-          </article>
-
-        </section>
-
-        <!-- SECTION: TEAM STATUS + MENTAL HEALTH -->
-        <section class="content-row student-mid-row">
-
-          <article class="card student-reports-card" aria-label="Team Status">
-            <h3>Team Status</h3>
-            <section class="student-card-body">
-              <section class="student-placeholder-box">
-                <p><strong>Team Sentiment</strong></p>
-                <p>Overall team morale this week, communication quality, blockers.</p>
-              </section>
-            </section>
-          </article>
-
-          <article class="card student-mental-card" aria-label="Mental Health">
-            <h3>Mental Health</h3>
-            <section class="student-card-body">
-              <section class="student-placeholder-box">
-                <p><strong>Pulses</strong></p>
-                <p>Feelings about workload, team alignment, and stress level.</p>
-              </section>
-            </section>
-          </article>
-
-        </section>
-
-        <!-- REPORTS -->
-        <section class="card student-reports-card" aria-label="Reports">
-          <h3>Reports</h3>
-          <section class="student-card-body">
-            <section class="student-placeholder-box">
-              <p><strong>Status Report</strong></p>
-              <p>High-level update on team progress and blockers.</p>
-            </section>
-
-            <section class="student-placeholder-box">
-              <p><strong>Visual Diagram</strong></p>
-              <p>Architecture, workflow or burndown charts.</p>
-            </section>
-          </section>
-        </section>
-
-        <!-- AVAILABILITY -->
-        <section class="card student-availability-card" aria-label="Availability">
-          <h3>Availability (Weekly Calendar)</h3>
-          <section class="student-card-body">
-
-            <section class="student-placeholder-box student-availability-box">
-              <p>Weekly calendar placeholder</p>
-              <table class="student-calendar">
-                <thead>
-                  <tr>
-                    <th>Mon</th>
-                    <th>Tue</th>
-                    <th>Wed</th>
-                    <th>Thu</th>
-                    <th>Fri</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td></td>
-                    <td>5:00–6:20pm<br>Lecture</td>
-                    <td></td>
-                    <td class="student-calendar-event">5:00–6:20pm<br>Team Meeting</td>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </table>
-            </section>
-
-          </section>
-        </section>
-
-      </section>
-    </section>
+        <!-- Journal Entries Card -->
+        <div class="dashboard-card journal-card">
+          <h4>Journal Entries</h4>
+          <div class="journal-list">
+            <div class="journal-entry">Nov 22nd - Sprint Retrospective</div>
+            <div class="journal-entry">Oct 12th - Team Formation</div>
+            <div class="journal-entry">Sep 28th - Project Kickoff</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="/js/dashboard.service.js"></script>

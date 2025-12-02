@@ -271,6 +271,95 @@
   color: var(--teal-700, #0f766e);
 }
 
+.help-box.team-lead-card {
+  background: linear-gradient(135deg, var(--yellow-50, #fefce8) 0%, var(--amber-50, #fffbeb) 100%);
+  border: 2px solid var(--yellow-400, #facc15);
+  box-shadow: 0 4px 12px rgb(245 158 11 / 15%);
+}
+
+.help-box.team-lead-card h3 {
+  margin: 0 0 1rem;
+  color: var(--amber-700, #b45309);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.help-box.team-lead-card .form-field {
+  margin: 0 0 0.25rem;
+}
+
+.help-box.team-lead-card label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-700, #374151);
+  margin-bottom: 0.35rem;
+}
+
+.help-box.team-lead-card .required-indicator {
+  color: var(--red-500, #ef4444);
+  margin-left: 0.125rem;
+}
+
+.help-box.team-lead-card .text-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--gray-300, #d1d5db);
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--gray-900, #111827);
+  background: white;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.help-box.team-lead-card .text-input:focus {
+  outline: none;
+  border-color: var(--amber-500, #f59e0b);
+  box-shadow: 0 0 0 3px rgb(245 158 11 / 10%);
+}
+
+.help-box.team-lead-card .text-input:hover {
+  border-color: var(--gray-400, #9ca3af);
+}
+
+.help-box.team-lead-card button[type="submit"] {
+  margin-top: 0.5rem;
+  background: var(--amber-600, #d97706);
+  border-color: var(--amber-600, #d97706);
+  color: white;
+}
+
+.help-box.team-lead-card button[type="submit"]:hover {
+  background: var(--amber-700, #b45309);
+  border-color: var(--amber-700, #b45309);
+}
+
+.help-box.team-lead-card button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.help-box p {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700, #374151);
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.modal-header > h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--teal-700, #0f766e);
+}
+
 .contact-buttons {
   display: flex;
   flex-direction: column;

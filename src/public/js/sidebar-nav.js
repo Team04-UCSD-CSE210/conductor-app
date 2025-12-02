@@ -15,7 +15,7 @@
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
       { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" }
+      { href: "/class-directory", text: "Directory" }
     ],
     instructor: [
       { href: "/instructor-dashboard", text: "Dashboard" },
@@ -26,7 +26,7 @@
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
       { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" },
+      { href: "/class-directory", text: "Directory" },
       { href: "/instructor-meetings", text: "Team Meetings" }
     ],
     ta: [
@@ -37,39 +37,45 @@
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
       { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" }
+      { href: "/class-directory", text: "Directory" }
     ],
     teamLead: [
-      { href: "/team-lead-dashboard", text: "Dashboard" },
-      {
-        href: "/lecture-attendance-student",
-        text: "Lectures",
-        match: ["/lecture-attendance-student", "/student-lecture-response"]
+      { 
+        href: "/student-dashboard", 
+        text: "Courses",
+        match: ["/student-dashboard", "/team-lead-dashboard"]
       },
-      { href: "/meetings/team-lead", text: "Team Meetings" },
-      { href: "/class-directory", text: "Class Directory" },
-      {
-        href: "/work-journal",
-        text: "Work Journal",
-        match: ["/work-journal", "/lead-journal"]
-      },
-      { href: "/my-team", text: "My Team" }
-    ],
-    student: [
-      { href: "/student-dashboard", text: "Dashboard" },
       {
         href: "/lecture-attendance-student",
         text: "Lectures",
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
       { href: "/meetings", text: "Meetings" },
-      { href: "/class-directory", text: "Class Directory" },
       {
         href: "/work-journal",
         text: "Work Journal",
         match: ["/work-journal", "/student-work-journal", "/lead-journal"]
       },
-      { href: "/my-team", text: "My Team" }
+      { href: "/class-directory", text: "Directory" }
+    ],
+    student: [
+      { 
+        href: "/student-dashboard", 
+        text: "Courses",
+        match: ["/student-dashboard", "/team-lead-dashboard"]
+      },
+      {
+        href: "/lecture-attendance-student",
+        text: "Lectures",
+        match: ["/lecture-attendance-student", "/student-lecture-response"]
+      },
+      { href: "/meetings", text: "Meetings" },
+      {
+        href: "/work-journal",
+        text: "Work Journal",
+        match: ["/work-journal", "/student-work-journal", "/lead-journal"]
+      },
+      { href: "/class-directory", text: "Directory" }
     ]
   };
 

@@ -1,3 +1,4 @@
+
 /* Blocked Page Styles */
 
 .hero-layout {
@@ -47,3 +48,88 @@
     margin: 1.5rem 0;
 }
 
+/* Access Denied Styles */
+.access-denied-container {
+    max-width: 600px;
+    margin: 4rem auto;
+    padding: 2rem;
+}
+
+.access-denied-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.access-denied-title {
+    color: #dc2626;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.access-denied-subtitle {
+    color: #4b5563;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.access-denied-warning {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.access-denied-warning h2 {
+    color: #b91c1c;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.access-denied-warning p {
+    color: #374151;
+    margin-bottom: 1rem;
+}
+
+.access-denied-warning p:last-child {
+    margin: 0;
+}
+
+.access-denied-info {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+}
+
+.access-denied-info h2 {
+    color: #111827;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.access-denied-info ol {
+    color: #374151;
+    padding-left: 1.5rem;
+    line-height: 1.8;
+}
+
+.access-denied-actions {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.home-btn {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    text-decoration: none;
+    background: #000;
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.home-btn:hover {
+    background: #333;
+}

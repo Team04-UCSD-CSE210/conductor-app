@@ -3,48 +3,50 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Conductor - Welcome Page</title>
+    <title>Conductor - Your Learning Companion</title>
     <link rel="stylesheet" href="/css/global.css" />
     <link rel="stylesheet" href="/css/landing-page.css" />
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <span class="logo-text">conductor</span>
-        <a class="btn btn-outline" id="loginBtn" data-force-login href="/auth/google">Log In</a>
-    </header>
+    <div class="laptop-frame">
+        <div class="browser-window">
+            <!-- Browser Header -->
+            <div class="browser-header">
+                <div class="browser-controls">
+                    <div class="control-btn close"></div>
+                    <div class="control-btn minimize"></div>
+                    <div class="control-btn maximize"></div>
+                </div>
+                <div class="address-bar">conductor.ucsd.edu</div>
+            </div>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <span class="blob blob-1"></span>
-        <span class="blob blob-2"></span>
-
-        <article class="hero-layout">
-            <header>
-                <h1 class="hero-title">UCSD Software Engineering Platform</h1>
-                <p class="hero-description">
-                    Conductor simplifies course management, communication, and grading for software engineering classes.
-                </p>
-                <p class="hero-description">
-                    Learn more about how Conductor can transform your classroom.
-                </p>
-            </header>
-
-            <figure class="hero-image-wrapper">
-                <span class="hero-image-bg"></span>
-                <img class="hero-image" src="../assets/welcome.png" alt="Welcome students" />
-            </figure>
-        </article>
-    </section>
-
-    <!-- Footer -->
-    <footer id="about" class="footer">
-        <span class="logo-text">conductor</span>
-        <p class="footer-description">
-            The modern platform for teaching software engineering. Built by students, for students.
-        </p>
-        <p class="footer-bottom">&copy; 2025 Conductor @ The Agents UCSD. All rights reserved. Built for A11y.</p>
-    </footer>
+            <!-- Browser Content -->
+            <div class="browser-content">
+                <div class="main-content">
+                    <div class="content-grid">
+                        <div class="hero-content">
+                            <div class="hero-eyebrow">UCSD Software Engineering</div>
+                            <h1 class="hero-title">Transform Your Learning Experience</h1>
+                            <p class="hero-subtitle">
+                                Conductor brings together everything you need for sucess in software engineering at UCSD.
+                                Organize, connect, and learn with ease.
+                            </p>
+                            <a href="/auth/google" class="cta-button">Get Started</a>
+                        </div>
+                        
+                        <div class="hero-visual">
+                            <div class="polaroid-container">
+                                <div class="polaroid">
+                                    <img class="polaroid-image" src="/assets/welcome.png" alt="Welcome students" />
+                                    <div class="polaroid-caption">Welcome to Conductor!</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="/js/app.js"></script>
 </body>

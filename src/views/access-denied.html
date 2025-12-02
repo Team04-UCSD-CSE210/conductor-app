@@ -6,29 +6,30 @@
   <title>Access Denied - Conductor</title>
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/landing-page.css">
+  <link rel="stylesheet" href="/css/blocked.css">
 </head>
 <body>
-  <div class="container" style="max-width: 600px; margin: 4rem auto; padding: 2rem;">
-    <div style="text-align: center; margin-bottom: 2rem;">
-      <h1 style="color: var(--red-600, #dc2626); font-size: 2rem; margin-bottom: 1rem;">Access Denied</h1>
-      <p style="color: var(--gray-600, #4b5563); font-size: 1.1rem; margin-bottom: 2rem;">
+  <div class="access-denied-container">
+    <div class="access-denied-header">
+      <h1 class="access-denied-title">Access Denied</h1>
+      <p class="access-denied-subtitle">
         You are not currently enrolled in this course.
       </p>
     </div>
 
-    <div style="background: var(--red-50, #fef2f2); border: 1px solid var(--red-200, #fecaca); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem;">
-      <h2 style="color: var(--red-700, #b91c1c); font-size: 1.25rem; margin-bottom: 1rem;">What does this mean?</h2>
-      <p style="color: var(--gray-700, #374151); margin-bottom: 1rem;">
+    <div class="access-denied-warning">
+      <h2>What does this mean?</h2>
+      <p>
         Your account is not currently enrolled in the active course offering. To access this course, you must be added to the course roster by an instructor or administrator.
       </p>
-      <p style="color: var(--gray-700, #374151); margin: 0;">
+      <p>
         <strong>Email:</strong> <span id="user-email"></span>
       </p>
     </div>
 
-    <div style="background: white; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 0.75rem; padding: 1.5rem;">
-      <h2 style="color: var(--gray-900, #111827); font-size: 1.25rem; margin-bottom: 1rem;">What should I do?</h2>
-      <ol style="color: var(--gray-700, #374151); padding-left: 1.5rem; line-height: 1.8;">
+    <div class="access-denied-info">
+      <h2>What should I do?</h2>
+      <ol>
         <li>Contact your course instructor or administrator</li>
         <li>Provide them with your email address</li>
         <li>Request to be added to the course roster</li>
@@ -36,9 +37,9 @@
       </ol>
     </div>
 
-    <div style="text-align: center; margin-top: 2rem;">
-      <a href="/" class="btn btn-primary" style="display: inline-block; padding: 0.75rem 2rem; text-decoration: none;">
-        Sign Out
+    <div class="access-denied-actions">
+      <a href="/" class="home-btn">
+        Back to Home Page
       </a>
     </div>
   </div>
