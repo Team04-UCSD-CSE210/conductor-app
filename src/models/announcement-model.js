@@ -153,6 +153,28 @@ export class AnnouncementModel {
   }
 
   /**
+   * Get recent course-wide announcements only (last 7 days)
+   * @param {string} offeringId - Course offering ID
+   * @param {number} limit - Number of announcements to return
+   * @returns {Promise<Array>} Recent course-wide announcements
+   */
+  static async getRecentCourseWide(offeringId, limit = 5) {
+    const result = await pool.query(
+      `SELECT a.*, u.name as creator_name, u.email as creator_email
+       FROM announcements a
+       JOIN users u ON a.created_by = u.id
+       WHERE a.offering_id = $1
+         AND a.team_id IS NULL
+         AND a.created_at >= NOW() - INTERVAL '7 days'
+       ORDER BY a.created_at DESC
+       LIMIT $2`,
+      [offeringId, limit]
+    );
+
+    return result.rows;
+  }
+
+  /**
    * Get announcements visible to a user (course-wide + their team's)
    * @param {string} offeringId - Course offering ID
    * @param {string} userId - User ID

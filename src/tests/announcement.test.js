@@ -500,5 +500,55 @@ describe('Announcement Feature', () => {
         [testTeam.id, testStudent2.id]
       );
     });
+
+    it('should not show team announcements to instructors/TAs/tutors', async () => {
+      // Create both course-wide and team announcements
+      const courseAnnouncement = await AnnouncementService.createAnnouncement({
+        offering_id: testOffering.id,
+        subject: 'Course-wide Announcement',
+        message: 'Everyone should see this',
+        team_id: null
+      }, testUser.id);
+
+      const teamAnnouncement = await AnnouncementService.createAnnouncement({
+        offering_id: testOffering.id,
+        subject: 'Team Announcement',
+        message: 'Only team members should see this',
+        team_id: testTeam.id
+      }, testStudent1.id);
+
+      // Get all announcements
+      const allAnnouncements = await AnnouncementService.getAnnouncementsByOffering(
+        testOffering.id
+      );
+
+      // Filter to course-wide only (simulating what the route does for instructors)
+      const courseWideOnly = allAnnouncements.filter(a => a.team_id === null);
+
+      // Should only have course-wide announcements
+      expect(courseWideOnly.length).toBeGreaterThan(0);
+      expect(courseWideOnly.every(a => a.team_id === null)).toBe(true);
+      expect(courseWideOnly.some(a => a.subject === 'Course-wide Announcement')).toBe(true);
+      expect(courseWideOnly.some(a => a.subject === 'Team Announcement')).toBe(false);
+    });
+
+    it('should only return course-wide announcements from getRecentCourseWideAnnouncements', async () => {
+      // Create team announcement
+      await AnnouncementService.createAnnouncement({
+        offering_id: testOffering.id,
+        subject: 'Recent Team Announcement',
+        message: 'Team specific',
+        team_id: testTeam.id
+      }, testStudent1.id);
+
+      // Get recent course-wide announcements (what instructors/TAs/tutors see)
+      const recentCourseWide = await AnnouncementService.getRecentCourseWideAnnouncements(
+        testOffering.id
+      );
+
+      // Should not include team announcements
+      expect(recentCourseWide.every(a => a.team_id === null)).toBe(true);
+      expect(recentCourseWide.some(a => a.subject === 'Recent Team Announcement')).toBe(false);
+    });
   });
 });

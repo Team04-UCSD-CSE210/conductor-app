@@ -1510,7 +1510,6 @@ app.get(
 
       // Log successful callback with user role info
       console.log("✅ Login success for:", email);
-      console.log(`[DEBUG] User primary_role: ${user.primary_role}, id: ${user.id}`);
       await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
         req,
         message: "OAuth callback completed successfully",
@@ -1726,6 +1725,7 @@ app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) =
     }
 
     res.json({
+      id: user.id,
       primary_role: user.primary_role,
       enrollment_role: enrollmentRole,
       is_team_lead: isTeamLead,

@@ -83,7 +83,10 @@
 
         <!-- Announcements Card -->
         <div class="dashboard-card announcements-card">
-          <h4>Announcements</h4>
+          <div class="card-header-with-action">
+            <h4>Announcements</h4>
+            <button id="createAnnouncementBtn" class="btn btn-create" aria-label="Create new announcement">+</button>
+          </div>
           <div class="announcements-list">
             <p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Loading announcements...</p>
           </div>
@@ -151,6 +154,28 @@
   <script src="/js/colorblind-mode.js" defer></script>
   <script src="/js/student-leader-dashboard.js" defer></script>
   
+  <!-- Announcement Create/Edit Modal -->
+  <div id="announcementModal" class="modal-overlay" aria-hidden="true" inert>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="announcementModalTitle">
+      <header class="modal-header">
+        <h3 id="announcementModalTitle">New Team Announcement</h3>
+        <button class="modal-close" id="announcementModalClose" aria-label="Close">×</button>
+      </header>
+      <form id="announcement-form" class="modal-body">
+        <label for="announcement-subject">Subject</label>
+        <input id="announcement-subject" name="subject" type="text" required maxlength="200" />
+
+        <label for="announcement-body">Message</label>
+        <textarea id="announcement-body" name="body" rows="6" required></textarea>
+
+        <footer class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="announcementCancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="announcementSend">Send</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
   <!-- View Announcement Modal (for expanding announcements) -->
   <div id="viewAnnouncementModal" class="modal-overlay" aria-hidden="true" inert>
     <div class="modal view-announcement-modal" role="dialog" aria-modal="true" aria-labelledby="viewAnnouncementModalTitle">

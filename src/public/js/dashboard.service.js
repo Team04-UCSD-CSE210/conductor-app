@@ -235,6 +235,19 @@
   }
 
   /**
+   * Get user's teams in an offering
+   */
+  async function getUserTeams(offeringId) {
+    try {
+      const response = await apiFetch(`/teams?offering_id=${offeringId}`);
+      return Array.isArray(response) ? response : (response.teams || []);
+    } catch (error) {
+      console.error('Error getting teams:', error);
+      return [];
+    }
+  }
+
+  /**
    * Get announcements for an offering
    */
   async function getAnnouncements(offeringId) {
@@ -255,7 +268,8 @@
       method: 'POST',
       body: JSON.stringify({
         ...announcementData,
-        offering_id: offeringId
+        offering_id: offeringId,
+        team_id: announcementData.team_id || null
       })
     });
   }
@@ -413,8 +427,25 @@
       
       if (!welcomeH2 || !welcomeP) return;
 
-      // Get current user
-      const user = await getCurrentUser();
+      // Get current user from navigation context instead of /users/me
+      let user = null;
+      try {
+        const contextRes = await fetch('/api/users/navigation-context', { credentials: 'include' });
+        if (contextRes.ok) {
+          const context = await contextRes.json();
+          // Map navigation context to user object format
+          user = {
+            id: context.id,
+            name: context.name,
+            preferred_name: context.name,
+            primary_role: context.primary_role
+          };
+        }
+      } catch (error) {
+        console.error('Error getting navigation context:', error);
+        return;
+      }
+      
       if (!user) return;
 
       // Get user's enrollment role in the offering

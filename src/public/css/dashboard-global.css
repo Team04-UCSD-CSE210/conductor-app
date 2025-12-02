@@ -805,6 +805,19 @@ body.dashboard-page {
   align-items: flex-start;
 }
 
+/* Team badge for team-specific announcements */
+.team-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--palette-accent, #E0F2FE);
+  color: var(--palette-primary, #0C4A6E);
+  border-radius: 12px;
+  border: 1px solid var(--palette-secondary, #BAE6FD);
+}
+
 .announcement-edit-btn,
 .announcement-delete-btn {
   display: flex;

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { AnnouncementService } from '../services/announcement-service.js';
 import { protect } from '../middleware/permission-middleware.js';
+import { PermissionService } from '../services/permission-service.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -8,13 +10,44 @@ const router = Router();
  * Create a new announcement
  * POST /api/announcements
  * Body: { offering_id, subject, message, team_id? }
- * Requires: announcement.create permission (course scope) - Professor/TA/Team Leader
+ * Requires: announcement.create permission (course scope for course-wide, team scope for team announcements)
  */
-router.post('/', ...protect('announcement.create', 'course'), async (req, res) => {
+router.post('/', ensureAuthenticated, async (req, res) => {
   try {
+    const { offering_id, team_id } = req.body;
+    const userId = req.currentUser.id;
+
+    // Check permissions based on whether this is a team or course announcement
+    let hasPermission = false;
+    
+    if (team_id) {
+      // Team announcement - check team permissions
+      hasPermission = await PermissionService.hasPermission(
+        userId,
+        'announcement.create',
+        offering_id,
+        team_id
+      );
+    } else {
+      // Course-wide announcement - check course permissions
+      hasPermission = await PermissionService.hasPermission(
+        userId,
+        'announcement.create',
+        offering_id,
+        null
+      );
+    }
+
+    if (!hasPermission) {
+      return res.status(403).json({ 
+        error: 'Forbidden',
+        message: 'You do not have permission to create announcements'
+      });
+    }
+
     const announcement = await AnnouncementService.createAnnouncement(
       req.body,
-      req.currentUser.id
+      userId
     );
     res.status(201).json(announcement);
   } catch (err) {
@@ -42,9 +75,9 @@ router.get('/', ...protect('announcement.view', 'course'), async (req, res) => {
       order: 'created_at DESC'
     };
 
-    // Students and tutors see only course-wide + their team's announcements
-    // Instructors/TAs/Admins see all announcements
-    const userRole = req.currentUser.role;
+    // Students see only course-wide + their team's announcements
+    // Instructors/TAs/Tutors see only course-wide announcements (no team-specific)
+    const userRole = req.currentUser.primary_role;
     let announcements;
     
     if (userRole === 'student' || userRole === 'unregistered') {
@@ -54,10 +87,12 @@ router.get('/', ...protect('announcement.view', 'course'), async (req, res) => {
         options
       );
     } else {
-      announcements = await AnnouncementService.getAnnouncementsByOffering(
+      // Get all announcements and filter to course-wide only
+      const allAnnouncements = await AnnouncementService.getAnnouncementsByOffering(
         offering_id,
         options
       );
+      announcements = allAnnouncements.filter(a => a.team_id === null);
     }
 
     // Disable caching to ensure fresh data
@@ -75,6 +110,7 @@ router.get('/', ...protect('announcement.view', 'course'), async (req, res) => {
  * Get recent announcements for a course offering
  * GET /api/announcements/recent?offering_id=<uuid>&limit=<number>
  * Requires: announcement.view permission (course scope) - All authenticated users
+ * Returns: Course-wide announcements only for instructors/TAs/tutors, filtered for students
  */
 router.get('/recent', ...protect('announcement.view', 'course'), async (req, res) => {
   try {
@@ -84,10 +120,22 @@ router.get('/recent', ...protect('announcement.view', 'course'), async (req, res
       return res.status(400).json({ error: 'offering_id is required' });
     }
 
-    const announcements = await AnnouncementService.getRecentAnnouncements(
-      offering_id,
-      limit ? Number(limit) : 5
-    );
+    const userRole = req.currentUser.primary_role;
+    let announcements;
+
+    if (userRole === 'student' || userRole === 'unregistered') {
+      // Students see all recent (will be filtered by visibility in frontend/service if needed)
+      announcements = await AnnouncementService.getRecentAnnouncements(
+        offering_id,
+        limit ? Number(limit) : 5
+      );
+    } else {
+      // Instructors/TAs/Tutors see only course-wide recent announcements
+      announcements = await AnnouncementService.getRecentCourseWideAnnouncements(
+        offering_id,
+        limit ? Number(limit) : 5
+      );
+    }
 
     res.json(announcements);
   } catch (err) {
@@ -116,20 +164,53 @@ router.get('/:id', ...protect('announcement.view', 'course'), async (req, res) =
  * Update an announcement
  * PUT /api/announcements/:id
  * Body: { subject?, message? }
- * Requires: announcement.manage permission (course scope) - Professor/TA
+ * Requires: announcement.manage permission (course scope for course-wide, team scope for team announcements)
  */
-router.put('/:id', ...protect('announcement.manage', 'course'), async (req, res) => {
+router.put('/:id', ensureAuthenticated, async (req, res) => {
   try {
-    const announcement = await AnnouncementService.updateAnnouncement(
-      req.params.id,
-      req.body
-    );
+    const userId = req.currentUser.id;
+    const announcementId = req.params.id;
 
+    // Get the announcement to check its team_id and offering_id
+    const announcement = await AnnouncementService.getAnnouncement(announcementId);
     if (!announcement) {
       return res.status(404).json({ error: 'Announcement not found' });
     }
 
-    res.json(announcement);
+    // Check permissions based on whether this is a team or course announcement
+    let hasPermission = false;
+    
+    if (announcement.team_id) {
+      // Team announcement - check team permissions
+      hasPermission = await PermissionService.hasPermission(
+        userId,
+        'announcement.manage',
+        announcement.offering_id,
+        announcement.team_id
+      );
+    } else {
+      // Course-wide announcement - check course permissions
+      hasPermission = await PermissionService.hasPermission(
+        userId,
+        'announcement.manage',
+        announcement.offering_id,
+        null
+      );
+    }
+
+    if (!hasPermission) {
+      return res.status(403).json({ 
+        error: 'Forbidden',
+        message: 'You do not have permission to update this announcement'
+      });
+    }
+
+    const updated = await AnnouncementService.updateAnnouncement(
+      announcementId,
+      req.body
+    );
+
+    res.json(updated);
   } catch (err) {
     if (err.message === 'Announcement not found') {
       return res.status(404).json({ error: err.message });
@@ -141,17 +222,48 @@ router.put('/:id', ...protect('announcement.manage', 'course'), async (req, res)
 /**
  * Delete an announcement
  * DELETE /api/announcements/:id
- * Requires: announcement.manage permission (course scope) - Professor/TA
+ * Requires: announcement.manage permission (course scope for course-wide, team scope for team announcements)
  */
-router.delete('/:id', ...protect('announcement.manage', 'course'), async (req, res) => {
+router.delete('/:id', ensureAuthenticated, async (req, res) => {
   try {
-    const deleted = await AnnouncementService.deleteAnnouncement(
-      req.params.id
-    );
+    const userId = req.currentUser.id;
+    const announcementId = req.params.id;
 
-    if (!deleted) {
+    // Get the announcement to check its team_id and offering_id
+    const announcement = await AnnouncementService.getAnnouncement(announcementId);
+    if (!announcement) {
       return res.status(404).json({ error: 'Announcement not found' });
     }
+
+    // Check permissions based on whether this is a team or course announcement
+    let hasPermission = false;
+    
+    if (announcement.team_id) {
+      // Team announcement - check team permissions
+      hasPermission = await PermissionService.hasPermission(
+        userId,
+        'announcement.manage',
+        announcement.offering_id,
+        announcement.team_id
+      );
+    } else {
+      // Course-wide announcement - check course permissions
+      hasPermission = await PermissionService.hasPermission(
+        userId,
+        'announcement.manage',
+        announcement.offering_id,
+        null
+      );
+    }
+
+    if (!hasPermission) {
+      return res.status(403).json({ 
+        error: 'Forbidden',
+        message: 'You do not have permission to delete this announcement'
+      });
+    }
+
+    const deleted = await AnnouncementService.deleteAnnouncement(announcementId);
 
     res.json({ deleted: true });
   } catch (err) {

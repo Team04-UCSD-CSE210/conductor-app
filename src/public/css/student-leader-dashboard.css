@@ -3,6 +3,44 @@
 /* Import shared student dashboard styles */
 @import url('/css/student-dashboard.css');
 
+/* Card header with action button */
+.card-header-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-header-with-action h4 {
+  margin: 0;
+}
+
+.btn-create {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--palette-primary, #0F766E);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.btn-create:hover {
+  background: var(--palette-secondary, #14b8a6);
+  transform: scale(1.1);
+}
+
+.btn-create:active {
+  transform: scale(0.95);
+}
+
 /* Override dashboard row layouts for team lead specific ordering */
 .dashboard-page .dashboard-row-top {
   grid-template-columns: 1fr 1.5fr 1fr !important;

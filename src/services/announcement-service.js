@@ -145,6 +145,16 @@ export class AnnouncementService {
   }
 
   /**
+   * Get recent course-wide announcements only
+   * @param {string} offeringId - Course offering ID
+   * @param {number} limit - Number of announcements to return
+   * @returns {Promise<Array>} Recent course-wide announcements
+   */
+  static async getRecentCourseWideAnnouncements(offeringId, limit = 5) {
+    return await AnnouncementModel.getRecentCourseWide(offeringId, limit);
+  }
+
+  /**
    * Get announcement count for an offering
    * @param {string} offeringId - Course offering ID
    * @returns {Promise<number>} Count of announcements

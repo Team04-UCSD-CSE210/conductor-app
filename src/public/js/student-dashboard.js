@@ -216,12 +216,13 @@
         const title = announcement.title || announcement.subject || 'Announcement';
         const content = announcement.content || announcement.body || announcement.message || '';
         const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
         
         return `
           <div class="announcement-item clickable-announcement" data-announcement-id="${announcement.id}">
             <div class="announcement-date">${escapeHtml(dateStr)}</div>
             <div class="announcement-content">
-              <h5>${escapeHtml(title)}</h5>
+              <h5>${escapeHtml(title)} ${teamBadge}</h5>
               <p>${escapeHtml(preview)}</p>
             </div>
           </div>

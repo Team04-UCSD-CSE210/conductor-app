@@ -130,11 +130,13 @@
           </div>
         ` : '';
         
+        const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
+        
         return `
           <div class="announcement-item clickable-announcement" data-announcement-id="${announcement.id}">
             <div class="announcement-date">${escapeHtml(dateStr)}</div>
             <div class="announcement-content">
-              <h5>${escapeHtml(title)}</h5>
+              <h5>${escapeHtml(title)} ${teamBadge}</h5>
               <p>${escapeHtml(preview)}</p>
             </div>
             ${editDeleteButtons}
