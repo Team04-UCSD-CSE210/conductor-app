@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Conductor – Class Directory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../public/css/class-dir.css" />
+</head>
+<body class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <header class="sidebar-header">
+      <img
+        class="sidebar-logo"
+        src="../assets/temp-logo.png"
+        alt="Conductor logo"
+      />
+      <span class="sidebar-app-name">Conductor</span>
+    </header>
+
+    <section aria-label="Main menu">
+      <p class="sidebar-section-label">Main menu</p>
+      <nav>
+        <ul class="sidebar-nav">
+          <li>
+            <a href="#" class="sidebar-link">
+              <img class="sidebar-icon" src="../assets/home.png" alt="" aria-hidden="true" />
+              <span>Courses</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-link">
+              <img class="sidebar-icon" src="../assets/online-education.png" alt="" aria-hidden="true" />
+              <span>Lectures</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-link">
+              <img class="sidebar-icon" src="../assets/talk.png" alt="" aria-hidden="true" />
+              <span>Meetings</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-link">
+              <img class="sidebar-icon" src="../assets/journal.png" alt="" aria-hidden="true" />
+              <span>Work Journal</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-link sidebar-link-active">
+              <img class="sidebar-icon" src="../assets/directory.png" alt="" aria-hidden="true" />
+              <span>Directory</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </section>
+
+    <footer class="sidebar-footer">
+      <span class="sidebar-footer-label">Signed in as</span>
+      <button type="button" class="sidebar-signout">Sign out</button>
+    </footer>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <header class="page-header">
+      <section class="page-header-text">
+        <p class="page-header-eyebrow">Class directory</p>
+        <h1 class="page-header-title">Software Engineering</h1>
+        <p class="page-header-subtitle">
+          Find and connect with your instructors, TAs, tutors, and classmates.
+        </p>
+      </section>
+
+      <aside class="page-header-controls">
+        <section class="course-card" aria-label="Course info">
+          <p class="course-card-label">CSE 210</p>
+          <p class="course-card-name">Software Engineering</p>
+          <p class="course-card-desc">
+            Teaching team &amp; class roster for this course.
+          </p>
+        </section>
+
+        <section aria-label="Filter directory" class="filter">
+          <label class="filter-label" for="filter-select">Filter</label>
+          <select id="filter-select" class="filter-select">
+            <option selected>All sections</option>
+            <option>My section</option>
+            <option>Project group</option>
+          </select>
+        </section>
+      </aside>
+    </header>
+
+    <!-- DIRECTORY -->
+    <section class="directory" aria-label="Class directory">
+      <!-- ROLE TABS -->
+      <nav class="role-tabs" aria-label="Directory roles">
+        <button class="role-tab role-tab-active" type="button" data-role="professors">
+          Professors
+        </button>
+        <button class="role-tab" type="button" data-role="tas">
+          TAs
+        </button>
+        <button class="role-tab" type="button" data-role="tutors">
+          Tutors
+        </button>
+        <button class="role-tab" type="button" data-role="students">
+          Students
+        </button>
+        <button class="role-tab" type="button" data-role="groups">
+          Groups
+        </button>
+      </nav>
+
+      <section class="directory-layout">
+        <!-- LEFT: LIST -->
+        <section class="directory-list">
+          <!-- Professors panel -->
+          <section class="role-panel" data-panel="professors">
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Professors</h2>
+                <p class="role-panel-subtitle">
+                  Your primary instructors for this course.
+                </p>
+              </section>
+              <label class="search" aria-label="Search professors">
+                <span class="visually-hidden">Search professors</span>
+                <input type="search" placeholder="Search professors…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <span class="person-avatar" aria-hidden="true">HB</span>
+                  <header>
+                    <h3 class="person-name">Dr. John Smith</h3>
+                    <p class="person-role">Professor</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p>Email: hbender@university.edu</p>
+                  <p>Office hours: Mon &amp; Wed 3:00–4:30 PM</p>
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Lecture lead</span>
+                    <span class="tag">Section A</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-primary">Contact</button>
+                  <button type="button" class="link-button">View profile</button>
+                </section>
+              </article>
+
+              <article class="person-card">
+                <section class="person-identity">
+                  <span class="person-avatar" aria-hidden="true">JL</span>
+                  <header>
+                    <h3 class="person-name">Dr. Jordan Lee</h3>
+                    <p class="person-role">Co-Instructor</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p>Email: jlee@university.edu</p>
+                  <p>Office hours: Tue 1:00–3:00 PM</p>
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Project mentor</span>
+                    <span class="tag">Section B</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-primary">Contact</button>
+                  <button type="button" class="link-button">View profile</button>
+                </section>
+              </article>
+            </section>
+          </section>
+
+          <!-- TAs panel -->
+          <section class="role-panel" data-panel="tas" hidden>
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Teaching Assistants</h2>
+                <p class="role-panel-subtitle">
+                  TAs supporting lectures, discussions, and grading.
+                </p>
+              </section>
+              <label class="search" aria-label="Search TAs">
+                <span class="visually-hidden">Search TAs</span>
+                <input type="search" placeholder="Search TAs…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <span class="person-avatar" aria-hidden="true">CS</span>
+                  <header>
+                    <h3 class="person-name">Casey Smith</h3>
+                    <p class="person-role">Teaching Assistant</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p>Email: csmith@university.edu</p>
+                  <p>Office hours: Thu 10:00–12:00 PM</p>
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Grading</span>
+                    <span class="tag">Section A</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-primary">Contact TA</button>
+                  <button type="button" class="link-button">View profile</button>
+                </section>
+              </article>
+            </section>
+          </section>
+
+          <!-- Tutors panel -->
+          <section class="role-panel" data-panel="tutors" hidden>
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Tutors</h2>
+                <p class="role-panel-subtitle">
+                  Peer tutors available for additional support.
+                </p>
+              </section>
+              <label class="search" aria-label="Search tutors">
+                <span class="visually-hidden">Search tutors</span>
+                <input type="search" placeholder="Search tutors…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <span class="person-avatar" aria-hidden="true">RM</span>
+                  <header>
+                    <h3 class="person-name">Riley Martinez</h3>
+                    <p class="person-role">Tutor – Evening sessions</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p>Email: rmartinez@university.edu</p>
+                  <p>Times: Tue &amp; Thu 7:00–9:00 PM</p>
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Data structures</span>
+                    <span class="tag">Project help</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-primary">Message tutor</button>
+                  <button type="button" class="link-button">View schedule</button>
+                </section>
+              </article>
+            </section>
+          </section>
+
+          <!-- Students panel -->
+          <section class="role-panel" data-panel="students" hidden>
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Students</h2>
+                <p class="role-panel-subtitle">
+                  Classmates enrolled in this course.
+                </p>
+              </section>
+              <label class="search" aria-label="Search students">
+                <span class="visually-hidden">Search students</span>
+                <input type="search" placeholder="Search students…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <span class="person-avatar" aria-hidden="true">AK</span>
+                  <header>
+                    <h3 class="person-name">Alex Kim</h3>
+                    <p class="person-role">Student – Team 3</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p>Email: akim@university.edu</p>
+                  <p>Time zone: PST</p>
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Team 3</span>
+                    <span class="tag">Backend</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-primary">Message</button>
+                  <button type="button" class="link-button">View profile</button>
+                </section>
+              </article>
+            </section>
+          </section>
+
+          <!-- Groups panel -->
+          <section class="role-panel" data-panel="groups" hidden>
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Project groups</h2>
+                <p class="role-panel-subtitle">
+                  Teams for the course project.
+                </p>
+              </section>
+              <label class="search" aria-label="Search groups">
+                <span class="visually-hidden">Search groups</span>
+                <input type="search" placeholder="Search groups…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <span class="person-avatar" aria-hidden="true">G1</span>
+                  <header>
+                    <h3 class="person-name">Team Harmony</h3>
+                    <p class="person-role">Project group</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p>Members: 5 students</p>
+                  <p>Mentor: Casey Smith (TA)</p>
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Backend focus</span>
+                    <span class="tag">Section A</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-primary">View group</button>
+                  <button type="button" class="link-button">Open workspace</button>
+                </section>
+              </article>
+            </section>
+          </section>
+        </section>
+
+        <!-- RIGHT: SUMMARY / ACTIONS -->
+        <aside class="directory-aside">
+          <section class="aside-card">
+            <h2 class="aside-title">Need help?</h2>
+            <p class="aside-body">
+              If something looks off in the directory or you’re not sure who to contact,
+              feel free to reach out.
+            </p>
+            <section class="aside-actions">
+              <button type="button" class="btn btn-primary">Contact TA</button>
+              <button type="button" class="btn btn-secondary">Contact instructor</button>
+            </section>
+          </section>
+
+          <section class="aside-card aside-card-stat" data-aside="professors">
+            <h2 class="aside-title">Teaching team</h2>
+            <p class="aside-number">2</p>
+            <p class="aside-label">professors in this course</p>
+          </section>
+
+          <section class="aside-card aside-card-stat" data-aside="tas" hidden>
+            <h2 class="aside-title">Teaching assistants</h2>
+            <p class="aside-number">3</p>
+            <p class="aside-label">TAs supporting this course</p>
+          </section>
+
+          <section class="aside-card aside-card-stat" data-aside="tutors" hidden>
+            <h2 class="aside-title">Tutors</h2>
+            <p class="aside-number">4</p>
+            <p class="aside-label">peer tutors available</p>
+          </section>
+
+          <section class="aside-card aside-card-stat" data-aside="students" hidden>
+            <h2 class="aside-title">Enrolled students</h2>
+            <p class="aside-number">120</p>
+            <p class="aside-label">students on the roster</p>
+          </section>
+
+          <section class="aside-card aside-card-stat" data-aside="groups" hidden>
+            <h2 class="aside-title">Project groups</h2>
+            <p class="aside-number">24</p>
+            <p class="aside-label">active project teams</p>
+          </section>
+        </aside>
+      </section>
+    </section>
+  </main>
+
+  <!-- tiny JS for tab switching -->
+  <script>
+    const tabs = document.querySelectorAll(".role-tab");
+    const panels = document.querySelectorAll(".role-panel");
+    const asidePanels = document.querySelectorAll("[data-aside]");
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const role = tab.dataset.role;
+
+        tabs.forEach((t) => t.classList.toggle("role-tab-active", t === tab));
+        panels.forEach((panel) => {
+          panel.hidden = panel.dataset.panel !== role;
+        });
+        asidePanels.forEach((panel) => {
+          panel.hidden = panel.dataset.aside !== role;
+        });
+      });
+    });
+  </script>
+</body>
+</html>
