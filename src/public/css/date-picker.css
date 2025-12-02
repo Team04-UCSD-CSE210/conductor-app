@@ -79,10 +79,7 @@
 
 /* Position above and to the left */
 .date-picker-dropdown.align-top-left {
-  top: auto;
-  bottom: calc(100% + 0.5rem);
-  left: auto;
-  right: 0;
+  inset: auto 0 calc(100% + 0.5rem) auto;
   animation: slide-up 0.2s ease-out;
 }
 
