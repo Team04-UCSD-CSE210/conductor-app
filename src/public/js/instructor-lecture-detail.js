@@ -15,9 +15,10 @@
   let sessionId = null;
   let lecture = null;
   let isLoading = false;
-  let autoRefreshInterval = null;
   let currentQuestionId = null;
-  const REFRESH_INTERVAL_MS = 5000; // Refresh every 5 seconds
+  let currentResponses = [];
+  let checkInterval = null;
+  const CHECK_INTERVAL_MS = 3000; // Check for new responses every 3 seconds
 
   // Get session ID from URL params or data attribute
   function getSessionId() {
@@ -369,20 +370,26 @@
     return container;
   }
 
-  async function renderResponses(questionId) {
+  async function renderResponses(questionId, isManualRefresh = false) {
     if (!selectors.responseList || !questionId) return;
     
     isLoading = true;
-    showLoading();
+    if (!isManualRefresh) {
+      showLoading();
+    }
 
     try {
       const responses = await window.LectureService.getQuestionResponses(sessionId, questionId);
       
     selectors.responseList.innerHTML = '';
       
+      // Update response count
       if (selectors.responseCount) {
         selectors.responseCount.textContent = `${responses.length} response${responses.length !== 1 ? 's' : ''}`;
       }
+      
+      // Store current responses for comparison
+      currentResponses = responses;
 
     if (!responses.length) {
       const empty = document.createElement('p');
@@ -430,28 +437,102 @@
     }
   }
 
-  function startAutoRefresh(questionId) {
-    // Clear any existing interval
-    stopAutoRefresh();
+  async function checkAndAddNewResponses() {
+    if (!currentQuestionId || isLoading || !selectors.responseList) return;
     
-    currentQuestionId = questionId;
-    
-    // Set up new interval for auto-refresh
-    autoRefreshInterval = setInterval(() => {
-      if (!isLoading && currentQuestionId) {
-        console.log('Auto-refreshing responses...');
-        renderResponses(currentQuestionId);
+    try {
+      const responses = await window.LectureService.getQuestionResponses(sessionId, currentQuestionId);
+      
+      // If we had no responses before and now we do, do a full re-render
+      if (currentResponses.length === 0 && responses.length > 0) {
+        console.log(`First response${responses.length !== 1 ? 's' : ''} received, re-rendering`);
+        await renderResponses(currentQuestionId, true);
+        return;
       }
-    }, REFRESH_INTERVAL_MS);
-    
-    console.log('Auto-refresh started (every 5 seconds)');
+      
+      // Create a map of current responses for quick lookup
+      const currentMap = new Map();
+      currentResponses.forEach(r => {
+        const id = r.id || `${r.userId}-${r.timestamp}`;
+        const content = JSON.stringify(r);
+        currentMap.set(id, content);
+      });
+      
+      // Check for new or edited responses
+      const newResponseIds = new Set(currentResponses.map(r => r.id || `${r.userId}-${r.timestamp}`));
+      const newResponses = [];
+      const editedResponses = [];
+      
+      responses.forEach(r => {
+        const id = r.id || `${r.userId}-${r.timestamp}`;
+        const content = JSON.stringify(r);
+        
+        if (!currentMap.has(id)) {
+          // This is a new response
+          newResponses.push(r);
+        } else if (currentMap.get(id) !== content) {
+          // This response was edited
+          editedResponses.push(r);
+        }
+      });
+      
+      const hasChanges = newResponses.length > 0 || editedResponses.length > 0;
+      
+      if (hasChanges) {
+        if (newResponses.length > 0) {
+          console.log(`${newResponses.length} new response${newResponses.length !== 1 ? 's' : ''} received`);
+        }
+        if (editedResponses.length > 0) {
+          console.log(`${editedResponses.length} response${editedResponses.length !== 1 ? 's' : ''} edited`);
+        }
+        
+        // Get current question to check type
+        const currentQuestion = lecture.questions.find(q => q.id == currentQuestionId);
+        const questionType = currentQuestion?.type || currentQuestion?.question_type;
+        
+        // For pulse/multiple choice, or if there are edited responses, re-render completely
+        if (questionType === 'pulse' || questionType === 'pulse_check' || questionType === 'multiple_choice' || editedResponses.length > 0) {
+          await renderResponses(currentQuestionId, true);
+        } else {
+          // For text responses with only new additions, smoothly add new cards at the top
+          newResponses.reverse().forEach(response => {
+            const card = createResponseCard(response);
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(-10px)';
+            selectors.responseList.insertBefore(card, selectors.responseList.firstChild);
+            
+            // Animate in
+            setTimeout(() => {
+              card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, 10);
+          });
+          
+          // Update stored responses
+          currentResponses = responses;
+          
+          // Update count
+          if (selectors.responseCount) {
+            selectors.responseCount.textContent = `${responses.length} response${responses.length !== 1 ? 's' : ''}`;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for new responses:', error);
+    }
   }
 
-  function stopAutoRefresh() {
-    if (autoRefreshInterval) {
-      clearInterval(autoRefreshInterval);
-      autoRefreshInterval = null;
-      console.log('Auto-refresh stopped');
+  function startLiveUpdates() {
+    stopLiveUpdates();
+    checkInterval = setInterval(checkAndAddNewResponses, CHECK_INTERVAL_MS);
+    console.log('Live updates started (checking every 3 seconds)');
+  }
+
+  function stopLiveUpdates() {
+    if (checkInterval) {
+      clearInterval(checkInterval);
+      checkInterval = null;
     }
   }
 
@@ -459,19 +540,20 @@
     if (!selectors.questionSelect || selectors.questionSelect.disabled) return;
     
     selectors.questionSelect.addEventListener('change', (event) => {
-      if (!isLoading) {
-        const questionId = event.target.value;
-        renderResponses(questionId);
-        startAutoRefresh(questionId);
-      }
+      const questionId = event.target.value;
+      console.log('Question dropdown changed to:', questionId);
+      currentQuestionId = questionId;
+      renderResponses(questionId);
+      startLiveUpdates();
     });
     
     // Load first question by default
     if (lecture && lecture.questions && lecture.questions.length > 0) {
       const firstQuestionId = lecture.questions[0].id;
+      currentQuestionId = firstQuestionId;
       selectors.questionSelect.value = firstQuestionId;
       renderResponses(firstQuestionId);
-      startAutoRefresh(firstQuestionId);
+      startLiveUpdates();
     }
   }
 
@@ -521,8 +603,8 @@
     initBackButton();
     hydrate();
     
-    // Stop auto-refresh when user leaves the page
-    window.addEventListener('beforeunload', stopAutoRefresh);
+    // Stop live updates when user leaves the page
+    window.addEventListener('beforeunload', stopLiveUpdates);
   }
 
   if (document.readyState === 'loading') {

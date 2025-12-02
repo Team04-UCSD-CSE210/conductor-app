@@ -18,6 +18,9 @@
   };
 
   let isLoading = false;
+  let liveUpdateInterval = null;
+  let currentMeetingStats = new Map();
+  const LIVE_UPDATE_INTERVAL_MS = 3000; // Check for updates every 3 seconds
 
   function formatDate(dateString) {
     if (!dateString) return '—';
@@ -35,6 +38,8 @@
   function buildStatusBadge(sessionState, attendanceCount, totalMembers) {
     const badge = document.createElement('span');
     badge.classList.add('lecture-badge');
+    badge.classList.add('meeting-status-badge'); // Add class for easier selection
+    badge.style.transition = 'transform 0.2s ease';
     
     if (sessionState === 'open') {
       badge.textContent = `Open - ${attendanceCount}/${totalMembers}`;
@@ -48,6 +53,83 @@
     }
     
     return badge;
+  }
+
+  async function updateMeetingStats() {
+    if (isLoading) return;
+    
+    // Find all open meetings
+    const openMeetings = state.meetings.filter(m => {
+      const sessionState = determineMeetingStatus(m);
+      return sessionState === 'open';
+    });
+    
+    if (openMeetings.length === 0) {
+      return; // Nothing to update
+    }
+    
+    console.log(`Refreshing data for ${openMeetings.length} open meeting(s)`);
+    
+    try {
+      // Re-fetch meetings to get updated attendance counts
+      const updatedMeetings = await fetchMeetings();
+      
+      // Update only the open meetings in state
+      for (const openMeeting of openMeetings) {
+        const updated = updatedMeetings.find(m => m.id === openMeeting.id);
+        if (!updated) continue;
+        
+        // Check if attendance count changed
+        const oldCount = openMeeting.attendance_count || 0;
+        const newCount = updated.attendance_count || 0;
+        
+        if (oldCount !== newCount) {
+          // Update state
+          const index = state.meetings.findIndex(m => m.id === openMeeting.id);
+          if (index !== -1) {
+            state.meetings[index] = updated;
+          }
+          
+          // Update the badge in the DOM
+          const meetingRow = document.querySelector(`[data-meeting-id="${updated.id}"]`);
+          if (meetingRow) {
+            const badge = meetingRow.querySelector('.meeting-status-badge');
+            if (badge) {
+              const totalMembers = updated.team_member_count || 0;
+              badge.textContent = `Open - ${newCount}/${totalMembers}`;
+              
+              // Add a subtle animation to indicate update
+              badge.style.transform = 'scale(1.05)';
+              setTimeout(() => {
+                badge.style.transform = 'scale(1)';
+              }, 200);
+              
+              console.log(`Attendance updated for ${updated.title}: ${newCount}/${totalMembers}`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing meeting data:', error);
+    }
+  }
+
+  function startLiveUpdates() {
+    stopLiveUpdates();
+    const openMeetings = state.meetings.filter(m => determineMeetingStatus(m) === 'open');
+    console.log(`Starting live updates for ${openMeetings.length} open meeting(s)`);
+    if (openMeetings.length > 0) {
+      liveUpdateInterval = setInterval(updateMeetingStats, LIVE_UPDATE_INTERVAL_MS);
+      // Do an immediate update
+      updateMeetingStats();
+    }
+  }
+
+  function stopLiveUpdates() {
+    if (liveUpdateInterval) {
+      clearInterval(liveUpdateInterval);
+      liveUpdateInterval = null;
+    }
   }
 
   async function buildLeaderAttendanceBadge(meeting, sessionState) {
@@ -148,6 +230,7 @@ function determineMeetingStatus(meeting) {
 }  async function buildMeetingRow(meeting) {
     const row = document.createElement('article');
     row.className = 'lecture-item';
+    row.dataset.meetingId = meeting.id; // Add meeting ID for live updates
     
     const sessionState = determineMeetingStatus(meeting);
     row.dataset.status = sessionState;
@@ -795,6 +878,9 @@ function determineMeetingStatus(meeting) {
       await updateTeamAttendance();
       isLoading = false;
       renderMeetings();
+      
+      // Start live updates for open meetings
+      startLiveUpdates();
     } catch (error) {
       console.error('Error hydrating meeting view:', error);
       isLoading = false;
@@ -944,6 +1030,9 @@ function determineMeetingStatus(meeting) {
     initButtons();
     initFlipCard();
     hydrateMeetingView();
+    
+    // Stop live updates when user leaves the page
+    window.addEventListener('beforeunload', stopLiveUpdates);
   }
 
   if (document.readyState === 'loading') {
