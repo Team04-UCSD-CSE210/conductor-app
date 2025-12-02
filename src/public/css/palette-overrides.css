@@ -270,21 +270,6 @@ button.btn-primary {
 }
 
 /* ============================================================================
-   INSTRUCTOR DASHBOARD SPECIFIC
-   ============================================================================ */
-.instructor-dashboard .attendance-item {
-  background: var(--palette-background, #F0FDFA) !important;
-}
-
-.instructor-dashboard .progress-fill {
-  background: var(--palette-secondary, #83D7CF) !important;
-}
-
-.instructor-dashboard .attendance-label {
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-/* ============================================================================
    ATTENDANCE ITEMS - CONFIGURABLE COLORS AND BORDERS
    ============================================================================ */
 .attendance-item {
@@ -301,17 +286,34 @@ button.btn-primary {
   color: var(--gray-600, #4b5563) !important;
 }
 
-.progress-bar {
-  background: var(--palette-accent, #99F6E4) !important;
+/* ============================================================================
+   INSTRUCTOR DASHBOARD SPECIFIC
+   ============================================================================ */
+.instructor-dashboard .attendance-item {
+  background: var(--palette-background, #F0FDFA) !important;
 }
 
-.progress-fill {
-  background: linear-gradient(90deg, var(--palette-primary, #0F766E), var(--palette-secondary, #83D7CF)) !important;
+.instructor-dashboard .progress-fill {
+  background: var(--palette-secondary, #83D7CF) !important;
 }
 
-.progress-percentage {
+.instructor-dashboard .attendance-label {
   color: var(--palette-primary, #0F766E) !important;
-  background: var(--palette-accent, #99F6E4) !important;
+}
+
+/* ============================================================================
+.attendance-item {
+  background: var(--palette-background, #F0FDFA) !important;
+  border-color: var(--palette-accent, #99F6E4) !important;
+}
+
+.attendance-label,
+.attendance-title {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.attendance-meta {
+  color: var(--gray-600, #4b5563) !important;
 }
 
 /* ============================================================================

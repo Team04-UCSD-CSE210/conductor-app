@@ -289,7 +289,7 @@
     try {
       const response = await apiFetch(`/teams/my-team?offering_id=${offeringId}`);
       return response.team || null;
-    } catch (error) {
+    } catch {
       // User might not be in a team, which is fine
       return null;
     }
@@ -364,7 +364,7 @@
       else if (hours > 12) hours -= 12;
 
       return `${hours}:${minutes} ${ampm}`;
-    } catch (e) {
+    } catch {
       return timeStr;
     }
   }

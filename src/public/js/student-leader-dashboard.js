@@ -7,15 +7,11 @@
     return;
   }
 
-  const { getActiveOfferingId, getOfferingWithStats, getUserEnrollment, updateCourseInfo, updateStats, updateCourseProgress, updateStickyHeader, updateWelcomeMessage } = window.DashboardService;
+  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo, updateCourseProgress, updateStickyHeader, updateWelcomeMessage } = window.DashboardService;
   
   let offeringId = null;
   let refreshInterval = null;
 
-  // Get current user ID
-  function getCurrentUserId() {
-    return window.currentUserId || null;
-  }
 
   // Load dashboard statistics (including attendance)
   async function loadDashboardStats() {
@@ -249,7 +245,6 @@
 
         const isCurrentWeek = now >= currentWeekStart && now <= weekEnd;
         const isPastWeek = now > weekEnd;
-        const isUpcoming = now < currentWeekStart;
 
         const statusClass = isCurrentWeek ? 'current' : '';
         const statusText = isPastWeek ? 'completed' : (isCurrentWeek ? 'in-progress' : 'upcoming');

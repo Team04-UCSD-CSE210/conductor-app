@@ -16,7 +16,6 @@
     getStudents = async () => [],
     updateCourseInfo = () => {},
     updateStats = () => {},
-    renderTeamsList = () => {},
     getAnnouncements = async () => [],
     createAnnouncement = async () => ({}),
     getAttendanceSessions = async () => [],
@@ -438,8 +437,6 @@
     const form = document.getElementById('announcement-form');
     const subjectInput = document.getElementById('announcement-subject');
     const bodyInput = document.getElementById('announcement-body');
-    const announcementsList = document.querySelector('.announcements-list');
-
     if (!openBtn || !overlay || !form) return;
 
     let previouslyFocused = null;
@@ -451,7 +448,7 @@
 
       // make the modal visible/accessible
       overlay.setAttribute('aria-hidden', 'false');
-      try { overlay.inert = false; } catch (e) { /* ignore if not available */ }
+      try { overlay.inert = false; } catch { /* ignore if not available */ }
 
       // hide background content from assistive tech
       if (mainContent) mainContent.setAttribute('aria-hidden', 'true');
@@ -469,7 +466,7 @@
     function closeModal() {
       // hide the modal from AT
       overlay.setAttribute('aria-hidden', 'true');
-      try { overlay.inert = true; } catch (e) { /* ignore if not available */ }
+      try { overlay.inert = true; } catch { /* ignore if not available */ }
 
       // restore background content visibility to AT
       if (mainContent) mainContent.removeAttribute('aria-hidden');

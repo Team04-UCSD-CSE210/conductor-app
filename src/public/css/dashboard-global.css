@@ -438,10 +438,6 @@ body.dashboard-page {
   border-color: #faefb8;
 }
 
-.card.wide.recent-updates h3 {
-  color: #6b5e00;
-}
-
 .card.wide.recent-updates ul {
   color: var(--gray-800, #1f2937);
 }
@@ -542,8 +538,7 @@ body.dashboard-page {
   flex-direction: column;
   gap: 8px;
   max-height: 200px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   padding-right: 8px;
   width: 100%;
   box-sizing: border-box;
@@ -761,7 +756,7 @@ body.dashboard-page {
   background: white;
   padding: 10px 10px 28px;
   border-radius: 8px;
-  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.20);
+  box-shadow: 0 8px 20px rgb(15 118 110 / 20%);
   width: 220px;
   max-width: 240px;
 }
