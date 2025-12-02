@@ -159,7 +159,7 @@ body.dashboard-page .main-container {
 
 .btn-primary {
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 9999px;
   padding: 0.75rem 1.5rem;
   background: var(--teal-600, #0d9488);
   color: white;
