@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/css/dashboard-global.css">
   <link rel="stylesheet" href="/css/inactivity-timeout.css">
   <link rel="stylesheet" href="/css/lectures-global.css">
+  <link rel="stylesheet" href="/css/instructor-lectures.css">
   <link rel="stylesheet" href="/css/lecture-attendance-student.css">
   <link rel="stylesheet" href="/css/meeting-attendance.css">
 </head>
@@ -27,7 +28,7 @@
     
     <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
-    
+
     <footer>
       <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
@@ -36,11 +37,11 @@
   <main class="main-container" id="main">
     <div class="attendance-layout">
       <section class="attendance-content" data-offering-id="">
-        <div class="attendance-title">
-          <div>
+        <div class="header-container">
+          <div class="header-info">
             <p class="eyebrow">Meeting attendance</p>
-            <h2 id="team-name">Loading...</h2>
-            <p class="subtitle">Scan the list below review your status or log your attendance for a meeting.</p>
+            <h2 class="header-title" id="team-name">Loading...</h2>
+            <p class="header-subtitle">Scan the list below review your status or log your attendance for a meeting.</p>
           </div>
           <div class="attendance-filter">
             <label for="meeting-filter">Filter</label>

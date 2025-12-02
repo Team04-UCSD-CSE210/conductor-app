@@ -237,7 +237,7 @@
 
 .help-box {
   background: linear-gradient(135deg, white 0%, var(--teal-50, #f0fdfa) 100%);
-  border: 1px solid var(--teal-200, #99f6e4);
+  border: none;
   border-radius: 0.75rem;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgb(13 148 136 / 8%);

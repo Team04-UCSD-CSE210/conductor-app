@@ -266,39 +266,6 @@ body.dashboard-page .main-container {
   height: 14px;
 }
 
-.delete-button {
-  border-radius: 0.5rem;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--red-200, #fecaca);
-  background: var(--red-50, #fef2f2);
-  color: var(--red-600, #dc2626);
-  transition: all 0.15s;
-  padding: 0;
-  cursor: pointer;
-}
-
-.delete-button:hover {
-  background: var(--red-100, #fee2e2);
-  border-color: var(--red-300, #fca5a5);
-  color: var(--red-700, #b91c1c);
-  transform: scale(1.05);
-  box-shadow: 0 2px 4px rgb(220 38 38 / 20%);
-}
-
-.delete-button:active {
-  transform: scale(0.95);
-}
-
-.delete-button svg {
-  width: 18px;
-  height: 18px;
-  stroke: currentcolor;
-}
-
 .empty-state {
   border: 1px dashed var(--gray-300, #d1d5db);
   border-radius: 0.75rem;
