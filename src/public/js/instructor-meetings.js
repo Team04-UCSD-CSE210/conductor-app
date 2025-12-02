@@ -136,6 +136,9 @@ async function renderTeams() {
       
       const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
       
+      const memberCount = team.member_count || team.members?.length || 0;
+      const meetingCount = teamMeetings.length;
+      
       const row = document.createElement('a');
       row.className = 'attendance-card-list';
       row.href = `/instructor-team-meetings.html?team_id=${encodeURIComponent(team.id)}&offering_id=${encodeURIComponent(offeringId)}`;
@@ -143,16 +146,15 @@ async function renderTeams() {
       row.style.color = 'inherit';
       row.innerHTML = `
         <span class="attendance-card-list-label">${team.name || 'Team ' + team.team_number}</span>
-        <div class="attendance-card-list-meta">
-          <span class="attendance-percent">Members: ${team.member_count || team.members?.length || 0}</span>
-          <span class="attendance-schedule">Meetings: ${teamMeetings.length}</span>
-        </div>
-        <span style="display:flex;align-items:center;">Attendance:
+        <span class="attendance-members">${memberCount} ${memberCount === 1 ? 'member' : 'members'}</span>
+        <div class="attendance-card-list-row">
+          <span class="attendance-text">Attendance:</span>
           <span class="attendance-bar">
             <span class="attendance-fill" style="width:${percent}%"></span>
             <span class="attendance-label">${percent}%</span>
           </span>
-        </span>
+        </div>
+        <span class="attendance-meetings">${meetingCount} ${meetingCount === 1 ? 'meeting' : 'meetings'}</span>
       `;
       
       container.appendChild(row);
