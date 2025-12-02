@@ -279,7 +279,6 @@
       setTimeout(() => {
         const rect = this.picker.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
         
         // Reset positioning classes
         this.picker.classList.remove('align-right', 'align-top-left');
