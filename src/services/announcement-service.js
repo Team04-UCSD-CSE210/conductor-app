@@ -7,12 +7,12 @@ import { pool } from '../db.js';
 export class AnnouncementService {
   /**
    * Create a new announcement
-   * @param {Object} data - { offering_id, subject, message }
+   * @param {Object} data - { offering_id, subject, message, team_id? }
    * @param {string} userId - ID of the user creating the announcement
    * @returns {Promise<Object>} Created announcement
    */
   static async createAnnouncement(data, userId) {
-    const { offering_id, subject, message } = data;
+    const { offering_id, subject, message, team_id } = data;
 
     // Validate required fields
     if (!offering_id) {
@@ -35,12 +35,25 @@ export class AnnouncementService {
       throw new Error('Course offering not found');
     }
 
+    // If team_id provided, validate it belongs to the offering
+    if (team_id) {
+      const teamCheck = await pool.query(
+        'SELECT id FROM team WHERE id = $1 AND offering_id = $2',
+        [team_id, offering_id]
+      );
+
+      if (teamCheck.rows.length === 0) {
+        throw new Error('Team not found or does not belong to this offering');
+      }
+    }
+
     // Create announcement
     const announcement = await AnnouncementModel.create({
       offering_id,
       subject: subject.trim(),
       message: message.trim(),
-      created_by: userId
+      created_by: userId,
+      team_id: team_id || null
     });
 
     return announcement;
@@ -138,5 +151,16 @@ export class AnnouncementService {
    */
   static async getAnnouncementCount(offeringId) {
     return await AnnouncementModel.count(offeringId);
+  }
+
+  /**
+   * Get announcements visible to a user (course-wide + their team's)
+   * @param {string} offeringId - Course offering ID
+   * @param {string} userId - User ID
+   * @param {Object} options - Query options
+   * @returns {Promise<Array>} List of announcements
+   */
+  static async getAnnouncementsForUser(offeringId, userId, options = {}) {
+    return await AnnouncementModel.findVisibleToUser(offeringId, userId, options);
   }
 }

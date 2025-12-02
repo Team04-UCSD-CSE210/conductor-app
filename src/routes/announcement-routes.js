@@ -7,8 +7,8 @@ const router = Router();
 /**
  * Create a new announcement
  * POST /api/announcements
- * Body: { offering_id, subject, message }
- * Requires: announcement.create permission (course scope) - Professor/TA
+ * Body: { offering_id, subject, message, team_id? }
+ * Requires: announcement.create permission (course scope) - Professor/TA/Team Leader
  */
 router.post('/', ...protect('announcement.create', 'course'), async (req, res) => {
   try {
@@ -26,6 +26,7 @@ router.post('/', ...protect('announcement.create', 'course'), async (req, res) =
  * Get all announcements for a course offering
  * GET /api/announcements?offering_id=<uuid>&limit=<number>&offset=<number>
  * Requires: announcement.view permission (course scope) - All authenticated users
+ * Returns: All announcements (for instructors/TAs) or user-visible announcements (for students)
  */
 router.get('/', ...protect('announcement.view', 'course'), async (req, res) => {
   try {
@@ -41,10 +42,23 @@ router.get('/', ...protect('announcement.view', 'course'), async (req, res) => {
       order: 'created_at DESC'
     };
 
-    const announcements = await AnnouncementService.getAnnouncementsByOffering(
-      offering_id,
-      options
-    );
+    // Students and tutors see only course-wide + their team's announcements
+    // Instructors/TAs/Admins see all announcements
+    const userRole = req.currentUser.role;
+    let announcements;
+    
+    if (userRole === 'student' || userRole === 'unregistered') {
+      announcements = await AnnouncementService.getAnnouncementsForUser(
+        offering_id,
+        req.currentUser.id,
+        options
+      );
+    } else {
+      announcements = await AnnouncementService.getAnnouncementsByOffering(
+        offering_id,
+        options
+      );
+    }
 
     // Disable caching to ensure fresh data
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');

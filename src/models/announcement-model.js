@@ -6,17 +6,17 @@ import { pool } from '../db.js';
 export class AnnouncementModel {
   /**
    * Create a new announcement
-   * @param {Object} data - { offering_id, subject, message, created_by }
+   * @param {Object} data - { offering_id, subject, message, created_by, team_id? }
    * @returns {Promise<Object>} Created announcement
    */
   static async create(data) {
-    const { offering_id, subject, message, created_by } = data;
+    const { offering_id, subject, message, created_by, team_id } = data;
 
     const result = await pool.query(
-      `INSERT INTO announcements (offering_id, subject, message, created_by)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO announcements (offering_id, subject, message, created_by, team_id)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [offering_id, subject, message, created_by]
+      [offering_id, subject, message, created_by, team_id || null]
     );
 
     return result.rows[0];
@@ -147,6 +147,43 @@ export class AnnouncementModel {
        ORDER BY a.created_at DESC
        LIMIT $2`,
       [offeringId, limit]
+    );
+
+    return result.rows;
+  }
+
+  /**
+   * Get announcements visible to a user (course-wide + their team's)
+   * @param {string} offeringId - Course offering ID
+   * @param {string} userId - User ID
+   * @param {Object} options - { limit, offset, order }
+   * @returns {Promise<Array>} List of announcements
+   */
+  static async findVisibleToUser(offeringId, userId, options = {}) {
+    const {
+      limit = 50,
+      offset = 0,
+      order = 'created_at DESC'
+    } = options;
+
+    const result = await pool.query(
+      `SELECT DISTINCT a.*, u.name as creator_name, u.email as creator_email,
+              t.name as team_name
+       FROM announcements a
+       JOIN users u ON a.created_by = u.id
+       LEFT JOIN team t ON a.team_id = t.id
+       WHERE a.offering_id = $1
+         AND (
+           a.team_id IS NULL  -- Course-wide announcements
+           OR a.team_id IN (  -- Team-specific announcements for user's team
+             SELECT team_id 
+             FROM team_members 
+             WHERE user_id = $2 AND left_at IS NULL
+           )
+         )
+       ORDER BY ${order}
+       LIMIT $3 OFFSET $4`,
+      [offeringId, userId, limit, offset]
     );
 
     return result.rows;

@@ -41,3 +41,11 @@ SELECT 'student'::enrollment_role_enum, p.id
 FROM permissions p
 WHERE p.code = 'announcement.view'
 ON CONFLICT (enrollment_role, permission_id) DO NOTHING;
+
+-- Grant announcement permissions to team roles
+-- Team leader can create, manage, and view announcements
+INSERT INTO team_role_permissions (team_role, permission_id)
+SELECT 'leader'::team_member_role_enum, p.id
+FROM permissions p
+WHERE p.code IN ('announcement.create', 'announcement.manage', 'announcement.view')
+ON CONFLICT (team_role, permission_id) DO NOTHING;
