@@ -11,21 +11,6 @@ body.lecture-builder-page .main-container {
   -webkit-overflow-scrolling: touch;
 }
 
-/* body.lecture-builder-page :where(
-  .builder-shell,
-  .builder-shell p,
-  .builder-shell label,
-  .builder-shell h1,
-  .builder-shell h2,
-  .builder-shell h3,
-  .builder-shell span,
-  .builder-shell input,
-  .builder-shell select,
-  .builder-shell textarea
-) {
-  color: inherit;
-} */
-
 .builder-shell {
   display: flex;
   flex-direction: column;

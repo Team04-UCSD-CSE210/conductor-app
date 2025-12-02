@@ -24,12 +24,20 @@ import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
 import journalRoutes from "./routes/journal-routes.js";
+import instructorJournalRoutes from "./routes/instructor-journal-routes.js";
+import taJournalRoutes from "./routes/ta-journal-routes.js";
+import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Since server.js is in src/, views are in src/views relative to project root, but "views" relative to src/
 const VIEW_DIR = process.env.VERCEL ? "public" : "views"
+
+// Helper function to build full path to view files
+function buildFullViewPath(viewFileName){
+  return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
+}
 
 dotenv.config();
 
@@ -145,10 +153,21 @@ const findOrCreateUser = async (email, defaults = {}) => {
     let user = await findUserByEmail(email);
     
     if (!user) {
+<<<<<<< HEAD
       // Simple user creation with primary_role defaulting to 'unregistered'
       const result = await pool.query(
         `INSERT INTO users (email, name, primary_role) VALUES ($1, $2, $3) 
          ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name 
+=======
+      // Simple user creation with sensible defaults:
+      // - primary_role defaults to 'unregistered'
+      // - status defaults to 'active' to satisfy NOT NULL constraint
+      const result = await pool.query(
+        `INSERT INTO users (email, name, primary_role, status) 
+         VALUES ($1, $2, $3, 'active'::user_status_enum) 
+         ON CONFLICT (email) DO UPDATE SET 
+           name = EXCLUDED.name 
+>>>>>>> feature/enhance-instructor-dashboard
          RETURNING *`,
         [
           email,
@@ -906,7 +925,11 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
 
     // Admin and instructor can access team lead dashboard (for viewing)
     if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+<<<<<<< HEAD
       return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
+=======
+      return res.sendFile(buildFullViewPath("student-dashboard.html"));
+>>>>>>> feature/enhance-instructor-dashboard
     }
 
     // Check if user is a team lead
@@ -924,7 +947,11 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
       return res.redirect("/student-dashboard");
     }
 
+<<<<<<< HEAD
     return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
+=======
+    return res.sendFile(buildFullViewPath("student-dashboard.html"));
+>>>>>>> feature/enhance-instructor-dashboard
   } catch (error) {
     console.error("Error accessing team lead dashboard:", error);
     return res.status(500).send("Internal server error");
@@ -1193,9 +1220,14 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     if (enrollmentRoleForAccess === 'student' || enrollmentRoleForAccess === 'team-lead' || 
         user.primary_role === 'student' || user.primary_role === 'admin' || 
         user.primary_role === 'instructor') {
+<<<<<<< HEAD
       // Serve team lead view if user is a team lead, otherwise student view
       if (isTeamLead) {
         // Team leads get the enhanced team lead dashboard
+=======
+      // Team leads get the enhanced team lead dashboard with create meeting functionality
+      if (isTeamLead) {
+>>>>>>> feature/enhance-instructor-dashboard
         return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
       } else {
         // Regular students get the student view
@@ -1249,6 +1281,149 @@ app.get("/meetings/team-lead", ensureAuthenticated, async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
+=======
+// -------------------- JOURNAL ROUTES --------------------
+
+/**
+ * Work Journal - Student View
+ * Students can view and edit their work journal
+ * Requires: Authentication - Students
+ */
+app.get("/work-journal", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Check if user is a team lead
+    const isTeamLead = await isUserTeamLead(user.id);
+    
+    // Allow students, admins, and instructors
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'student' || user.primary_role === 'student' || 
+        user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      // Both team leads and regular students get the same student journal page
+      return res.sendFile(buildFullViewPath("student-journal.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a student to access the work journal");
+  } catch (error) {
+    console.error("Error accessing work journal:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * Instructor Journal
+ * Instructors can view all student journals
+ * Requires: Authentication - Instructors
+ */
+app.get("/instructor-journal", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow instructors and admins
+    if (user.primary_role === 'instructor' || user.primary_role === 'admin') {
+      return res.sendFile(buildFullViewPath("instructor-journal.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: Only instructors can access this page");
+  } catch (error) {
+    console.error("Error accessing instructor journal:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * TA Journal
+ * TAs can view student journals
+ * Requires: Authentication - TAs
+ */
+app.get("/ta-journal", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("ta-journal.html"));
+    }
+
+    // Check if user is enrolled as TA
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'ta') {
+      return res.sendFile(buildFullViewPath("ta-journal.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a TA to access this page");
+  } catch (error) {
+    console.error("Error accessing TA journal:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+/**
+ * Tutor Journal
+ * Tutors can view student journals
+ * Requires: Authentication - Tutors
+ */
+app.get("/tutor-journal", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("tutor-journal.html"));
+    }
+
+    // Check if user is enrolled as tutor
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("tutor-journal.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a tutor to access this page");
+  } catch (error) {
+    console.error("Error accessing tutor journal:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+>>>>>>> feature/enhance-instructor-dashboard
 // serve all your static files (HTML, CSS, JS, etc.) - serve project root for any other static files
 app.use(express.static(path.join(__dirname, "..")));
 
@@ -1482,12 +1657,9 @@ app.get("/auth/failure", async (req, res) => {
 });
 
 
-function buildFullViewPath(viewFileName){
-  return path.join(__dirname, `${VIEW_DIR}/${viewFileName}`)
-}
-
-// Reset any leftover session before showing login page
+// Login route - redirect to Google OAuth
 app.get("/login", (req, res) => {
+<<<<<<< HEAD
   // Clear Passport user and Redis session if any
   try {
     safeLogout(req);
@@ -1497,6 +1669,10 @@ app.get("/login", (req, res) => {
   }
 
   res.sendFile(buildFullViewPath("login.html"));
+=======
+  // Redirect to Google OAuth
+  res.redirect("/auth/google");
+>>>>>>> feature/enhance-instructor-dashboard
 });
 
 // Health check endpoint (public, no authentication required)
@@ -1604,6 +1780,9 @@ app.use("/api/interactions", interactionRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/journals", ensureAuthenticated, journalRoutes);
+app.use("/api/instructor-journals", ensureAuthenticated, instructorJournalRoutes);
+app.use("/api/ta-journals", ensureAuthenticated, taJournalRoutes);
+app.use("/api/tutor-journals", ensureAuthenticated, tutorJournalRoutes);
 app.use("/api/class", courseOfferingRoutes);
 app.use("/api/class-directory", classDirectoryRoutes);
 

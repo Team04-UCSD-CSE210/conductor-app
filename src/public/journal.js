@@ -40,96 +40,127 @@ function clearForm() {
 // This function is used in HTML onclick handlers
 // eslint-disable-next-line no-unused-vars
 async function submitJournal() {
-  const payload = {
-    date: new Date().toISOString().split("T")[0],
-    done_since_yesterday: document.getElementById("done").value,
-    working_on_today: document.getElementById("today").value,
-    blockers: document.getElementById("blockers").value,
-    feelings: document.getElementById("feelings").value
-  };
+  try {
+    const payload = {
+      date: new Date().toISOString().split("T")[0],
+      done_since_yesterday: document.getElementById("done").value,
+      working_on_today: document.getElementById("today").value,
+      blockers: document.getElementById("blockers").value,
+      feelings: document.getElementById("feelings").value
+    };
 
-  let url = "/api/journals";
-  let method = "POST";
+    let url = "/api/journals";
+    let method = "POST";
 
-  if (window.editingId) {
-    url = `/api/journals/${window.editingId}`;
-    method = "PUT";
-    delete payload.date;
-  }
+    if (window.editingId) {
+      url = `/api/journals/${window.editingId}`;
+      method = "PUT";
+      delete payload.date;
+    }
 
-  const res = await fetch(url, {
-    method,
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+    const res = await fetch(url, {
+      method,
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.success) {
-    alert(window.editingId ? "Entry updated!" : "Entry saved!");
-    window.editingId = null;
-    clearForm();
-    loadEntries();
-  } else {
-    alert("Failed to save entry.");
+    if (data.success) {
+      alert(window.editingId ? "Entry updated!" : "Entry saved!");
+      window.editingId = null;
+      clearForm();
+      loadEntries();
+    } else {
+      alert("Failed to save entry: " + (data.error || "Unknown error"));
+    }
+  } catch (error) {
+    console.error("Error submitting journal:", error);
+    alert("Error submitting journal. Check console for details.");
   }
 }
 
 async function loadEntries() {
-  const res = await fetch("/api/journals", { credentials: "include" });
-  const data = await res.json();
-
-  const container = document.getElementById("entries");
-  container.innerHTML = "";
-
-  if (!data.logs || data.logs.length === 0) {
-    container.innerHTML = "<p>No previous entries yet.</p>";
-    return;
-  }
-
-  // Sort latest first (use updated_at/updatedAt, then created_at/createdAt, fallback to date)
-  data.logs.sort((a, b) => {
-    const tb = new Date(b.updated_at || b.updatedAt || b.created_at || b.createdAt || b.date);
-    const ta = new Date(a.updated_at || a.updatedAt || a.created_at || a.createdAt || a.date);
-    return tb - ta;
-  });
-
-  // Save logs globally for editing
-  window.currentLogs = data.logs;
-
-  data.logs.forEach((log) => {
-    const ts = log.updated_at || log.updatedAt || log.created_at || log.createdAt;
-    let dateLabel = log.date;
-    if (ts) {
-      const dt = new Date(ts);
-      if (!isNaN(dt)) {
-        const timeStr = dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        dateLabel = `${log.date} ${timeStr}`;
-      }
+  try {
+    const res = await fetch("/api/journals", { credentials: "include" });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
-    const edited = log.updated_at && log.updated_at !== log.created_at;
-    const editedLabel = edited ? `<span class="edited-label">(edited)</span>` : "";
-    const div = document.createElement("div");
-    div.className = "entry fade-in";
-    div.innerHTML = `
-      <div class="entry-header">
-        <div class="entry-date">${dateLabel} ${editedLabel}</div>
-        <div class="entry-menu" onclick="toggleMenu('${log.id}')">⋮</div>
-      </div>
+    
+    const data = await res.json();
 
-      <div id="menu-${log.id}" class="entry-dropdown hidden">
-        <div onclick="editEntry('${log.id}')">Edit</div>
-        <div onclick="deleteEntry('${log.id}')">Delete</div>
-      </div>
+    const container = document.getElementById("entries");
+    if (!container) {
+      console.error("Container #entries not found!");
+      return;
+    }
+    
+    container.innerHTML = "";
 
-      <div><strong>Done:</strong> ${log.done_since_yesterday}</div>
-      <div><strong>Today:</strong> ${log.working_on_today}</div>
-      <div><strong>Blockers:</strong> ${log.blockers}</div>
-      <div><strong>Feelings:</strong> ${log.feelings}</div>
-    `;
-    container.appendChild(div);
-  });
+    if (!data.logs || data.logs.length === 0) {
+      container.innerHTML = "<p>No previous entries yet.</p>";
+      return;
+    }
+
+    // Sort latest first (use updated_at/updatedAt, then created_at/createdAt, fallback to date)
+    data.logs.sort((a, b) => {
+      const tb = new Date(b.updated_at || b.updatedAt || b.created_at || b.createdAt || b.date);
+      const ta = new Date(a.updated_at || a.updatedAt || a.created_at || a.createdAt || a.date);
+      return tb - ta;
+    });
+
+    // Save logs globally for editing
+    window.currentLogs = data.logs;
+
+    data.logs.forEach((log) => {
+      // Format date properly
+      const dateObj = new Date(log.date || log.created_at || log.createdAt);
+      const dateLabel = dateObj.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+
+      const article = document.createElement("article");
+      article.className = "wj-entry";
+      article.innerHTML = `
+        <header class="wj-entry-header">
+          <span class="wj-entry-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+              <rect x="3" y="4" width="18" height="17" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.6" />
+              <line x1="8" y1="3" x2="8" y2="7" stroke="currentColor" stroke-width="1.6" />
+              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </span>
+          <p class="wj-entry-date">${dateLabel}</p>
+        </header>
+
+        <dl class="wj-entry-details">
+          <dt>Done since yesterday:</dt>
+          <dd>${log.done_since_yesterday || 'N/A'}</dd>
+
+          <dt>Working on:</dt>
+          <dd>${log.working_on_today || 'N/A'}</dd>
+
+          <dt>Blockers:</dt>
+          <dd>${log.blockers || 'N/A'}</dd>
+
+          <dt>Feelings:</dt>
+          <dd>${log.feelings || 'N/A'}</dd>
+        </dl>
+      `;
+      container.appendChild(article);
+    });
+  } catch (error) {
+    console.error("Error loading entries:", error);
+    const container = document.getElementById("entries");
+    if (container) {
+      container.innerHTML = "<p>Error loading entries. Check console for details.</p>";
+    }
+  }
 }
 
 // Load entries on page load

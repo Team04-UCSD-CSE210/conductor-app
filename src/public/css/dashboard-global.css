@@ -6,6 +6,8 @@
   font-size: 0.85rem;
   color: var(--gray-700);
   line-height: 1.4;
+  /* Hide team lead name and info */
+  display: none;
 }
 
 .sidebar-user-role {
@@ -24,6 +26,12 @@
   box-shadow: 0 0 0 2px var(--red-400, #f87171);
   border-color: var(--red-500, #ef4444);
   background: var(--red-200, #fecaca);
+}
+
+/* Center the + and - content inside the interaction buttons  */
+.interaction-btn {
+	justify-content: center;
+	text-align: center; /* fallback for non-flex user agents */
 }
 
 /* Interaction Report Form Styles */
@@ -145,6 +153,120 @@ body.dashboard-page {
   color: var(--gray-900, #111827);
   height: 100vh;
   overflow: hidden;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  width: 180px;
+  background: var(--teal-50, #f0fdfa);
+  border-right: 2px solid var(--gray-200, #e5e7eb);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--teal-600, #0d9488);
+  margin: 0;
+}
+
+.sidebar-logo {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-logo img {
+  max-width: 100%;
+  height: auto;
+}
+
+.main-menu-header {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-600, #4b5563);
+  margin: 1rem 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar nav a {
+  text-decoration: none;
+  color: var(--gray-700, #374151);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.sidebar nav a::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.sidebar nav a[href*="dashboard"]::before,
+.sidebar nav a[href*="courses"]::before {
+  background-image: url('/assets/home.png');
+}
+
+.sidebar nav a[href*="lecture"]::before {
+  background-image: url('/assets/online-education.png');
+}
+
+.sidebar nav a[href*="meeting"]::before {
+  background-image: url('/assets/talk.png');
+}
+
+.sidebar nav a[href*="journal"]::before {
+  background-image: url('/assets/journal.png');
+}
+
+.sidebar nav a[href*="directory"]::before {
+  background-image: url('/assets/directory.png');
+}
+
+.sidebar nav a:hover {
+  background: var(--emerald-50, #ecfdf5);
+  color: var(--teal-600, #0d9488);
+}
+
+.sidebar nav a.active {
+  background: var(--emerald-100, #d1fae5);
+  color: var(--teal-700, #0f766e);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar footer {
+  margin-top: auto;
+  border-top: 1px solid var(--gray-200, #e5e7eb);
+  padding-top: 1rem;
+}
+
+.sidebar footer .btn-ghost {
+  font-size: 0.9rem;
+  padding: 0.5rem;
 }
 
 /* Main Container */

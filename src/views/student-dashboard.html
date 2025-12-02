@@ -3,156 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Dashboard</title>
-
+  <title>Student & Student Lead Dashboard</title>
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/dashboard-global.css">
-  <link rel="stylesheet" href="/css/instructor-dashboard.css">
+  <link rel="stylesheet" href="/css/student-dashboard.css">
 </head>
 
 <body class="dashboard-page">
-
-  <!-- Hamburger Menu Button (mobile only, same as instructor) -->
   <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
   </button>
 
-  <!-- Sidebar Navigation (reuse instructor styling) -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
-    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    
+    <footer>
+      <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
   </header>
 
-  <!-- Main Content -->
   <main class="main-container" id="main">
-    <h2 class="page-title">Dashboard</h2>
+    <!-- Top Bar with User Icon -->
+    <div class="dashboard-header">
+      <img src="/assets/user.png" alt="User Profile" class="user-profile-icon">
+    </div>
 
-    <section class="frame" role="region" aria-label="Student dashboard content">
-      <section class="content">
+    <!-- Welcome Banner with Polaroid -->
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <h2>Welcome, Helena Bender!</h2>
+        <p>See what happened with your course and team!</p>
+      </div>
+      <div class="polaroid-container">
+        <div class="polaroid">
+          <div class="polaroid-tape"></div>
+          <div class="course-info">
+            <h3>CSE 210: Software Engineering</h3>
+            <p>Insert course description<br>& team information</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        <!-- TOP ROW: Course info (left) + Recent Activity (right) -->
-        <section class="top-cards-wrapper">
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Attendance Card -->
+        <div class="dashboard-card attendance-card">
+          <h4>Attendance</h4>
+          <div class="attendance-item">
+            <span class="attendance-label">Lecture</span>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 98%"></div>
+              </div>
+              <span class="progress-percentage">98%</span>
+            </div>
+          </div>
+          <div class="attendance-item">
+            <span class="attendance-label">Team Meetings</span>
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div>
+              </div>
+              <span class="progress-percentage">100%</span>
+            </div>
+          </div>
+        </div>
 
-          <!-- Course Info (instructor-style card) -->
-          <article class="card card-course-info" aria-label="Course information">
-            <strong class="course-code">CSE 210</strong>
-            <p class="course-title">Software Engineering</p>
-            <p class="course-term">Fall 2025</p>
+        <!-- Course Status Card -->
+        <div class="dashboard-card course-status-card">
+          <h4>Course Status</h4>
+          <div class="status-content">
+            <div class="circular-progress">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
+                        stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
+              </svg>
+              <div class="progress-text">75%</div>
+            </div>
+            <div class="status-legend">
+              <div class="legend-item">
+                <span class="legend-dot completed"></span>
+                <span>Completed</span>
+                <span class="legend-dot in-progress"></span>
+                <span>In-Progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <dl class="course-schedule">
-              <dt>Lectures</dt>
-              <dd>Tue/Thu 5:00–6:20 pm</dd>
+      <!-- Middle Column -->
+      <div class="middle-column">
+        <!-- Announcements Card -->
+        <div class="dashboard-card announcements-card">
+          <h4>Announcements</h4>
+          <div class="announcements-list">
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Upcoming Final Exam</h5>
+                <p>Prepare for final exam this week...</p>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Team Meeting</h5>
+                <p>Weekly team standup scheduled...</p>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="announcement-date">10/10/25</div>
+              <div class="announcement-content">
+                <h5>Project Deadline</h5>
+                <p>Final project due next Friday...</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <dt>Office Hours</dt>
-              <dd>Tue 2–4 pm</dd>
-            </dl>
+        <!-- Recent Progress Card -->
+        <div class="dashboard-card recent-progress-card">
+          <h4>Recent Progress</h4>
+          <div class="progress-placeholder">
+            <div class="weeks-timeline">
+              <div class="week-item current">
+                <div class="week-header">
+                  <div class="week-number">Week 10</div>
+                  <div class="week-dates">Nov 25 - Dec 01</div>
+                </div>
+                <div class="week-status upcoming">Upcoming: Final presentations, Code reviews</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 9</div>
+                  <div class="week-dates">Nov 18 - Nov 24</div>
+                </div>
+                <div class="week-status completed">Completed: Sprint retrospective, Team standup</div>
+              </div>
+              <div class="week-item">
+                <div class="week-header">
+                  <div class="week-number">Week 8</div>
+                  <div class="week-dates">Nov 11 - Nov 17</div>
+                </div>
+                <div class="week-status completed">Completed: Unit testing, Documentation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <figure class="course-stats">
-              <figcaption class="stat-item">
-                <span class="stat-value">13</span>
-                <span class="stat-label">Group Members</span>
-              </figcaption>
-              <figcaption class="stat-item">
-                <span class="stat-value">2</span>
-                <span class="stat-label">Assignments Due</span>
-              </figcaption>
-              <figcaption class="stat-item">
-                <span class="stat-value">4</span>
-                <span class="stat-label">Weeks Left</span>
-              </figcaption>
-            </figure>
-          </article>
+      <!-- Right Column -->
+      <div class="right-column">
+        <!-- TODO Card -->
+        <div class="dashboard-card todo-card">
+          <h4>TODO</h4>
+          <div class="todo-list">
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item One</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item Two</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Item Three</span>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <span>Complete Assignment</span>
+            </div>
+          </div>
+        </div>
 
-          <!-- Recent Activity (now top-right card) -->
-          <article class="card" aria-label="Recent activity">
-            <h3>Recent Activity</h3>
-            <section class="student-card-body">
-              <p><strong>Tasks completed:</strong> Finished API unit tests, submitted Week 6 reflection</p>
-              <p><strong>Upcoming tasks:</strong> Finalize slides for Thursday presentation, update team repo README</p>
-              <p><strong>Recent communications:</strong> TA left feedback on sprint board; team lead requested slide draft by Tuesday night</p>
-            </section>
-          </article>
-
-        </section>
-
-        <!-- REPORTS + MENTAL HEALTH ROW -->
-        <section class="content-row student-mid-row">
-
-          <!-- Reports -->
-          <article class="card student-reports-card" aria-label="Reports">
-            <h3>Reports</h3>
-            <section class="student-card-body">
-              <section class="student-placeholder-box">
-                <p><strong>Status report</strong></p>
-                <p>High-level summary of what you accomplished this week and what’s blocked.</p>
-              </section>
-              <section class="student-placeholder-box">
-                <p><strong>Visual diagram of work done</strong></p>
-                <p>Space for architecture diagrams, workflow sketches, or links to design docs.</p>
-              </section>
-            </section>
-          </article>
-
-          <!-- Mental Health -->
-          <article class="card student-mental-card" aria-label="Mental health check-ins">
-            <h3>Mental Health</h3>
-            <section class="student-card-body">
-              <section class="student-placeholder-box">
-                <p><strong>Pulses</strong></p>
-                <p>How are you feeling personally, about your team, and about the course this week?</p>
-                <p>If something isn’t going well, you can leave notes here so staff know how to support you.</p>
-              </section>
-            </section>
-          </article>
-
-        </section>
-
-        <!-- AVAILABILITY / CALENDAR -->
-        <section class="card student-availability-card" aria-label="Availability">
-          <h3>Weekly Calendar</h3>
-          <section class="student-card-body">
-            <p><strong>This week:</strong> Team presentation due on Thursday during lecture.</p>
-
-            <section class="student-placeholder-box student-availability-box">
-              <p>Weekly calendar placeholder</p>
-              <table class="student-calendar" aria-label="Weekly availability">
-                <thead>
-                  <tr>
-                    <th>Mon</th>
-                    <th>Tue</th>
-                    <th>Wed</th>
-                    <th>Thu</th>
-                    <th>Fri</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td></td>
-                    <td>5:00–6:20pm<br>Lecture</td>
-                    <td></td>
-                    <td class="student-calendar-event">5:00–6:20pm<br>Lecture + Presentation</td>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </table>
-            </section>
-          </section>
-        </section>
-
-      </section>
-    </section>
+        <!-- Journal Entries Card -->
+        <div class="dashboard-card journal-card">
+          <h4>Journal Entries</h4>
+          <div class="journal-list">
+            <div class="journal-entry">Nov 22nd</div>
+            <div class="journal-entry">Oct 12th</div>
+            <div class="journal-entry">Sep 28th</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="/js/dashboard.service.js"></script>
