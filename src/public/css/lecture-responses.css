@@ -18,6 +18,7 @@
   gap: 1rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .question-toolbar label {
@@ -39,6 +40,22 @@
   color: var(--gray-600, #4b5563);
   display: flex;
   align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.live-indicator {
+  color: var(--green-500, #22c55e);
+  font-size: 0.6rem;
+  animation: pulse-indicator 2s ease-in-out infinite;
+}
+
+@keyframes pulse-indicator {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .response-list {
@@ -54,6 +71,7 @@
   display: flex;
   gap: 1rem;
   background: var(--gray-50, #f9fafb);
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .response-avatar {
@@ -86,6 +104,13 @@
   color: var(--gray-900, #111827);
 }
 
+.response-body h3 span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gray-500, #6b7280);
+  margin-left: 0.35rem;
+@media (width <= 768px) {
+  .responses-header {
 .response-body h3 span {
   font-size: 0.85rem;
   font-weight: 500;
