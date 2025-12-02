@@ -296,8 +296,17 @@
         
         const editDeleteButtons = canManageAnnouncements ? `
           <div class="announcement-actions">
-            <button class="announcement-edit-btn" data-announcement-id="${announcement.id}" aria-label="Edit announcement">✏️</button>
-            <button class="announcement-delete-btn" data-announcement-id="${announcement.id}" aria-label="Delete announcement">🗑️</button>
+            <button class="announcement-edit-btn" data-announcement-id="${announcement.id}" aria-label="Edit announcement">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="announcement-delete-btn" data-announcement-id="${announcement.id}" aria-label="Delete announcement">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 4H14M12.6667 4V13.3333C12.6667 14 12 14.6667 11.3333 14.6667H4.66667C4 14.6667 3.33333 14 3.33333 13.3333V4M5.33333 4V2.66667C5.33333 2 6 1.33333 6.66667 1.33333H9.33333C10 1.33333 10.6667 2 10.6667 2.66667V4M6.66667 7.33333V11.3333M9.33333 7.33333V11.3333" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
         ` : '';
         

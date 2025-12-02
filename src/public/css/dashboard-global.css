@@ -807,25 +807,59 @@ body.dashboard-page {
 
 .announcement-edit-btn,
 .announcement-delete-btn {
-  background: transparent;
-  border: 1px solid var(--palette-accent, #99F6E4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 6px;
-  padding: 4px 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  transition: all 0.2s;
+  transition: all 0.15s;
   flex-shrink: 0;
+  border: 1px solid;
+}
+
+.announcement-edit-btn {
+  background: transparent;
+  border-color: var(--palette-accent, #99F6E4);
+  color: var(--palette-primary, #0F766E);
 }
 
 .announcement-edit-btn:hover {
   background: var(--palette-accent, #99F6E4);
   border-color: var(--palette-secondary, #83D7CF);
+  transform: scale(1.05);
+}
+
+.announcement-edit-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.announcement-delete-btn {
+  border-color: var(--red-200, #fecaca);
+  background: var(--red-50, #fef2f2);
+  color: var(--red-600, #dc2626);
 }
 
 .announcement-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
+  background: var(--red-100, #fee2e2);
+  border-color: var(--red-300, #fca5a5);
+  color: var(--red-700, #b91c1c);
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgb(220 38 38 / 20%);
+}
+
+.announcement-delete-btn:active {
+  transform: scale(0.95);
+}
+
+.announcement-delete-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
 }
 
 .announcement-item {
