@@ -153,12 +153,6 @@ const findOrCreateUser = async (email, defaults = {}) => {
     let user = await findUserByEmail(email);
     
     if (!user) {
-<<<<<<< HEAD
-      // Simple user creation with primary_role defaulting to 'unregistered'
-      const result = await pool.query(
-        `INSERT INTO users (email, name, primary_role) VALUES ($1, $2, $3) 
-         ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name 
-=======
       // Simple user creation with sensible defaults:
       // - primary_role defaults to 'unregistered'
       // - status defaults to 'active' to satisfy NOT NULL constraint
@@ -167,7 +161,6 @@ const findOrCreateUser = async (email, defaults = {}) => {
          VALUES ($1, $2, $3, 'active'::user_status_enum) 
          ON CONFLICT (email) DO UPDATE SET 
            name = EXCLUDED.name 
->>>>>>> feature/enhance-instructor-dashboard
          RETURNING *`,
         [
           email,
@@ -925,11 +918,7 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
 
     // Admin and instructor can access team lead dashboard (for viewing)
     if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
-<<<<<<< HEAD
-      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
-=======
       return res.sendFile(buildFullViewPath("student-dashboard.html"));
->>>>>>> feature/enhance-instructor-dashboard
     }
 
     // Check if user is a team lead
@@ -947,11 +936,7 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
       return res.redirect("/student-dashboard");
     }
 
-<<<<<<< HEAD
-    return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
-=======
     return res.sendFile(buildFullViewPath("student-dashboard.html"));
->>>>>>> feature/enhance-instructor-dashboard
   } catch (error) {
     console.error("Error accessing team lead dashboard:", error);
     return res.status(500).send("Internal server error");
@@ -1220,14 +1205,8 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     if (enrollmentRoleForAccess === 'student' || enrollmentRoleForAccess === 'team-lead' || 
         user.primary_role === 'student' || user.primary_role === 'admin' || 
         user.primary_role === 'instructor') {
-<<<<<<< HEAD
-      // Serve team lead view if user is a team lead, otherwise student view
-      if (isTeamLead) {
-        // Team leads get the enhanced team lead dashboard
-=======
       // Team leads get the enhanced team lead dashboard with create meeting functionality
       if (isTeamLead) {
->>>>>>> feature/enhance-instructor-dashboard
         return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
       } else {
         // Regular students get the student view
@@ -1281,8 +1260,6 @@ app.get("/meetings/team-lead", ensureAuthenticated, async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-=======
 // -------------------- JOURNAL ROUTES --------------------
 
 /**
@@ -1423,7 +1400,6 @@ app.get("/tutor-journal", ensureAuthenticated, async (req, res) => {
   }
 });
 
->>>>>>> feature/enhance-instructor-dashboard
 // serve all your static files (HTML, CSS, JS, etc.) - serve project root for any other static files
 app.use(express.static(path.join(__dirname, "..")));
 
@@ -1659,20 +1635,8 @@ app.get("/auth/failure", async (req, res) => {
 
 // Login route - redirect to Google OAuth
 app.get("/login", (req, res) => {
-<<<<<<< HEAD
-  // Clear Passport user and Redis session if any
-  try {
-    safeLogout(req);
-    safeDestroySession(req);
-  } catch (err) {
-    console.error("⚠️ Error while resetting session on /login:", err);
-  }
-
-  res.sendFile(buildFullViewPath("login.html"));
-=======
   // Redirect to Google OAuth
   res.redirect("/auth/google");
->>>>>>> feature/enhance-instructor-dashboard
 });
 
 // Health check endpoint (public, no authentication required)
