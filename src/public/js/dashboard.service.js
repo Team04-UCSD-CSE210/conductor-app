@@ -239,7 +239,7 @@
    */
   async function getAnnouncements(offeringId) {
     try {
-      const response = await apiFetch(`/offerings/${offeringId}/announcements`);
+      const response = await apiFetch(`/announcements?offering_id=${offeringId}`);
       return Array.isArray(response) ? response : (response.announcements || []);
     } catch (error) {
       console.error('Error getting announcements:', error);
@@ -251,9 +251,31 @@
    * Create an announcement
    */
   async function createAnnouncement(offeringId, announcementData) {
-    return apiFetch(`/offerings/${offeringId}/announcements`, {
+    return apiFetch('/announcements', {
       method: 'POST',
+      body: JSON.stringify({
+        ...announcementData,
+        offering_id: offeringId
+      })
+    });
+  }
+
+  /**
+   * Update an announcement
+   */
+  async function updateAnnouncement(announcementId, announcementData) {
+    return apiFetch(`/announcements/${announcementId}`, {
+      method: 'PUT',
       body: JSON.stringify(announcementData)
+    });
+  }
+
+  /**
+   * Delete an announcement
+   */
+  async function deleteAnnouncement(announcementId) {
+    return apiFetch(`/announcements/${announcementId}`, {
+      method: 'DELETE'
     });
   }
 
@@ -527,6 +549,8 @@
     // Announcements
     getAnnouncements,
     createAnnouncement,
+    updateAnnouncement,
+    deleteAnnouncement,
     // Attendance
     getSessionStatistics,
     getAttendanceSessions,

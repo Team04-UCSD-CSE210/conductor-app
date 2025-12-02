@@ -229,13 +229,18 @@
 
       announcementsList.innerHTML = announcements.slice(0, 5).map(announcement => {
         const date = new Date(announcement.created_at || announcement.date || Date.now());
-        const dateStr = date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' });
+        // Format date as MM/DD/YY (e.g., 12/01/25)
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+        const dateStr = `${month}/${day}/${year}`;
+        
         const title = announcement.title || announcement.subject || 'Announcement';
         const content = announcement.content || announcement.body || announcement.message || '';
         const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
         
         return `
-          <div class="announcement-item">
+          <div class="announcement-item clickable-announcement" data-announcement-id="${announcement.id}">
             <div class="announcement-date">${escapeHtml(dateStr)}</div>
             <div class="announcement-content">
               <h5>${escapeHtml(title)}</h5>
@@ -244,6 +249,24 @@
           </div>
         `;
       }).join('');
+
+      // Store announcements data for access in event handlers
+      announcements.forEach(announcement => {
+        const item = announcementsList.querySelector(`[data-announcement-id="${announcement.id}"]`);
+        if (item) {
+          item._announcementData = announcement;
+        }
+      });
+
+      // Add click listener to announcement items to expand
+      announcementsList.querySelectorAll('.clickable-announcement').forEach(item => {
+        item.addEventListener('click', (e) => {
+          const announcement = item._announcementData;
+          if (announcement) {
+            openViewAnnouncementModal(announcement);
+          }
+        });
+      });
     } catch (error) {
       console.error('Error loading announcements:', error);
       announcementsList.innerHTML = '<p class="dashboard-error-state">Error loading announcements</p>';
@@ -337,6 +360,70 @@
     });
   }
 
+  // View announcement modal (for expanding announcements)
+  function initViewAnnouncementModal() {
+    const overlay = document.getElementById('viewAnnouncementModal');
+    const closeBtn = document.getElementById('viewAnnouncementModalClose');
+    if (!overlay) return;
+
+    function closeModal() {
+      overlay.setAttribute('aria-hidden', 'true');
+      try { overlay.inert = true; } catch { /* ignore if not available */ }
+      document.body.style.overflow = '';
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+        closeModal();
+      }
+    });
+
+    // Expose function to open the modal
+    window.openViewAnnouncementModal = function(announcement) {
+      function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+      
+      const date = new Date(announcement.created_at || announcement.date || Date.now());
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const year = String(date.getFullYear()).slice(-2);
+      const dateStr = `${month}/${day}/${year}`;
+      
+      const title = announcement.title || announcement.subject || 'Announcement';
+      const content = announcement.content || announcement.body || announcement.message || '';
+      
+      const dateEl = document.getElementById('viewAnnouncementDate');
+      const subjectEl = document.getElementById('viewAnnouncementSubject');
+      const messageEl = document.getElementById('viewAnnouncementMessage');
+      
+      if (dateEl) dateEl.textContent = dateStr;
+      if (subjectEl) subjectEl.textContent = title;
+      if (messageEl) {
+        messageEl.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
+      }
+      
+      overlay.setAttribute('aria-hidden', 'false');
+      try { overlay.inert = false; } catch { /* ignore if not available */ }
+      document.body.style.overflow = 'hidden';
+      
+      setTimeout(() => {
+        if (closeBtn) closeBtn.focus();
+      }, 50);
+    };
+  }
+
   // Clean up on page unload
   window.addEventListener('beforeunload', () => {
     if (refreshInterval) {
@@ -347,10 +434,12 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       initHamburger();
+      initViewAnnouncementModal();
       initDashboard();
     });
   } else {
     initHamburger();
+    initViewAnnouncementModal();
     initDashboard();
   }
 })();

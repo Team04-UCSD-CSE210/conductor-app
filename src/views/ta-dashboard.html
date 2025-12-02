@@ -165,7 +165,7 @@
   <script src="/js/colorblind-mode.js" defer></script>
   <script src="/js/ta-dashboard.js" defer></script>
   
-  <!-- Announcement Modal -->
+  <!-- Announcement Create/Edit Modal -->
   <div id="announcementModal" class="modal-overlay" aria-hidden="true" inert>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="announcementModalTitle">
       <header class="modal-header">
@@ -184,6 +184,23 @@
           <button type="submit" class="btn btn-primary" id="announcementSend">Send</button>
         </footer>
       </form>
+    </div>
+  </div>
+
+  <!-- View Announcement Modal (for expanding announcements) -->
+  <div id="viewAnnouncementModal" class="modal-overlay" aria-hidden="true" inert>
+    <div class="modal view-announcement-modal" role="dialog" aria-modal="true" aria-labelledby="viewAnnouncementModalTitle">
+      <header class="modal-header">
+        <h3 id="viewAnnouncementModalTitle">Announcement</h3>
+        <button class="modal-close" id="viewAnnouncementModalClose" aria-label="Close">×</button>
+      </header>
+      <div class="modal-body view-announcement-body">
+        <div class="view-announcement-date" id="viewAnnouncementDate"></div>
+        <div class="view-announcement-content">
+          <h4 id="viewAnnouncementSubject"></h4>
+          <p id="viewAnnouncementMessage"></p>
+        </div>
+      </div>
     </div>
   </div>
 </body>

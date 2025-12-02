@@ -19,6 +19,10 @@
     updateCourseProgress = () => {},
     updateStickyHeader = async () => {},
     updateWelcomeMessage = async () => {},
+    getAnnouncements = async () => [],
+    createAnnouncement = async () => ({}),
+    updateAnnouncement = async () => ({}),
+    deleteAnnouncement = async () => ({}),
   } = DS;
   
   let offeringId = null;
@@ -61,8 +65,129 @@
 
       // Update instructor attendance summary on the card
       await updateInstructorAttendance(offeringId);
+
+      // Load announcements from backend
+      await loadAnnouncements();
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+    }
+  }
+
+  // Load announcements from backend
+  async function loadAnnouncements() {
+    if (!offeringId) {
+      offeringId = await getActiveOfferingId();
+      if (!offeringId) return;
+    }
+
+    const announcementsList = document.querySelector('.announcements-list');
+    if (!announcementsList) return;
+
+    try {
+      const announcements = await getAnnouncements(offeringId);
+      
+      if (!announcements || announcements.length === 0) {
+        announcementsList.innerHTML = '<p class="dashboard-empty-state">No announcements</p>';
+        return;
+      }
+
+      // Helper function to escape HTML
+      function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Instructors can manage announcements
+      const canManageAnnouncements = true;
+
+      announcementsList.innerHTML = announcements.slice(0, 5).map(announcement => {
+        const date = new Date(announcement.created_at || announcement.date || Date.now());
+        // Format date as MM/DD/YY (e.g., 12/01/25)
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+        const dateStr = `${month}/${day}/${year}`;
+        
+        const title = announcement.title || announcement.subject || 'Announcement';
+        const content = announcement.content || announcement.body || announcement.message || '';
+        const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        
+        const editDeleteButtons = canManageAnnouncements ? `
+          <div class="announcement-actions">
+            <button class="announcement-edit-btn" data-announcement-id="${announcement.id}" aria-label="Edit announcement">✏️</button>
+            <button class="announcement-delete-btn" data-announcement-id="${announcement.id}" aria-label="Delete announcement">🗑️</button>
+          </div>
+        ` : '';
+        
+        return `
+          <div class="announcement-item clickable-announcement" data-announcement-id="${announcement.id}">
+            <div class="announcement-date">${escapeHtml(dateStr)}</div>
+            <div class="announcement-content">
+              <h5>${escapeHtml(title)}</h5>
+              <p>${escapeHtml(preview)}</p>
+            </div>
+            ${editDeleteButtons}
+          </div>
+        `;
+      }).join('');
+
+      // Store announcements data for access in event handlers
+      announcements.forEach(announcement => {
+        const item = announcementsList.querySelector(`[data-announcement-id="${announcement.id}"]`);
+        if (item) {
+          item._announcementData = announcement;
+        }
+      });
+
+      // Add click listener to announcement items to expand (except when clicking edit/delete buttons)
+      announcementsList.querySelectorAll('.clickable-announcement').forEach(item => {
+        item.addEventListener('click', (e) => {
+          // Don't expand if clicking on edit/delete buttons
+          if (e.target.closest('.announcement-actions')) {
+            return;
+          }
+          
+          const announcement = item._announcementData;
+          if (announcement) {
+            openViewAnnouncementModal(announcement);
+          }
+        });
+      });
+
+      // Add event listeners for edit and delete buttons
+      if (canManageAnnouncements) {
+        announcementsList.querySelectorAll('.announcement-edit-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const announcementId = btn.dataset.announcementId;
+            const announcement = announcements.find(a => a.id === announcementId);
+            if (announcement) {
+              openEditAnnouncementModal(announcement);
+            }
+          });
+        });
+
+        announcementsList.querySelectorAll('.announcement-delete-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const announcementId = btn.dataset.announcementId;
+            if (confirm('Are you sure you want to delete this announcement?')) {
+              try {
+                await deleteAnnouncement(announcementId);
+                await loadAnnouncements();
+              } catch (error) {
+                console.error('Error deleting announcement:', error);
+                alert('Failed to delete announcement. Please try again.');
+              }
+            }
+          });
+        });
+      }
+    } catch (error) {
+      console.error('Error loading announcements:', error);
+      announcementsList.innerHTML = '<p class="dashboard-error-state">Error loading announcements</p>';
     }
   }
 
@@ -398,22 +523,49 @@
   }
 
   // Announcement modal handling
+  let editingAnnouncementId = null;
+  
   function initAnnouncementModal() {
     const openBtn = document.getElementById('createAnnouncementBtn');
     const overlay = document.getElementById('announcementModal');
     const closeBtn = document.getElementById('announcementModalClose');
     const cancelBtn = document.getElementById('announcementCancel');
-  const form = document.getElementById('announcement-form');
+    const form = document.getElementById('announcement-form');
     const subjectInput = document.getElementById('announcement-subject');
     const bodyInput = document.getElementById('announcement-body');
-    const announcementsList = document.querySelector('.announcements-list');
-
-    if (!openBtn || !overlay || !form) return;
+    const modalTitle = document.getElementById('announcementModalTitle');
+    const submitBtn = document.getElementById('announcementSend');
+    if (!overlay || !form) return;
 
     let previouslyFocused = null;
     const mainContent = document.querySelector('main');
 
-    function openModal() {
+    function openModal(isEdit = false, announcement = null) {
+      editingAnnouncementId = isEdit && announcement ? announcement.id : null;
+      
+      // Update modal title
+      if (modalTitle) {
+        modalTitle.textContent = isEdit ? 'Edit Announcement' : 'New Announcement';
+      }
+      
+      // Update submit button text
+      if (submitBtn) {
+        submitBtn.textContent = isEdit ? 'Update' : 'Send';
+      }
+
+      // Populate form if editing
+      if (isEdit && announcement) {
+        if (subjectInput) {
+          subjectInput.value = announcement.subject || announcement.title || '';
+        }
+        if (bodyInput) {
+          bodyInput.value = announcement.message || announcement.body || announcement.content || '';
+        }
+      } else {
+        // Reset form for new announcement
+        form.reset();
+      }
+
       // save focused element to restore later
       previouslyFocused = document.activeElement;
 
@@ -447,6 +599,7 @@
 
       // reset form and restore focus
       form.reset();
+      editingAnnouncementId = null;
       if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
         previouslyFocused.focus();
       } else if (openBtn) {
@@ -454,7 +607,14 @@
       }
     }
 
-    openBtn.addEventListener('click', openModal);
+    // Open edit modal function (exposed for use by edit buttons)
+    window.openEditAnnouncementModal = function(announcement) {
+      openModal(true, announcement);
+    };
+
+    if (openBtn) {
+      openBtn.addEventListener('click', () => openModal(false));
+    }
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
@@ -470,45 +630,103 @@
       }
     });
 
-    // Submit handler: insert new announcement locally and optionally call service
+    // Submit handler: create or update announcement and reload list
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const subject = subjectInput.value.trim();
       const body = bodyInput.value.trim();
       if (!subject || !body) return;
 
-      // Build announcement element
-      const item = document.createElement('div');
-      item.className = 'announcement-item';
-      const date = new Date().toLocaleDateString();
-      item.innerHTML = `
-        <div class="announcement-date">${date}</div>
-        <div class="announcement-content">
-          <h5>${escapeHtml(subject)}</h5>
-          <p>${escapeHtml(body)}</p>
-        </div>
-      `;
-
-      if (announcementsList) {
-        announcementsList.prepend(item);
-      }
-
-      // Optionally call server via DashboardService (if available)
-      if (window.DashboardService && typeof window.DashboardService.createAnnouncement === 'function') {
-        try {
-          await window.DashboardService.createAnnouncement({ subject, body });
-        } catch (err) {
-          console.error('Failed to create announcement on server:', err);
+      if (!offeringId) {
+        offeringId = await getActiveOfferingId();
+        if (!offeringId) {
+          alert('Error: No active offering found');
+          return;
         }
       }
 
-      closeModal();
+      try {
+        if (editingAnnouncementId) {
+          // Update existing announcement
+          await updateAnnouncement(editingAnnouncementId, { subject, message: body });
+        } else {
+          // Create new announcement
+          await createAnnouncement(offeringId, { subject, message: body });
+        }
+        
+        // Reload announcements list
+        await loadAnnouncements();
+        
+        closeModal();
+      } catch (err) {
+        console.error('Failed to save announcement:', err);
+        alert(`Failed to ${editingAnnouncementId ? 'update' : 'create'} announcement. Please try again.`);
+      }
+    });
+  }
+
+  // View announcement modal (for expanding announcements)
+  function initViewAnnouncementModal() {
+    const overlay = document.getElementById('viewAnnouncementModal');
+    const closeBtn = document.getElementById('viewAnnouncementModalClose');
+    if (!overlay) return;
+
+    function closeModal() {
+      overlay.setAttribute('aria-hidden', 'true');
+      try { overlay.inert = true; } catch { /* ignore if not available */ }
+      document.body.style.overflow = '';
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
     });
 
-    // small HTML escape to avoid injection when inserting content
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, function (m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]; });
-    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') {
+        closeModal();
+      }
+    });
+
+    // Expose function to open the modal
+    window.openViewAnnouncementModal = function(announcement) {
+      function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+      
+      const date = new Date(announcement.created_at || announcement.date || Date.now());
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const year = String(date.getFullYear()).slice(-2);
+      const dateStr = `${month}/${day}/${year}`;
+      
+      const title = announcement.title || announcement.subject || 'Announcement';
+      const content = announcement.content || announcement.body || announcement.message || '';
+      
+      const dateEl = document.getElementById('viewAnnouncementDate');
+      const subjectEl = document.getElementById('viewAnnouncementSubject');
+      const messageEl = document.getElementById('viewAnnouncementMessage');
+      
+      if (dateEl) dateEl.textContent = dateStr;
+      if (subjectEl) subjectEl.textContent = title;
+      if (messageEl) {
+        messageEl.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
+      }
+      
+      overlay.setAttribute('aria-hidden', 'false');
+      try { overlay.inert = false; } catch { /* ignore if not available */ }
+      document.body.style.overflow = 'hidden';
+      
+      setTimeout(() => {
+        if (closeBtn) closeBtn.focus();
+      }, 50);
+    };
   }
 
   // Clean up on page unload
@@ -523,12 +741,14 @@
       initHamburger();
       initInteractionForm();
       initAnnouncementModal();
+      initViewAnnouncementModal();
       initDashboard();
     });
   } else {
     initHamburger();
     initInteractionForm();
     initAnnouncementModal();
+    initViewAnnouncementModal();
     initDashboard();
   }
 })();
