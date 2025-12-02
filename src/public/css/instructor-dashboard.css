@@ -189,7 +189,7 @@
 #announcement-form input[type="text"]:focus,
 #announcement-form textarea:focus {
   outline: none;
-  border-color: #83D7CF;
+  border-color: var(--palette-secondary, #83D7CF);
   box-shadow: 0 0 0 4px rgb(131 215 207 / 12%);
 }
 
@@ -265,7 +265,7 @@
 .attendance-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #0F766E;
+  color: var(--palette-primary, #0F766E);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

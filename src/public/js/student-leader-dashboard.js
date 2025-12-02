@@ -7,7 +7,7 @@
     return;
   }
 
-  const { getActiveOfferingId, getOfferingWithStats, getUserEnrollment, updateCourseInfo, updateStats, updateCourseProgress } = window.DashboardService;
+  const { getActiveOfferingId, getOfferingWithStats, getUserEnrollment, updateCourseInfo, updateStats, updateCourseProgress, updateStickyHeader, updateWelcomeMessage } = window.DashboardService;
   
   let offeringId = null;
   let refreshInterval = null;
@@ -34,6 +34,12 @@
       // Update course info and course progress
       updateCourseInfo(offering);
       updateCourseProgress(offering);
+      
+      // Update welcome message with user's name and role
+      await updateWelcomeMessage(offeringId);
+      
+      // Update sticky header with course details, timings, location, and team info
+      await updateStickyHeader(offeringId);
 
       // Load attendance statistics for the current student
       await updateStudentAttendance(offeringId);

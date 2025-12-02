@@ -7,8 +7,9 @@
 
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/dashboard-global.css">
-  <link rel="stylesheet" href="/css/ta-dashboard.css">
+  <link rel="stylesheet" href="/css/instructor-dashboard.css">
   <link rel="stylesheet" href="/css/student-dashboard.css">
+  <link rel="stylesheet" href="/css/ta-dashboard.css">
 </head>
 
 <body class="dashboard-page">
@@ -56,10 +57,10 @@
       </div>
     </div>
 
-    <!-- Dashboard Grid (three columns) -->
+    <!-- Dashboard Grid -->
     <div class="dashboard-grid">
-      <!-- Left Column -->
-      <div class="left-column">
+      <!-- Top row: Attendance, Announcements, Journal Entries -->
+      <div class="dashboard-row dashboard-row-top">
         <!-- Attendance Card -->
         <div class="dashboard-card attendance-card">
           <div class="card-header">
@@ -67,44 +68,40 @@
             <button id="createAttendanceBtn" class="btn btn-primary btn-create-attendance" aria-label="Add attendance">+</button>
           </div>
           <div class="attendance-list">
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 1</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 98%"></div>
-                </div>
-                <span class="progress-percentage">98%</span>
+            <p class="dashboard-loading-state">Loading attendance...</p>
               </div>
             </div>
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 2</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 100%"></div>
+
+        <!-- Announcements Card -->
+        <div class="dashboard-card announcements-card">
+          <div class="card-header">
+            <h4>Announcements</h4>
+            <button id="createAnnouncementBtn" class="btn btn-primary btn-create-announcement" aria-label="Create new announcement">Create New</button>
                 </div>
-                <span class="progress-percentage">100%</span>
+          <div class="announcements-list">
+            <p class="dashboard-loading-state">Loading announcements...</p>
               </div>
             </div>
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 3</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 100%"></div>
-                </div>
-                <span class="progress-percentage">60%</span>
-              </div>
+
+        <!-- Journal Entries Card -->
+        <div class="dashboard-card journal-card">
+          <h4>Journal Entries</h4>
+          <div class="journal-list">
+            <p class="dashboard-loading-state">Loading journal entries...</p>
             </div>
           </div>
         </div>
 
+      <!-- Bottom row: Course Status, Recent Progress, TODO -->
+      <div class="dashboard-row dashboard-row-bottom">
         <!-- Course Status Card -->
         <div class="dashboard-card course-status-card">
           <h4>Course Status</h4>
           <div class="status-content">
             <div class="circular-progress">
               <svg width="70" height="70" viewBox="0 0 70 70">
-                <circle cx="35" cy="35" r="28" fill="none" stroke="#83D7CF" stroke-width="4"/>
-                <circle cx="35" cy="35" r="28" fill="none" stroke="#0F766E" stroke-width="4" 
+                <circle cx="35" cy="35" r="28" fill="none" class="circular-progress-bg" stroke-width="4"/>
+                <circle cx="35" cy="35" r="28" fill="none" class="circular-progress-fill" stroke-width="4" 
                         stroke-dasharray="176" stroke-dashoffset="44" transform="rotate(-90 35 35)"/>
               </svg>
               <div class="progress-text">75%</div>
@@ -115,40 +112,6 @@
                 <span>Completed</span>
                 <span class="legend-dot in-progress"></span>
                 <span>In-Progress</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Middle Column -->
-      <div class="middle-column">
-        <!-- Announcements Card -->
-        <div class="dashboard-card announcements-card">
-          <div class="card-header">
-            <h4>Announcements</h4>
-            <button id="createAnnouncementBtn" class="btn btn-primary btn-create-announcement" aria-label="Create new announcement">Create New</button>
-          </div>
-          <div class="announcements-list">
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Upcoming Final Exam</h5>
-                <p>Prepare for final exam this week...</p>
-              </div>
-            </div>
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Team Meeting</h5>
-                <p>Weekly team standup scheduled...</p>
-              </div>
-            </div>
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Project Deadline</h5>
-                <p>Final project due next Friday...</p>
               </div>
             </div>
           </div>
@@ -179,76 +142,16 @@
                   <div class="week-dates">Nov 11 - Nov 17</div>
                 </div>
                 <div class="week-status completed">Completed: Unit testing, Documentation</div>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Right Column: Teams & Pulses -->
-      <div class="right-column">
-        <div class="dashboard-card teams-card">
-          <h4>Teams</h4>
-          <div class="teams-list">
-            <a href="/teams/1" class="team-item">
-              <div class="team-info">
-                <span class="team-name">Team 1</span>
-                <span class="team-count">8 members</span>
-              </div>
-              <div class="team-pulse">
-                <span class="pulse-dot pulse-positive" aria-hidden="true"></span>
-              </div>
-            </a>
-            <a href="/teams/2" class="team-item">
-              <div class="team-info">
-                <span class="team-name">Team 2</span>
-                <span class="team-count">8 members</span>
-              </div>
-              <div class="team-pulse">
-                <span class="pulse-dot pulse-warning" aria-hidden="true"></span>
-              </div>
-            </a>
-            <a href="/teams/3" class="team-item">
-              <div class="team-info">
-                <span class="team-name">Team 3</span>
-                <span class="team-count">7 members</span>
-              </div>
-              <div class="team-pulse">
-                <span class="pulse-dot pulse-negative" aria-hidden="true"></span>
-              </div>
-            </a>
-            <a href="/teams/4" class="team-item">
-              <div class="team-info">
-                <span class="team-name">Team 4</span>
-                <span class="team-count">7 members</span>
-              </div>
-              <div class="team-pulse">
-                <span class="pulse-dot pulse-negative" aria-hidden="true"></span>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        <!-- TODO Card -->
+        <!-- TODO Card (items loaded from backend) -->
         <div class="dashboard-card todo-card">
           <h4>TODO</h4>
           <div class="todo-list">
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item One</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item Two</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item Three</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Complete Assignment</span>
-            </div>
+            <!-- Items populated by todo-widget.js -->
           </div>
         </div>
       </div>

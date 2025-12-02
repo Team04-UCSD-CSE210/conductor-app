@@ -234,6 +234,278 @@
     }).join('');
   }
 
+  /**
+   * Get announcements for an offering
+   */
+  async function getAnnouncements(offeringId) {
+    try {
+      const response = await apiFetch(`/offerings/${offeringId}/announcements`);
+      return Array.isArray(response) ? response : (response.announcements || []);
+    } catch (error) {
+      console.error('Error getting announcements:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Create an announcement
+   */
+  async function createAnnouncement(offeringId, announcementData) {
+    return apiFetch(`/offerings/${offeringId}/announcements`, {
+      method: 'POST',
+      body: JSON.stringify(announcementData)
+    });
+  }
+
+  /**
+   * Get attendance statistics for a session
+   */
+  async function getSessionStatistics(sessionId) {
+    try {
+      return await apiFetch(`/attendance/sessions/${sessionId}/statistics`);
+    } catch (error) {
+      console.error('Error getting session statistics:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get attendance sessions for an offering
+   */
+  async function getAttendanceSessions(offeringId) {
+    try {
+      const response = await apiFetch(`/sessions?offering_id=${offeringId}`);
+      return Array.isArray(response) ? response : (response.sessions || []);
+    } catch (error) {
+      console.error('Error getting attendance sessions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get current user's team for an offering
+   */
+  async function getMyTeam(offeringId) {
+    try {
+      const response = await apiFetch(`/teams/my-team?offering_id=${offeringId}`);
+      return response.team || null;
+    } catch (error) {
+      // User might not be in a team, which is fine
+      return null;
+    }
+  }
+
+  /**
+   * Format class timings from JSONB to readable format (e.g., "TTh 2:00 PM - 3:20 PM")
+   */
+  function formatClassTimings(classTimings) {
+    if (!classTimings || typeof classTimings !== 'object') {
+      return null;
+    }
+
+    // Handle array of timing objects
+    if (Array.isArray(classTimings)) {
+      return classTimings.map(timing => formatSingleTiming(timing)).filter(Boolean).join('; ');
+    }
+
+    // Handle single timing object
+    return formatSingleTiming(classTimings);
+  }
+
+  function formatSingleTiming(timing) {
+    if (!timing || typeof timing !== 'object') return null;
+
+    const days = timing.days || timing.day || [];
+    const startTime = timing.start_time || timing.startTime;
+    const endTime = timing.end_time || timing.endTime;
+
+    if (!days || days.length === 0) return null;
+
+    // Format days (e.g., ["Tuesday", "Thursday"] -> "TTh")
+    const dayAbbrev = {
+      'Monday': 'M',
+      'Tuesday': 'T',
+      'Wednesday': 'W',
+      'Thursday': 'Th',
+      'Friday': 'F',
+      'Saturday': 'S',
+      'Sunday': 'Su'
+    };
+
+    const dayCodes = days.map(day => {
+      const dayName = typeof day === 'string' ? day : day.name || day.day;
+      return dayAbbrev[dayName] || dayName.substring(0, 2);
+    }).join('');
+
+    // Format times
+    let timeStr = '';
+    if (startTime) {
+      const start = formatTime(startTime);
+      const end = endTime ? formatTime(endTime) : null;
+      timeStr = start + (end ? ` - ${end}` : '');
+    }
+
+    return timeStr ? `${dayCodes} ${timeStr}` : dayCodes;
+  }
+
+  function formatTime(timeStr) {
+    if (!timeStr) return '';
+    
+    try {
+      // Handle "HH:MM" or "HH:MM:SS" format
+      const parts = timeStr.split(':');
+      if (parts.length < 2) return timeStr;
+
+      let hours = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      
+      if (hours === 0) hours = 12;
+      else if (hours > 12) hours -= 12;
+
+      return `${hours}:${minutes} ${ampm}`;
+    } catch (e) {
+      return timeStr;
+    }
+  }
+
+  /**
+   * Get current user info
+   */
+  async function getCurrentUser() {
+    try {
+      return await apiFetch('/users/me');
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update welcome message with user's name and role
+   */
+  async function updateWelcomeMessage(offeringId) {
+    try {
+      const welcomeH2 = document.querySelector('.welcome-content h2');
+      const welcomeP = document.querySelector('.welcome-content p');
+      
+      if (!welcomeH2 || !welcomeP) return;
+
+      // Get current user
+      const user = await getCurrentUser();
+      if (!user) return;
+
+      // Get user's enrollment role in the offering
+      let enrollmentRole = null;
+      if (offeringId && user.id) {
+        const enrollment = await getUserEnrollment(offeringId, user.id);
+        if (enrollment && enrollment.course_role) {
+          enrollmentRole = enrollment.course_role.toUpperCase(); // "ta", "tutor", "student"
+        }
+      }
+
+      // Use preferred_name or name
+      const displayName = user.preferred_name || user.name || 'User';
+      
+      // Update welcome heading
+      welcomeH2.textContent = `Welcome, ${displayName}!`;
+
+      // Update welcome message based on role
+      if (enrollmentRole) {
+        const roleDisplay = enrollmentRole === 'TA' ? 'TA' : 
+                           enrollmentRole === 'TUTOR' ? 'Tutor' :
+                           enrollmentRole === 'STUDENT' ? 'Student' : enrollmentRole;
+        welcomeP.textContent = `You are registered in the course as a ${roleDisplay}.`;
+      } else if (user.primary_role === 'instructor') {
+        welcomeP.textContent = 'See what happened with your course and team!';
+      } else if (user.primary_role) {
+        // Fallback to primary role if no enrollment role
+        const roleDisplay = user.primary_role === 'student' ? 'Student' :
+                           user.primary_role.charAt(0).toUpperCase() + user.primary_role.slice(1);
+        welcomeP.textContent = `You are registered in the course as a ${roleDisplay}.`;
+      } else {
+        welcomeP.textContent = 'See what happened with your course and team!';
+      }
+    } catch (error) {
+      console.error('Error updating welcome message:', error);
+    }
+  }
+
+  /**
+   * Update sticky header (polaroid course info) with course details
+   */
+  async function updateStickyHeader(offeringId) {
+    try {
+      const courseInfoContainer = document.querySelector('.course-info');
+      if (!courseInfoContainer) return;
+
+      // Get offering details
+      const offering = await getOfferingWithStats(offeringId);
+      if (!offering) return;
+
+      // Get user's team (if any)
+      const userTeam = await getMyTeam(offeringId);
+
+      // Build course title
+      const courseTitle = courseInfoContainer.querySelector('h3');
+      if (courseTitle) {
+        const title = offering.code && offering.name 
+          ? `${offering.code}: ${offering.name}`
+          : offering.code || offering.name || 'Course';
+        courseTitle.textContent = title;
+      }
+
+      // Build course details
+      const detailsContainer = courseInfoContainer.querySelector('p');
+      if (detailsContainer) {
+        const details = [];
+
+        // Term and Year (e.g., "Fall 2025")
+        if (offering.term || offering.year) {
+          const termYear = [offering.term, offering.year].filter(Boolean).join(' ');
+          if (termYear) details.push(termYear);
+        }
+
+        // Department (if available)
+        if (offering.department) {
+          details.push(offering.department);
+        }
+
+        // Credits (if available)
+        if (offering.credits) {
+          details.push(`${offering.credits} credit${offering.credits !== 1 ? 's' : ''}`);
+        }
+
+        // Class timings (e.g., "TTh 2:00 PM - 3:20 PM")
+        const timings = formatClassTimings(offering.class_timings);
+        if (timings) {
+          details.push(`📅 ${timings}`);
+        }
+
+        // Location (e.g., "CSE Building, Room 1202")
+        if (offering.location) {
+          details.push(`📍 ${offering.location}`);
+        }
+
+        // Team information (for students only - not for instructors/TAs/tutors)
+        if (userTeam) {
+          const teamName = userTeam.name || (userTeam.team_number ? `Team ${userTeam.team_number}` : 'Team');
+          const role = userTeam.user_role === 'leader' ? 'Leader' : 'Member';
+          details.push(`👥 ${teamName} (${role})`);
+        }
+
+        // Fallback if no details
+        if (details.length === 0) {
+          details.push('Course information');
+        }
+
+        detailsContainer.innerHTML = details.join('<br>');
+      }
+    } catch (error) {
+      console.error('Error updating sticky header:', error);
+    }
+  }
+
   // Expose to global scope
   window.DashboardService = {
     getActiveOfferingId,
@@ -251,6 +523,19 @@
     getDashboardTodos,
     createDashboardTodo,
     updateDashboardTodo,
-    deleteDashboardTodo
+    deleteDashboardTodo,
+    // Announcements
+    getAnnouncements,
+    createAnnouncement,
+    // Attendance
+    getSessionStatistics,
+    getAttendanceSessions,
+    // Team info
+    getMyTeam,
+    // User info
+    getCurrentUser,
+    // Sticky header
+    updateStickyHeader,
+    updateWelcomeMessage
   };
 })();

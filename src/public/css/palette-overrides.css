@@ -44,6 +44,11 @@ body,
   background: var(--palette-background, #F0FDFA) !important;
 }
 
+/* Yellow welcome banner - always yellow, not configurable */
+.welcome-section {
+  background: #FFF6B6 !important;
+}
+
 /* ============================================================================
    SHADOWS (using neutral colors that work with all palettes)
    ============================================================================ */
@@ -277,6 +282,36 @@ button.btn-primary {
 
 .instructor-dashboard .attendance-label {
   color: var(--palette-primary, #0F766E) !important;
+}
+
+/* ============================================================================
+   ATTENDANCE ITEMS - CONFIGURABLE COLORS AND BORDERS
+   ============================================================================ */
+.attendance-item {
+  background: var(--palette-background, #F0FDFA) !important;
+  border-color: var(--palette-accent, #99F6E4) !important;
+}
+
+.attendance-label,
+.attendance-title {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.attendance-meta {
+  color: var(--gray-600, #4b5563) !important;
+}
+
+.progress-bar {
+  background: var(--palette-accent, #99F6E4) !important;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, var(--palette-primary, #0F766E), var(--palette-secondary, #83D7CF)) !important;
+}
+
+.progress-percentage {
+  color: var(--palette-primary, #0F766E) !important;
+  background: var(--palette-accent, #99F6E4) !important;
 }
 
 /* ============================================================================

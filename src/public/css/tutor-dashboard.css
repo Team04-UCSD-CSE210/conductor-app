@@ -1,105 +1,32 @@
-/* Tutor Dashboard */
+/* Tutor Dashboard specific overrides. */
 
-/* Dashboard Grid - Two Row Layout */
-.dashboard-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.dashboard-row {
-  display: grid;
-  gap: 16px;
-}
-
-/* Top row: Course Info, On Duty, TODOs */
+/* Top row: Attendance, Announcements, Journal Entries */
 .dashboard-row-top {
-  grid-template-columns: 0.8fr 0.8fr 0.8fr;
+  grid-template-columns: 1fr 1.5fr 0.8fr;
 }
 
-/* Bottom row: Queue, Recent Updates, Report Interaction */
+/* Bottom row: Course Status, Recent Progress, TODO */
 .dashboard-row-bottom {
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 0.8fr 1.5fr 0.8fr;
 }
 
-/* Make Report Interaction span full width in bottom row */
-.tutor-report-card {
-  grid-column: 1 / -1;
+/* Loading, Empty, and Error States */
+.dashboard-loading-state,
+.dashboard-empty-state,
+.dashboard-error-state {
+  padding: 1rem;
+  color: var(--palette-primary, var(--gray-600));
+  font-size: 0.95rem;
+  text-align: center;
+  }
+
+.dashboard-loading-state {
+  color: var(--palette-primary, var(--gray-500));
+  }
+
+.dashboard-error-state {
+  color: var(--error-color, #EF4444);
 }
 
-/* Ensure cards have consistent minimum heights */
-.dashboard-row-top .card {
-  min-height: 260px;
-}
 
-/* ============================================================================
-   MOBILE RESPONSIVE STYLES
-   ============================================================================ */
-
-/* Tablet and smaller: Stack rows vertically */
-@media (width < 1200px) {
-  .dashboard-row-top,
-  .dashboard-row-bottom {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .tutor-report-card {
-    grid-column: 1;
-  }
-
-  .dashboard-row-top .card {
-    min-height: 0;
-  }
-}
-
-/* Mobile: Full single column layout */
-@media (width < 768px) {
-  .dashboard-grid {
-    gap: 12px;
-  }
-
-  .dashboard-row-top,
-  .dashboard-row-bottom {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  /* Make interaction form stack vertically on mobile */
-  .interaction-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .interaction-col {
-    min-width: 100%;
-  }
-
-  /* Adjust course stats for mobile */
-  .card-course-info .course-stats {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .card-course-info {
-    height: auto;
-  }
-}
-
-/* Very small mobile devices */
-@media (width < 480px) {
-  .dashboard-grid {
-    gap: 10px;
-  }
-
-  .dashboard-row-top,
-  .dashboard-row-bottom {
-    gap: 10px;
-  }
-
-  .card {
-    padding: 12px;
-  }
-}
 

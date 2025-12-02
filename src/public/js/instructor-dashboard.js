@@ -17,6 +17,8 @@
     updateCourseInfo = () => {},
     updateStats = () => {},
     updateCourseProgress = () => {},
+    updateStickyHeader = async () => {},
+    updateWelcomeMessage = async () => {},
   } = DS;
   
   let offeringId = null;
@@ -39,6 +41,12 @@
       // Update course info and course progress
       updateCourseInfo(offering);
       updateCourseProgress(offering);
+      
+      // Update welcome message with user's name and role
+      await updateWelcomeMessage(offeringId);
+      
+      // Update sticky header with course details, timings, and location
+      await updateStickyHeader(offeringId);
 
       // Update stats
       const stats = {
