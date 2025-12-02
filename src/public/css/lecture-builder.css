@@ -18,15 +18,19 @@ body.lecture-builder-page .main-container {
   min-height: 100%;
 }
 
+.header-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .auto-save-indicator {
-  position: absolute;
-  top: 2rem;
-  right: 2rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
   color: var(--gray-500, #6b7280);
+  margin-left: auto;
 }
 
 .save-status {
