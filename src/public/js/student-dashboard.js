@@ -1,4 +1,5 @@
 // Student Dashboard Page Scripts
+/* global openViewAnnouncementModal */
 
 (function() {
   // Wait for DashboardService to be available
@@ -239,7 +240,7 @@
 
       // Add click listener to announcement items to expand
       announcementsList.querySelectorAll('.clickable-announcement').forEach(item => {
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', () => {
           const announcement = item._announcementData;
           if (announcement) {
             openViewAnnouncementModal(announcement);

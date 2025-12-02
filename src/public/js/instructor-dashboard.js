@@ -1,4 +1,5 @@
 // Instructor Dashboard Page Scripts
+/* global openViewAnnouncementModal, openEditAnnouncementModal */
 
 (function() {
   // DashboardService is optional for the modal UI; provide safe fallbacks so

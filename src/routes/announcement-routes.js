@@ -263,7 +263,7 @@ router.delete('/:id', ensureAuthenticated, async (req, res) => {
       });
     }
 
-    const deleted = await AnnouncementService.deleteAnnouncement(announcementId);
+    await AnnouncementService.deleteAnnouncement(announcementId);
 
     res.json({ deleted: true });
   } catch (err) {

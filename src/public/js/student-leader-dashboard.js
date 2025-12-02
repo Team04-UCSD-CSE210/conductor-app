@@ -1,4 +1,5 @@
 // Student Leader (Team Lead) Dashboard Page Scripts
+/* global openViewAnnouncementModal, openEditAnnouncementModal */
 
 (function() {
   // Wait for DashboardService to be available
@@ -7,7 +8,7 @@
     return;
   }
 
-  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo, updateCourseProgress, updateStickyHeader, updateWelcomeMessage, getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement, getTeams } = window.DashboardService;
+  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo, updateCourseProgress, updateStickyHeader, updateWelcomeMessage, getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } = window.DashboardService;
   
   let offeringId = null;
   let refreshInterval = null;

@@ -495,14 +495,14 @@ describe('Announcement Feature', () => {
 
     it('should not show team announcements to instructors/TAs/tutors', async () => {
       // Create both course-wide and team announcements
-      const courseAnnouncement = await AnnouncementService.createAnnouncement({
+      await AnnouncementService.createAnnouncement({
         offering_id: testOffering.id,
         subject: 'Course-wide Announcement',
         message: 'Everyone should see this',
         team_id: null
       }, testUser.id);
 
-      const teamAnnouncement = await AnnouncementService.createAnnouncement({
+      await AnnouncementService.createAnnouncement({
         offering_id: testOffering.id,
         subject: 'Team Announcement',
         message: 'Only team members should see this',

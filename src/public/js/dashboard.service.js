@@ -235,19 +235,6 @@
   }
 
   /**
-   * Get user's teams in an offering
-   */
-  async function getUserTeams(offeringId) {
-    try {
-      const response = await apiFetch(`/teams?offering_id=${offeringId}`);
-      return Array.isArray(response) ? response : (response.teams || []);
-    } catch (error) {
-      console.error('Error getting teams:', error);
-      return [];
-    }
-  }
-
-  /**
    * Get announcements for an offering
    */
   async function getAnnouncements(offeringId) {

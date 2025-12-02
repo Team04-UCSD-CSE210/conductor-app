@@ -796,6 +796,9 @@ body.dashboard-page {
 /* Announcement Actions (Edit/Delete buttons) */
 .announcement-item {
   position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 .announcement-actions {
@@ -848,7 +851,7 @@ body.dashboard-page {
 .announcement-edit-btn svg {
   width: 16px;
   height: 16px;
-  stroke: currentColor;
+  stroke: currentcolor;
 }
 
 .announcement-delete-btn {
@@ -862,7 +865,7 @@ body.dashboard-page {
   border-color: var(--red-300, #fca5a5);
   color: var(--red-700, #b91c1c);
   transform: scale(1.05);
-  box-shadow: 0 2px 4px rgb(220 38 38 / 20%);
+  box-shadow: 0 2px 4px rgb(220 38 38 / 15%);
 }
 
 .announcement-delete-btn:active {
@@ -872,13 +875,7 @@ body.dashboard-page {
 .announcement-delete-btn svg {
   width: 16px;
   height: 16px;
-  stroke: currentColor;
-}
-
-.announcement-item {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  stroke: currentcolor;
 }
 
 .announcement-content {
@@ -894,7 +891,7 @@ body.dashboard-page {
 
 .clickable-announcement:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
 }
 
 /* View Announcement Modal Styles */
