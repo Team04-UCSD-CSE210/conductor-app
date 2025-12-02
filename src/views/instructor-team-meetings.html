@@ -33,8 +33,7 @@
     </footer>
   </header>
   <main class="main-container" id="main">
-    <div class="attendance-layout">
-      <section class="attendance-content" data-offering-id="">
+    <div class="team-meeting-shell">
         <header class="header-container">
           <button class="header-back-button" id="back-button" aria-label="Back to meeting list">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -43,19 +42,18 @@
           </button>
           <header class="header-info">
             <p class="eyebrow">Team Meetings Overview</p>
-            <h2 id="team-title"></h2>
-            <p class="subtitle">Review all meeting attendance for this team.</p>
+            <h2 id="header-title"></h2>
+            <p class="header-subtitle">Review all meeting attendance for this team.</p>
           </header>
           <header class="attendance-stats">
             <p class="label">Attendance Overall</p>
             <p class="value" id="overall-attendance-value">—</p>
           </header>
         </header>
-        <div class="lecture-list" id="meeting-list" aria-live="polite"></div>
+        <div class="meeting-list" id="meeting-list" aria-live="polite"></div>
         <div class="empty-state" id="meeting-empty" hidden>
           <p>No meetings found for any team.</p>
         </div>
-      </section>
     </div>
   </main>
   <script type="module" src="/js/instructor-team-meetings.js"></script>

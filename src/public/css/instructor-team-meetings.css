@@ -11,53 +11,6 @@ body {
   background: var(--bg, #f6f7fb);
 }
 
-/* .sidebar {
-  background: var(--panel, #fff);
-  border-right: 1px solid var(--border, #e6e8ef);
-  padding: 16px;
-  min-height: 100vh;
-}
-
-.sidebar-role {
-  font-size: 12px;
-  color: var(--muted, #6b7280);
-  margin-bottom: 16px;
-}
-
-.sidebar-role strong {
-  color: var(--text, #0f172a);
-}
-
-.sidebar-sep {
-  border: 0;
-  border-top: 1px solid var(--border, #e6e8ef);
-  margin: 12px 0 16px;
-}
-
-.sidebar-nav {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 8px;
-} */
-
-/* .nav-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  text-decoration: none;
-  color: var(--text, #0f172a);
-  border: 1px solid transparent;
-}
-
-.nav-item:hover {
-  background: #fafafa;
-  border-color: var(--border, #e6e8ef);
-} */
-
 .team-container {
   max-width: 800px;
   margin: 2rem auto;
@@ -78,7 +31,15 @@ body {
 }
 
 .meeting-list {
-  margin-top: 2rem;
+  padding-top: 2rem;
+  flex: 1;
+  overflow: hidden auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .meeting-row {
@@ -115,4 +76,11 @@ body {
   color: var(--primary, #000);
   font-weight: 600;
   margin-left: 0.5em;
+}
+
+.team-meeting-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 100%;
 }
