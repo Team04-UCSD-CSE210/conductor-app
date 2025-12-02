@@ -15,7 +15,15 @@ describe('Announcement Feature', () => {
     await pool.query(`DELETE FROM team WHERE name LIKE 'Test Team%'`);
     await pool.query(`DELETE FROM users WHERE email LIKE 'test-%@ucsd.edu'`);
 
-    // Get existing CSE210 offering or use any offering
+    // Create test instructor user first (will be used for creating test offering if needed)
+    const userResult = await pool.query(
+      `INSERT INTO users (email, name, primary_role, status)
+       VALUES ('test-instructor@ucsd.edu', 'Test Instructor', 'instructor', 'active')
+       RETURNING *`
+    );
+    testUser = userResult.rows[0];
+
+    // Get existing offering or create one
     const existingOffering = await pool.query(
       `SELECT id, code FROM course_offerings LIMIT 1`
     );
@@ -23,31 +31,15 @@ describe('Announcement Feature', () => {
     if (existingOffering.rows.length > 0) {
       testOffering = existingOffering.rows[0];
     } else {
-      // If no offerings exist, create one with minimal required fields
-      const instructorResult = await pool.query(
-        `SELECT id FROM users WHERE primary_role = 'instructor' LIMIT 1`
-      );
-      
-      if (instructorResult.rows.length === 0) {
-        throw new Error('No instructor found. Database not properly seeded.');
-      }
-      
+      // Create test offering using the test instructor we just created
       const offeringResult = await pool.query(
         `INSERT INTO course_offerings (code, name, instructor_id, start_date, end_date)
          VALUES ('TEST-COURSE', 'Test Course', $1, CURRENT_DATE, CURRENT_DATE + INTERVAL '90 days')
          RETURNING id, code`,
-        [instructorResult.rows[0].id]
+        [testUser.id]
       );
       testOffering = offeringResult.rows[0];
     }
-
-    // Create test user
-    const userResult = await pool.query(
-      `INSERT INTO users (email, name, primary_role, status)
-       VALUES ('test-instructor@ucsd.edu', 'Test Instructor', 'instructor', 'active')
-       RETURNING *`
-    );
-    testUser = userResult.rows[0];
 
     // Create test students
     const student1Result = await pool.query(
