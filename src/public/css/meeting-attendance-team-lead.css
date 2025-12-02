@@ -106,6 +106,7 @@ flip-card-back {
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
+  color: var(--gray-900, #111827);
 }
 
 .team-lead-header h3 {
@@ -164,6 +165,29 @@ flip-card-back {
   position: relative;
   z-index: 10002;
   overflow: visible !important;
+}
+
+/* Create Meeting Button - Teal background */
+#create-meeting-btn.btn-primary {
+  background: var(--teal-600, #0d9488);
+  color: white;
+  border: none;
+}
+
+#create-meeting-btn.btn-primary:hover:not(:disabled) {
+  background: var(--teal-700, #0f766e);
+  color: white;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #dc2626;
 }
 
 @media (width <= 600px) {

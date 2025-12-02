@@ -55,10 +55,9 @@
 .lecture-status {
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
   min-width: 70px;
   text-align: center;
   flex-shrink: 0;
