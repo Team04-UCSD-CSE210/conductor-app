@@ -11,7 +11,6 @@ async function getParams() {
   };
 }
 
-<<<<<<< HEAD
 function initBackButton() {
   const backBtn = document.querySelector('.header-back-button');
   if (!backBtn) return;
@@ -19,8 +18,6 @@ function initBackButton() {
     window.location.href = '/instructor-meetings';
   });
 }
-=======
->>>>>>> feature/enhance-instructor-dashboard
 
 function renderTeamMeta(team) {
   const meta = document.getElementById('team-meta');
@@ -45,13 +42,8 @@ function renderMeetings(meetings, teamSize) {
   }
   let statsPromises = [];
   for (const meeting of meetings) {
-<<<<<<< HEAD
     const row = document.createElement('article');
-    row.className = 'attendance-card';
-=======
-    const row = document.createElement('div');
-    row.className = 'meeting-row';
->>>>>>> feature/enhance-instructor-dashboard
+    row.className = 'attendance-card-list';
     
     // Format date and time using session_date and session_time (same as team leader view)
     let timeStr = 'TBD';
@@ -138,17 +130,11 @@ function renderMeetings(meetings, teamSize) {
     }
     
     row.innerHTML = `
-<<<<<<< HEAD
-      <span class="attendance-card-label">${meeting.title || meeting.label || 'Meeting'}</span>
-      <div class="attendance-card-meta">
+      <span class="attendance-card-list-label">${meeting.title || meeting.label || 'Meeting'}</span>
+      <div class="attendance-card-list-meta">
       <span class="attendance-percent" id="attendance-${meeting.id}" style="margin-top:0.5rem;color:#444;font-size:0.98rem;">Loading attendance...</span>
       <span class="attendance-schedule">${timeStr}</span>
       </div>
-=======
-      <span class="meeting-title">${meeting.title || meeting.label || 'Meeting'}</span>
-      <span class="meeting-time">${timeStr}</span>
-      <span class="meeting-attendance" id="attendance-${meeting.id}" style="margin-top:0.5rem;color:#444;font-size:0.98rem;">Loading attendance...</span>
->>>>>>> feature/enhance-instructor-dashboard
     `;
     list.appendChild(row);
     
@@ -190,10 +176,6 @@ function renderMeetings(meetings, teamSize) {
     const overallEl = document.getElementById('overall-attendance-value');
     if (overallEl) overallEl.textContent = `${percent}%`;
   });
-<<<<<<< HEAD
-
-=======
->>>>>>> feature/enhance-instructor-dashboard
 }
 
 async function renderPage() {
@@ -209,20 +191,13 @@ async function renderPage() {
   let teamSize = 0;
   if (teamRes.ok) {
     team = await teamRes.json();
-<<<<<<< HEAD
     document.getElementById('header-title').textContent = team.name || `Team ${team.team_number}`;
-=======
-    document.getElementById('team-title').textContent = team.name || `Team ${team.team_number}`;
->>>>>>> feature/enhance-instructor-dashboard
     renderTeamMeta(team);
     teamSize = Array.isArray(team.members) ? team.members.length : 0;
   }
   const meetings = await fetchMeetings(teamId, offeringId);
   renderMeetings(meetings, teamSize);
-<<<<<<< HEAD
   initBackButton();
-=======
->>>>>>> feature/enhance-instructor-dashboard
 }
 
 document.addEventListener('DOMContentLoaded', renderPage);
