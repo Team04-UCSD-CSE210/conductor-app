@@ -101,15 +101,11 @@
 
   function createDeleteButton(lectureId, lectureLabel) {
     const button = document.createElement('button');
-    button.className = 'delete-button';
+    button.className = 'btn-link btn-delete';
     button.type = 'button';
     button.title = `Delete ${lectureLabel}`;
     button.setAttribute('aria-label', `Delete ${lectureLabel}`);
-    button.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 4H14M12.6667 4V13.3333C12.6667 14 12 14.6667 11.3333 14.6667H4.66667C4 14.6667 3.33333 14 3.33333 13.3333V4M5.33333 4V2.66667C5.33333 2 6 1.33333 6.66667 1.33333H9.33333C10 1.33333 10.6667 2 10.6667 2.66667V4M6.66667 7.33333V11.3333M9.33333 7.33333V11.3333" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
+    button.textContent = 'Delete';
     button.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (window.confirm(`Are you sure you want to delete "${lectureLabel}"? This action cannot be undone.`)) {

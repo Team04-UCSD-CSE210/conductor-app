@@ -267,6 +267,21 @@ body > :not(.footer) {
   background: var(--emerald-50);
 }
 
+.btn-delete {
+  background-color: var(--red-600, #dc2626) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background-color: var(--red-700, #b91c1c) !important;
+}
+
 .btn-cta-outline {
   background: transparent;
   border: 2px solid white;
@@ -570,9 +585,8 @@ body > :not(.footer) {
   }
 
   .main-container {
-    margin-left: 0;
-    color: purple;
-    width: 100%;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 
   .hamburger-menu {
@@ -580,6 +594,9 @@ body > :not(.footer) {
   }
 
   .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 999;

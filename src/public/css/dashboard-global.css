@@ -220,6 +220,7 @@ body.dashboard-page {
   background-position: center;
   margin-right: 8px;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .sidebar nav a[href*="dashboard"]::before,
@@ -241,6 +242,14 @@ body.dashboard-page {
 
 .sidebar nav a[href*="directory"]::before {
   background-image: url('/assets/directory.png');
+}
+
+.sidebar nav a[href*="roster"]::before {
+  background-image: url('/assets/directory.png');
+}
+
+.sidebar nav a[href*="settings"]::before {
+  background-image: url('/assets/welcome.png');
 }
 
 .sidebar nav a:hover {

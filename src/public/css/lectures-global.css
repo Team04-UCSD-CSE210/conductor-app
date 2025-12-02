@@ -95,6 +95,10 @@
   gap: 0.5rem;
 }
 
+.lecture-actions .btn-delete {
+  margin-left: 0.5rem;
+}
+
 .btn-link {
   border-radius: 9999px;
   border: 1.5px solid var(--teal-600, #0d9488);

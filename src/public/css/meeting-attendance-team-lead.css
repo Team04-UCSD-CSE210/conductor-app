@@ -101,30 +101,16 @@ flip-card-back {
     margin-left: auto;
 }
 
-.btn-delete {
-    background-color: var(--red-600, #dc2626) !important;
-    color: white !important;
-    border: none !important;
-}
-
-.btn-delete:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn-delete:hover:not(:disabled) {
-    background-color: var(--red-700, #b91c1c) !important;
-}
-
 .team-lead-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 1rem;
 }
 
 .team-lead-header h3 {
   margin: 0;
+  text-align: center;
 }
 
 .quick-setup {
@@ -138,6 +124,7 @@ flip-card-back {
   gap: 1rem;
   width: 100%;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .help-box.team-lead-card {
@@ -146,6 +133,8 @@ flip-card-back {
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.5rem;
+  border: 1px solid var(--emerald-200, #a7f3d0);
+  overflow: visible;
 }
 
 .meeting-time-grid {
@@ -162,10 +151,19 @@ flip-card-back {
   box-sizing: border-box;
 }
 
+.form-field {
+  overflow: visible;
+  position: relative;
+  z-index: 10003;
+}
+
 .attendance-sidebar {
   max-width: 300px;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
+  z-index: 10002;
+  overflow: visible !important;
 }
 
 @media (width <= 600px) {
