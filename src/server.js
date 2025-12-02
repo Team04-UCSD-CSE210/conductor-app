@@ -688,6 +688,27 @@ console.log("✅ OAuth callback configured for:", CALLBACK_URL);
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
 
+// Middleware to ensure session methods exist (fix passport session regeneration issue)
+app.use((req, res, next) => {
+  if (req.session) {
+    // Ensure regenerate method exists
+    if (!req.session.regenerate) {
+      req.session.regenerate = (cb) => {
+        console.warn('⚠️ Session regenerate called but not available, skipping');
+        cb();
+      };
+    }
+    // Ensure save method exists
+    if (!req.session.save) {
+      req.session.save = (cb) => {
+        console.warn('⚠️ Session save called but not available, skipping');
+        cb();
+      };
+    }
+  }
+  next();
+});
+
 // -------------------- MIDDLEWARE --------------------
 
 // Test route to verify sessions work
@@ -725,26 +746,33 @@ app.get("/dashboard", ensureAuthenticated, async (req, res) => {
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     
     // Route based on primary_role and enrollment role
+    // IMPORTANT: Admin and instructor checks must come FIRST, before any enrollment role checks
     if (user.primary_role === 'admin') {
       return res.redirect("/admin-dashboard");
     }
     
+    // Instructors ALWAYS go to instructor dashboard, regardless of enrollment role
     if (user.primary_role === 'instructor') {
       return res.redirect("/instructor-dashboard");
     }
     
-    // TA role comes from enrollments.course_role
-    if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+    // TA and tutor roles come from enrollments.course_role - check this BEFORE student check
+    // Also check primary_role === 'ta' as a fallback (defensive check)
+    if (enrollmentRole === 'tutor') {
+      return res.redirect("/tutor-dashboard");
+    }
+    if (enrollmentRole === 'ta' || user.primary_role === 'ta') {
       return res.redirect("/ta-dashboard");
     }
     
     // Check if user is a team lead - team leads get special dashboard
+    // Only check for team leads if they're students (not TAs)
     const isTeamLead = await isUserTeamLead(user.id);
     if (isTeamLead && (enrollmentRole === 'student' || user.primary_role === 'student')) {
       return res.redirect("/team-lead-dashboard");
     }
     
-    // Students and unregistered users
+    // Students and unregistered users (only if not TA/tutor)
     if (enrollmentRole === 'student' || user.primary_role === 'student') {
       return res.redirect("/student-dashboard");
     }
@@ -819,16 +847,47 @@ app.get("/ta-dashboard", ensureAuthenticated, async (req, res) => {
       return res.sendFile(buildFullViewPath("ta-dashboard.html"));
     }
 
-    // Check if user is enrolled as TA or tutor
+    // Check if user is enrolled as TA (not tutor - tutors have their own dashboard)
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
-    if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+    if (enrollmentRole === 'ta') {
       return res.sendFile(buildFullViewPath("ta-dashboard.html"));
     }
 
     // Not authorized
-    return res.status(403).send("Forbidden: You must be enrolled as a TA or tutor to access this dashboard");
+    return res.status(403).send("Forbidden: You must be enrolled as a TA to access this dashboard");
   } catch (error) {
     console.error("Error accessing TA dashboard:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+app.get("/tutor-dashboard", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Admin and instructor can access tutor dashboard (for viewing)
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("tutor-dashboard.html"));
+    }
+
+    // Check if user is enrolled as tutor
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("tutor-dashboard.html"));
+    }
+
+    // Not authorized
+    return res.status(403).send("Forbidden: You must be enrolled as a tutor to access this dashboard");
+  } catch (error) {
+    console.error("Error accessing tutor dashboard:", error);
     return res.status(500).send("Internal server error");
   }
 });
@@ -853,7 +912,15 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
     // Check if user is a team lead
     const isTeamLead = await isUserTeamLead(user.id);
     if (!isTeamLead) {
-      // Not a team lead, redirect to student dashboard
+      // Not a team lead, check if they're a tutor or TA and redirect accordingly
+      const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+      if (enrollmentRole === 'tutor') {
+        return res.redirect("/tutor-dashboard");
+      }
+      if (enrollmentRole === 'ta') {
+        return res.redirect("/ta-dashboard");
+      }
+      // Otherwise redirect to student dashboard
       return res.redirect("/student-dashboard");
     }
 
@@ -931,14 +998,68 @@ app.get("/lecture-responses", ...protectAny(['attendance.view', 'session.manage'
   res.sendFile(buildFullViewPath("lecture-responses.html"));
 });
 
-// Roster page - accessible to all authenticated users (view-only)
-// Editing (import/export) is restricted to instructors/admins via frontend and API permissions
-app.get("/roster", ensureAuthenticated, (req, res) => {
-  res.sendFile(buildFullViewPath("roster.html"));
+// Roster page - accessible only to instructors, TAs, and admins
+// Students and team leads cannot access roster
+app.get("/roster", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("roster.html"));
+    }
+
+    // Check if user is enrolled as TA or tutor
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("roster.html"));
+    }
+
+    // Students and team leads are not allowed
+    return res.status(403).send("Forbidden: Only instructors, TAs, and administrators can access the roster");
+  } catch (error) {
+    console.error("Error accessing roster:", error);
+    return res.status(500).send("Internal server error");
+  }
 });
 
-app.get("/courses/:courseId/roster", ensureAuthenticated, (req, res) => {
-  res.sendFile(buildFullViewPath("roster.html"));
+app.get("/courses/:courseId/roster", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("roster.html"));
+    }
+
+    // Check if user is enrolled as TA or tutor
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+      return res.sendFile(buildFullViewPath("roster.html"));
+    }
+
+    // Students and team leads are not allowed
+    return res.status(403).send("Forbidden: Only instructors, TAs, and administrators can access the roster");
+  } catch (error) {
+    console.error("Error accessing roster:", error);
+    return res.status(500).send("Internal server error");
+  }
 });
 
 // Class Directory route - similar permissions to roster
@@ -1216,6 +1337,12 @@ app.get(
     const email = req.user?.emails?.[0]?.value || "unknown";
 
     try {
+      // Ensure session exists before proceeding
+      if (!req.session) {
+        console.error("❌ Session undefined in callback, creating new session");
+        return res.redirect("/auth/failure?error=session_error");
+      }
+
       // DEBUG LOGS
       console.log("🔐 New login detected:");
       console.log("   Session ID:", req.sessionID);
@@ -1279,23 +1406,29 @@ app.get(
 
       // Dashboard routing based on enrollment role (TA comes from enrollments table)
       
+      // IMPORTANT: Admin and instructor checks must come FIRST, before any enrollment role checks
       // Admin and instructor get their dashboards directly
       if (user.primary_role === 'admin') {
         console.log(`[DEBUG] User ${email} is admin, redirecting to admin dashboard`);
         return res.redirect("/admin-dashboard");
       }
       
+      // Instructors ALWAYS go to instructor dashboard, regardless of enrollment role
       if (user.primary_role === 'instructor') {
         console.log(`[DEBUG] User ${email} is instructor, redirecting to instructor dashboard`);
         return res.redirect("/instructor-dashboard");
       }
       
-      // TA role comes from enrollments.course_role
-      if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
+      // TA and tutor roles come from enrollments.course_role - check this BEFORE student check
+      // Also check primary_role === 'ta' as a fallback (defensive check)
+      if (enrollmentRole === 'tutor') {
+        return res.redirect("/tutor-dashboard");
+      }
+      if (enrollmentRole === 'ta' || user.primary_role === 'ta') {
         return res.redirect("/ta-dashboard");
       }
       
-      // Students (only if they have student primary_role, not unregistered)
+      // Students (only if they have student primary_role, not unregistered, and not TA/tutor)
       if (enrollmentRole === 'student' || user.primary_role === 'student') {
         return res.redirect("/student-dashboard");
       }

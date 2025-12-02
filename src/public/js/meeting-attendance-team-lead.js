@@ -91,38 +91,42 @@
     return badge;
   }
 
-  function determineMeetingStatus(meeting) {
-    const now = new Date();
+function determineMeetingStatus(meeting) {
+  const now = new Date();
+  
+  // FIRST: Check if scheduled time is in the future - always return pending for future meetings
+  let scheduledStartTime = null;
+  if (meeting.session_date && meeting.session_time) {
+    const sessionDate = new Date(meeting.session_date);
+    const year = sessionDate.getFullYear();
+    const month = sessionDate.getMonth();
+    const day = sessionDate.getDate();
+    const [hours, minutes] = meeting.session_time.split(':').map(Number);
+    scheduledStartTime = new Date(year, month, day, hours, minutes);
     
-    // First check scheduled time - if meeting hasn't started yet, it's always pending
-    if (meeting.session_date && meeting.session_time) {
-      const sessionDate = new Date(meeting.session_date);
-      const year = sessionDate.getUTCFullYear();
-      const month = sessionDate.getUTCMonth();
-      const day = sessionDate.getUTCDate();
-      const [hours, minutes] = meeting.session_time.split(':').map(Number);
-      const startTime = new Date(year, month, day, hours, minutes);
-      
-      // If scheduled start time is in the future, it's pending regardless of attendance timestamps
-      if (startTime > now) {
-        return 'pending';
-      }
+    // If scheduled start time is in the future, it's always pending
+    if (scheduledStartTime > now) {
+      return 'pending';
     }
+  }
+  
+  // Scheduled time is NOT in future - now check attendance timestamps
+  if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
+    // Both timestamps are set - check time range
+    const openTime = new Date(meeting.attendance_opened_at);
+    const closeTime = new Date(meeting.attendance_closed_at);
     
-    // Now check attendance timestamps for open/closed status
-    if (meeting.attendance_opened_at && meeting.attendance_closed_at) {
-      // Both timestamps are set
-      const openTime = new Date(meeting.attendance_opened_at);
-      const closeTime = new Date(meeting.attendance_closed_at);
-      
-      if (now >= openTime && now < closeTime) {
-        return 'open'; // Meeting is currently open
-      } else if (now >= closeTime) {
-        return 'closed'; // Meeting has ended
-      }
-    } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
-      // Only open time is set
-      
+    if (now >= openTime && now < closeTime) {
+      return 'open'; // Meeting is currently open
+    } else if (now >= closeTime) {
+      return 'closed'; // Meeting has ended
+    }
+  } else if (meeting.attendance_opened_at && !meeting.attendance_closed_at) {
+    // Only open time is set - meeting is currently open
+    const openTime = new Date(meeting.attendance_opened_at);
+    
+    // Check if it's past the open time
+    if (now >= openTime) {
       // Check if end time has passed
       if (meeting.code_expires_at) {
         const endTime = new Date(meeting.code_expires_at);
@@ -131,18 +135,17 @@
         }
       }
       return 'open';
-    } else {
-      // No attendance timestamps - use scheduled time
-      if (meeting.session_date && meeting.session_time) {
-        // We already checked if it's pending above, so if we're here it must be closed
-        return 'closed';
-      }
     }
-    
-    return 'pending';
   }
-
-  async function buildMeetingRow(meeting) {
+  
+  // No attendance timestamps or they're in the future - check scheduled time
+  if (scheduledStartTime && scheduledStartTime <= now) {
+    // Scheduled time has passed without attendance being opened
+    return 'closed';
+  }
+  
+  return 'pending';
+}  async function buildMeetingRow(meeting) {
     const row = document.createElement('article');
     row.className = 'lecture-item';
     
