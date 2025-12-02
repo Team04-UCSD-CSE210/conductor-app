@@ -1,8 +1,7 @@
 
 .attendance-stats {
   margin-left: auto;
-  text-align: right;
-  background: yellowgreen;
+
   /* background: var(--gray-50, #f9fafb); */
   text-align: center;
   border-radius: 0.75rem;

@@ -43,14 +43,14 @@ body.dashboard-page .main-container {
   justify-content: center;
 }
 
-.eyebrow-local {
+/* .eyebrow-local {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--gray-500, #6b7280);
   font-size: 0.7rem;
   margin: 0 0 0.75rem;
   font-weight: 600;
-}
+} */
 
 .stat-value {
   font-size: 5.5rem;
@@ -208,78 +208,6 @@ body.dashboard-page .main-container {
   gap: 1rem;
 }
 
-.lecture-card {
-  border: 1px solid var(--gray-200, #e5e7eb);
-  border-radius: 0.75rem;
-  padding: 1.25rem 1.5rem;
-  display: grid;
-  grid-template-columns: 180px 1fr 160px 100px 220px;
-  gap: 1.5rem;
-  align-items: center;
-  transition: all 0.2s ease;
-  background: white;
-}
-
-.lecture-card:hover {
-  border-color: var(--teal-200, #99f6e4);
-  box-shadow: 0 4px 12px rgb(13 148 136 / 10%);
-  transform: translateY(-1px);
-}
-
-.lecture-card.active {
-  border-color: var(--teal-400, #2dd4bf);
-  background: var(--teal-50, #f0fdfa);
-  box-shadow: 0 4px 12px rgb(13 148 136 / 15%);
-}
-
-.lecture-label {
-  display: flex;
-  align-items: center;
-}
-
-.lecture-label button {
-  border-radius: 0.5rem;
-  border: 1px solid var(--gray-300, #d1d5db);
-  padding: 0.6rem 1rem;
-  font-weight: 600;
-  font-size: 0.95rem;
-  background: white;
-  cursor: pointer;
-  width: 100%;
-  transition: all 0.15s;
-  color: var(--gray-700, #374151);
-  text-align: left;
-}
-
-.lecture-label button:hover {
-  border-color: var(--teal-500, #14b8a6);
-  color: var(--teal-600, #0d9488);
-  background: var(--teal-50, #f0fdfa);
-}
-
-.lecture-label button.active {
-  border-color: var(--teal-500, #14b8a6);
-  color: var(--teal-600, #0d9488);
-  background: var(--teal-50, #f0fdfa);
-}
-
-.lecture-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.lecture-meta .attendance-percent {
-  font-weight: 600;
-  color: var(--gray-900, #111827);
-  font-size: 0.95rem;
-}
-
-.lecture-meta .lecture-schedule {
-  color: var(--gray-600, #4b5563);
-  font-size: 0.85rem;
-}
-
 .access-code-col {
   display: flex;
   flex-direction: column;
@@ -380,19 +308,9 @@ body.dashboard-page .main-container {
   margin-top: 1.25rem;
 }
 
-@media (width <= 1400px) {
-  .lecture-card {
-    grid-template-columns: 160px 1fr 140px 90px 200px;
-    gap: 1.25rem;
-  }
-}
+
 
 @media (width <= 1200px) {
-  .lecture-card {
-    grid-template-columns: 140px 1fr 120px 80px 180px;
-    gap: 1rem;
-  }
-  
   .stat-card {
     width: 240px;
   }
@@ -403,12 +321,6 @@ body.dashboard-page .main-container {
 }
 
 @media (width <= 1024px) {
-  .lecture-card {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
   .lecture-actions {
     justify-content: flex-start;
     flex-wrap: wrap;

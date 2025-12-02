@@ -53,7 +53,6 @@ body {
 /* Sidebar Navigation */
 .sidebar {
   width: 180px;
-  background: var(--teal-50, #f0fdfa);
   border-right: 2px solid var(--gray-200, #e5e7eb);
   padding: 1.5rem 1rem;
   display: flex;
@@ -75,7 +74,6 @@ body {
 
 .sidebar-logo {
   display: block;
-  background: yellowgreen;
   margin-bottom: 0.5rem;
 }
 
@@ -117,12 +115,22 @@ body {
   padding-top: 1rem;
 }
 
+.btn-ghost {
+  background: transparent;
+  color: var(--gray-700);
+}
+
+.btn-ghost:hover {
+  color: var(--emerald-600);
+  background: var(--gray-50);
+}
+
 .sidebar footer .btn-ghost {
   font-size: 0.9rem;
   padding: 0.5rem;
 }
 
-/* Hamburger Menu (Nav bar when not wide enough)*/
+/* Hamburger Menu (Nav bar when not wide enough) */
 .hamburger-menu {
   display: none;
   position: fixed;
@@ -163,12 +171,6 @@ body {
   transform: rotate(-45deg) translateY(-7px);
 }
 
-/* Container */
-.container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
 
 /* Main content grows to push footer down */
 body > :not(.footer) {
@@ -233,16 +235,6 @@ body > :not(.footer) {
 .btn-full {
   width: 100%;
   justify-content: center;
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--gray-700);
-}
-
-.btn-ghost:hover {
-  color: var(--emerald-600);
-  background: var(--gray-50);
 }
 
 .btn-primary {
@@ -371,6 +363,14 @@ body > :not(.footer) {
   font-weight: 600;
 }
 
+.header-subtitle {
+    font-size: 1rem;
+}
+
+.header-title {
+  font-size: 2rem;
+}
+
 /* Modal Overlay */
 .modal-overlay {
   position: fixed;
@@ -457,9 +457,102 @@ body > :not(.footer) {
   }
 }
 
+.attendance-card {
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: 180px auto auto auto auto;
+  gap: 1.5rem;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.attendance-card:hover {
+  border-color: var(--teal-200, #99f6e4);
+  box-shadow: 0 4px 12px rgb(13 148 136 / 10%);
+  transform: translateY(-1px);
+}
+
+.attendance-card.active {
+  border-color: var(--teal-400, #2dd4bf);
+  background: var(--teal-50, #f0fdfa);
+  box-shadow: 0 4px 12px rgb(13 148 136 / 15%);
+}
+
+.attendance-card-label {
+  display: flex;
+  align-items: center;
+}
+
+.attendance-card-label button {
+  border-radius: 0.5rem;
+  border: 1px solid var(--gray-300, #d1d5db);
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: white;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s;
+  color: var(--gray-700, #374151);
+  text-align: left;
+}
+
+
+.attendance-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.attendance-card-meta .attendance-percent {
+  font-weight: 600;
+  color: var(--gray-900, #111827);
+  font-size: 0.95rem;
+}
+
+.attendance-card-meta .attendance-schedule {
+  color: var(--gray-600, #4b5563);
+  font-size: 0.85rem;
+}
+
+.attendance-card-label button:hover {
+  border-color: var(--teal-500, #14b8a6);
+  color: var(--teal-600, #0d9488);
+  background: var(--teal-50, #f0fdfa);
+}
+
+.attendance-card-label button.active {
+  border-color: var(--teal-500, #14b8a6);
+  color: var(--teal-600, #0d9488);
+  background: var(--teal-50, #f0fdfa);
+}
+
+@media (width <= 1400px) {
+  .attendance-card {
+    grid-template-columns: 160px 1fr 140px 90px 200px;
+    gap: 1.25rem;
+  }
+}
+
+@media (width <= 1200px) {
+  .attendance-card {
+    grid-template-columns: 140px 1fr 120px 80px 180px;
+    gap: 1rem;
+  }
+}
+
+@media (width <= 1024px) {
+  .attendance-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+}
+
 /* Responsive Design */
 @media (width <= 768px) {
-
   /* Shift the page title to the right so it doesn't sit underneath the fixed hamburger button */
   .page-title {
     margin-left: 3rem; /* 1rem (left offset) + 2.5rem (button width) + 0.25rem spacing */
@@ -467,6 +560,7 @@ body > :not(.footer) {
 
   .main-container {
     margin-left: 0;
+    color: purple;
     width: 100%;
   }
 

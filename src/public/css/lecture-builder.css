@@ -11,7 +11,7 @@ body.lecture-builder-page .main-container {
   -webkit-overflow-scrolling: touch;
 }
 
-body.lecture-builder-page :where(
+/* body.lecture-builder-page :where(
   .builder-shell,
   .builder-shell p,
   .builder-shell label,
@@ -24,39 +24,13 @@ body.lecture-builder-page :where(
   .builder-shell textarea
 ) {
   color: inherit;
-}
+} */
 
 .builder-shell {
   display: flex;
   flex-direction: column;
   gap: 2rem;
   min-height: 100%;
-}
-
-/* Header Section */
-.builder-header {
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-  background: white;
-  border: 1px solid var(--gray-200, #e5e7eb);
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
-  position: relative;
-}
-
-.header-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.header-description {
-  margin: 0;
-  color: var(--gray-600, #4b5563);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  max-width: 700px;
 }
 
 .auto-save-indicator {

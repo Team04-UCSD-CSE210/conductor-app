@@ -94,22 +94,22 @@ async function renderTeams() {
       }
       const percent = totalPossible > 0 ? Math.round((totalAttendance / totalPossible) * 100) : 0;
       const row = document.createElement('a');
-      row.className = 'team-row';
+      row.className = 'attendance-card';
       row.href = `/instructor-team-meetings.html?team_id=${encodeURIComponent(team.id)}&offering_id=${encodeURIComponent(offeringId)}`;
       row.style.textDecoration = 'none';
       row.style.color = 'inherit';
       row.innerHTML = `
-        <span class="team-name">${team.name || 'Team ' + team.team_number}</span>
-        <div class="team-meta">
-          <span>Members: ${team.member_count || team.members?.length || 0}</span>
-          <span>Meetings: ${teamMeetings.length}</span>
-          <span style="display:flex;align-items:center;">Attendance:
-            <span class="attendance-bar">
-              <span class="attendance-fill" style="width:${percent}%"></span>
-              <span class="attendance-label">${percent}%</span>
-            </span>
-          </span>
+        <span class="attendance-card-label">${team.name || 'Team ' + team.team_number}</span>
+        <div class="attendance-card-meta">
+          <span class="attendance-percent">Members: ${team.member_count || team.members?.length || 0}</span>
+          <span class="attendance-schedule">Meetings: ${teamMeetings.length}</span>
         </div>
+        <span style="display:flex;align-items:center;">Attendance:
+          <span class="attendance-bar">
+            <span class="attendance-fill" style="width:${percent}%"></span>
+            <span class="attendance-label">${percent}%</span>
+          </span>
+        </span>
       `;
       return row;
     });

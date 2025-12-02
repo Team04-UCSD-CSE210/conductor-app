@@ -1,12 +1,15 @@
 /* instructor-meetings.css */
 
 .team-list {
-  max-width: 900px;
-  margin: 2rem auto;
-  background: #fff;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 6%);
-  padding: 2rem;
+   padding-top: 2rem;
+  flex: 1;
+  overflow: hidden auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .team-row {
@@ -36,7 +39,7 @@
 
 .attendance-bar {
   height: 1.2rem;
-  width: 120px;
+  width: 100%;
   background: #f3f4f6;
   border-radius: 0.5rem;
   overflow: hidden;
@@ -66,4 +69,8 @@
   color: #374151;
   text-shadow: none;
   z-index: 1;
+}
+
+.attendance-card-label {
+  font-size: 2rem;
 }

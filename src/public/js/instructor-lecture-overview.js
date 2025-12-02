@@ -167,14 +167,14 @@
 
   function buildLectureCard(lecture, currentLectureId) {
     const card = document.createElement('article');
-    card.className = 'lecture-card';
+    card.className = 'attendance-card';
     if (lecture.id === currentLectureId && lecture.status === 'open') {
       card.classList.add('active');
     }
 
     // Lecture label
     const labelWrapper = document.createElement('div');
-    labelWrapper.className = 'lecture-label';
+    labelWrapper.className = 'attendance-card-label';
     const label = document.createElement('button');
     label.type = 'button';
     label.textContent = lecture.label;
@@ -196,12 +196,12 @@
 
     // Attendance and date
     const meta = document.createElement('div');
-    meta.className = 'lecture-meta';
+    meta.className = 'attendance-card-meta';
     const attendance = document.createElement('span');
     attendance.className = 'attendance-percent';
     attendance.textContent = `${lecture.attendancePercent}% attendance`;
     const schedule = document.createElement('span');
-    schedule.className = 'lecture-schedule';
+    schedule.className = 'attendance-schedule';
     schedule.textContent = formatTimeRange(lecture.startsAt, lecture.endsAt);
     meta.append(attendance, schedule);
 

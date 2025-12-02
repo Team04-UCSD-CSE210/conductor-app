@@ -442,8 +442,6 @@ body.dashboard-page {
 
 /* MOBILE RESPONSIVE */
 @media (width <= 768px) {
-
-  /* Hide Recent Updates on small screens */
   .recent-updates {
     display: none;
   }
