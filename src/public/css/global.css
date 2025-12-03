@@ -488,7 +488,7 @@ body > :not(.footer) {
   border-radius: 0.75rem;
   padding: 1.25rem 1.5rem;
   display: grid;
-  grid-template-columns: 180px auto auto auto auto;
+  grid-template-columns: 180px auto 1fr auto auto;
   gap: 1.5rem;
   align-items: center;
   transition: all 0.2s ease;
@@ -557,14 +557,14 @@ body > :not(.footer) {
 
 @media (width <= 1400px) {
   .attendance-card-list {
-    grid-template-columns: 160px 1fr 140px 90px 200px;
+    grid-template-columns: 160px auto 1fr auto auto;
     gap: 1.25rem;
   }
 }
 
 @media (width <= 1200px) {
   .attendance-card-list {
-    grid-template-columns: 140px 1fr 120px 80px 180px;
+    grid-template-columns: 140px auto 1fr auto auto;
     gap: 1rem;
   }
 }
