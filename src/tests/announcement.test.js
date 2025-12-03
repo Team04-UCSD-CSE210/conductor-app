@@ -86,7 +86,7 @@ describe('Announcement Feature', () => {
       await pool.query('DELETE FROM team WHERE id = $1', [testTeam.id]);
     }
     // Only delete offering if we created it for the test (code starts with TEST)
-    if (testOffering && testOffering.code && testOffering.code.startsWith('TEST')) {
+    if (testOffering?.code?.startsWith('TEST')) {
       await pool.query('DELETE FROM course_offerings WHERE id = $1', [testOffering.id]);
     }
     if (testUser) {

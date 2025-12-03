@@ -142,7 +142,7 @@ export class AnnouncementModel {
       [offeringId]
     );
 
-    return parseInt(result.rows[0].count, 10);
+    return Number.parseInt(result.rows[0].count, 10);
   }
 
   /**

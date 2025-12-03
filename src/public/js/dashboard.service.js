@@ -742,6 +742,6 @@
     getCurrentUser,
     updateStickyHeader,
     updateWelcomeMessage,
-    loadRecentProgress,
+    loadRecentProgress
   };
 })();

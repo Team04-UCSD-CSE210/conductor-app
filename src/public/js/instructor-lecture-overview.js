@@ -69,7 +69,7 @@
     if (chartDates) chartDates.innerHTML = '';
     
     // Get palette colors for charts
-    const paletteColors = window.getPaletteColors ? window.getPaletteColors() : {
+    const paletteColors = globalThis.getPaletteColors ? globalThis.getPaletteColors() : {
       primary: '#0F766E',
       secondary: '#83D7CF'
     };

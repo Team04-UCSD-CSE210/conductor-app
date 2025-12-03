@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  if (typeof window.DashboardService === 'undefined') {
+  if (globalThis.DashboardService === undefined) {
     console.error('DashboardService not loaded. TODO widget will be disabled.');
     return;
   }
@@ -11,7 +11,7 @@
     createDashboardTodo,
     updateDashboardTodo,
     deleteDashboardTodo
-  } = window.DashboardService;
+  } = globalThis.DashboardService;
 
   function createTodoDomItem(todo) {
     const item = document.createElement('div');
