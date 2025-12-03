@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       
       - name: Install dependencies
         run: npm install
@@ -65,7 +65,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       
       - name: Install dependencies
         run: npm install
@@ -129,7 +129,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       
       - name: Install dependencies
         run: npm install
@@ -193,7 +193,7 @@ jobs:
           if [[ "${{ needs.unit-tests.result }}" == "success" && 
                 "${{ needs.e2e-tests.result }}" == "success" && 
                 "${{ needs.load-tests.result }}" == "success" ]]; then
-            echo "âœ… All tests passed!" >> $GITHUB_STEP_SUMMARY
+            echo "âœ?All tests passed!" >> $GITHUB_STEP_SUMMARY
           else
-            echo "âŒ Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
+            echo "â?Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
           fi
