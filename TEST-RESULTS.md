@@ -8,6 +8,38 @@
 
 ---
 
+## 🔗 Reviewer Quick Links
+
+- **Branch**: `sprint4/diagnostics`
+- **How-To Run (PowerShell)**:
+
+```powershell
+# 1) Ensure PostgreSQL is running
+pg_ctl -D "C:\Program Files\PostgreSQL\18\data" start
+
+# 2) Start the server (uses port 8443)
+$env:BYPASS_AUTH = "true"; $env:PORT = "8443"; npm run start
+
+# In a new terminal, set BASE_URL for load tests
+$env:BASE_URL = "http://localhost:8443"
+
+# 3) Run load tests
+npm run test:load
+
+# 4) Run E2E tests on Chromium only
+npm run test:e2e:chromium
+
+# 5) Run full lint suite
+npm run lint
+```
+
+Docs:
+
+- `docs/TESTING-QUICKSTART.md`
+- `docs/TESTING-SUMMARY.md`
+- `docs/TESTING-DEMO-CHECKLIST.md`
+- `docs/TESTING.md`
+
 ## ✅ Load Testing Results
 
 ### Test Configuration
