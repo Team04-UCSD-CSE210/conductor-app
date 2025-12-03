@@ -319,6 +319,7 @@
       this.picker.removeAttribute('hidden');
       this.displayButton.setAttribute('aria-expanded', 'true');
       this.displayButton.classList.add('active');
+      this.container.classList.add('active');
       
       // Ensure picker is built before scrolling
       if (this.picker.children.length === 0) {
@@ -373,6 +374,7 @@
       this.picker.setAttribute('hidden', 'true');
       this.displayButton.setAttribute('aria-expanded', 'false');
       this.displayButton.classList.remove('active');
+      this.container.classList.remove('active');
     }
 
     toggle() {
