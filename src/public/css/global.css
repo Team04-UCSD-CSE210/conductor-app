@@ -226,6 +226,7 @@ body > :not(.footer) {
 .modal-overlay[aria-hidden="true"] {
   display: none;
 }
+
 .modal-overlay[aria-hidden="false"] {
   display: flex;
 }

@@ -68,6 +68,7 @@ This testing infrastructure demonstrates comprehensive quality assurance for the
 ### Purpose
 
 Simulates real-world traffic with 150+ concurrent users to verify:
+
 - Response time under load
 - System stability  
 - Throughput capacity
@@ -76,18 +77,21 @@ Simulates real-world traffic with 150+ concurrent users to verify:
 ### Test Scenarios
 
 #### Test 1: User List API - Student Load
+
 - **Endpoint**: `GET /api/users?limit=50&offset=0`
 - **Connections**: 150 concurrent students
 - **Duration**: 30 seconds
 - **Purpose**: Simulate students accessing roster data
 
 #### Test 2: Dashboard - Realistic Load
+
 - **Endpoint**: `GET /dashboard.html`
 - **Connections**: 90 concurrent users (60% of typical peak)
 - **Duration**: 30 seconds
 - **Purpose**: Simulate typical dashboard access
 
 #### Test 3: Spike Test - Sudden High Load
+
 - **Endpoint**: `GET /api/users`
 - **Connections**: 200 concurrent users
 - **Duration**: 15 seconds
@@ -170,6 +174,7 @@ npm run test:e2e:debug
 **Success Rate**: **100%**
 
 #### Test 1: User List API
+
 - **Requests**: 31,277 total
 - **Req/sec**: 1,042.57
 - **Success Rate**: 100% ✅
@@ -177,6 +182,7 @@ npm run test:e2e:debug
 - **Throughput**: 28.11 MB/s
 
 #### Test 2: Dashboard Load
+
 - **Requests**: 209,230 total
 - **Req/sec**: 6,974.94
 - **Success Rate**: 100% ✅
@@ -184,6 +190,7 @@ npm run test:e2e:debug
 - **Throughput**: 46.17 MB/s
 
 #### Test 3: Spike Test
+
 - **Requests**: 13,771 total
 - **Req/sec**: 918.07
 - **Success Rate**: 100% ✅
@@ -299,6 +306,7 @@ test('my new test', async ({ page }) => {
 ### Updating CI Configuration
 
 Edit `.github/workflows/testing.yml` to modify:
+
 - Node.js version
 - Database configuration
 - Test timeouts
@@ -311,6 +319,7 @@ Edit `.github/workflows/testing.yml` to modify:
 ### Common Issues
 
 **PostgreSQL Connection Failed**
+
 ```bash
 # Ensure PostgreSQL is running
 pg_ctl -D "C:\Program Files\PostgreSQL\18\data" start
@@ -320,6 +329,7 @@ psql -U postgres -c "SELECT 1"
 ```
 
 **Server Won't Start**
+
 ```bash
 # Check if port is already in use
 netstat -ano | findstr :8443
@@ -329,12 +339,14 @@ taskkill /PID <process_id> /F
 ```
 
 **E2E Tests Timeout**
+
 ```bash
 # Increase timeout in playwright.config.js
 timeout: 60000  // 60 seconds
 ```
 
 **Load Tests Fail**
+
 ```bash
 # Ensure server is running and accessible
 curl http://localhost:8443/api/health
