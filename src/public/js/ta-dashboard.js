@@ -26,6 +26,7 @@
     getSessionStatistics = async () => null,
     updateStickyHeader = async () => {},
     updateWelcomeMessage = async () => {},
+    loadRecentProgress = async () => {},
   } = DS;
   
   let offeringId = null;
@@ -410,6 +411,11 @@
     await loadJournalEntries();
     await loadAnnouncements();
     // TODO items are handled by todo-widget.js - no manual loading needed
+    
+    // Load recent progress (weeks timeline)
+    if (offeringId) {
+      await loadRecentProgress(offeringId, { showCount: 3 });
+    }
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {

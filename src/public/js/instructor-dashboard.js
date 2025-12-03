@@ -24,6 +24,7 @@
     createAnnouncement = async () => ({}),
     updateAnnouncement = async () => ({}),
     deleteAnnouncement = async () => ({}),
+    loadRecentProgress = async () => {},
   } = DS;
   
   let offeringId = null;
@@ -69,6 +70,9 @@
 
       // Load announcements from backend
       await loadAnnouncements();
+      
+      // Load recent progress (weeks timeline)
+      await loadRecentProgress(offeringId, { showCount: 3 });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
@@ -407,6 +411,11 @@
     await loadInteractionFormData();
     await loadWelcomeName();
     await loadJournalEntries();
+    
+    // Load recent progress (weeks timeline)
+    if (offeringId) {
+      await loadRecentProgress(offeringId, { showCount: 3 });
+    }
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {

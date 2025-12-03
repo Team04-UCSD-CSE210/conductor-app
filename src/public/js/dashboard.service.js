@@ -472,6 +472,148 @@
   }
 
   /**
+   * Load and display recent progress (weeks timeline) from course offering dates
+   * @param {string} offeringId - Course offering ID
+   * @param {Object} options - { showCount: number of weeks to show (default: 3) }
+   */
+  async function loadRecentProgress(offeringId, options = {}) {
+    const { showCount = 3 } = options;
+    const weeksTimeline = document.querySelector('.weeks-timeline');
+    if (!weeksTimeline || !offeringId) return;
+
+    try {
+      // Fetch offering to get start/end dates
+      const offering = await getOfferingWithStats(offeringId);
+      if (!offering || !offering.start_date || !offering.end_date) {
+        weeksTimeline.innerHTML = '<p class="dashboard-empty-state">Progress information not available</p>';
+        return;
+      }
+
+      const startDate = new Date(offering.start_date);
+      const endDate = new Date(offering.end_date);
+      const now = new Date();
+
+      // Validate dates
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        weeksTimeline.innerHTML = '<p class="dashboard-empty-state">Invalid course dates</p>';
+        return;
+      }
+
+      // Calculate all weeks in the course, aligned to Monday starting from week 1
+      const weeks = [];
+      
+      // Find the Monday of the week that contains the course start date
+      // Week 1 starts on the Monday of the week containing the start date
+      let week1Start = new Date(startDate);
+      week1Start.setHours(0, 0, 0, 0);
+      
+      // Get day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+      const dayOfWeek = week1Start.getDay();
+      // Calculate days to subtract to get to Monday
+      // If dayOfWeek is 0 (Sunday), subtract 6 days to get Monday
+      // Otherwise subtract (dayOfWeek - 1) days to get Monday
+      const daysToMonday = dayOfWeek === 0 ? -6 : -(dayOfWeek - 1);
+      week1Start.setDate(week1Start.getDate() + daysToMonday);
+      
+      let currentWeekStart = new Date(week1Start);
+      let weekNumber = 1;
+
+      // Calculate weeks from Week 1 Monday until we reach or pass the end date
+      while (currentWeekStart <= endDate) {
+        const weekEnd = new Date(currentWeekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6); // Sunday (Monday + 6 days)
+        weekEnd.setHours(23, 59, 59, 999); // End of day
+        
+        // If week extends past course end, cap it at end date
+        const actualWeekEnd = weekEnd > endDate ? new Date(endDate) : weekEnd;
+        
+        // Only include weeks that start on or before the course end date
+        // (ensures we include the final week if it starts before the end date)
+        if (currentWeekStart <= endDate) {
+          const isCurrentWeek = now >= currentWeekStart && now <= actualWeekEnd;
+          const isPastWeek = now > actualWeekEnd;
+
+          const statusClass = isCurrentWeek ? 'current' : '';
+          const statusText = isPastWeek ? 'completed' : (isCurrentWeek ? 'in-progress' : 'upcoming');
+          
+          // Format date range (e.g., "Nov 25 - Dec 01" or "Nov 25 - Nov 30")
+          const startMonth = currentWeekStart.toLocaleDateString('en-US', { month: 'short' });
+          const startDay = currentWeekStart.getDate();
+          const endMonth = actualWeekEnd.toLocaleDateString('en-US', { month: 'short' });
+          const endDay = actualWeekEnd.getDate();
+          
+          const dateRange = startMonth === endMonth
+            ? `${startMonth} ${startDay} - ${endDay}`
+            : `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+          
+          weeks.push({
+            weekNumber,
+            dateRange,
+            statusClass,
+            statusText,
+            startDate: new Date(currentWeekStart),
+            endDate: actualWeekEnd,
+            isCurrentWeek,
+            isPastWeek
+          });
+
+          weekNumber++;
+        }
+
+        // Move to next Monday
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      }
+
+      if (weeks.length === 0) {
+        weeksTimeline.innerHTML = '<p class="dashboard-empty-state">No weeks found for this course</p>';
+        return;
+      }
+
+      // Determine which weeks to show:
+      // - Show last N weeks (most recent), centered on current week if it exists
+      // - This provides context of recent past and upcoming weeks
+      const currentWeekIndex = weeks.findIndex(w => w.isCurrentWeek);
+      let displayWeeks = [];
+      
+      if (currentWeekIndex >= 0) {
+        // We're in the course - show weeks around current week
+        // Try to show: 1 past week, current week, 1-2 upcoming weeks
+        const startIdx = Math.max(0, currentWeekIndex - 1);
+        const endIdx = Math.min(weeks.length, startIdx + showCount);
+        displayWeeks = weeks.slice(startIdx, endIdx);
+      } else {
+        // Course hasn't started or has ended - show last N weeks
+        displayWeeks = weeks.slice(-showCount);
+      }
+
+      // Reverse to show most recent first (newest at top)
+      displayWeeks.reverse();
+
+      weeksTimeline.innerHTML = displayWeeks.map(week => {
+        const statusLabel = week.statusText === 'completed' 
+          ? 'Completed' 
+          : (week.statusText === 'in-progress' 
+            ? 'In Progress' 
+            : 'Upcoming');
+        
+        return `
+          <div class="week-item ${week.statusClass}">
+            <div class="week-header">
+              <div class="week-number">Week ${week.weekNumber}</div>
+              <div class="week-dates">${week.dateRange}</div>
+            </div>
+            <div class="week-status ${week.statusText}">${statusLabel}</div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error loading recent progress:', error);
+      weeksTimeline.innerHTML = '<p class="dashboard-error-state">Error loading progress</p>';
+    }
+  }
+
+  /**
    * Update sticky header (polaroid course info) with course details
    */
   async function updateStickyHeader(offeringId) {
@@ -578,6 +720,8 @@
     getCurrentUser,
     // Sticky header
     updateStickyHeader,
-    updateWelcomeMessage
+    updateWelcomeMessage,
+    // Recent progress
+    loadRecentProgress
   };
 })();

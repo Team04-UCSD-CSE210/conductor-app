@@ -8,7 +8,7 @@
     return;
   }
 
-  const { getActiveOfferingId, getOfferingWithStats, getUserEnrollment, updateCourseInfo, updateStats, updateCourseProgress, updateStickyHeader, updateWelcomeMessage, getAnnouncements } = window.DashboardService;
+  const { getActiveOfferingId, getOfferingWithStats, getUserEnrollment, updateCourseInfo, updateStats, updateCourseProgress, updateStickyHeader, updateWelcomeMessage, getAnnouncements, loadRecentProgress } = window.DashboardService;
   
   let offeringId = null;
   let refreshInterval = null;
@@ -328,6 +328,11 @@
     await loadWelcomeName();
     await loadJournalEntries();
     await loadAnnouncements();
+    
+    // Load recent progress (weeks timeline)
+    if (offeringId) {
+      await loadRecentProgress(offeringId, { showCount: 3 });
+    }
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {

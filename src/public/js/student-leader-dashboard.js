@@ -8,7 +8,7 @@
     return;
   }
 
-  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo, updateCourseProgress, updateStickyHeader, updateWelcomeMessage, getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement } = window.DashboardService;
+  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo, updateCourseProgress, updateStickyHeader, updateWelcomeMessage, getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement, loadRecentProgress } = window.DashboardService;
   
   let offeringId = null;
   let refreshInterval = null;
@@ -69,7 +69,7 @@
       await loadJournalEntries();
       
       // Load recent progress
-      await loadRecentProgress(offeringId);
+      await loadRecentProgress(offeringId, { showCount: 3 });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
@@ -313,82 +313,18 @@
     }
   }
 
-  // Load recent progress (weeks timeline)
-  async function loadRecentProgress(offeringId) {
-    const weeksTimeline = document.querySelector('.weeks-timeline');
-    if (!weeksTimeline || !offeringId) return;
-
-    try {
-      // Fetch offering to get start/end dates
-      const offering = await getOfferingWithStats(offeringId);
-      if (!offering || !offering.start_date || !offering.end_date) {
-        weeksTimeline.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Progress information not available</p>';
-        return;
-      }
-
-      const startDate = new Date(offering.start_date);
-      const endDate = new Date(offering.end_date);
-      const now = new Date();
-
-      // Calculate weeks
-      const weeks = [];
-      let currentWeekStart = new Date(startDate);
-      let weekNumber = 1;
-
-      while (currentWeekStart < endDate) {
-        const weekEnd = new Date(currentWeekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6);
-        
-        if (weekEnd > endDate) {
-          weekEnd.setTime(endDate.getTime());
-        }
-
-        const isCurrentWeek = now >= currentWeekStart && now <= weekEnd;
-        const isPastWeek = now > weekEnd;
-
-        const statusClass = isCurrentWeek ? 'current' : '';
-        const statusText = isPastWeek ? 'completed' : (isCurrentWeek ? 'in-progress' : 'upcoming');
-        
-        const dateRange = `${currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-        
-        weeks.push({
-          weekNumber,
-          dateRange,
-          statusClass,
-          statusText,
-          startDate: new Date(currentWeekStart),
-          endDate: new Date(weekEnd)
-        });
-
-        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-        weekNumber++;
-      }
-
-      // Show last 3 weeks (or all if less than 3)
-      const displayWeeks = weeks.slice(-3).reverse();
-
-      weeksTimeline.innerHTML = displayWeeks.map(week => {
-        return `
-          <div class="week-item ${week.statusClass}">
-            <div class="week-header">
-              <div class="week-number">Week ${week.weekNumber}</div>
-              <div class="week-dates">${week.dateRange}</div>
-            </div>
-            <div class="week-status ${week.statusText}">${week.statusText === 'completed' ? 'Completed' : (week.statusText === 'in-progress' ? 'In Progress' : 'Upcoming')}</div>
-          </div>
-        `;
-      }).join('');
-
-    } catch (error) {
-      console.error('Error loading recent progress:', error);
-      weeksTimeline.innerHTML = '<p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Error loading progress</p>';
-    }
-  }
+  // Recent progress is now handled by DashboardService.loadRecentProgress()
+  // (removed local implementation to use shared function)
 
   // Initialize dashboard
   async function initDashboard() {
     await loadDashboardStats();
     await loadWelcomeName();
+    
+    // Load recent progress (weeks timeline)
+    if (offeringId) {
+      await loadRecentProgress(offeringId, { showCount: 3 });
+    }
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {

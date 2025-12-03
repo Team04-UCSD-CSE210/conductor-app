@@ -20,6 +20,7 @@
     updateCourseProgress = () => {},
     updateStickyHeader = async () => {},
     updateWelcomeMessage = async () => {},
+    loadRecentProgress = async () => {},
     getAnnouncements = async () => [],
     createAnnouncement = async () => ({}),
     updateAnnouncement = async () => ({}),
@@ -308,6 +309,11 @@
     await loadJournalEntries();
     await loadAnnouncements();
     // TODO items are handled by todo-widget.js - no manual loading needed
+    
+    // Load recent progress (weeks timeline)
+    if (offeringId) {
+      await loadRecentProgress(offeringId, { showCount: 3 });
+    }
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {
