@@ -19,7 +19,6 @@
 
   let isLoading = false;
   let liveUpdateInterval = null;
-  let currentMeetingStats = new Map();
   const LIVE_UPDATE_INTERVAL_MS = 3000; // Check for updates every 3 seconds
 
   function formatDate(dateString) {

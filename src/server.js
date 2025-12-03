@@ -1279,9 +1279,6 @@ app.get("/work-journal", ensureAuthenticated, async (req, res) => {
       return res.redirect("/login");
     }
 
-    // Check if user is a team lead
-    const isTeamLead = await isUserTeamLead(user.id);
-    
     // Allow students, admins, and instructors
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student' || 
