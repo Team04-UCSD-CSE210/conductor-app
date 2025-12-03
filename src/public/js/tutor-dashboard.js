@@ -14,7 +14,6 @@
     getActiveOfferingId = async () => null,
     getOfferingWithStats = async () => ({}),
     getTeams = async () => [],
-    getStudents = async () => [],
     updateCourseInfo = () => {},
     updateStats = () => {},
     updateCourseProgress = () => {},
@@ -22,9 +21,6 @@
     updateWelcomeMessage = async () => {},
     loadRecentProgress = async () => {},
     getAnnouncements = async () => [],
-    createAnnouncement = async () => ({}),
-    updateAnnouncement = async () => ({}),
-    deleteAnnouncement = async () => ({}),
     getAttendanceSessions = async () => [],
     getSessionStatistics = async () => null,
   } = DS;
