@@ -523,6 +523,9 @@ body > :not(.footer) {
   transition: all 0.15s;
   color: var(--gray-700, #374151);
   text-align: left;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 
