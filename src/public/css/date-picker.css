@@ -3,7 +3,7 @@
 .date-picker-wrapper {
   position: relative;
   width: 100%;
-  z-index: 10000;
+  z-index: 10002;
 }
 
 .date-picker-display {
@@ -65,7 +65,7 @@
   border: 1.5px solid var(--gray-200, #e5e7eb);
   border-radius: 0.75rem;
   box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
-  z-index: 10001;
+  z-index: 10003;
   width: 320px;
   padding: 1rem;
   animation: slide-down 0.2s ease-out;

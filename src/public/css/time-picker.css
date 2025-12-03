@@ -6,6 +6,10 @@
   z-index: 10000;
 }
 
+.time-picker-wrapper.active {
+  z-index: 10002;
+}
+
 .time-picker-display {
   width: 100%;
   padding: 0.75rem 1rem;
