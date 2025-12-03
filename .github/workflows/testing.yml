@@ -11,6 +11,21 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conductor_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,7 +38,14 @@ jobs:
       - name: Install dependencies
         run: npm install
       
+      - name: Setup database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+        run: npm run db:init
+      
       - name: Run unit tests with coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
         run: npm run test:coverage
       
       - name: Upload coverage reports
@@ -75,6 +97,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
           NODE_ENV: test
+          PORT: 3000
           SESSION_SECRET: test-secret-key-for-ci
           GOOGLE_CLIENT_ID: fake-client-id
           GOOGLE_CLIENT_SECRET: fake-client-secret
@@ -136,6 +159,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
           NODE_ENV: test
+          PORT: 3000
+          PORT: 3000
           SESSION_SECRET: test-secret-key-for-ci
           GOOGLE_CLIENT_ID: fake-client-id
           GOOGLE_CLIENT_SECRET: fake-client-secret
@@ -186,7 +211,7 @@ jobs:
           if [[ "${{ needs.unit-tests.result }}" == "success" && 
                 "${{ needs.e2e-tests.result }}" == "success" && 
                 "${{ needs.load-tests.result }}" == "success" ]]; then
-            echo "ï¿½?All tests passed!" >> $GITHUB_STEP_SUMMARY
+            echo "ï¿?All tests passed!" >> $GITHUB_STEP_SUMMARY
           else
-            echo "ï¿½?Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
+            echo "ï¿?Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
           fi
