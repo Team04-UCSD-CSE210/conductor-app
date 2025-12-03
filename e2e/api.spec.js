@@ -78,7 +78,7 @@ test.describe('API - Rate Limiting and Security', () => {
   });
 
   test('should handle multiple concurrent requests', async ({ request }) => {
-    const requests = Array(10).fill(null).map(() => 
+    const requests = new Array(10).fill(null).map(() => 
       request.get(`${API_BASE}/users`)
     );
     

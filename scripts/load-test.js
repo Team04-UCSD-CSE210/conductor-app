@@ -19,8 +19,8 @@ import autocannon from 'autocannon';
 import { pool } from '../src/db.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
-const DURATION = parseInt(process.env.DURATION || '30', 10);
-const STUDENT_COUNT = parseInt(process.env.STUDENT_COUNT || '150', 10);
+const DURATION = Number.parseInt(process.env.DURATION || '30', 10);
+const STUDENT_COUNT = Number.parseInt(process.env.STUDENT_COUNT || '150', 10);
 const PROFESSOR_COUNT = 5; // Simulating a few professors/TAs
 
 /**
@@ -168,11 +168,10 @@ async function runLoadTests() {
 }
 
 // Run the tests
-runLoadTests()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('\n❌ Load testing failed:', error);
-    process.exit(1);
-  });
+try {
+  await runLoadTests();
+  process.exit(0);
+} catch (error) {
+  console.error('\n❌ Load testing failed:', error);
+  process.exit(1);
+}
