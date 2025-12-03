@@ -31,13 +31,6 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
-      
-      - name: Comment coverage on PR
-        if: github.event_name == 'pull_request'
-        uses: romeovs/lcov-reporter-action@v0.3.1
-        with:
-          lcov-file: ./coverage/lcov.info
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   e2e-tests:
     name: E2E Tests
@@ -193,7 +186,7 @@ jobs:
           if [[ "${{ needs.unit-tests.result }}" == "success" && 
                 "${{ needs.e2e-tests.result }}" == "success" && 
                 "${{ needs.load-tests.result }}" == "success" ]]; then
-            echo "âœ?All tests passed!" >> $GITHUB_STEP_SUMMARY
+            echo "ï¿½?All tests passed!" >> $GITHUB_STEP_SUMMARY
           else
-            echo "â?Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
+            echo "ï¿½?Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
           fi
