@@ -337,7 +337,7 @@
     labelsContainer.style.flexWrap = 'wrap';
     labelsContainer.style.gap = '15px';
 
-    options.forEach((option, index) => {
+    options.forEach((option) => {
       const count = counts[option] || 0;
 
       if (count > 0) {
@@ -459,7 +459,6 @@
       });
       
       // Check for new or edited responses
-      const newResponseIds = new Set(currentResponses.map(r => r.id || `${r.userId}-${r.timestamp}`));
       const newResponses = [];
       const editedResponses = [];
       

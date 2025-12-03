@@ -54,14 +54,14 @@ body {
   border-radius: 0.75rem;
   background: white;
   transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
   text-decoration: none;
   color: inherit;
 }
 
 .attendance-card-list:hover {
   border-color: var(--teal-400, #2dd4bf);
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+  box-shadow: 0 4px 12px rgb(13 148 136 / 15%);
   transform: translateY(-2px);
 }
 
@@ -132,8 +132,9 @@ body {
   gap: 0;
   min-height: 100%;
 }
+
 /* Responsive layout for smaller screens */
-@media (max-width: 1200px) {
+@media (width <= 1200px) {
   .attendance-card-list {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;

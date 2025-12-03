@@ -208,7 +208,7 @@
 
       // make the modal visible/accessible
       overlay.setAttribute('aria-hidden', 'false');
-      try { overlay.inert = false; } catch (e) { /* ignore if not available */ }
+      try { overlay.inert = false; } catch { /* ignore if not available */ }
 
       // hide background content from assistive tech
       if (mainContent) mainContent.setAttribute('aria-hidden', 'true');
@@ -226,7 +226,7 @@
     function closeModal() {
       // hide the modal from AT
       overlay.setAttribute('aria-hidden', 'true');
-      try { overlay.inert = true; } catch (e) { /* ignore if not available */ }
+      try { overlay.inert = true; } catch { /* ignore if not available */ }
 
       // restore background content visibility to AT
       if (mainContent) mainContent.removeAttribute('aria-hidden');

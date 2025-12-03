@@ -53,6 +53,7 @@
   0%, 100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -104,13 +105,6 @@
   color: var(--gray-900, #111827);
 }
 
-.response-body h3 span {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--gray-500, #6b7280);
-  margin-left: 0.35rem;
-@media (width <= 768px) {
-  .responses-header {
 .response-body h3 span {
   font-size: 0.85rem;
   font-weight: 500;
