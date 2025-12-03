@@ -103,31 +103,32 @@ async function runLoadTests() {
 
   await testDatabase();
 
-  const results = [];
+  // Run all tests and collect results
+  const results = [
+    // Test 1: User List API - Student Load (Read-Heavy)
+    await runLoadTest('Test 1: User List API - Student Load', {
+      url: `${BASE_URL}/api/users?limit=50&offset=0`,
+      connections: STUDENT_COUNT,
+      duration: DURATION,
+      method: 'GET',
+    }),
 
-  // Test 1: User List API - Student Load (Read-Heavy)
-  results.push(await runLoadTest('Test 1: User List API - Student Load', {
-    url: `${BASE_URL}/api/users?limit=50&offset=0`,
-    connections: STUDENT_COUNT,
-    duration: DURATION,
-    method: 'GET',
-  }));
+    // Test 2: Dashboard Load - Realistic Concurrent Users
+    await runLoadTest('Test 2: Dashboard - Realistic Load', {
+      url: `${BASE_URL}/dashboard.html`,
+      connections: Math.floor(STUDENT_COUNT * 0.6),
+      duration: DURATION,
+      method: 'GET',
+    }),
 
-  // Test 2: Dashboard Load - Realistic Concurrent Users
-  results.push(await runLoadTest('Test 2: Dashboard - Realistic Load', {
-    url: `${BASE_URL}/dashboard.html`,
-    connections: Math.floor(STUDENT_COUNT * 0.6),
-    duration: DURATION,
-    method: 'GET',
-  }));
-
-  // Test 3: Spike Test - Sudden High Load
-  results.push(await runLoadTest('Test 3: Spike Test - Sudden High Load', {
-    url: `${BASE_URL}/api/users`,
-    connections: STUDENT_COUNT + 50,
-    duration: 15,
-    method: 'GET',
-  }));
+    // Test 3: Spike Test - Sudden High Load
+    await runLoadTest('Test 3: Spike Test - Sudden High Load', {
+      url: `${BASE_URL}/api/users`,
+      connections: STUDENT_COUNT + 50,
+      duration: 15,
+      method: 'GET',
+    })
+  ];
 
   // Summary Report
   console.log('\n' + '='.repeat(60));
