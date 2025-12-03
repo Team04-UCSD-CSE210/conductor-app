@@ -83,12 +83,12 @@
 
         <!-- Announcements Card -->
         <div class="dashboard-card announcements-card">
-          <div class="card-header-with-action">
+          <div class="card-header">
             <h4>Announcements</h4>
-            <button id="createAnnouncementBtn" class="btn btn-create" aria-label="Create new announcement">+</button>
+            <button id="createAnnouncementBtn" class="btn btn-primary btn-create-announcement" aria-label="Create new announcement">Create New</button>
           </div>
           <div class="announcements-list">
-            <p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Loading announcements...</p>
+            <p class="dashboard-loading-state">Loading announcements...</p>
           </div>
         </div>
 
@@ -158,7 +158,7 @@
   <div id="announcementModal" class="modal-overlay" aria-hidden="true" inert>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="announcementModalTitle">
       <header class="modal-header">
-        <h3 id="announcementModalTitle">New Team Announcement</h3>
+        <h3 id="announcementModalTitle">New Announcement</h3>
         <button class="modal-close" id="announcementModalClose" aria-label="Close">×</button>
       </header>
       <form id="announcement-form" class="modal-body">

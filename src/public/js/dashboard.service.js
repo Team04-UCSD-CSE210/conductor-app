@@ -248,6 +248,32 @@
   }
 
   /**
+   * Format creator name with role
+   * @param {Object} announcement - Announcement object with creator info
+   * @returns {string} Formatted creator string (e.g., "John Doe (Instructor)" or "Jane Smith (Team Lead)")
+   */
+  function formatCreatorWithRole(announcement) {
+    const creatorName = announcement.creator_name || 'Unknown';
+    const primaryRole = announcement.creator_primary_role;
+    const enrollmentRole = announcement.creator_enrollment_role;
+    
+    // Determine display role (priority: enrollment_role > primary_role)
+    let displayRole = null;
+    
+    if (enrollmentRole === 'team-lead') {
+      displayRole = 'Team Lead';
+    } else if (enrollmentRole === 'ta') {
+      displayRole = 'TA';
+    } else if (enrollmentRole === 'tutor') {
+      displayRole = 'Tutor';
+    } else if (primaryRole === 'instructor') {
+      displayRole = 'Instructor';
+    }
+    
+    return displayRole ? `${creatorName} (${displayRole})` : creatorName;
+  }
+
+  /**
    * Create an announcement
    */
   async function createAnnouncement(offeringId, announcementData) {
@@ -609,7 +635,7 @@
 
     } catch (error) {
       console.error('Error loading recent progress:', error);
-      weeksTimeline.innerHTML = '<p class="dashboard-error-state">Error loading progress</p>';
+      weeksTimeline.innerHTML = '<p class="dashboard-empty-state">No progress yet</p>';
     }
   }
 
@@ -711,6 +737,7 @@
     createAnnouncement,
     updateAnnouncement,
     deleteAnnouncement,
+    formatCreatorWithRole,
     // Attendance
     getSessionStatistics,
     getAttendanceSessions,
@@ -722,6 +749,7 @@
     updateStickyHeader,
     updateWelcomeMessage,
     // Recent progress
-    loadRecentProgress
+    loadRecentProgress,
+    formatCreatorWithRole
   };
 })();

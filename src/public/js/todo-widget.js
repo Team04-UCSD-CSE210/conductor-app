@@ -100,36 +100,50 @@
 
   async function initTodoCard(card) {
     const list = card.querySelector('.todo-list');
-    if (!list) return;
+    if (!list) {
+      console.warn('Todo list not found in card');
+      return;
+    }
 
     // Clear any placeholder items
     list.innerHTML = '';
 
-    const addButton = document.createElement('button');
-    addButton.type = 'button';
-    addButton.className = 'todo-add';
-    addButton.textContent = 'Add item';
+    // Check if add button already exists to avoid duplicates
+    let addButton = card.querySelector('.todo-add');
+    if (!addButton) {
+      addButton = document.createElement('button');
+      addButton.type = 'button';
+      addButton.className = 'todo-add';
+      addButton.textContent = 'Add item';
+      addButton.setAttribute('aria-label', 'Add new todo item');
 
-    const addNewTodo = async () => {
-      const title = 'New task';
-      try {
-        const created = await createDashboardTodo(title);
-        const item = createTodoDomItem(created);
-        list.appendChild(item);
-        const input = item.querySelector('.todo-text');
-        if (input) {
-          input.focus();
-          input.select();
+      const addNewTodo = async () => {
+        const title = 'New task';
+        try {
+          const created = await createDashboardTodo(title);
+          if (created) {
+            const item = createTodoDomItem(created);
+            list.appendChild(item);
+            const input = item.querySelector('.todo-text');
+            if (input) {
+              input.focus();
+              input.select();
+            }
+          } else {
+            console.error('Failed to create todo: no response');
+            alert('Failed to create todo item. Please try again.');
+          }
+        } catch (err) {
+          console.error('Failed to create todo', err);
+          alert('Failed to create todo item. Please try again.');
         }
-      } catch (err) {
-        console.error('Failed to create todo', err);
-      }
-    };
+      };
 
-    addButton.addEventListener('click', addNewTodo);
+      addButton.addEventListener('click', addNewTodo);
 
-    // Attach add button after the list
-    card.appendChild(addButton);
+      // Attach add button after the list
+      card.appendChild(addButton);
+    }
 
     try {
       const todos = await getDashboardTodos();

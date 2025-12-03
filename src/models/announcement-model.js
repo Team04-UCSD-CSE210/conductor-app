@@ -29,9 +29,16 @@ export class AnnouncementModel {
    */
   static async findById(id) {
     const result = await pool.query(
-      `SELECT a.*, u.name as creator_name, u.email as creator_email
+      `SELECT a.*, 
+              u.name as creator_name, 
+              u.email as creator_email,
+              u.primary_role as creator_primary_role,
+              e.course_role as creator_enrollment_role
        FROM announcements a
        JOIN users u ON a.created_by = u.id
+       LEFT JOIN enrollments e ON e.user_id = u.id 
+         AND e.offering_id = a.offering_id 
+         AND e.status = 'enrolled'::enrollment_status_enum
        WHERE a.id = $1`,
       [id]
     );
@@ -53,9 +60,16 @@ export class AnnouncementModel {
     } = options;
 
     const result = await pool.query(
-      `SELECT a.*, u.name as creator_name, u.email as creator_email
+      `SELECT a.*, 
+              u.name as creator_name, 
+              u.email as creator_email,
+              u.primary_role as creator_primary_role,
+              e.course_role as creator_enrollment_role
        FROM announcements a
        JOIN users u ON a.created_by = u.id
+       LEFT JOIN enrollments e ON e.user_id = u.id 
+         AND e.offering_id = a.offering_id 
+         AND e.status = 'enrolled'::enrollment_status_enum
        WHERE a.offering_id = $1
        ORDER BY ${order}
        LIMIT $2 OFFSET $3`,
@@ -139,9 +153,16 @@ export class AnnouncementModel {
    */
   static async getRecent(offeringId, limit = 5) {
     const result = await pool.query(
-      `SELECT a.*, u.name as creator_name, u.email as creator_email
+      `SELECT a.*, 
+              u.name as creator_name, 
+              u.email as creator_email,
+              u.primary_role as creator_primary_role,
+              e.course_role as creator_enrollment_role
        FROM announcements a
        JOIN users u ON a.created_by = u.id
+       LEFT JOIN enrollments e ON e.user_id = u.id 
+         AND e.offering_id = a.offering_id 
+         AND e.status = 'enrolled'::enrollment_status_enum
        WHERE a.offering_id = $1
          AND a.created_at >= NOW() - INTERVAL '7 days'
        ORDER BY a.created_at DESC
@@ -160,9 +181,16 @@ export class AnnouncementModel {
    */
   static async getRecentCourseWide(offeringId, limit = 5) {
     const result = await pool.query(
-      `SELECT a.*, u.name as creator_name, u.email as creator_email
+      `SELECT a.*, 
+              u.name as creator_name, 
+              u.email as creator_email,
+              u.primary_role as creator_primary_role,
+              e.course_role as creator_enrollment_role
        FROM announcements a
        JOIN users u ON a.created_by = u.id
+       LEFT JOIN enrollments e ON e.user_id = u.id 
+         AND e.offering_id = a.offering_id 
+         AND e.status = 'enrolled'::enrollment_status_enum
        WHERE a.offering_id = $1
          AND a.team_id IS NULL
          AND a.created_at >= NOW() - INTERVAL '7 days'
@@ -189,10 +217,17 @@ export class AnnouncementModel {
     } = options;
 
     const result = await pool.query(
-      `SELECT DISTINCT a.*, u.name as creator_name, u.email as creator_email,
+      `SELECT DISTINCT a.*, 
+              u.name as creator_name, 
+              u.email as creator_email,
+              u.primary_role as creator_primary_role,
+              e.course_role as creator_enrollment_role,
               t.name as team_name
        FROM announcements a
        JOIN users u ON a.created_by = u.id
+       LEFT JOIN enrollments e ON e.user_id = u.id 
+         AND e.offering_id = a.offering_id 
+         AND e.status = 'enrolled'::enrollment_status_enum
        LEFT JOIN team t ON a.team_id = t.id
        WHERE a.offering_id = $1
          AND (

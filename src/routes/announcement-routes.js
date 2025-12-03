@@ -22,12 +22,30 @@ router.post('/', ensureAuthenticated, async (req, res) => {
     
     if (team_id) {
       // Team announcement - check team permissions
+      // First check if user has team-level permission (leader role in team_members)
       hasPermission = await PermissionService.hasPermission(
         userId,
         'announcement.create',
         offering_id,
         team_id
       );
+      
+      // If not, check if user is team lead via enrollment role and is a member of the team
+      if (!hasPermission) {
+        const { pool } = await import('../db.js');
+        const teamCheck = await pool.query(
+          `SELECT 1 
+           FROM enrollments e
+           INNER JOIN team_members tm ON tm.team_id = $1 AND tm.user_id = e.user_id AND tm.left_at IS NULL
+           WHERE e.user_id = $2 
+             AND e.offering_id = $3 
+             AND e.course_role = 'team-lead'::enrollment_role_enum
+             AND e.status = 'enrolled'::enrollment_status_enum
+           LIMIT 1`,
+          [team_id, userId, offering_id]
+        );
+        hasPermission = teamCheck.rows.length > 0;
+      }
     } else {
       // Course-wide announcement - check course permissions
       hasPermission = await PermissionService.hasPermission(

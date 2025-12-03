@@ -17,7 +17,7 @@
     }
     
     // Wait for toggle to be created (by sidebar-nav.js or create it ourselves)
-    function setupToggle() {
+    function setupToggle(retries = 10) {
       let toggle = document.getElementById('colorblindToggle');
       
       // If toggle doesn't exist yet, create it as fallback
@@ -66,7 +66,9 @@
       
       if (!toggle) {
         // Retry after a short delay if toggle still doesn't exist
-        setTimeout(setupToggle, 100);
+        if (retries > 0) {
+          setTimeout(() => setupToggle(retries - 1), 100);
+        }
         return;
       }
       
@@ -80,7 +82,8 @@
       });
     }
     
-    setupToggle();
+    // Wait a bit for sidebar-nav.js to create the toggle first
+    setTimeout(() => setupToggle(), 50);
   }
   
   function updateColorblindMode(enabled) {

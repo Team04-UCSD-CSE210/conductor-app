@@ -8,7 +8,7 @@
     return;
   }
 
-  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo, updateCourseProgress, updateStickyHeader, updateWelcomeMessage, getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement, loadRecentProgress } = window.DashboardService;
+  const { getActiveOfferingId, getOfferingWithStats, updateCourseInfo, updateCourseProgress, updateStickyHeader, updateWelcomeMessage, getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement, loadRecentProgress, formatCreatorWithRole } = window.DashboardService;
   
   let offeringId = null;
   let refreshInterval = null;
@@ -167,6 +167,9 @@
         return div.innerHTML;
       }
 
+      // Team leads can manage their own team announcements
+      const canManageAnnouncements = true;
+
       announcementsList.innerHTML = announcements.slice(0, 5).map(announcement => {
         const date = new Date(announcement.created_at || announcement.date || Date.now());
         // Format date as MM/DD/YY (e.g., 12/01/25)
@@ -178,11 +181,11 @@
         const title = announcement.title || announcement.subject || 'Announcement';
         const content = announcement.content || announcement.body || announcement.message || '';
         const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
-        const creatorName = announcement.creator_name || 'Unknown';
+        const creatorDisplay = formatCreatorWithRole(announcement);
         const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
         
         // Show edit/delete buttons only for team announcements created by the current user
-        const canEdit = announcement.team_id && announcement.created_by === currentUserId;
+        const canEdit = announcement.team_id && announcement.created_by === currentUserId && canManageAnnouncements;
         const editDeleteButtons = canEdit ? `
           <div class="announcement-actions">
             <button class="announcement-edit-btn" data-announcement-id="${announcement.id}" aria-label="Edit announcement">
@@ -205,7 +208,7 @@
             <div class="announcement-content">
               <h5>${escapeHtml(title)} ${teamBadge}</h5>
               <p>${escapeHtml(preview)}</p>
-              <div class="announcement-creator">by ${escapeHtml(creatorName)}</div>
+              <div class="announcement-creator">by ${escapeHtml(creatorDisplay)}</div>
             </div>
             ${editDeleteButtons}
           </div>
@@ -475,7 +478,7 @@
       
       const title = announcement.title || announcement.subject || 'Announcement';
       const content = announcement.content || announcement.body || announcement.message || '';
-      const creatorName = announcement.creator_name || 'Unknown';
+      const creatorDisplay = formatCreatorWithRole(announcement);
       
       const dateEl = document.getElementById('viewAnnouncementDate');
       const creatorEl = document.getElementById('viewAnnouncementCreator');
@@ -483,7 +486,7 @@
       const messageEl = document.getElementById('viewAnnouncementMessage');
       
       if (dateEl) dateEl.textContent = dateStr;
-      if (creatorEl) creatorEl.textContent = `by ${escapeHtml(creatorName)}`;
+      if (creatorEl) creatorEl.textContent = `by ${escapeHtml(creatorDisplay)}`;
       if (subjectEl) subjectEl.textContent = title;
       if (messageEl) {
         messageEl.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
@@ -559,7 +562,7 @@
 
       // Update modal title
       if (modalTitle) {
-        modalTitle.textContent = isEdit ? 'Edit Team Announcement' : 'New Team Announcement';
+        modalTitle.textContent = isEdit ? 'Edit Announcement' : 'New Announcement';
       }
       
       // Update submit button text
@@ -659,18 +662,23 @@
             return;
           }
 
-          await createAnnouncement(offeringId, { 
+          const result = await createAnnouncement(offeringId, { 
             subject, 
             message: body,
             team_id: userTeamId  // Set team_id for team announcement
           });
+          
+          if (!result) {
+            throw new Error('No response from server');
+          }
         }
         
         closeModal();
         await loadAnnouncements(offeringId);
       } catch (error) {
         console.error('Error saving announcement:', error);
-        alert(`Failed to ${editingAnnouncementId ? 'update' : 'create'} announcement. Please try again.`);
+        const errorMessage = error.message || `Failed to ${editingAnnouncementId ? 'update' : 'create'} announcement`;
+        alert(`${errorMessage}. Please try again.`);
       }
     });
 
