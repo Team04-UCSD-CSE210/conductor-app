@@ -100,10 +100,15 @@
   padding: 6px 10px;
 }
 
+/* Attendance create button matches announcements */
+.btn-create-attendance {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
 /* Prevent the default h4 border from showing and ensure it doesn't add extra spacing */
 .announcements-card .card-header h4,
-.attendance-card .card-header h4,
-.attendance-card h4 {
+.attendance-card .card-header h4 {
   margin: 0;
   padding: 0;
   border-bottom: none;
@@ -144,7 +149,7 @@
 #announcement-form textarea:focus {
   outline: none;
   border-color: #83D7CF;
-  box-shadow: 0 0 0 4px rgb(131 215 207 / 12%);
+  box-shadow: 0 0 0 4px rgba(131,215,207,0.12);
 }
 
 /* Attendance list scroll behaviour */
@@ -179,14 +184,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-
   /* match announcements header: underline on the header container */
   border-bottom: 2px solid #99F6E4;
   padding-bottom: 8px;
   margin-bottom: 8px;
 }
 
-/* Attendance create button matches announcements */
+.attendance-card .card-header h4 {
+  margin: 0;
+  padding: 0;
+}
+
 .btn-create-attendance {
   font-size: 13px;
   padding: 4px 8px;
@@ -205,4 +213,12 @@
   padding: 0;
   font-size: 16px;
   border-radius: 6px;
+}
+
+/* Ensure the header underline for attendance spans the full card header width
+   (override h4's individual underline and rely on the card-header border) */
+.attendance-card h4 {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
 }
