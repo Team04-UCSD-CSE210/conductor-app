@@ -9,15 +9,269 @@ const router = Router();
  * GET /api/class-directory?offering_id=:id
  * Returns professors, TAs, students, and groups with their details
  */
+// router.get('/', ensureAuthenticated, async (req, res) => {
+//   try {
+//     const { offering_id } = req.query;
+    
+//     if (!offering_id) {
+//       return res.status(400).json({ error: 'offering_id query parameter is required' });
+//     }
+
+//     // Get professors (instructors)
+//     const professorsQuery = `
+//       SELECT DISTINCT
+//         u.id,
+//         u.name,
+//         u.email,
+//         e.course_role,
+//         u.primary_role
+//       FROM users u
+//       INNER JOIN enrollments e ON u.id = e.user_id
+//       WHERE e.offering_id = $1::uuid 
+//         AND e.status = 'enrolled'::enrollment_status_enum
+//         AND e.course_role = 'tutor'::enrollment_role_enum
+//       ORDER BY u.name
+//     `;
+
+//     // Get TAs
+//     const tasQuery = `
+//       SELECT DISTINCT
+//         u.id,
+//         u.name,
+//         u.email,
+//         e.course_role,
+//         u.primary_role
+//       FROM users u
+//       INNER JOIN enrollments e ON u.id = e.user_id
+//       WHERE e.offering_id = $1::uuid 
+//         AND e.status = 'enrolled'::enrollment_status_enum
+//         AND e.course_role = 'ta'::enrollment_role_enum
+//       ORDER BY u.name
+//     `;
+
+//     // Get students with team information
+//     const studentsQuery = `
+//       SELECT DISTINCT
+//         u.id,
+//         u.name,
+//         u.email,
+//         e.course_role,
+//         u.primary_role,
+//         tm.team_id,
+//         t.name as team_name,
+//         tm.role as team_role
+//       FROM users u
+//       INNER JOIN enrollments e ON u.id = e.user_id
+//       LEFT JOIN team_members tm ON u.id = tm.user_id
+//       LEFT JOIN team t ON tm.team_id = t.id AND t.offering_id = $1::uuid
+//       WHERE e.offering_id = $1::uuid 
+//         AND e.status = 'enrolled'::enrollment_status_enum
+//         AND e.course_role IN ('student'::enrollment_role_enum, 'ta'::enrollment_role_enum)
+//       ORDER BY u.name
+//     `;
+
+
+//     // // Get teams/groups with member information
+//     const groupsQuery = `
+//       SELECT 
+//         t.id,
+//         t.name,
+//         t.status,
+//         COUNT(tm.user_id) AS member_count,
+//         JSON_AGG(
+//           JSON_BUILD_OBJECT(
+//             'id', u.id,
+//             'name', u.name,
+//             'email', u.email,
+//             'role', tm.role
+//           ) ORDER BY u.name
+//         ) FILTER (WHERE u.id IS NOT NULL) AS members
+//       FROM team t
+//       LEFT JOIN team_members tm ON t.id = tm.team_id
+//       LEFT JOIN users u ON tm.user_id = u.id
+//       WHERE t.offering_id = $1::uuid
+//       GROUP BY t.id, t.name, t.status
+//       ORDER BY t.name;
+//       `;
+//     // Execute all queries in parallel
+//     const [professorsResult, tasResult, studentsResult, groupsResult] = await Promise.all([
+//       pool.query(professorsQuery, [offering_id]),
+//       pool.query(tasQuery, [offering_id]),
+//       pool.query(studentsQuery, [offering_id]),
+//       pool.query(groupsQuery, [offering_id])
+//     ]);
+
+//     // Process groups to add links array
+//     const groups = groupsResult.rows.map(group => ({
+//       ...group,
+//       links: [
+//         group.repository_url && { name: 'Repository', url: group.repository_url },
+//         group.slack_channel && { name: 'Slack', url: group.slack_channel }
+//       ].filter(Boolean)
+//     }));
+
+//     const response = {
+//       professors: professorsResult.rows,
+//       tas: tasResult.rows,
+//       students: studentsResult.rows,
+//       groups: groups
+//     };
+
+//     res.json(response);
+
+//   } catch (error) {
+//     console.error('Error fetching class directory:', error);
+//     res.status(500).json({ error: 'Failed to fetch class directory data' });
+//   }
+// });
+
+
+
+// router.get('/', ensureAuthenticated, async (req, res) => {
+//   try {
+//     const { offering_id } = req.query;
+    
+//     if (!offering_id) {
+//       return res.status(400).json({ error: 'offering_id query parameter is required' });
+//     }
+
+//     // Get professors (instructors)
+//     const professorsQuery = `
+//       SELECT DISTINCT
+//         u.id,
+//         u.name,
+//         u.email,
+//         u.phone,
+//         u.pronouns,
+//         u.availability,
+//         u.social_links,
+//         u.last_activity,
+//         e.course_role::text AS course_role,  -- 'professor'
+//         u.primary_role
+//       FROM enrollments e
+//       JOIN users u ON e.user_id = u.id
+//       WHERE e.offering_id = $1::uuid
+//         AND e.status = 'enrolled'::enrollment_status_enum
+//         AND e.course_role = 'professor'::enrollment_role_enum
+//       ORDER BY u.name
+//     `;
+
+
+//     // Get TAs
+//     const tasQuery = `
+//       SELECT DISTINCT
+//         u.id,
+//         u.name,
+//         u.email,
+//         u.phone,
+//         u.pronouns,
+//         u.availability,
+//         u.social_links,
+//         u.last_activity,
+//         e.course_role,
+//         u.primary_role
+//       FROM users u
+//       INNER JOIN enrollments e ON u.id = e.user_id
+//       WHERE e.offering_id = $1::uuid 
+//         AND e.status = 'enrolled'::enrollment_status_enum
+//         AND e.course_role = 'ta'::enrollment_role_enum
+//       ORDER BY u.name
+//     `;
+
+//     // Get students with team information
+//     const studentsQuery = `
+//       SELECT DISTINCT
+//         u.id,
+//         u.name,
+//         u.email,
+//         u.phone,
+//         u.pronouns,
+//         u.availability,
+//         u.social_links,
+//         u.last_activity,
+//         e.course_role,
+//         u.primary_role,
+//         tm.team_id,
+//         t.name as team_name,
+//         tm.role as team_role
+//       FROM users u
+//       INNER JOIN enrollments e ON u.id = e.user_id
+//       LEFT JOIN team_members tm ON u.id = tm.user_id
+//       LEFT JOIN team t ON tm.team_id = t.id AND t.offering_id = $1::uuid
+//       WHERE e.offering_id = $1::uuid 
+//         AND e.status = 'enrolled'::enrollment_status_enum
+//         AND e.course_role IN ('student'::enrollment_role_enum, 'tutor'::enrollment_role_enum)
+//       ORDER BY u.name
+//     `;
+
+//     // Get teams/groups with member information
+//     const groupsQuery = `
+//       SELECT 
+//         t.id,
+//         t.name,
+//         t.description as mantra,
+//         t.repository_url,
+//         t.slack_channel,
+//         t.status,
+//         COUNT(tm.user_id) as member_count,
+//         JSON_AGG(
+//           JSON_BUILD_OBJECT(
+//             'id', u.id,
+//             'name', u.name,
+//             'email', u.email,
+//             'role', tm.role
+//           ) ORDER BY u.name
+//         ) FILTER (WHERE u.id IS NOT NULL) as members
+//       FROM team t
+//       LEFT JOIN team_members tm ON t.id = tm.team_id
+//       LEFT JOIN users u ON tm.user_id = u.id
+//       WHERE t.offering_id = $1::uuid
+//       GROUP BY t.id, t.name, t.description, t.repository_url, t.slack_channel, t.status
+//       ORDER BY t.name
+//     `;
+
+//     // Execute all queries in parallel
+//     const [professorsResult, tasResult, studentsResult, groupsResult] = await Promise.all([
+//       pool.query(professorsQuery, [offering_id]),
+//       pool.query(tasQuery, [offering_id]),
+//       pool.query(studentsQuery, [offering_id]),
+//       pool.query(groupsQuery, [offering_id])
+//     ]);
+
+//     // Process groups to add links array
+//     const groups = groupsResult.rows.map(group => ({
+//       ...group,
+//       links: [
+//         group.repository_url && { name: 'Repository', url: group.repository_url },
+//         group.slack_channel && { name: 'Slack', url: group.slack_channel }
+//       ].filter(Boolean)
+//     }));
+
+//     const response = {
+//       professors: professorsResult.rows,
+//       tas: tasResult.rows,
+//       students: studentsResult.rows,
+//       groups: groups
+//     };
+
+//     res.json(response);
+
+//   } catch (error) {
+//     console.error('Error fetching class directory:', error);
+//     res.status(500).json({ error: 'Failed to fetch class directory data' });
+//   }
+// });
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     const { offering_id } = req.query;
-    
+
     if (!offering_id) {
       return res.status(400).json({ error: 'offering_id query parameter is required' });
     }
 
-    // Get professors (instructors)
+    const offeringId = offering_id; // 方便下面少打字
+
+    // Professors: enrollment_role_enum = 'professor'
     const professorsQuery = `
       SELECT DISTINCT
         u.id,
@@ -28,17 +282,17 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.availability,
         u.social_links,
         u.last_activity,
-        e.course_role,
+        e.course_role::text AS course_role,  -- 'professor'
         u.primary_role
-      FROM users u
-      INNER JOIN enrollments e ON u.id = e.user_id
-      WHERE e.offering_id = $1::uuid 
+      FROM enrollments e
+      JOIN users u ON e.user_id = u.id
+      WHERE e.offering_id = $1::uuid
         AND e.status = 'enrolled'::enrollment_status_enum
-        AND e.course_role = 'instructor'::enrollment_role_enum
+        AND e.course_role = 'professor'::enrollment_role_enum
       ORDER BY u.name
     `;
 
-    // Get TAs
+    // TAs
     const tasQuery = `
       SELECT DISTINCT
         u.id,
@@ -49,7 +303,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.availability,
         u.social_links,
         u.last_activity,
-        e.course_role,
+        e.course_role::text AS course_role,
         u.primary_role
       FROM users u
       INNER JOIN enrollments e ON u.id = e.user_id
@@ -59,7 +313,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       ORDER BY u.name
     `;
 
-    // Get students with team information
+    // Students
     const studentsQuery = `
       SELECT DISTINCT
         u.id,
@@ -70,7 +324,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.availability,
         u.social_links,
         u.last_activity,
-        e.course_role,
+        e.course_role::text AS course_role,
         u.primary_role,
         tm.team_id,
         t.name as team_name,
@@ -85,7 +339,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       ORDER BY u.name
     `;
 
-    // Get teams/groups with member information
+    // Groups
     const groupsQuery = `
       SELECT 
         t.id,
@@ -111,15 +365,13 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       ORDER BY t.name
     `;
 
-    // Execute all queries in parallel
     const [professorsResult, tasResult, studentsResult, groupsResult] = await Promise.all([
-      pool.query(professorsQuery, [offering_id]),
-      pool.query(tasQuery, [offering_id]),
-      pool.query(studentsQuery, [offering_id]),
-      pool.query(groupsQuery, [offering_id])
+      pool.query(professorsQuery, [offeringId]),
+      pool.query(tasQuery, [offeringId]),
+      pool.query(studentsQuery, [offeringId]),
+      pool.query(groupsQuery, [offeringId])
     ]);
 
-    // Process groups to add links array
     const groups = groupsResult.rows.map(group => ({
       ...group,
       links: [
@@ -128,20 +380,19 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       ].filter(Boolean)
     }));
 
-    const response = {
+    res.json({
       professors: professorsResult.rows,
       tas: tasResult.rows,
       students: studentsResult.rows,
-      groups: groups
-    };
-
-    res.json(response);
+      groups
+    });
 
   } catch (error) {
     console.error('Error fetching class directory:', error);
     res.status(500).json({ error: 'Failed to fetch class directory data' });
   }
 });
+
 
 /**
  * Get user activity data for activity charts and attendance
