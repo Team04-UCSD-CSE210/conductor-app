@@ -2,25 +2,31 @@
 /* global openViewAnnouncementModal */
 
 (function() {
-  // Wait for DashboardService to be available
-  if (typeof window.DashboardService === 'undefined') {
-    console.error('DashboardService not loaded. Make sure dashboard.service.js is included before this script.');
-    return;
+  // DashboardService is optional for the modal UI; provide safe fallbacks so
+  // the script still initializes (modal, hamburger, forms) even if the
+  // service bundle didn't load yet.
+  const DS = window.DashboardService || {};
+  if (!window.DashboardService) {
+    console.warn('DashboardService not loaded — some dashboard features will be disabled, but UI handlers will still work.');
   }
 
-  const { 
-    getActiveOfferingId, 
-    getOfferingWithStats, 
-    getTeams, 
-    updateCourseInfo, 
-    updateStats,
-    getAnnouncements,
-    getAttendanceSessions,
-    getSessionStatistics,
-    getDashboardTodos,
-    updateStickyHeader,
-    updateWelcomeMessage,
-  } = window.DashboardService;
+  const {
+    getActiveOfferingId = async () => null,
+    getOfferingWithStats = async () => ({}),
+    getTeams = async () => [],
+    getStudents = async () => [],
+    updateCourseInfo = () => {},
+    updateStats = () => {},
+    updateCourseProgress = () => {},
+    updateStickyHeader = async () => {},
+    updateWelcomeMessage = async () => {},
+    getAnnouncements = async () => [],
+    createAnnouncement = async () => ({}),
+    updateAnnouncement = async () => ({}),
+    deleteAnnouncement = async () => ({}),
+    getAttendanceSessions = async () => [],
+    getSessionStatistics = async () => null,
+  } = DS;
   
   let offeringId = null;
   let refreshInterval = null;
@@ -46,8 +52,9 @@
       // Fetch offering details
       const offering = await getOfferingWithStats(offeringId);
       
-      // Update course info
+      // Update course info and course progress
       updateCourseInfo(offering);
+      updateCourseProgress(offering);
       
       // Update welcome message with user's name and role
       await updateWelcomeMessage(offeringId);
@@ -86,18 +93,18 @@
       // Get all attendance sessions for this offering
       const sessions = await getAttendanceSessions(offeringId);
       
+      const attendanceList = attendanceCard.querySelector('.attendance-list');
+      if (!attendanceList) return;
+
       if (!sessions || sessions.length === 0) {
-        return; // No sessions yet
+        attendanceList.innerHTML = '<p class="dashboard-empty-state">No attendance sessions yet</p>';
+        return;
       }
 
       // Get the most recent sessions for display
       const recentSessions = sessions
         .sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0))
         .slice(0, 3);
-
-      // Load statistics for each session and display
-      const attendanceList = attendanceCard.querySelector('.attendance-list');
-      if (!attendanceList) return;
 
       const sessionStats = await Promise.all(
         recentSessions.map(async (session) => {
@@ -106,7 +113,14 @@
         })
       );
 
-      attendanceList.innerHTML = sessionStats.map(({ session, stats }) => {
+      const validStats = sessionStats.filter(item => item && item.session && item.stats);
+      
+      if (validStats.length === 0) {
+        attendanceList.innerHTML = '<p class="dashboard-empty-state">No attendance data available</p>';
+        return;
+      }
+
+      attendanceList.innerHTML = validStats.map(({ session, stats }) => {
         const sessionName = session.name || session.title || `Lecture ${session.session_number || ''}`.trim() || 'Session';
         const percentage = stats ? Math.round((stats.present_count / Math.max(stats.total_count, 1)) * 100) : 0;
         
@@ -124,6 +138,10 @@
       }).join('');
     } catch (error) {
       console.error('Error loading attendance statistics:', error);
+      const attendanceList = attendanceCard?.querySelector('.attendance-list');
+      if (attendanceList) {
+        attendanceList.innerHTML = '<p class="dashboard-error-state">Error loading attendance</p>';
+      }
     }
   }
 
@@ -138,7 +156,11 @@
       });
       
       if (!res.ok) {
-        journalList.innerHTML = '<p class="dashboard-empty-state">No journal entries</p>';
+        if (res.status === 404 || res.status === 403) {
+          journalList.innerHTML = '<p class="dashboard-empty-state">No journal entries</p>';
+        } else {
+          journalList.innerHTML = '<p class="dashboard-error-state">Error loading journal entries</p>';
+        }
         return;
       }
       
@@ -239,13 +261,16 @@
         const title = announcement.title || announcement.subject || 'Announcement';
         const content = announcement.content || announcement.body || announcement.message || '';
         const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        const creatorName = announcement.creator_name || 'Unknown';
+        const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
         
         return `
           <div class="announcement-item clickable-announcement" data-announcement-id="${announcement.id}">
             <div class="announcement-date">${escapeHtml(dateStr)}</div>
             <div class="announcement-content">
-              <h5>${escapeHtml(title)}</h5>
+              <h5>${escapeHtml(title)} ${teamBadge}</h5>
               <p>${escapeHtml(preview)}</p>
+              <div class="announcement-creator">by ${escapeHtml(creatorName)}</div>
             </div>
           </div>
         `;
@@ -274,49 +299,7 @@
     }
   }
 
-  // Load TODO items from backend
-  async function loadTodos() {
-    try {
-      const todos = await getDashboardTodos();
-      const todoList = document.querySelector('.todo-card .todo-list');
-      if (!todoList) return;
-
-      if (!todos || todos.length === 0) {
-        todoList.innerHTML = '<p class="dashboard-empty-state">No TODO items</p>';
-        return;
-      }
-
-      todoList.innerHTML = todos.map(todo => {
-        const isCompleted = todo.completed || false;
-        return `
-          <div class="todo-item">
-            <div class="todo-checkbox ${isCompleted ? 'checked' : ''}" data-todo-id="${todo.id}"></div>
-            <span class="${isCompleted ? 'completed' : ''}">${escapeHtml(todo.title)}</span>
-          </div>
-        `;
-      }).join('');
-
-      // Add click handlers for todo checkboxes
-      todoList.querySelectorAll('.todo-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('click', async () => {
-          const todoId = checkbox.dataset.todoId;
-          const isCompleted = checkbox.classList.contains('checked');
-          try {
-            if (window.DashboardService && window.DashboardService.updateDashboardTodo) {
-              await window.DashboardService.updateDashboardTodo(todoId, { completed: !isCompleted });
-              checkbox.classList.toggle('checked');
-              const span = checkbox.nextElementSibling;
-              if (span) span.classList.toggle('completed');
-            }
-          } catch (error) {
-            console.error('Error updating TODO:', error);
-          }
-        });
-      });
-    } catch (error) {
-      console.error('Error loading TODO items:', error);
-    }
-  }
+  // TODO items are handled by todo-widget.js - no manual loading needed
 
   // Initialize dashboard
   async function initDashboard() {
@@ -324,7 +307,7 @@
     await loadDashboardStats();
     await loadJournalEntries();
     await loadAnnouncements();
-    await loadTodos();
+    // TODO items are handled by todo-widget.js - no manual loading needed
     
     // Refresh stats every 30 seconds for live updates
     if (refreshInterval) {
@@ -404,12 +387,15 @@
       
       const title = announcement.title || announcement.subject || 'Announcement';
       const content = announcement.content || announcement.body || announcement.message || '';
+      const creatorName = announcement.creator_name || 'Unknown';
       
       const dateEl = document.getElementById('viewAnnouncementDate');
+      const creatorEl = document.getElementById('viewAnnouncementCreator');
       const subjectEl = document.getElementById('viewAnnouncementSubject');
       const messageEl = document.getElementById('viewAnnouncementMessage');
       
       if (dateEl) dateEl.textContent = dateStr;
+      if (creatorEl) creatorEl.textContent = `by ${escapeHtml(creatorName)}`;
       if (subjectEl) subjectEl.textContent = title;
       if (messageEl) {
         messageEl.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');

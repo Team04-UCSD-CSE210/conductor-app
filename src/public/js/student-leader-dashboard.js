@@ -178,6 +178,7 @@
         const title = announcement.title || announcement.subject || 'Announcement';
         const content = announcement.content || announcement.body || announcement.message || '';
         const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        const creatorName = announcement.creator_name || 'Unknown';
         const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
         
         // Show edit/delete buttons only for team announcements created by the current user
@@ -204,6 +205,7 @@
             <div class="announcement-content">
               <h5>${escapeHtml(title)} ${teamBadge}</h5>
               <p>${escapeHtml(preview)}</p>
+              <div class="announcement-creator">by ${escapeHtml(creatorName)}</div>
             </div>
             ${editDeleteButtons}
           </div>
@@ -537,12 +539,15 @@
       
       const title = announcement.title || announcement.subject || 'Announcement';
       const content = announcement.content || announcement.body || announcement.message || '';
+      const creatorName = announcement.creator_name || 'Unknown';
       
       const dateEl = document.getElementById('viewAnnouncementDate');
+      const creatorEl = document.getElementById('viewAnnouncementCreator');
       const subjectEl = document.getElementById('viewAnnouncementSubject');
       const messageEl = document.getElementById('viewAnnouncementMessage');
       
       if (dateEl) dateEl.textContent = dateStr;
+      if (creatorEl) creatorEl.textContent = `by ${escapeHtml(creatorName)}`;
       if (subjectEl) subjectEl.textContent = title;
       if (messageEl) {
         messageEl.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
