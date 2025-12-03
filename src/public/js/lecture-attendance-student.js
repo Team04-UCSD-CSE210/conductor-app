@@ -205,7 +205,7 @@
   }
 
   async function updateCourseTitle() {
-    const courseTitleEl = document.getElementById('course-title');
+    const courseTitleEl = document.getElementById('header-title');
     if (!courseTitleEl || !state.offeringId) return;
     
     try {

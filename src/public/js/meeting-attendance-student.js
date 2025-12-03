@@ -13,7 +13,8 @@
     filter: document.getElementById('meeting-filter'),
     attendancePercentage: document.getElementById('attendance-percentage'),
     container: document.querySelector('.attendance-content'),
-    teamName: document.getElementById('team-name')
+    teamName: document.getElementById('team-name'),
+    courseTitle: document.getElementById('course-title')
   };
 
   let isLoading = false;
@@ -52,7 +53,20 @@
     }
     // No attendance timestamps - fall back to session_date/session_time
     if (meeting.session_date && meeting.session_time) {
-      const startTime = new Date(`${meeting.session_date}T${meeting.session_time}`);
+      // Parse date directly to avoid timezone issues
+      let dateStr = meeting.session_date;
+      if (typeof dateStr === 'object') {
+        const year = dateStr.getFullYear();
+        const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+        const day = String(dateStr.getDate()).padStart(2, '0');
+        dateStr = `${year}-${month}-${day}`;
+      } else {
+        dateStr = String(dateStr).split('T')[0];
+      }
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hours, minutes] = meeting.session_time.split(':').map(Number);
+      const startTime = new Date(year, month - 1, day, hours, minutes);
+      
       if (startTime > now) {
         return 'pending';
       }
@@ -350,6 +364,24 @@
     }
   }
 
+  function updateCourseTitle(offering, teamInfo) {
+    if (!selectors.courseTitle) return;
+    
+    try {
+      const courseName = offering?.name || offering?.code || 'Course';
+      const teamDisplay = teamInfo?.number ? `Team ${teamInfo.number}` : (teamInfo?.name || 'Your Team');
+      
+      if (teamInfo) {
+        selectors.courseTitle.textContent = `${teamDisplay} - ${courseName}`;
+      } else {
+        selectors.courseTitle.textContent = `${courseName} - Meeting Attendance`;
+      }
+    } catch (error) {
+      console.error('Error updating course title:', error);
+      selectors.courseTitle.textContent = 'Meeting Attendance';
+    }
+  }
+
   async function hydrateStudentView() {
     if (!window.LectureService || !selectors.container) return;
 
@@ -359,11 +391,25 @@
       // Server-side routing already handles team lead vs student view
       // No need to check and redirect here - if we're on this page, we should be a student
       
-      // Get offering ID
+      // Get offering ID and offering info
       state.offeringId = selectors.container.getAttribute('data-offering-id');
       if (!state.offeringId) {
         state.offeringId = await window.LectureService.getActiveOfferingId();
         selectors.container.dataset.offeringId = state.offeringId;
+      }
+
+      // Get course offering details
+      let offering = null;
+      try {
+        const offeringResponse = await fetch(`/api/offerings/${state.offeringId}`, {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (offeringResponse.ok) {
+          offering = await offeringResponse.json();
+        }
+      } catch (err) {
+        console.warn('Could not fetch offering details:', err);
       }
 
       // Get team info
@@ -379,6 +425,9 @@
           selectors.teamName.textContent = 'No team assigned';
         }
       }
+
+      // Update course title
+      updateCourseTitle(offering, teamInfo);
 
       // Get meeting list (team-specific sessions)
       // Fetch sessions directly from API to get team_id

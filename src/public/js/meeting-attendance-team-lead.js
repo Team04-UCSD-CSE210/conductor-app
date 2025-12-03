@@ -163,7 +163,7 @@
       // If open and no attendance, hide the badge (will show "I'm here" button instead)
       badge.style.display = 'none';
     } catch (err) {
-      console.error('Error fetching leader attendance:', err);
+      // Silently handle errors - 404 is expected when no attendance record exists
       badge.style.display = 'none';
     }
     
@@ -178,12 +178,22 @@ function determineMeetingStatus(meeting) {
   // FIRST: Check if scheduled time is in the future - always return pending for future meetings
   let scheduledStartTime = null;
   if (meeting.session_date && meeting.session_time) {
-    const sessionDate = new Date(meeting.session_date);
-    const year = sessionDate.getFullYear();
-    const month = sessionDate.getMonth();
-    const day = sessionDate.getDate();
+    // Parse date directly from YYYY-MM-DD string to avoid timezone issues
+    let dateStr = meeting.session_date;
+    if (typeof dateStr === 'object') {
+      // If it's a Date object, extract local date components
+      const year = dateStr.getFullYear();
+      const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+      const day = String(dateStr.getDate()).padStart(2, '0');
+      dateStr = `${year}-${month}-${day}`;
+    } else {
+      // Extract just YYYY-MM-DD from string
+      dateStr = String(dateStr).split('T')[0];
+    }
+    
+    const [year, month, day] = dateStr.split('-').map(Number);
     const [hours, minutes] = meeting.session_time.split(':').map(Number);
-    scheduledStartTime = new Date(year, month, day, hours, minutes);
+    scheduledStartTime = new Date(year, month - 1, day, hours, minutes);
     
     // If scheduled start time is in the future, it's always pending
     if (scheduledStartTime > now) {
@@ -577,9 +587,9 @@ function determineMeetingStatus(meeting) {
               presentCount++;
             }
           }
-          // 404 means no attendance record (absent)
+          // 404 means no attendance record (absent) - this is normal, not an error
         } catch (err) {
-          console.error('Error fetching attendance:', err);
+          // Silently handle errors - 404 is expected when no attendance record exists
         }
       }
 
@@ -662,12 +672,19 @@ function determineMeetingStatus(meeting) {
       
       // Always prefer session_date + session_time for sorting
       if (a.session_date && a.session_time) {
-        const sessionDate = new Date(a.session_date);
-        const year = sessionDate.getUTCFullYear();
-        const month = sessionDate.getUTCMonth();
-        const day = sessionDate.getUTCDate();
+        // Parse date directly to avoid timezone issues
+        let dateStr = a.session_date;
+        if (typeof dateStr === 'object') {
+          const year = dateStr.getFullYear();
+          const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+          const day = String(dateStr.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${day}`;
+        } else {
+          dateStr = String(dateStr).split('T')[0];
+        }
+        const [year, month, day] = dateStr.split('-').map(Number);
         const [hours, minutes] = a.session_time.split(':').map(Number);
-        dateA = new Date(year, month, day, hours, minutes);
+        dateA = new Date(year, month - 1, day, hours, minutes);
       } else if (a.attendance_opened_at) {
         dateA = new Date(a.attendance_opened_at);
       } else {
@@ -675,12 +692,19 @@ function determineMeetingStatus(meeting) {
       }
       
       if (b.session_date && b.session_time) {
-        const sessionDate = new Date(b.session_date);
-        const year = sessionDate.getUTCFullYear();
-        const month = sessionDate.getUTCMonth();
-        const day = sessionDate.getUTCDate();
+        // Parse date directly to avoid timezone issues
+        let dateStr = b.session_date;
+        if (typeof dateStr === 'object') {
+          const year = dateStr.getFullYear();
+          const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+          const day = String(dateStr.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${day}`;
+        } else {
+          dateStr = String(dateStr).split('T')[0];
+        }
+        const [year, month, day] = dateStr.split('-').map(Number);
         const [hours, minutes] = b.session_time.split(':').map(Number);
-        dateB = new Date(year, month, day, hours, minutes);
+        dateB = new Date(year, month - 1, day, hours, minutes);
       } else if (b.attendance_opened_at) {
         dateB = new Date(b.attendance_opened_at);
       } else {

@@ -1210,7 +1210,7 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
         return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
       } else {
         // Regular students get the student view
-        return res.sendFile(buildFullViewPath("meeting-attendance-student.html"));
+        return res.sendFile(buildFullViewPath("meeting-attendance.html"));
       }
     }
 

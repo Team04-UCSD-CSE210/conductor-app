@@ -185,7 +185,7 @@ export class SessionService {
       const teamRes = await pool.query(
         `SELECT t.id 
          FROM team t
-         LEFT JOIN team_members tm ON tm.team_id = t.id
+         LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.left_at IS NULL
          WHERE t.offering_id = $1 
            AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
          LIMIT 1`,
@@ -212,7 +212,7 @@ export class SessionService {
         `SELECT t.id, t.offering_id,
                 EXISTS(
                   SELECT 1 FROM team_members tm 
-                  WHERE tm.team_id = t.id AND tm.user_id = $2 AND tm.role = 'leader'
+                  WHERE tm.team_id = t.id AND tm.user_id = $2 AND tm.role = 'leader' AND tm.left_at IS NULL
                   UNION
                   SELECT 1 WHERE t.leader_id = $2
                 ) as is_leader
