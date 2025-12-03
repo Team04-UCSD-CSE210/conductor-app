@@ -314,11 +314,9 @@ body {
 
 /* layout under tabs */
 
+/* CSE 210: full-width cards, no right summary column */
 .directory-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 2.6fr) minmax(260px, 1fr);
-  gap: 18px;
-  align-items: flex-start;
+  display: block;
 }
 
 /* left list */
@@ -327,6 +325,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 }
 
 .role-panel-header {
@@ -394,6 +393,10 @@ body {
   justify-content: center;
   align-items: center;
   font-weight: 700;
+  
+  /* Make avatar work as an <img> too */
+  object-fit: cover;
+  overflow: hidden;
 }
 
 .person-name {
@@ -494,10 +497,9 @@ body {
 
 /* right column */
 
+/* CSE 210: hide old summary/aside column */
 .directory-aside {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: none;
 }
 
 .aside-card {
@@ -576,7 +578,7 @@ body {
   }
 
   .directory-layout {
-    grid-template-columns: 1fr;
+    display: block;
   }
 }
 
@@ -594,4 +596,54 @@ body {
   .page-header-controls {
     align-items: flex-start;
   }
+}
+
+/* ----- Profile-view specific tweaks (professors-directory) ----- */
+
+/* On this page, hide details until the card is expanded */
+.directory-profiles .person-info {
+  display: none;
+}
+
+.directory-profiles .person-card.profile-open .person-info {
+  display: flex;          /* keep the stacked layout */
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Punch-card dropdown (pull down) */
+
+.activity-dropdown {
+  margin-top: 0.75rem;
+}
+
+.activity-summary {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  list-style: none;
+}
+
+.activity-summary::marker {
+  content: "";
+}
+
+.activity-dropdown[open] .activity-summary {
+  color: #111827;
+}
+
+.activity-summary::after {
+  content: "▾";
+  margin-left: 0.35rem;
+  font-size: 0.7rem;
+}
+
+.activity-dropdown[open] .activity-summary::after {
+  content: "▴";
+}
+
+.activity-dropdown .activity-chart,
+.activity-dropdown .attendance-stats {
+  margin-top: 0.5rem;
 }
