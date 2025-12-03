@@ -727,29 +727,21 @@
     updateStats,
     renderTeamsList,
     updateCourseProgress,
-    // Dashboard todos
     getDashboardTodos,
     createDashboardTodo,
     updateDashboardTodo,
     deleteDashboardTodo,
-    // Announcements
     getAnnouncements,
     createAnnouncement,
     updateAnnouncement,
     deleteAnnouncement,
     formatCreatorWithRole,
-    // Attendance
     getSessionStatistics,
     getAttendanceSessions,
-    // Team info
     getMyTeam,
-    // User info
     getCurrentUser,
-    // Sticky header
     updateStickyHeader,
     updateWelcomeMessage,
-    // Recent progress
     loadRecentProgress,
-    formatCreatorWithRole
   };
 })();
