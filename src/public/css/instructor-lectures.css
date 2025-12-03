@@ -212,6 +212,8 @@ body.dashboard-page .main-container {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .access-code-col .code-label {
