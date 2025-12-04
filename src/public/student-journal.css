@@ -269,3 +269,47 @@ body.dashboard-page {
   height: 1em;
   display: block;
 }
+
+/* Contact section styles */
+.help-box {
+  background: linear-gradient(135deg, white 0%, var(--teal-50, #f0fdfa) 100%);
+  border: 1px solid var(--teal-200, #99f6e4);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
+}
+
+.help-box p {
+  margin: 0 0 1rem;
+  color: var(--gray-700, #374151);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.contact-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btn-contact {
+  padding: 0.625rem 1rem;
+  border: 2px solid var(--teal-600, #0d9488);
+  border-radius: 9999px;
+  background: white;
+  color: var(--teal-600, #0d9488);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-contact:hover {
+  background: var(--teal-50, #f0fdfa);
+  border-color: var(--teal-700, #0f766e);
+  color: var(--teal-700, #0f766e);
+}
+
+.btn-contact:active {
+  transform: scale(0.98);
+}
