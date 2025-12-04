@@ -47,6 +47,7 @@
 
     try {
       // Fetch offering details
+      console.log('Loading dashboard for team leader, offeringId:', offeringId);
       const offering = await getOfferingWithStats(offeringId);
       
       // Update course info and course progress
@@ -72,6 +73,11 @@
       await loadRecentProgress(offeringId, { showCount: 3 });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        offeringId: offeringId
+      });
     }
   }
 
@@ -141,11 +147,16 @@
     return div.innerHTML;
   }
 
-  // Load announcements from backend
+
   async function loadAnnouncements(offeringId) {
     if (!offeringId) {
       offeringId = await getActiveOfferingId();
       if (!offeringId) return;
+    }
+
+    // Ensure currentUserId is loaded
+    if (!currentUserId) {
+      await loadCurrentUserId();
     }
 
     const announcementsList = document.querySelector('.announcements-list');
@@ -153,6 +164,8 @@
 
     try {
       const announcements = await getAnnouncements(offeringId);
+      
+      console.log('[Team Lead Dashboard] Loaded announcements:', announcements?.length || 0, 'announcements');
       
       if (!announcements || announcements.length === 0) {
         announcementsList.innerHTML = '<p class="dashboard-empty-state">No announcements</p>';
@@ -180,7 +193,8 @@
         
         const title = announcement.title || announcement.subject || 'Announcement';
         const content = announcement.content || announcement.body || announcement.message || '';
-        const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        const isLongContent = content.length > 100;
+        const preview = isLongContent ? content.substring(0, 100) : content;
         const creatorDisplay = formatCreatorWithRole(announcement);
         const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
         
@@ -202,12 +216,14 @@
           </div>
         ` : '';
         
+        const viewMoreLink = isLongContent ? ` <button class="announcement-view-more" data-announcement-id="${announcement.id}" aria-label="View full announcement">View More</button>` : '';
+        
         return `
           <div class="announcement-item clickable-announcement" data-announcement-id="${announcement.id}">
             <div class="announcement-date">${escapeHtml(dateStr)}</div>
             <div class="announcement-content">
-              <h5>${escapeHtml(title)} ${teamBadge}</h5>
-              <p>${escapeHtml(preview)}</p>
+              <h5><span class="announcement-title-text">${escapeHtml(title)}</span>${teamBadge}</h5>
+              <p class="announcement-preview">${escapeHtml(preview)}${viewMoreLink}</p>
               <div class="announcement-creator">by ${escapeHtml(creatorDisplay)}</div>
             </div>
             ${editDeleteButtons}
@@ -223,11 +239,23 @@
         }
       });
 
+      // Add click listener to "View More" buttons - opens modal
+      announcementsList.querySelectorAll('.announcement-view-more').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const announcementId = btn.dataset.announcementId;
+          const announcement = announcements.find(a => a.id === announcementId);
+          if (announcement) {
+            openViewAnnouncementModal(announcement);
+          }
+        });
+      });
+
       // Add click listener to announcement items to expand
       announcementsList.querySelectorAll('.clickable-announcement').forEach(item => {
         item.addEventListener('click', (e) => {
-          // Don't expand if clicking on edit/delete buttons
-          if (e.target.closest('.announcement-actions')) {
+          // Don't expand if clicking on edit/delete buttons or view more button
+          if (e.target.closest('.announcement-actions') || e.target.closest('.announcement-view-more')) {
             return;
           }
           
@@ -257,7 +285,10 @@
           if (confirm('Are you sure you want to delete this announcement?')) {
             try {
               await deleteAnnouncement(announcementId);
-              await loadAnnouncements();
+              if (!offeringId) {
+                offeringId = await getActiveOfferingId();
+              }
+              await loadAnnouncements(offeringId);
             } catch (err) {
               console.error('Failed to delete announcement:', err);
               alert('Failed to delete announcement. Please try again.');
@@ -504,7 +535,10 @@
 
   // Get team leader's team ID
   async function getUserTeam() {
-    if (!offeringId) return null;
+    if (!offeringId) {
+      offeringId = await getActiveOfferingId();
+      if (!offeringId) return null;
+    }
     
     try {
       // Use the my-team endpoint to get the current user's team
@@ -550,8 +584,35 @@
     const modalTitle = document.getElementById('announcementModalTitle');
     const subjectInput = document.getElementById('announcement-subject');
     const bodyInput = document.getElementById('announcement-body');
+    const subjectCounter = document.getElementById('announcement-subject-count');
 
     if (!overlay || !form) return;
+
+    // Character counter for subject field
+    function updateSubjectCounter() {
+      if (subjectInput && subjectCounter) {
+        const length = subjectInput.value.length;
+        subjectCounter.textContent = length;
+        
+        // Update color based on length
+        const counterContainer = document.getElementById('announcement-subject-counter');
+        if (counterContainer) {
+          if (length > 90) {
+            counterContainer.style.color = 'var(--red-600, #dc2626)';
+          } else if (length > 80) {
+            counterContainer.style.color = 'var(--amber-600, #d97706)';
+          } else {
+            counterContainer.style.color = 'var(--gray-400, #9ca3af)';
+          }
+        }
+      }
+    }
+
+    // Add event listener for subject input
+    if (subjectInput) {
+      subjectInput.addEventListener('input', updateSubjectCounter);
+      subjectInput.addEventListener('keyup', updateSubjectCounter);
+    }
 
     const mainContent = document.querySelector('main');
     let previouslyFocused = null;
@@ -577,6 +638,9 @@
       } else {
         form.reset();
       }
+
+      // Update character counter after form is populated/reset
+      updateSubjectCounter();
 
       // save focused element to restore later
       previouslyFocused = document.activeElement;
@@ -611,6 +675,7 @@
 
       // reset form and restore focus
       form.reset();
+      updateSubjectCounter(); // Reset counter to 0
       if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
         previouslyFocused.focus();
       } else if (openBtn) {
@@ -619,7 +684,17 @@
     }
 
     if (openBtn) {
-      openBtn.addEventListener('click', () => openModal());
+      openBtn.addEventListener('click', async () => {
+        // Ensure team ID is loaded before opening modal
+        if (!userTeamId) {
+          userTeamId = await getUserTeam();
+          if (!userTeamId) {
+            alert('Could not find your team. Please contact your instructor.');
+            return;
+          }
+        }
+        openModal();
+      });
     }
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
@@ -642,6 +717,13 @@
       const subject = subjectInput.value.trim();
       const body = bodyInput.value.trim();
       if (!subject || !body) return;
+      
+      // Validate subject length
+      if (subject.length > 100) {
+        alert('Subject must be 100 characters or less.');
+        subjectInput.focus();
+        return;
+      }
 
       if (!offeringId) {
         offeringId = await getActiveOfferingId();
@@ -673,8 +755,12 @@
           }
         }
         
-        closeModal();
+        if (!offeringId) {
+          offeringId = await getActiveOfferingId();
+        }
+        
         await loadAnnouncements(offeringId);
+        closeModal();
       } catch (error) {
         console.error('Error saving announcement:', error);
         const errorMessage = error.message || `Failed to ${editingAnnouncementId ? 'update' : 'create'} announcement`;

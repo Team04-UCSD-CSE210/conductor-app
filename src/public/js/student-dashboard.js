@@ -216,16 +216,18 @@
         
         const title = announcement.title || announcement.subject || 'Announcement';
         const content = announcement.content || announcement.body || announcement.message || '';
-        const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        const isLongContent = content.length > 100;
+        const preview = isLongContent ? content.substring(0, 100) : content;
         const creatorDisplay = formatCreatorWithRole(announcement);
         const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
+        const viewMoreLink = isLongContent ? ` <button class="announcement-view-more" data-announcement-id="${announcement.id}" aria-label="View full announcement">View More</button>` : '';
         
         return `
           <div class="announcement-item clickable-announcement" data-announcement-id="${announcement.id}">
             <div class="announcement-date">${escapeHtml(dateStr)}</div>
             <div class="announcement-content">
-              <h5>${escapeHtml(title)} ${teamBadge}</h5>
-              <p>${escapeHtml(preview)}</p>
+              <h5><span class="announcement-title-text">${escapeHtml(title)}</span>${teamBadge}</h5>
+              <p class="announcement-preview">${escapeHtml(preview)}${viewMoreLink}</p>
               <div class="announcement-creator">by ${escapeHtml(creatorDisplay)}</div>
             </div>
           </div>
@@ -240,9 +242,25 @@
         }
       });
 
+      // Add click listener to "View More" buttons - opens modal
+      announcementsList.querySelectorAll('.announcement-view-more').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const announcementId = btn.dataset.announcementId;
+          const announcement = announcements.find(a => a.id === announcementId);
+          if (announcement) {
+            openViewAnnouncementModal(announcement);
+          }
+        });
+      });
+
       // Add click listener to announcement items to expand
       announcementsList.querySelectorAll('.clickable-announcement').forEach(item => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', (e) => {
+          // Don't expand if clicking on view more button
+          if (e.target.closest('.announcement-view-more')) {
+            return;
+          }
           const announcement = item._announcementData;
           if (announcement) {
             openViewAnnouncementModal(announcement);

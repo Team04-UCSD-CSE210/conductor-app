@@ -150,8 +150,9 @@ router.get('/:offeringId', ensureAuthenticated, async (req, res) => {
       console.warn('Permission check failed, checking enrollment:', permError);
     }
 
-    // If no permission, check if user is enrolled
+    // If no permission, check if user is enrolled (including team leads)
     if (!hasPermission && userId) {
+      // Check regular enrollment (including team-lead enrollment role)
       const enrollmentCheck = await pool.query(
         `SELECT 1 FROM enrollments 
          WHERE offering_id = $1 AND user_id = $2 AND status = 'enrolled' 
@@ -159,6 +160,30 @@ router.get('/:offeringId', ensureAuthenticated, async (req, res) => {
         [offeringId, userId]
       );
       isEnrolled = enrollmentCheck.rows.length > 0;
+      
+      // Also check if user is a team member or team leader (team leads might not be explicitly enrolled but are team members)
+      if (!isEnrolled) {
+        // Check if user is a team member
+        const teamMemberCheck = await pool.query(
+          `SELECT 1 FROM team_members tm
+           INNER JOIN team t ON tm.team_id = t.id
+           WHERE t.offering_id = $1 AND tm.user_id = $2 AND tm.left_at IS NULL
+           LIMIT 1`,
+          [offeringId, userId]
+        );
+        if (teamMemberCheck.rows.length > 0) {
+          isEnrolled = true;
+        } else {
+          // Also check if user is a team leader (via team.leader_id)
+          const teamLeaderCheck = await pool.query(
+            `SELECT 1 FROM team
+             WHERE offering_id = $1 AND leader_id = $2
+             LIMIT 1`,
+            [offeringId, userId]
+          );
+          isEnrolled = teamLeaderCheck.rows.length > 0;
+        }
+      }
     }
 
     if (!hasPermission && !isEnrolled) {
@@ -183,13 +208,16 @@ router.get('/:offeringId', ensureAuthenticated, async (req, res) => {
         GROUP BY co.id
       `;
     } else {
-      // Basic info for enrolled students (no sensitive stats)
+      // Basic info for enrolled students/team leads (no sensitive stats, but include course details)
       query = `
         SELECT 
           co.id,
           co.code,
           co.name,
           co.term,
+          co.year,
+          co.location,
+          co.class_timings,
           co.start_date,
           co.end_date,
           co.is_active,

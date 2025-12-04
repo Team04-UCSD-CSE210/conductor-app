@@ -531,7 +531,9 @@ body.dashboard-page {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: 0;
+  height: 400px;
+  min-height: 400px;
+  max-height: 400px;
 }
 
 .todo-list {
@@ -576,6 +578,9 @@ body.dashboard-page {
   width: 100%;
   overflow: hidden;
   box-sizing: border-box;
+  height: 60px;
+  min-height: 60px;
+  max-height: 60px;
 }
 
 .todo-item:hover {
@@ -800,6 +805,13 @@ body.dashboard-page {
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  height: 100px;
+  min-height: 100px;
+  max-height: 100px;
 }
 
 .announcement-actions {
@@ -807,19 +819,24 @@ body.dashboard-page {
   gap: 8px;
   margin-left: auto;
   align-items: flex-start;
+  flex-shrink: 0;
 }
 
 /* Team badge for team-specific announcements */
 .team-badge {
   display: inline-block;
   padding: 2px 8px;
-  margin-left: 8px;
+  margin-left: 6px;
   font-size: 0.75rem;
   font-weight: 500;
   background: var(--palette-accent, #E0F2FE);
   color: var(--palette-primary, #0C4A6E);
   border-radius: 12px;
   border: 1px solid var(--palette-secondary, #BAE6FD);
+  vertical-align: middle;
+  line-height: 1.2;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .announcement-edit-btn,
@@ -882,6 +899,42 @@ body.dashboard-page {
 .announcement-content {
   flex: 1;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
+
+.announcement-content h5 {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  line-height: 1.4;
+  margin: 0 0 6px;
+  min-height: 22px;
+  max-height: 26px;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.announcement-content h5 .announcement-title-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.announcement-content h5 .team-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-left: 0;
+  flex-shrink: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  height: fit-content;
 }
 
 .announcement-creator {
@@ -889,6 +942,59 @@ body.dashboard-page {
   color: var(--gray-600, #4b5563);
   margin-top: 6px;
   font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.announcement-content p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  max-height: 18px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Fixed height for announcement, journal, and todo cards - all dashboards */
+.announcements-card,
+.journal-card,
+.todo-card {
+  height: 400px !important;
+  min-height: 400px !important;
+  max-height: 400px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Fixed height for journal entries */
+.journal-entry {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+/* Journal list scrollable */
+.journal-list {
+  max-height: 320px !important;
+  overflow-y: auto !important;
+  padding-right: 8px !important;
+}
+
+/* Announcements list scrollable */
+.announcements-list {
+  max-height: 320px !important;
+  overflow-y: auto !important;
+  padding-right: 8px !important;
 }
 
 /* Clickable announcement items */
@@ -900,6 +1006,37 @@ body.dashboard-page {
 .clickable-announcement:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+}
+
+/* View More button for long announcements - inline with text */
+.announcement-view-more {
+  background: none;
+  border: none;
+  color: var(--palette-primary, #0F766E);
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  margin-left: 0.25rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+  display: inline;
+}
+
+.announcement-view-more:hover {
+  color: var(--palette-secondary, #83D7CF);
+}
+
+.announcement-preview {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+  display: block;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 /* View Announcement Modal Styles */
@@ -937,6 +1074,11 @@ body.dashboard-page {
   color: var(--palette-primary, #0F766E);
   margin: 0 0 16px;
   line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  hyphens: auto;
 }
 
 .view-announcement-content p {

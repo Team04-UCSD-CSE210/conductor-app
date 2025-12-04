@@ -116,7 +116,15 @@
 
       attendanceList.innerHTML = validStats.map(({ session, stats }) => {
         const sessionName = session.name || session.title || `Lecture ${session.session_number || ''}`.trim() || 'Session';
-        const percentage = stats ? Math.round((stats.present_count / Math.max(stats.total_count, 1)) * 100) : 0;
+        // Use attendance_percentage if available, otherwise calculate from present_count/total_count
+        let percentage = 0;
+        if (stats) {
+          if (typeof stats.attendance_percentage === 'number' && !isNaN(stats.attendance_percentage)) {
+            percentage = Math.round(stats.attendance_percentage);
+          } else if (typeof stats.present_count === 'number' && typeof stats.total_count === 'number' && stats.total_count > 0) {
+            percentage = Math.round((stats.present_count / stats.total_count) * 100);
+          }
+        }
         
         return `
           <div class="attendance-item">
@@ -310,9 +318,11 @@
         
         const title = announcement.title || announcement.subject || 'Announcement';
         const content = announcement.content || announcement.body || announcement.message || '';
-        const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        const isLongContent = content.length > 100;
+        const preview = isLongContent ? content.substring(0, 100) : content;
         const creatorName = announcement.creator_name || 'Unknown';
         const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
+        const viewMoreLink = isLongContent ? ` <button class="announcement-view-more" data-announcement-id="${announcement.id}" aria-label="View full announcement">View More</button>` : '';
         
         const editDeleteButtons = canManageAnnouncements ? `
           <div class="announcement-actions">
@@ -334,8 +344,8 @@
           <div class="announcement-item clickable-announcement" data-announcement-id="${announcement.id}">
             <div class="announcement-date">${escapeHtml(dateStr)}</div>
             <div class="announcement-content">
-              <h5>${escapeHtml(title)} ${teamBadge}</h5>
-              <p>${escapeHtml(preview)}</p>
+              <h5><span class="announcement-title-text">${escapeHtml(title)}</span>${teamBadge}</h5>
+              <p class="announcement-preview">${escapeHtml(preview)}${viewMoreLink}</p>
               <div class="announcement-creator">by ${escapeHtml(creatorName)}</div>
             </div>
             ${editDeleteButtons}
@@ -351,11 +361,23 @@
         }
       });
 
-      // Add click listener to announcement items to expand (except when clicking edit/delete buttons)
+      // Add click listener to "View More" buttons - opens modal
+      announcementsList.querySelectorAll('.announcement-view-more').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const announcementId = btn.dataset.announcementId;
+          const announcement = announcements.find(a => a.id === announcementId);
+          if (announcement) {
+            openViewAnnouncementModal(announcement);
+          }
+        });
+      });
+
+      // Add click listener to announcement items to expand (except when clicking edit/delete buttons or view more)
       announcementsList.querySelectorAll('.clickable-announcement').forEach(item => {
         item.addEventListener('click', (e) => {
-          // Don't expand if clicking on edit/delete buttons
-          if (e.target.closest('.announcement-actions')) {
+          // Don't expand if clicking on edit/delete buttons or view more button
+          if (e.target.closest('.announcement-actions') || e.target.closest('.announcement-view-more')) {
             return;
           }
           
@@ -517,7 +539,34 @@
     const bodyInput = document.getElementById('announcement-body');
     const modalTitle = document.getElementById('announcementModalTitle');
     const submitBtn = document.getElementById('announcementSend');
+    const subjectCounter = document.getElementById('announcement-subject-count');
     if (!overlay || !form) return;
+
+    // Character counter for subject field
+    function updateSubjectCounter() {
+      if (subjectInput && subjectCounter) {
+        const length = subjectInput.value.length;
+        subjectCounter.textContent = length;
+        
+        // Update color based on length
+        const counterContainer = document.getElementById('announcement-subject-counter');
+        if (counterContainer) {
+          if (length > 90) {
+            counterContainer.style.color = 'var(--red-600, #dc2626)';
+          } else if (length > 80) {
+            counterContainer.style.color = 'var(--amber-600, #d97706)';
+          } else {
+            counterContainer.style.color = 'var(--gray-400, #9ca3af)';
+          }
+        }
+      }
+    }
+
+    // Add event listener for subject input
+    if (subjectInput) {
+      subjectInput.addEventListener('input', updateSubjectCounter);
+      subjectInput.addEventListener('keyup', updateSubjectCounter);
+    }
 
     let previouslyFocused = null;
     const mainContent = document.querySelector('main');
@@ -547,6 +596,9 @@
         // Reset form for new announcement
         form.reset();
       }
+
+      // Update character counter after form is populated/reset
+      updateSubjectCounter();
 
       // save focused element to restore later
       previouslyFocused = document.activeElement;
@@ -582,6 +634,7 @@
       // reset form and restore focus
       form.reset();
       editingAnnouncementId = null;
+      updateSubjectCounter(); // Reset counter to 0
       if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
         previouslyFocused.focus();
       } else if (openBtn) {
@@ -618,6 +671,13 @@
       const subject = subjectInput.value.trim();
       const body = bodyInput.value.trim();
       if (!subject || !body) return;
+      
+      // Validate subject length
+      if (subject.length > 100) {
+        alert('Subject must be 100 characters or less.');
+        subjectInput.focus();
+        return;
+      }
 
       if (!offeringId) {
         offeringId = await getActiveOfferingId();

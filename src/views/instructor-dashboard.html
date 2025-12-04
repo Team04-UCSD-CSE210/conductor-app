@@ -178,7 +178,8 @@
       </header>
       <form id="announcement-form" class="modal-body">
         <label for="announcement-subject">Subject</label>
-        <input id="announcement-subject" name="subject" type="text" required maxlength="200" />
+        <input id="announcement-subject" name="subject" type="text" required maxlength="100" />
+        <div class="char-counter" id="announcement-subject-counter"><span id="announcement-subject-count">0</span>/100</div>
 
         <label for="announcement-body">Message</label>
         <textarea id="announcement-body" name="body" rows="6" required></textarea>

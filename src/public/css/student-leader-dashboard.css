@@ -64,8 +64,11 @@
 }
 
 #announcement-form textarea {
+  height: 140px;
   min-height: 140px;
-  resize: vertical;
+  max-height: 140px;
+  resize: none;
+  overflow-y: auto;
 }
 
 #announcement-form input[type="text"]:focus,
@@ -73,6 +76,14 @@
   outline: none;
   border-color: var(--palette-secondary, #83D7CF);
   box-shadow: 0 0 0 3px rgb(131 215 207 / 10%);
+}
+
+#announcement-form .char-counter {
+  font-size: 0.75rem;
+  color: var(--gray-400, #9ca3af);
+  margin-top: 0.25rem;
+  text-align: right;
+  margin-bottom: 0.5rem;
 }
 
 .btn-create {
@@ -103,11 +114,11 @@
 
 /* Override dashboard row layouts for team lead specific ordering */
 .dashboard-page .dashboard-row-top {
-  grid-template-columns: 1fr 1.5fr 1fr !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) !important;
 }
 
 .dashboard-page .dashboard-row-bottom {
-  grid-template-columns: 1fr 1.5fr 0.8fr !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 0.8fr) !important;
 }
 
 /* Fix all text colors to use palette variables */
@@ -121,14 +132,79 @@
 
 .announcement-content h5 {
   color: var(--palette-primary, #0F766E) !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  -webkit-box-orient: vertical !important;
+  line-height: 1.4 !important;
+  max-height: 21px !important;
+  margin: 0 0 6px !important;
 }
 
 .announcement-content p {
   color: var(--palette-primary, #0F766E) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  -webkit-box-orient: vertical !important;
+  max-height: 18px !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
 }
 
+/* Fixed height for all cards */
+.dashboard-card {
+  height: 400px !important;
+  min-height: 400px !important;
+  max-height: 400px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Fixed height for journal entries */
 .journal-entry {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
   color: var(--palette-primary, #0F766E) !important;
+}
+
+/* Fixed height for todo items */
+.todo-item {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+}
+
+.todo-item span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.announcements-list {
+  max-height: 320px !important;
+}
+
+.journal-list {
+  max-height: 320px !important;
+  overflow-y: auto !important;
+}
+
+.todo-list {
+  max-height: 320px !important;
 }
 
 .progress-text {

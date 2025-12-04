@@ -88,3 +88,59 @@ body.teamlead-page .content {
   overflow: visible;
 }
 
+/* Fixed height for announcement items - consistent sizing */
+.announcement-item {
+  height: 100px !important;
+  min-height: 100px !important;
+  max-height: 100px !important;
+}
+
+.announcement-content h5 {
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  max-height: 21px !important;
+}
+
+.announcement-content p {
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  max-height: 18px !important;
+}
+
+.announcements-list {
+  max-height: 320px !important;
+}
+
+/* Fixed height for all cards */
+.dashboard-card {
+  height: 400px !important;
+  min-height: 400px !important;
+  max-height: 400px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Fixed height for journal entries */
+.journal-entry {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Fixed height for todo items */
+.todo-item {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+}
+
+.todo-item span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+

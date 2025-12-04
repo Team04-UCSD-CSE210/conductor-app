@@ -25,7 +25,7 @@
 
 /* Top row: Attendance (wider), Announcements, Teams */
 .instructor-dashboard .dashboard-row-top {
-  grid-template-columns: 1.3fr 1.5fr 0.8fr;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr) minmax(0, 0.8fr);
 }
 
 /* Bottom row: Course Status, Recent Progress, TODO */
@@ -52,6 +52,15 @@
 .card-course-info .course-stats .stat-item {
   flex: 0 0 auto;
   padding: 0 0.5rem; /* Slight extra horizontal breathing room */
+}
+
+/* Fixed height for all cards */
+.dashboard-card {
+  height: 400px !important;
+  min-height: 400px !important;
+  max-height: 400px !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* Ensure top row cards (Attendance, Announcements, Teams) share the same vertical size */
@@ -182,8 +191,11 @@
 }
 
 #announcement-form textarea {
+  height: 140px;
   min-height: 140px;
-  resize: vertical;
+  max-height: 140px;
+  resize: none;
+  overflow-y: auto;
 }
 
 #announcement-form input[type="text"]:focus,
@@ -191,6 +203,61 @@
   outline: none;
   border-color: var(--palette-secondary, #83D7CF);
   box-shadow: 0 0 0 4px rgb(131 215 207 / 12%);
+}
+
+#announcement-form .char-counter {
+  font-size: 0.75rem;
+  color: var(--gray-400, #9ca3af);
+  margin-top: 0.25rem;
+  text-align: right;
+  margin-bottom: 0.5rem;
+}
+
+/* Fixed height for announcement items - consistent sizing */
+.announcement-item {
+  height: 100px !important;
+  min-height: 100px !important;
+  max-height: 100px !important;
+}
+
+.announcement-content h5 {
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  max-height: 21px !important;
+}
+
+.announcement-content p {
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  max-height: 18px !important;
+}
+
+.announcements-list {
+  max-height: 320px !important;
+}
+
+/* Fixed height for journal entries */
+.journal-entry {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Fixed height for todo items */
+.todo-item {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+}
+
+.todo-item span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 /* Attendance list scroll behaviour */

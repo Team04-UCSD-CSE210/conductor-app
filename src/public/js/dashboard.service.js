@@ -32,7 +32,9 @@
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: `HTTP error! status: ${response.status}` }));
-      throw new Error(error.error || `HTTP error! status: ${response.status}`);
+      const errorMessage = error.error || `HTTP error! status: ${response.status}`;
+      console.error(`API Error for ${endpoint}:`, errorMessage, error);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -348,29 +350,25 @@
    * Format class timings from JSONB to readable format (e.g., "TTh 2:00 PM - 3:20 PM")
    */
   function formatClassTimings(classTimings) {
-    if (!classTimings || typeof classTimings !== 'object') {
+    if (!classTimings) {
       return null;
     }
 
-    // Handle array of timing objects
-    if (Array.isArray(classTimings)) {
-      return classTimings.map(timing => formatSingleTiming(timing)).filter(Boolean).join('; ');
+    // Handle string (JSON string that needs parsing)
+    if (typeof classTimings === 'string') {
+      try {
+        classTimings = JSON.parse(classTimings);
+      } catch (e) {
+        console.debug('Failed to parse class_timings as JSON:', e);
+        return null;
+      }
     }
 
-    // Handle single timing object
-    return formatSingleTiming(classTimings);
-  }
+    if (typeof classTimings !== 'object') {
+      return null;
+    }
 
-  function formatSingleTiming(timing) {
-    if (!timing || typeof timing !== 'object') return null;
-
-    const days = timing.days || timing.day || [];
-    const startTime = timing.start_time || timing.startTime;
-    const endTime = timing.end_time || timing.endTime;
-
-    if (!days || days.length === 0) return null;
-
-    // Format days (e.g., ["Tuesday", "Thursday"] -> "TTh")
+    // Day abbreviation mapping
     const dayAbbrev = {
       'Monday': 'M',
       'Tuesday': 'T',
@@ -381,20 +379,85 @@
       'Sunday': 'Su'
     };
 
-    const dayCodes = days.map(day => {
-      const dayName = typeof day === 'string' ? day : day.name || day.day;
-      return dayAbbrev[dayName] || dayName.substring(0, 2);
-    }).join('');
-
-    // Format times
-    let timeStr = '';
-    if (startTime) {
-      const start = formatTime(startTime);
-      const end = endTime ? formatTime(endTime) : null;
-      timeStr = start + (end ? ` - ${end}` : '');
+    const dayOrder = {
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6,
+      'Sunday': 7
+    };
+    
+    let timingsArray = [];
+    if (Array.isArray(classTimings)) {
+      timingsArray = classTimings;
+    } else if (classTimings.lectures && Array.isArray(classTimings.lectures)) {
+      timingsArray = classTimings.lectures;
+    } else if (classTimings.days || classTimings.day || classTimings.start_time || classTimings.startTime) {
+      // Single timing object
+      timingsArray = [classTimings];
+    } else {
+      return null;
     }
 
-    return timeStr ? `${dayCodes} ${timeStr}` : dayCodes;
+    if (timingsArray.length === 0) return null;
+
+    // Group timings by time slot (same start_time and end_time)
+    const timeGroups = {};
+    
+    timingsArray.forEach(timing => {
+      if (!timing || typeof timing !== 'object') return;
+      
+      const days = timing.days || timing.day || [];
+      const startTime = timing.start_time || timing.startTime;
+      const endTime = timing.end_time || timing.endTime;
+
+      if (!days || days.length === 0 || !startTime) return;
+
+      // Create a key from start and end time
+      const timeKey = `${startTime}-${endTime || ''}`;
+      
+      if (!timeGroups[timeKey]) {
+        timeGroups[timeKey] = {
+          startTime,
+          endTime,
+          days: []
+        };
+      }
+
+      // Add days to this time group
+      days.forEach(day => {
+        const dayName = typeof day === 'string' ? day : day.name || day.day;
+        if (dayName && !timeGroups[timeKey].days.includes(dayName)) {
+          timeGroups[timeKey].days.push(dayName);
+        }
+      });
+    });
+
+    // Format each group
+    const formattedGroups = Object.values(timeGroups).map(group => {
+      // Sort days by day order
+      group.days.sort((a, b) => {
+        const orderA = dayOrder[a] || 99;
+        const orderB = dayOrder[b] || 99;
+        return orderA - orderB;
+      });
+
+      // Convert days to abbreviations
+      const dayCodes = group.days.map(day => {
+        return dayAbbrev[day] || day.substring(0, 2);
+      }).join('');
+
+      // Format times
+      const start = formatTime(group.startTime);
+      const end = group.endTime ? formatTime(group.endTime) : null;
+      const timeStr = start + (end ? ` - ${end}` : '');
+
+      return timeStr ? `${dayCodes} ${timeStr}` : dayCodes;
+    }).filter(Boolean);
+
+    return formattedGroups.length > 0 ? formattedGroups.join('<br>') : null;
   }
 
   function formatTime(timeStr) {
@@ -407,12 +470,13 @@
 
       let hours = parseInt(parts[0], 10);
       const minutes = parts[1];
-      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const ampm = hours >= 12 ? 'pm' : 'am';
       
       if (hours === 0) hours = 12;
       else if (hours > 12) hours -= 12;
 
-      return `${hours}:${minutes} ${ampm}`;
+      // Format as "2:00pm" (lowercase, no space before pm/am)
+      return `${hours}:${minutes}${ampm}`;
     } catch {
       return timeStr;
     }
@@ -651,8 +715,14 @@
       const offering = await getOfferingWithStats(offeringId);
       if (!offering) return;
 
-      // Get user's team (if any)
-      const userTeam = await getMyTeam(offeringId);
+      // Get user's team (if any) - only for students/team leads
+      // Note: Not needed for sticky header, but kept for potential future use
+      try {
+        await getMyTeam(offeringId);
+      } catch (error) {
+        // Not all users have teams (TAs, instructors, etc.) - this is fine
+        console.debug('User is not in a team:', error);
+      }
 
       // Build course title
       const courseTitle = courseInfoContainer.querySelector('h3');
@@ -663,43 +733,32 @@
         courseTitle.textContent = title;
       }
 
-      // Build course details
+      // Build course details - consistent format: quarter, location, and timings
       const detailsContainer = courseInfoContainer.querySelector('p');
       if (detailsContainer) {
         const details = [];
 
-        // Term and Year (e.g., "Fall 2025")
-        if (offering.term || offering.year) {
-          const termYear = [offering.term, offering.year].filter(Boolean).join(' ');
+        // Term and Year (e.g., "Fall 2025") - always show both if available
+        const term = offering.term || '';
+        const year = offering.year || '';
+        if (term || year) {
+          const termYear = [term, year].filter(Boolean).join(' ');
           if (termYear) details.push(termYear);
         }
 
-        // Department (if available)
-        if (offering.department) {
-          details.push(offering.department);
-        }
-
-        // Credits (if available)
-        if (offering.credits) {
-          details.push(`${offering.credits} credit${offering.credits !== 1 ? 's' : ''}`);
-        }
-
-        // Class timings (e.g., "TTh 2:00 PM - 3:20 PM")
-        const timings = formatClassTimings(offering.class_timings);
-        if (timings) {
-          details.push(`📅 ${timings}`);
-        }
-
-        // Location (e.g., "CSE Building, Room 1202")
+        // Location (e.g., "📍 CSE Building, Room 1202")
         if (offering.location) {
           details.push(`📍 ${offering.location}`);
         }
 
-        // Team information (for students only - not for instructors/TAs/tutors)
-        if (userTeam) {
-          const teamName = userTeam.name || (userTeam.team_number ? `Team ${userTeam.team_number}` : 'Team');
-          const role = userTeam.user_role === 'leader' ? 'Leader' : 'Member';
-          details.push(`👥 ${teamName} (${role})`);
+        // Class timings with clock icon (grouped by time slot, e.g., "🕐 MWF 2:00pm - 3:20pm")
+        const timings = formatClassTimings(offering.class_timings);
+        if (timings) {
+          // Add clock icon before timings
+          details.push(`🕐 ${timings}`);
+        } else {
+          // Debug: log if timings are missing
+          console.debug('No class timings found for offering:', offeringId, 'class_timings:', offering.class_timings);
         }
 
         // Fallback if no details
