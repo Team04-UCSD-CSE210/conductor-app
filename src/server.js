@@ -1065,14 +1065,11 @@ app.get("/courses/:courseId/roster", ensureAuthenticated, async (req, res) => {
     if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
       return res.sendFile(buildFullViewPath("roster.html"));
     }
-
-    // Check if user is enrolled as TA or tutor
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'ta' || enrollmentRole === 'tutor') {
       return res.sendFile(buildFullViewPath("roster.html"));
     }
 
-    // Students and team leads are not allowed
     return res.status(403).send("Forbidden: Only instructors, TAs, and administrators can access the roster");
   } catch (error) {
     console.error("Error accessing roster:", error);
@@ -1080,15 +1077,43 @@ app.get("/courses/:courseId/roster", ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Class Directory route - similar permissions to roster
-const classDirectoryMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
+app.get("/class-directory", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
 
-app.get("/class-directory", ...classDirectoryMiddleware, (req, res) => {
-  res.sendFile(buildFullViewPath("class-directory.html"));
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+
+    // Instructors / TAs / tutors see the instructor directory view
+    if (
+      user.primary_role === "admin" ||
+      user.primary_role === "instructor" ||
+      enrollmentRole === "ta" ||
+      enrollmentRole === "tutor"
+    ) {
+      return res.sendFile(buildFullViewPath("instructor-directory.html"));
+    }
+
+    // Students and everyone else see the student directory view
+    return res.sendFile(buildFullViewPath("students-directory.html"));
+  } catch (error) {
+    console.error("Error accessing class directory:", error);
+    return res.status(500).send("Internal server error");
+  }
 });
 
-app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, (req, res) => {
-  res.sendFile(buildFullViewPath("class-directory.html"));
+// Keep course-scoped route but reuse the same role-aware handler
+app.get("/courses/:courseId/class-directory", ensureAuthenticated, async (req, res) => {
+  // Delegate to /class-directory logic for now
+  req.url = "/class-directory";
+  app._router.handle(req, res, () => {});
 });
 
 // Course selection page

@@ -5,66 +5,35 @@
   <title>Conductor – Class Directory (Professors view)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Shared CSS -->
-  <link rel="stylesheet" href="../public/css/class-dir.css" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/dashboard-global.css" />
+  <link rel="stylesheet" href="/css/class-dir.css" />
 </head>
-<body class="app directory-profiles">
+<body class="dashboard-page class-directory-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
   <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <header class="sidebar-header">
-      <img
-        class="sidebar-logo"
-        src="../assets/temp-logo.png"
-        alt="Conductor logo"
-      />
-      <span class="sidebar-app-name">Conductor</span>
-    </header>
-
-    <section aria-label="Main menu">
-      <p class="sidebar-section-label">Main menu</p>
-      <nav aria-label="Main menu navigation">
-        <ul class="sidebar-nav">
-          <li>
-            <a href="#" class="sidebar-link">
-              <img class="sidebar-icon" src="../assets/home.png" alt="" aria-hidden="true" />
-              <span>Courses</span>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="sidebar-link">
-              <img class="sidebar-icon" src="../assets/online-education.png" alt="" aria-hidden="true" />
-              <span>Lectures</span>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="sidebar-link">
-              <img class="sidebar-icon" src="../assets/talk.png" alt="" aria-hidden="true" />
-              <span>Meetings</span>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="sidebar-link">
-              <img class="sidebar-icon" src="../assets/journal.png" alt="" aria-hidden="true" />
-              <span>Work Journal</span>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="sidebar-link sidebar-link-active">
-              <img class="sidebar-icon" src="../assets/directory.png" alt="" aria-hidden="true" />
-              <span>Directory</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </section>
-
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    
+    <div class="main-menu-header">Main Menu</div>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    
     <footer class="sidebar-footer">
       <span class="sidebar-footer-label">Signed in as</span>
       <button type="button" class="sidebar-signout">Sign out</button>
     </footer>
-  </aside>
+  </header>
 
   <!-- MAIN CONTENT -->
-  <main class="main" aria-label="Instructor class directory">
+  <main class="main-container" id="main" aria-label="Instructor class directory">
     <header class="page-header">
       <section class="page-header-text">
         <p class="page-header-eyebrow">Class directory</p>
@@ -563,62 +532,10 @@
     </section>
   </main>
 
-  <!-- JS: tabs + profile toggles + avatar upload preview -->
-  <script>
-    // Role tabs
-    const tabs = document.querySelectorAll(".role-tab");
-    const panels = document.querySelectorAll(".role-panel");
-
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        const role = tab.dataset.role;
-
-        tabs.forEach((t) =>
-          t.classList.toggle("role-tab-active", t === tab)
-        );
-        panels.forEach((panel) => {
-          panel.hidden = panel.dataset.panel !== role;
-        });
-      });
-    });
-
-    // Show/hide profile details inside each card
-    const profileButtons = document.querySelectorAll(".profile-toggle");
-
-    profileButtons.forEach((button) => {
-      const baseLabel = button.dataset.profileLabel || "View profile";
-      const card = button.closest(".person-card");
-
-      // Start collapsed by default
-      card.classList.remove("profile-open");
-
-      // Ensure initial label
-      button.textContent = baseLabel;
-
-      button.addEventListener("click", () => {
-        const isOpen = card.classList.toggle("profile-open");
-        button.textContent = isOpen ? "Hide profile" : baseLabel;
-      });
-    });
-
-    // Avatar upload preview for each card
-    const avatarInputs = document.querySelectorAll(".avatar-input");
-
-    avatarInputs.forEach((input) => {
-      const label = input.closest(".avatar-upload-label");
-      const img = label.querySelector(".avatar-preview");
-
-      input.addEventListener("change", () => {
-        const file = input.files && input.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-  </script>
+  <!-- Shared JS: palette + role-aware sidebar navigation + colorblind mode + directory logic -->
+  <script src="/js/palette-loader.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
+  <script src="/js/instructor-directory.js" defer></script>
 </body>
 </html>

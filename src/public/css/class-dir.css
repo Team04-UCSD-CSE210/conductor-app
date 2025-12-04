@@ -36,12 +36,6 @@ body {
   color: var(--text-main);
 }
 
-/* app root on body */
-
-.app {
-  display: flex;
-  min-height: 100vh;
-}
 
 /* visually hidden for labels */
 
@@ -56,130 +50,7 @@ body {
   border: 0;
 }
 
-/* sidebar */
-
-.sidebar {
-  width: var(--sidebar-width);
-  background: #e9fbf6;
-  border-right: 1px solid #d0f0e6;
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 32px;
-}
-
-.sidebar-logo-mark {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--primary);
-}
-
-.sidebar-app-name {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #0d6f5c;
-}
-
-.sidebar-section-label {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 0 0 10px;
-}
-
-.sidebar-nav {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 32px;
-}
-
-.sidebar-nav li + li {
-  margin-top: 6px;
-}
-
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 18px;
-  text-decoration: none;
-  color: var(--text-main);
-  font-size: 15px;
-  transition: background var(--transition), box-shadow var(--transition),
-    transform var(--transition), color var(--transition);
-}
-
-.sidebar-link:hover {
-  background: #dff7eb;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgb(0 0 0 / 4%);
-}
-
-.sidebar-link-active {
-  background: #dff7eb;
-  color: #0d6f5c;
-  box-shadow: 0 10px 22px rgb(0 163 138 / 16%);
-}
-
-.sidebar-link-active span {
-  color: inherit;
-}
-
-.sidebar-icon {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  display: inline-block;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.sidebar-footer-label {
-  display: block;
-}
-
-.sidebar-signout {
-  margin-top: 6px;
-  padding: 10px 0;
-  background: none;
-  border: none;
-  color: var(--text-main);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sidebar-logo {
-  width: 120px;
-  height: auto;
-  max-width: none;
-  object-fit: contain;
-  display: block;
-}
-
-/* main layout */
-
-.main {
-  flex: 1;
-  padding: 24px 32px 32px;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-main);
-}
+/* layout tweaks for directory pages rely on dashboard-global for sidebar/main */
 
 /* header – match Lecture Attendance style */
 
@@ -601,14 +472,40 @@ body {
 /* ----- Profile-view specific tweaks (professors-directory) ----- */
 
 /* On this page, hide details until the card is expanded */
-.directory-profiles .person-info {
+.class-directory-page .person-info {
   display: none;
 }
 
-.directory-profiles .person-card.profile-open .person-info {
+.class-directory-page .person-card.profile-open .person-info {
   display: flex;          /* keep the stacked layout */
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* Team member list styling inside Teams cards */
+.team-member-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.team-member {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.team-member-name {
+  font-weight: 500;
+}
+
+.team-member-leader {
+  font-weight: 600;
+}
+
+.team-member-email {
+  color: #6a8589;
 }
 
 /* Punch-card dropdown (pull down) */
