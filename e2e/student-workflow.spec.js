@@ -102,21 +102,25 @@ test.describe('Student Workflow - User Flow Integration', () => {
   test('complete student journey simulation', async ({ page }) => {
     // 1. Start at home
     await page.goto(BASE_URL);
+    await page.waitForLoadState('domcontentloaded');
     
     // 2. Navigate to dashboard (or login)
-    const response1 = await page.goto(`${BASE_URL}/dashboard.html`);
+    const response1 = await page.goto(`${BASE_URL}/dashboard.html`, { waitUntil: 'domcontentloaded' });
     expect(response1?.status()).toBeLessThan(500);
+    await page.waitForTimeout(300);
     
     // 3. Check attendance
-    const response2 = await page.goto(`${BASE_URL}/attendance.html`);
+    const response2 = await page.goto(`${BASE_URL}/attendance.html`, { waitUntil: 'domcontentloaded' });
     expect(response2?.status()).toBeLessThan(500);
+    await page.waitForTimeout(300);
     
     // 4. View sessions
-    const response3 = await page.goto(`${BASE_URL}/sessions.html`);
+    const response3 = await page.goto(`${BASE_URL}/sessions.html`, { waitUntil: 'domcontentloaded' });
     expect(response3?.status()).toBeLessThan(500);
+    await page.waitForTimeout(300);
     
     // 5. Access team info
-    const response4 = await page.goto(`${BASE_URL}/teams.html`);
+    const response4 = await page.goto(`${BASE_URL}/teams.html`, { waitUntil: 'domcontentloaded' });
     expect(response4?.status()).toBeLessThan(500);
     
     // Verify all pages loaded successfully
