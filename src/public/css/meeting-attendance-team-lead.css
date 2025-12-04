@@ -224,9 +224,27 @@ flip-card-back {
 
   .attendance-sidebar {
     width: 100%;
+    max-width: 100%;
     order: 2;
     position: relative;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .attendance-sidebar > * {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .help-box.team-lead-card {
+    max-width: 100%;
+  }
+
+  .stats-box {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
