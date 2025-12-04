@@ -19,7 +19,7 @@
 /* Interaction report selections */
 .interaction-btn.selected {
   box-shadow: 0 0 0 2px var(--palette-secondary, #34d399);
-  border-color: var(--palette-primary, #10b981);
+  border-color: var(--palette-hover-border, var(--palette-primary, #0F766E));
   background: var(--palette-accent, #a7f3d0);
 }
 
@@ -176,8 +176,9 @@ body.dashboard-page {
   margin: 0;
 }
 
-/* Colorblind Mode Toggle */
+/* Colorblind Mode Toggle - DISABLED */
 .colorblind-toggle-container {
+  display: none !important;
   margin: 1rem 0;
   padding: 0.5rem 0;
 }
@@ -685,8 +686,8 @@ body.dashboard-page {
 }
 
 .team-item:hover {
-  background: var(--palette-background, #ecfdf5);
-  border-color: var(--palette-primary, #0d9488);
+  background: var(--palette-hover-background, var(--palette-background, #F0FDFA));
+  border-color: var(--palette-hover-border, var(--palette-primary, #0F766E));
 }
 
 .team-name {

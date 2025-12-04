@@ -20,9 +20,9 @@
 }
 
 .back-button:hover {
-  border-color: var(--teal-500, #14b8a6);
-  color: var(--teal-600, #0d9488);
-  background: var(--teal-50, #f0fdfa);
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
+  color: var(--palette-primary, #0F766E);
+  background: var(--palette-background, #F0FDFA);
 }
 
 .back-button:focus {
@@ -122,7 +122,7 @@
 }
 
 .btn-link:hover {
-  background: var(--teal-600, #0d9488);
+  background: var(--palette-primary, #0F766E);
   color: white;
   transform: scale(1.02);
   box-shadow: 0 2px 8px rgb(13 148 136 / 25%);
@@ -152,7 +152,7 @@
 
 .pulse-bar-row:hover {
   background: white;
-  border-color: var(--teal-300, #5eead4);
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
   box-shadow: 0 2px 8px rgb(20 184 166 / 10%);
 }
 
@@ -170,7 +170,7 @@
 }
 
 .pulse-bar-row:hover .pulse-bar-emoji {
-  border-color: var(--teal-400, #2dd4bf);
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
   transform: scale(1.05);
 }
 
@@ -238,7 +238,7 @@
 
 .pulse-option-row:hover {
   background: white;
-  border-color: var(--teal-300, #5eead4);
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
   box-shadow: 0 2px 8px rgb(20 184 166 / 10%);
 }
 
@@ -265,7 +265,7 @@
 }
 
 .pulse-option-row:hover .pulse-emoji {
-  border-color: var(--teal-400, #2dd4bf);
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
   transform: scale(1.1);
 }
 

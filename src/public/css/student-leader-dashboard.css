@@ -15,6 +15,66 @@
   margin: 0;
 }
 
+/* Announcements header: align title and action button */
+.announcements-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--palette-accent, #99F6E4);
+  padding-bottom: 8px;
+}
+
+.btn-create-announcement {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+.announcements-card .card-header h4 {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+}
+
+/* Announcement modal fields: ensure subject and message have identical widths */
+#announcement-form {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#announcement-form label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+#announcement-form input[type="text"],
+#announcement-form textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--gray-200, #e6eef0);
+  border-radius: 8px;
+  background: var(--bg-input, #fff);
+  font-size: 0.95rem;
+  color: var(--gray-900, #0f172a);
+}
+
+#announcement-form textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+#announcement-form input[type="text"]:focus,
+#announcement-form textarea:focus {
+  outline: none;
+  border-color: var(--palette-secondary, #83D7CF);
+  box-shadow: 0 0 0 3px rgba(131, 215, 207, 0.1);
+}
+
 .btn-create {
   width: 32px;
   height: 32px;
@@ -107,6 +167,17 @@
   
   .dashboard-card {
     padding: 16px;
+  }
+
+  /* Adjust announcement header layout for mobile */
+  .announcements-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .announcements-card .card-header .btn-create-announcement {
+    width: 100%;
   }
 }
 

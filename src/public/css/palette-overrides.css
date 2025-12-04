@@ -349,8 +349,8 @@ button.btn-primary {
 }
 
 .team-item:hover {
-  background: var(--palette-background, var(--emerald-50, #ecfdf5)) !important;
-  border-color: var(--palette-primary, var(--teal-600, #0d9488)) !important;
+  background: var(--palette-hover-background, var(--palette-background, var(--emerald-50, #ecfdf5))) !important;
+  border-color: var(--palette-hover-border, var(--palette-primary, #0F766E)) !important;
 }
 
 .team-item-name {

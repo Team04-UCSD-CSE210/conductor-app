@@ -221,7 +221,7 @@ body.dashboard-page .main-container {
 }
 
 .lecture-card:hover {
-  border-color: var(--teal-200, #99f6e4);
+  border-color: var(--palette-hover-border, var(--palette-accent, #99F6E4));
   box-shadow: 0 4px 12px rgb(13 148 136 / 10%);
   transform: translateY(-1px);
 }
@@ -252,9 +252,9 @@ body.dashboard-page .main-container {
 }
 
 .lecture-label button:hover {
-  border-color: var(--teal-500, #14b8a6);
-  color: var(--teal-600, #0d9488);
-  background: var(--teal-50, #f0fdfa);
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
+  color: var(--palette-primary, #0F766E);
+  background: var(--palette-background, #F0FDFA);
 }
 
 .lecture-label button.active {

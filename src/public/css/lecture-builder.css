@@ -308,7 +308,7 @@ body.lecture-builder-page :where(
 }
 
 .question-card:hover {
-  border-color: var(--teal-300, #5eead4);
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
   box-shadow: 0 4px 12px rgb(13 148 136 / 12%);
   transform: translateY(-1px);
 }
@@ -521,8 +521,8 @@ body.lecture-builder-page :where(
 }
 
 .btn-outlined:hover {
-  background: var(--teal-50, #f0fdfa);
-  border-color: var(--teal-600, #0d9488);
+  background: var(--palette-background, #F0FDFA);
+  border-color: var(--palette-hover-border, var(--palette-primary, #0F766E));
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgb(13 148 136 / 15%);
 }

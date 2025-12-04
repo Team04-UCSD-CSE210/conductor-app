@@ -29,6 +29,10 @@
   --palette-accent: #99F6E4;
   --palette-background: #F0FDFA;
   
+  /* Hover state colors - configurable via palette */
+  --palette-hover-border: var(--palette-primary, #0F766E);
+  --palette-hover-background: var(--palette-background, #F0FDFA);
+  
   /* Standard colors (not palette-dependent) */
   --blue-50: #eff6ff;
   --blue-100: #dbeafe;
