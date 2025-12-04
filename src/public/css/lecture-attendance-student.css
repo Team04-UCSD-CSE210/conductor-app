@@ -616,9 +616,8 @@
 @media (width <= 1100px) {
   .attendance-layout {
     max-width: 100%;
-    overflow-x: hidden;
+    overflow: hidden auto;
     flex-direction: column;
-    overflow-y: auto;
     height: 100vh;
   }
 
@@ -647,23 +646,7 @@
 }
 
 @media (width <= 768px) {
-  .attendance-layout {
-    max-width: 100%;
-    overflow-x: hidden;
-    flex-direction: column;
-    overflow-y: auto;
-    height: 100vh;
-  }
-
-  .attendance-content {
-    max-width: 100%;
-    overflow-x: hidden;
-    order: 1;
-  }
-
   .attendance-sidebar {
-    width: 100%;
-    order: 2;
     margin-top: auto;
   }
 
@@ -707,28 +690,6 @@
     gap: 1rem;
     max-width: 100%;
     box-sizing: border-box;
-  }
-
-  .attendance-layout {
-    max-width: 100%;
-    overflow-x: hidden;
-    flex-direction: column;
-    overflow-y: auto;
-    height: 100vh;
-  }
-
-  .attendance-content {
-    max-width: 100%;
-    overflow-x: hidden;
-    order: 1;
-    flex: none;
-  }
-
-  .attendance-sidebar {
-    width: 100%;
-    order: 2;
-    position: relative;
-    flex-shrink: 0;
   }
 
   .access-code-modal {
