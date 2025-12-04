@@ -83,22 +83,38 @@ flip-card-back {
     align-items: center;
 }
 
+.lecture-item {
+    min-width: 0;
+    max-width: 100%;
+}
+
 .lecture-info {
     display: flex;
     align-items: center;
     gap: 1rem;
     flex: 1;
     justify-content: space-between;
+    min-width: 0;
 }
 
 .lecture-info > div:nth-child(2) {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    flex: 1;
+    min-width: 150px;
+    overflow: hidden;
 }
 
-.lecture-info > .lecture-meta {
+.lecture-number {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+.lecture-actions {
     margin-left: auto;
+    flex-shrink: 0;
 }
 
 .team-lead-header {
@@ -190,6 +206,52 @@ flip-card-back {
   background: #dc2626;
 }
 
+@media (width <= 1100px) {
+  .attendance-layout {
+    max-width: 100%;
+    overflow-x: hidden;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100vh;
+  }
+
+  .attendance-content {
+    max-width: 100%;
+    overflow-x: hidden;
+    order: 1;
+    flex: none;
+  }
+
+  .attendance-sidebar {
+    width: 100%;
+    order: 2;
+    position: relative;
+    flex-shrink: 0;
+  }
+}
+
+@media (width > 600px) {
+  .lecture-info {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+  }
+
+  .lecture-info > div:nth-child(2) {
+    min-width: 200px;
+  }
+
+  .lecture-actions {
+    margin-left: auto;
+    width: auto;
+  }
+
+  .badge-container {
+    flex-direction: row;
+    width: auto;
+  }
+}
+
 @media (width <= 600px) {
   .help-box.team-lead-card {
     max-width: 100%;
@@ -200,11 +262,32 @@ flip-card-back {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-}
 
+  .lecture-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .lecture-info > div {
+    align-items: center;
+  }
+
+  .lecture-actions {
+    justify-content: center;
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .badge-container {
+    justify-content: center;
+    width: 100%;
+  }
+}
+/* 
 @media (width <= 900px) {
   .attendance-sidebar {
     max-width: 100%;
     padding: 0.5rem;
   }
-}
+} */
