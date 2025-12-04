@@ -1,0 +1,217 @@
+name: Testing Suite
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conductor_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Setup database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+        run: npm run db:init
+      
+      - name: Run unit tests with coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+        run: npm run test:coverage
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conductor_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Setup database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+        run: npm run db:init
+      
+      - name: Start server in background
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+          NODE_ENV: test
+          PORT: 3000
+          SESSION_SECRET: test-secret-key-for-ci
+          GOOGLE_CLIENT_ID: fake-client-id
+          GOOGLE_CLIENT_SECRET: fake-client-secret
+        run: |
+          npm start &
+          sleep 10
+      
+      - name: Wait for server to be ready
+        run: npx wait-on http://localhost:3000 -t 30000
+      
+      - name: Run E2E tests
+        run: npm run test:e2e:chromium
+      
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  load-tests:
+    name: Load Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conductor_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Setup database
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+        run: npm run db:seed
+      
+      - name: Start server in background
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
+          NODE_ENV: test
+          PORT: 3000
+          PORT: 3000
+          SESSION_SECRET: test-secret-key-for-ci
+          GOOGLE_CLIENT_ID: fake-client-id
+          GOOGLE_CLIENT_SECRET: fake-client-secret
+        run: |
+          npm start &
+          sleep 10
+      
+      - name: Wait for server to be ready
+        run: npx wait-on http://localhost:3000 -t 30000
+      
+      - name: Run load tests
+        env:
+          BASE_URL: http://localhost:3000
+          DURATION: 20
+          STUDENT_COUNT: 100
+        run: npm run test:load
+      
+      - name: Save load test results
+        if: always()
+        run: |
+          echo "Load test completed at $(date)" > load-test-summary.txt
+          echo "Check workflow logs for detailed results" >> load-test-summary.txt
+      
+      - name: Upload load test summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: load-test-summary.txt
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests, load-tests]
+    if: always()
+    
+    steps:
+      - name: Create summary
+        run: |
+          echo "# Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Jobs Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit Tests: ${{ needs.unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- E2E Tests: ${{ needs.e2e-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Load Tests: ${{ needs.load-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.unit-tests.result }}" == "success" && 
+                "${{ needs.e2e-tests.result }}" == "success" && 
+                "${{ needs.load-tests.result }}" == "success" ]]; then
+            echo "ï¿?All tests passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ï¿?Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
+          fi
