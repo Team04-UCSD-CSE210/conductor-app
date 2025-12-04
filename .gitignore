@@ -16,3 +16,8 @@ certs/
 package-lock.json
 .idea
 certs
+
+# Test results and reports
+test-results/
+playwright-report/
+.last-run.json

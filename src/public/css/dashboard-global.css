@@ -103,9 +103,9 @@
 }
 
 .btn-negative.interaction-btn {
-  background: var(--red-100, #fee);
-  color: var(--red-700, #b91c1c);
-  border: 1px solid var(--red-300, #fca5a5);
+	background: var(--red-100, #fee);
+	color: var(--red-700, #b91c1c);
+	border: 1px solid var(--red-300, #fca5a5);
 }
 
 .interaction-details {

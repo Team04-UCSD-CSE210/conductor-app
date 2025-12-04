@@ -9,6 +9,21 @@ import { pool } from "../db.js";
  */
 export async function authenticate(req, res, next) {
   try {
+    // TEST MODE: Bypass authentication for load testing
+    if (process.env.TEST_MODE === 'true' || process.env.BYPASS_AUTH === 'true') {
+      req.user = {
+        emails: [{ value: 'admin@ucsd.edu' }]
+      };
+      req.currentUser = {
+        id: '963f7bb3-438d-4dea-ae8c-995e23aecf5c',
+        email: 'admin@ucsd.edu',
+        name: 'System Administrator',
+        primary_role: 'admin',
+        status: 'active'
+      };
+      return next();
+    }
+
     if (!(req.isAuthenticated && req.isAuthenticated() && req.user)) {
       return res.status(401).json({
         error: "Unauthorized",
