@@ -1,3 +1,6 @@
+// IMPORTANT: Instrumentation MUST be imported first before any other modules
+import "./instrumentation.js";
+
 import express from "express";
 import session from "express-session";
 import passport from "passport";
@@ -28,6 +31,7 @@ import instructorJournalRoutes from "./routes/instructor-journal-routes.js";
 import taJournalRoutes from "./routes/ta-journal-routes.js";
 import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
+import { metricsMiddleware } from "./middleware/metrics-middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -128,6 +132,9 @@ app.use((req, res, next) => {
   // If no session, just continue (for static files, etc.)
   next();
 });
+
+// Metrics middleware for OpenTelemetry/SigNoz integration
+app.use(metricsMiddleware);
 
 if (!DATABASE_URL || DATABASE_URL.includes("localhost")) {
   console.log("⚠️ Database not configured or using localhost, running without database features");
