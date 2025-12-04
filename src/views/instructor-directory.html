@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Conductor – Class Directory</title>
+  <title>Conductor – Class Directory (Professors view)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Shared CSS -->
   <link rel="stylesheet" href="../public/css/class-dir.css" />
 </head>
-<body class="app">
+<body class="app directory-profiles">
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <header class="sidebar-header">
@@ -63,13 +64,13 @@
   </aside>
 
   <!-- MAIN CONTENT -->
-  <main class="main" aria-label="Students class directory">
+  <main class="main" aria-label="Instructor class directory">
     <header class="page-header">
       <section class="page-header-text">
         <p class="page-header-eyebrow">Class directory</p>
         <h1 class="page-header-title">Software Engineering</h1>
         <p class="page-header-subtitle">
-          Find and connect with your instructors, TAs, tutors, and classmates.
+          Detailed contact and availability information for your instructors and teaching team.
         </p>
       </section>
 
@@ -114,10 +115,10 @@
         </button>
       </nav>
 
-      <!-- FULL-WIDTH LAYOUT (no right aside) -->
+      <!-- FULL-WIDTH LAYOUT -->
       <section class="directory-layout">
         <section class="directory-list">
-          <!-- PROFESSORS PANEL -->
+          <!-- PROFESSORS -->
           <section class="role-panel" data-panel="professors">
             <header class="role-panel-header">
               <section class="role-panel-heading">
@@ -136,15 +137,30 @@
               <!-- Professor 1 -->
               <article class="person-card">
                 <section class="person-identity">
-                  <span class="person-avatar" aria-hidden="true">HB</span>
+                  <!-- Clickable avatar with upload -->
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/prof-john-smith.jpg"
+                      alt="Dr. John Smith"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Dr. John Smith"
+                      hidden
+                    />
+                  </label>
+
                   <header>
                     <h3 class="person-name">Dr. John Smith</h3>
-                    <p class="person-role">Professor · Lecture lead</p>
+                    <p class="person-role">Professor – Lecture lead</p>
                   </header>
                 </section>
 
-                <!-- Hidden until "View profile" is clicked -->
-                <section class="person-info" data-profile-details>
+                <!-- Hidden until “View profile” is clicked -->
+                <section class="person-info">
                   <p><strong>Pronouns:</strong> he/him</p>
                   <p><strong>Pronunciation:</strong> “JOHN SMITH”</p>
 
@@ -163,13 +179,18 @@
                     Office hours – Tue 15:00–17:00 (CSE 210 Lab / Zoom)<br />
                     Group meetings – By appointment
                   </p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Lecture lead</span>
+                    <span class="tag">Section A</span>
+                  </p>
                 </section>
 
                 <section class="person-actions">
-                  <button type="button" class="btn btn-primary">Contact</button>
+                  <button type="button" class="btn btn-secondary">Contact</button>
                   <button
                     type="button"
-                    class="link-button profile-toggle"
+                    class="btn btn-primary profile-toggle"
                     data-profile-label="View profile"
                   >
                     View profile
@@ -180,14 +201,28 @@
               <!-- Professor 2 -->
               <article class="person-card">
                 <section class="person-identity">
-                  <span class="person-avatar" aria-hidden="true">JL</span>
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/prof-jordan-lee.jpg"
+                      alt="Dr. Jordan Lee"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Dr. Jordan Lee"
+                      hidden
+                    />
+                  </label>
+
                   <header>
                     <h3 class="person-name">Dr. Jordan Lee</h3>
-                    <p class="person-role">Co-Instructor · Project mentor</p>
+                    <p class="person-role">Co-Instructor – Project mentor</p>
                   </header>
                 </section>
 
-                <section class="person-info" data-profile-details>
+                <section class="person-info">
                   <p><strong>Pronouns:</strong> she/they</p>
                   <p><strong>Pronunciation:</strong> “JOR-dun LEE”</p>
 
@@ -206,13 +241,18 @@
                     Office hours – Wed 14:00–16:00 (CSE 210 Lab)<br />
                     1:1s / project check-ins – By appointment
                   </p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Project mentor</span>
+                    <span class="tag">Section B</span>
+                  </p>
                 </section>
 
                 <section class="person-actions">
-                  <button type="button" class="btn btn-primary">Contact</button>
+                  <button type="button" class="btn btn-secondary">Contact</button>
                   <button
                     type="button"
-                    class="link-button profile-toggle"
+                    class="btn btn-primary profile-toggle"
                     data-profile-label="View profile"
                   >
                     View profile
@@ -222,7 +262,7 @@
             </section>
           </section>
 
-          <!-- TAs PANEL -->
+          <!-- TAs -->
           <section class="role-panel" data-panel="tas" hidden>
             <header class="role-panel-header">
               <section class="role-panel-heading">
@@ -240,14 +280,28 @@
             <section class="card-list">
               <article class="person-card">
                 <section class="person-identity">
-                  <span class="person-avatar" aria-hidden="true">CS</span>
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/ta-casey-smith.jpg"
+                      alt="Casey Smith"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Casey Smith"
+                      hidden
+                    />
+                  </label>
+
                   <header>
                     <h3 class="person-name">Casey Smith</h3>
                     <p class="person-role">Teaching Assistant</p>
                   </header>
                 </section>
 
-                <section class="person-info" data-profile-details>
+                <section class="person-info">
                   <p><strong>Pronouns:</strong> they/them</p>
                   <p><strong>Pronunciation:</strong> “KAY-see SMITH”</p>
 
@@ -262,17 +316,22 @@
                   <p>
                     <strong>Availability (specific):</strong><br />
                     Office hours – Thu 10:00–12:00 (CSE 210 Lab)<br />
-                    Lab support – Mon 14:00–16:00 (CSE 210 Lab)
+                    Lab support – Mon 14:00–16:00
                   </p>
 
                   <p><strong>Teams:</strong> Team Harmony, Team Delta</p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Grading</span>
+                    <span class="tag">Section A</span>
+                  </p>
                 </section>
 
                 <section class="person-actions">
-                  <button type="button" class="btn btn-primary">Contact TA</button>
+                  <button type="button" class="btn btn-secondary">Contact TA</button>
                   <button
                     type="button"
-                    class="link-button profile-toggle"
+                    class="btn btn-primary profile-toggle"
                     data-profile-label="View profile"
                   >
                     View profile
@@ -282,7 +341,7 @@
             </section>
           </section>
 
-          <!-- TUTORS PANEL -->
+          <!-- Tutors -->
           <section class="role-panel" data-panel="tutors" hidden>
             <header class="role-panel-header">
               <section class="role-panel-heading">
@@ -300,17 +359,34 @@
             <section class="card-list">
               <article class="person-card">
                 <section class="person-identity">
-                  <span class="person-avatar" aria-hidden="true">RM</span>
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/tutor-riley-martinez.jpg"
+                      alt="Riley Martinez"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Riley Martinez"
+                      hidden
+                    />
+                  </label>
+
                   <header>
                     <h3 class="person-name">Riley Martinez</h3>
                     <p class="person-role">Tutor – Evening sessions</p>
                   </header>
                 </section>
 
-                <!-- Tutors don't get special profile behavior here -->
                 <section class="person-info">
-                  <p>Email: rmartinez@university.edu</p>
-                  <p>Times: Tue &amp; Thu 7:00–9:00 PM</p>
+                  <p><strong>Pronouns:</strong> he/they</p>
+                  <p><strong>Pronunciation:</strong> “RYE-lee MAR-tee-nez”</p>
+
+                  <p><strong>Contact:</strong> Email – rmartinez@university.edu</p>
+                  <p><strong>Times:</strong> Tue &amp; Thu 7:00–9:00 PM</p>
+
                   <p class="person-tags">
                     <span class="tag tag-accent">Data structures</span>
                     <span class="tag">Project help</span>
@@ -318,20 +394,26 @@
                 </section>
 
                 <section class="person-actions">
-                  <button type="button" class="btn btn-primary">Message tutor</button>
-                  <button type="button" class="link-button">View schedule</button>
+                  <button type="button" class="btn btn-secondary">Message tutor</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View profile"
+                  >
+                    View profile
+                  </button>
                 </section>
               </article>
             </section>
           </section>
 
-          <!-- STUDENTS PANEL -->
+          <!-- STUDENTS -->
           <section class="role-panel" data-panel="students" hidden>
             <header class="role-panel-header">
               <section class="role-panel-heading">
                 <h2 class="role-panel-title">Students</h2>
                 <p class="role-panel-subtitle">
-                  Classmates enrolled in this course.
+                  Students enrolled in this course.
                 </p>
               </section>
               <label class="search" aria-label="Search students">
@@ -343,16 +425,45 @@
             <section class="card-list">
               <article class="person-card">
                 <section class="person-identity">
-                  <span class="person-avatar" aria-hidden="true">AK</span>
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/student-alex-kim.jpg"
+                      alt="Alex Kim"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Alex Kim"
+                      hidden
+                    />
+                  </label>
+
                   <header>
                     <h3 class="person-name">Alex Kim</h3>
-                    <p class="person-role">Student – Team 3</p>
+                    <p class="person-role">Student – Team 3 (Team leader)</p>
                   </header>
                 </section>
 
                 <section class="person-info">
-                  <p>Email: akim@university.edu</p>
-                  <p>Time zone: PST</p>
+                  <p><strong>Pronouns:</strong> they/them</p>
+                  <p><strong>Pronunciation:</strong> “AL-ex KIM”</p>
+
+                  <p><strong>Leader or not:</strong> Team leader</p>
+                  <p><strong>Class / group chat:</strong> #team-3</p>
+                  <p><strong>Outside socials:</strong> Discord – <strong>alexk#0312</strong></p>
+                  <p><strong>Phone:</strong> (555) 555-0101</p>
+                  <p><strong>Email:</strong> akim@university.edu</p>
+
+                  <p><strong>Availability (general):</strong> Evenings and weekends (PST)</p>
+                  <p>
+                    <strong>Availability (specific):</strong><br />
+                    Lectures – Mon/Wed 10:30–11:20 (CSE2 G01)<br />
+                    Team sync – Tue 18:00–19:00 PT<br />
+                    Office hours – Thu 13:00–15:00 PT
+                  </p>
+
                   <p class="person-tags">
                     <span class="tag tag-accent">Team 3</span>
                     <span class="tag">Backend</span>
@@ -360,14 +471,20 @@
                 </section>
 
                 <section class="person-actions">
-                  <button type="button" class="btn btn-primary">Message</button>
-                  <!-- No "View profile" here on purpose -->
+                  <button type="button" class="btn btn-secondary">Message</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View profile"
+                  >
+                    View profile
+                  </button>
                 </section>
               </article>
             </section>
           </section>
 
-          <!-- TEAMS PANEL (formerly Groups) -->
+          <!-- TEAMS (formerly Groups) -->
           <section class="role-panel" data-panel="teams" hidden>
             <header class="role-panel-header">
               <section class="role-panel-heading">
@@ -385,7 +502,21 @@
             <section class="card-list">
               <article class="person-card">
                 <section class="person-identity">
-                  <span class="person-avatar" aria-hidden="true">G1</span>
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/team-harmony-logo.png"
+                      alt="Team Harmony logo"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload logo for Team Harmony"
+                      hidden
+                    />
+                  </label>
+
                   <header>
                     <h3 class="person-name">Team Harmony</h3>
                     <p class="person-role">Project team</p>
@@ -393,8 +524,21 @@
                 </section>
 
                 <section class="person-info">
-                  <p>Members: 5 students</p>
-                  <p>Mentor: Casey Smith (TA)</p>
+                  <p><strong>Mantra:</strong> “Build together, ship often.”</p>
+
+                  <p>
+                    <strong>Links:</strong><br />
+                    Slack – <strong>#team-harmony</strong><br />
+                    Repo – <strong>github.com/cse210/team-harmony</strong><br />
+                    Workspace – MM / project dashboard
+                  </p>
+
+                  <p>
+                    <strong>Member list:</strong><br />
+                    Alex Kim (leader), Jordan Chen, Priya Patel, Sam Rivera,
+                    Taylor Nguyen
+                  </p>
+
                   <p class="person-tags">
                     <span class="tag tag-accent">Backend focus</span>
                     <span class="tag">Section A</span>
@@ -402,8 +546,14 @@
                 </section>
 
                 <section class="person-actions">
-                  <button type="button" class="btn btn-primary">View team</button>
-                  <button type="button" class="link-button">Open workspace</button>
+                  <button type="button" class="btn btn-secondary">Open workspace</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View team"
+                  >
+                    View team
+                  </button>
                 </section>
               </article>
             </section>
@@ -413,7 +563,7 @@
     </section>
   </main>
 
-  <!-- JS: tabs + professor/TA profile toggles -->
+  <!-- JS: tabs + profile toggles + avatar upload preview -->
   <script>
     // Role tabs
     const tabs = document.querySelectorAll(".role-tab");
@@ -432,27 +582,41 @@
       });
     });
 
-    // Profile toggles for Professors / TAs only
+    // Show/hide profile details inside each card
     const profileButtons = document.querySelectorAll(".profile-toggle");
 
     profileButtons.forEach((button) => {
       const baseLabel = button.dataset.profileLabel || "View profile";
       const card = button.closest(".person-card");
-      const details = card.querySelector("[data-profile-details]");
 
-      if (!details) return;
+      // Start collapsed by default
+      card.classList.remove("profile-open");
 
-      // Start collapsed
-      details.hidden = true;
+      // Ensure initial label
       button.textContent = baseLabel;
-      button.setAttribute("aria-expanded", "false");
 
       button.addEventListener("click", () => {
-        const isHidden = details.hidden;
-        details.hidden = !isHidden;
+        const isOpen = card.classList.toggle("profile-open");
+        button.textContent = isOpen ? "Hide profile" : baseLabel;
+      });
+    });
 
-        button.textContent = isHidden ? "Hide profile" : baseLabel;
-        button.setAttribute("aria-expanded", String(isHidden));
+    // Avatar upload preview for each card
+    const avatarInputs = document.querySelectorAll(".avatar-input");
+
+    avatarInputs.forEach((input) => {
+      const label = input.closest(".avatar-upload-label");
+      const img = label.querySelector(".avatar-preview");
+
+      input.addEventListener("change", () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
       });
     });
   </script>

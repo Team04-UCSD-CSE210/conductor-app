@@ -73,41 +73,99 @@ const getInitials = (name) => {
 
 // Render Functions
 const renderPersonCard = (person, type) => {
-  const isActive = person.last_activity && 
+  const isActive = person.last_activity &&
     new Date(person.last_activity) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  
+
+  const initials = getInitials(person.name);
+
+  // 给不同类型一个更友好的 role 文本
+  const roleLabel =
+    type === 'professor'
+      ? 'Professor – Lecture lead'
+      : type === 'ta'
+      ? 'Teaching Assistant'
+      : type === 'student'
+      ? 'Student'
+      : (person.course_role || person.primary_role || '');
+
+  const availabilityGeneral = person.availability || 'See syllabus / Canvas';
+
   return `
-    <div class="person-card" data-person-id="${person.id}" data-type="${type}">
-      <div class="person-header">
-        <div class="person-avatar">${getInitials(person.name)}</div>
-        <div class="person-info">
-          <h4>${person.name}</h4>
-          <div class="person-role">${person.course_role || person.primary_role}</div>
-          ${person.pronouns ? `<div class="person-pronouns">${person.pronouns}</div>` : ''}
-        </div>
-      </div>
-      <div class="person-details">
-        <div class="detail-item">
-          <span class="detail-label">Email:</span>
+    <article class="person-card" data-person-id="${person.id}" data-type="${type}">
+      <!-- 左：头像 + 基本信息 -->
+      <section class="person-identity">
+        <div class="person-avatar" aria-hidden="true">${initials}</div>
+        <header class="person-identity-header">
+          <h3 class="person-name">${person.name}</h3>
+          <p class="person-role">${roleLabel}</p>
+          ${person.pronouns ? `<p class="person-pronouns">${person.pronouns}</p>` : ''}
+        </header>
+      </section>
+
+      <!-- 中：详细信息，可以配合 profile-open 来控制展开/收起 -->
+      <section class="person-info">
+        <div class="detail-row">
+          <span class="detail-label">Email</span>
           <span class="detail-value">${person.email}</span>
         </div>
-        ${person.phone ? `
-          <div class="detail-item">
-            <span class="detail-label">Phone:</span>
-            <span class="detail-value">${person.phone}</span>
-          </div>
-        ` : ''}
-        <div class="detail-item">
-          <span class="detail-label">Status:</span>
-          <div class="activity-indicator">
-            <div class="activity-dot ${isActive ? 'active' : 'inactive'}"></div>
-            <span class="detail-value">${isActive ? 'Active' : 'Inactive'}</span>
-          </div>
+        ${
+          person.phone
+            ? `
+        <div class="detail-row">
+          <span class="detail-label">Phone</span>
+          <span class="detail-value">${person.phone}</span>
+        </div>`
+            : ''
+        }
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span class="detail-value">
+            <span class="activity-indicator">
+              <span class="activity-dot ${isActive ? 'active' : 'inactive'}"></span>
+              ${isActive ? 'Active' : 'Inactive'}
+            </span>
+          </span>
         </div>
-      </div>
-    </div>
+        <div class="detail-row">
+          <span class="detail-label">Availability (general)</span>
+          <span class="detail-value">${availabilityGeneral}</span>
+        </div>
+      </section>
+
+      <!-- 右：标签 + 按钮，模仿 prototype 里的 “View profile” -->
+      <section class="person-actions">
+        <div class="person-tags">
+          ${
+            type === 'professor'
+              ? '<span class="tag tag-accent">Lecture lead</span>'
+              : ''
+          }
+          ${
+            type === 'ta'
+              ? '<span class="tag tag-accent">TA</span>'
+              : ''
+          }
+          ${
+            type === 'student'
+              ? '<span class="tag tag-accent">Student</span>'
+              : ''
+          }
+        </div>
+        <div class="person-buttons">
+          <button type="button" class="btn btn-secondary">Contact</button>
+          <button
+            type="button"
+            class="btn btn-primary profile-toggle"
+            data-profile-label="View profile"
+          >
+            View profile
+          </button>
+        </div>
+      </section>
+    </article>
   `;
 };
+
 
 const renderGroupCard = (group) => {
   return `
@@ -136,6 +194,23 @@ const renderGroupCard = (group) => {
     </div>
   `;
 };
+function setupProfileToggles(root = document) {
+  const buttons = root.querySelectorAll('.profile-toggle');
+
+  buttons.forEach((button) => {
+    const baseLabel = button.dataset.profileLabel || 'View profile';
+    const card = button.closest('.person-card');
+
+    // 初始状态：关闭
+    card.classList.remove('profile-open');
+    button.textContent = baseLabel;
+
+    button.addEventListener('click', () => {
+      const isOpen = card.classList.toggle('profile-open');
+      button.textContent = isOpen ? 'Hide profile' : baseLabel;
+    });
+  });
+}
 
 // Filter Functions
 const filterPeople = (people, filters) => {
@@ -174,7 +249,12 @@ const renderProfessorsGrid = () => {
     return;
   }
   
-  elements.professorsGrid.innerHTML = filtered.map(prof => renderPersonCard(prof, 'professor')).join('');
+  elements.professorsGrid.innerHTML = filtered
+    .map(prof => renderPersonCard(prof, 'professor'))
+    .join('');
+
+  // ⭐ 关键：渲染完之后挂 toggle
+  setupProfileToggles(elements.professorsGrid);
 };
 
 const renderTAsGrid = () => {
@@ -185,7 +265,12 @@ const renderTAsGrid = () => {
     return;
   }
   
-  elements.tasGrid.innerHTML = filtered.map(ta => renderPersonCard(ta, 'ta')).join('');
+  elements.tasGrid.innerHTML = filtered
+    .map(ta => renderPersonCard(ta, 'ta'))
+    .join('');
+
+  // ⭐ 关键
+  setupProfileToggles(elements.tasGrid);
 };
 
 const renderStudentsGrid = () => {
@@ -196,8 +281,15 @@ const renderStudentsGrid = () => {
     return;
   }
   
-  elements.studentsGrid.innerHTML = filtered.map(student => renderPersonCard(student, 'student')).join('');
+  elements.studentsGrid.innerHTML = filtered
+    .map(student => renderPersonCard(student, 'student'))
+    .join('');
+
+  // ⭐ 关键
+  setupProfileToggles(elements.studentsGrid);
 };
+
+
 
 const renderGroupsGrid = () => {
   const filtered = filterGroups(state.groups, state.filters.groups);
