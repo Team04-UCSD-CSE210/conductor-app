@@ -72,7 +72,7 @@
 #announcement-form textarea:focus {
   outline: none;
   border-color: var(--palette-secondary, #83D7CF);
-  box-shadow: 0 0 0 3px rgba(131, 215, 207, 0.1);
+  box-shadow: 0 0 0 3px rgb(131 215 207 / 10%);
 }
 
 .btn-create {
