@@ -133,8 +133,9 @@
     actions.appendChild(actionButton);
 
     meta.append(sessionStatus, actions);
-    info.append(details, meta);
+    info.appendChild(details);
     row.appendChild(info);
+    row.appendChild(meta);
 
     return row;
   }

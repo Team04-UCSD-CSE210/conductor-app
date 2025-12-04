@@ -387,20 +387,6 @@ function determineMeetingStatus(meeting) {
     
     details.append(label, time);
 
-    const meta = document.createElement('div');
-    meta.className = 'lecture-meta';
-
-    // Only show session status for open/closed meetings (not pending)
-    // The badge already shows "Upcoming" for pending meetings
-    const sessionStatus = document.createElement('span');
-    if (isOpen) {
-      sessionStatus.className = 'lecture-status open';
-      sessionStatus.textContent = 'Open';
-    } else if (isPast) {
-      sessionStatus.className = 'lecture-status closed';
-      sessionStatus.textContent = 'Closed';
-    }
-
     const actions = document.createElement('div');
     actions.className = 'lecture-actions';
     
@@ -502,20 +488,13 @@ function determineMeetingStatus(meeting) {
     });
     
     actions.appendChild(deleteButton);
-
-    // Only append sessionStatus if it has content (open or closed)
-    if (isOpen || isPast) {
-      meta.append(sessionStatus, actions);
-    } else {
-      meta.appendChild(actions);
-    }
     
     // Create badge container
     const badgeContainer = document.createElement('div');
     badgeContainer.className = 'badge-container';
     badgeContainer.append(badge, leaderStatusBadge);
     
-    info.append(badgeContainer, details, meta);
+    info.append(badgeContainer, details, actions);
     row.appendChild(info);
 
     return row;
