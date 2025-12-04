@@ -162,7 +162,7 @@
       
       // If open and no attendance, hide the badge (will show "I'm here" button instead)
       badge.style.display = 'none';
-    } catch (err) {
+    } catch {
       // Silently handle errors - 404 is expected when no attendance record exists
       badge.style.display = 'none';
     }
@@ -245,7 +245,6 @@ function determineMeetingStatus(meeting) {
     row.dataset.status = sessionState;
     
     const isOpen = sessionState === 'open';
-    const isPast = sessionState === 'closed';
 
     const attendanceCount = meeting.attendance_count || 0;
     const totalMembers = meeting.team_member_count || 0;
@@ -567,7 +566,7 @@ function determineMeetingStatus(meeting) {
             }
           }
           // 404 means no attendance record (absent) - this is normal, not an error
-        } catch (err) {
+        } catch {
           // Silently handle errors - 404 is expected when no attendance record exists
         }
       }

@@ -209,9 +209,8 @@ flip-card-back {
 @media (width <= 1100px) {
   .attendance-layout {
     max-width: 100%;
-    overflow-x: hidden;
+    overflow: hidden auto;
     flex-direction: column;
-    overflow-y: auto;
     height: 100vh;
   }
 
@@ -302,6 +301,7 @@ flip-card-back {
     width: 100%;
   }
 }
+
 /* 
 @media (width <= 900px) {
   .attendance-sidebar {
