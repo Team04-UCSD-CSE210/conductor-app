@@ -20,6 +20,7 @@ import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
 import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
+import dashboardTodoRoutes from "./routes/dashboard-todo-routes.js";
 import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
@@ -28,6 +29,7 @@ import instructorJournalRoutes from "./routes/instructor-journal-routes.js";
 import taJournalRoutes from "./routes/ta-journal-routes.js";
 import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
+import announcementRoutes from "./routes/announcement-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -813,6 +815,10 @@ app.get("/instructor-dashboard", ...protect('course.manage', 'course'), (req, re
   res.sendFile(buildFullViewPath("instructor-dashboard.html"));
 });
 
+app.get("/course-settings", ...protect('course.manage', 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("course-settings.html"));
+});
+
 app.get("/meeting-attendance", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("meeting-attendance.html"));
 });
@@ -918,7 +924,7 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
 
     // Admin and instructor can access team lead dashboard (for viewing)
     if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
-      return res.sendFile(buildFullViewPath("student-dashboard.html"));
+      return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
     }
 
     // Check if user is a team lead
@@ -936,7 +942,7 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
       return res.redirect("/student-dashboard");
     }
 
-    return res.sendFile(buildFullViewPath("student-dashboard.html"));
+    return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
   } catch (error) {
     console.error("Error accessing team lead dashboard:", error);
     return res.status(500).send("Internal server error");
@@ -1504,7 +1510,6 @@ app.get(
 
       // Log successful callback with user role info
       console.log("✅ Login success for:", email);
-      console.log(`[DEBUG] User primary_role: ${user.primary_role}, id: ${user.id}`);
       await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
         req,
         message: "OAuth callback completed successfully",
@@ -1720,6 +1725,7 @@ app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) =
     }
 
     res.json({
+      id: user.id,
       primary_role: user.primary_role,
       enrollment_role: enrollmentRole,
       is_team_lead: isTeamLead,
@@ -1738,8 +1744,10 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/offerings", offeringRoutes);
 app.use("/api/interactions", interactionRoutes);
+app.use("/api/dashboard-todos", dashboardTodoRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/announcements", announcementRoutes);
 app.use("/api/journals", ensureAuthenticated, journalRoutes);
 app.use("/api/instructor-journals", ensureAuthenticated, instructorJournalRoutes);
 app.use("/api/ta-journals", ensureAuthenticated, taJournalRoutes);

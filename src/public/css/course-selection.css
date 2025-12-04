@@ -95,7 +95,7 @@
 }
 
 .course-card:hover {
-  border-color: var(--emerald-400);
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
   box-shadow: 0 10px 25px -3px rgb(16 185 129 / 20%);
   transform: translateY(-2px);
 }
