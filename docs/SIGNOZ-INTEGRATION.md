@@ -1,10 +1,15 @@
 # SigNoz Metrics Integration
 
-This document explains the SigNoz/OpenTelemetry integration for the Conductor application, which provides observability through metrics, traces, and logs.
+This document explains the SigNoz/OpenTelemetry integration for the
+Conductor application, which provides observability through metrics,
+traces, and logs.
 
 ## Overview
 
-The application uses OpenTelemetry SDK to collect metrics and traces, which are exported to SigNoz for visualization and analysis. This integration is **embedded into the application code** (not standalone) as required.
+The application uses OpenTelemetry SDK to collect metrics and traces,
+which are exported to SigNoz for visualization and analysis. This
+integration is **embedded into the application code** (not standalone)
+as required.
 
 ## Architecture
 
@@ -28,16 +33,16 @@ The application uses OpenTelemetry SDK to collect metrics and traces, which are 
 The integration tracks the following custom metrics:
 
 | Metric Name | Type | Description |
-|------------|------|-------------|
-| `http.requests` | Counter | Total number of HTTP requests by method, route, and status |
+| ----------- | ---- | ----------- |
+| `http.requests` | Counter | Total HTTP requests by method, route, status |
 | `http.request.duration` | Histogram | HTTP request latency in milliseconds |
 | `user.logins` | Counter | User login events by status (success/failure) |
 | `db.queries` | Counter | Database queries by operation type |
 | `db.query.duration` | Histogram | Database query execution time |
 | `api.errors` | Counter | API errors by type and endpoint |
 | `active.sessions` | Gauge | Current number of active user sessions |
-| `journal.entries` | Counter | Journal entries created by role (student/instructor/TA/tutor) |
-| `attendance.records` | Counter | Attendance records by status (present/absent/late) |
+| `journal.entries` | Counter | Journal entries by role |
+| `attendance.records` | Counter | Attendance records by status |
 
 ### Auto-Instrumentation
 
@@ -59,10 +64,11 @@ The following are automatically instrumented:
 ### Local SigNoz Setup (Docker)
 
 1. **Install Docker Desktop for Windows**
-   - Download from https://www.docker.com/products/docker-desktop/
+   - Download from <https://www.docker.com/products/docker-desktop/>
    - Follow installation instructions
 
 2. **Clone SigNoz repository**
+
    ```powershell
    cd $HOME
    git clone https://github.com/SigNozHQ/signoz.git
@@ -70,16 +76,18 @@ The following are automatically instrumented:
    ```
 
 3. **Start SigNoz**
+
    ```powershell
    docker compose -f docker/clickhouse-setup/docker-compose.yaml up -d
    ```
 
 4. **Verify SigNoz is running**
-   - Open browser to http://localhost:3301
+   - Open browser to <http://localhost:3301>
    - Create an account (first user is admin)
-   - SigNoz collector endpoint: http://localhost:4318
+   - SigNoz collector endpoint: <http://localhost:4318>
 
 5. **Stop SigNoz** (when done)
+
    ```powershell
    docker compose -f docker/clickhouse-setup/docker-compose.yaml down
    ```
@@ -87,11 +95,13 @@ The following are automatically instrumented:
 ### Configuration
 
 1. **Copy `.env.example` to `.env`** (if not already done)
+
    ```powershell
    Copy-Item .env.example .env
    ```
 
 2. **Update `.env` with SigNoz settings**
+
    ```env
    # For local SigNoz
    SIGNOZ_ENDPOINT=http://localhost:4318
@@ -100,6 +110,7 @@ The following are automatically instrumented:
    ```
 
 3. **For SigNoz Cloud** (if using cloud instead of local)
+
    ```env
    SIGNOZ_ENDPOINT=https://ingest.{region}.signoz.cloud:443
    SERVICE_NAME=conductor-app
@@ -124,6 +135,7 @@ node src/server.js
 ```
 
 The instrumentation will:
+
 - Initialize on app startup
 - Automatically track all HTTP requests
 - Export metrics to SigNoz every 10 seconds
@@ -131,7 +143,7 @@ The instrumentation will:
 
 ### Viewing Metrics in SigNoz
 
-1. Open SigNoz dashboard: http://localhost:3301 (or your cloud URL)
+1. Open SigNoz dashboard: <http://localhost:3301> (or your cloud URL)
 
 2. Navigate to:
    - **Services** - See service health, latency, error rates
@@ -214,6 +226,7 @@ app.post('/attendance', async (req, res) => {
 ### Setting Up Alerts
 
 Create alerts in SigNoz for:
+
 - Error rate > 5%
 - Request latency p95 > 1000ms
 - Login failures > 10/minute
@@ -224,17 +237,21 @@ Create alerts in SigNoz for:
 ### Metrics not appearing in SigNoz
 
 1. **Check SigNoz is running**
+
    ```powershell
    docker ps
    ```
-   Should show containers: `signoz-otel-collector`, `signoz-query-service`, `clickhouse`
+
+   Should show containers: `signoz-otel-collector`, `signoz-query-service`,
+   `clickhouse`
 
 2. **Verify endpoint configuration**
    - Check `.env` has `SIGNOZ_ENDPOINT=http://localhost:4318`
    - Ensure no firewall blocking port 4318
 
 3. **Check application logs**
-   ```
+
+   ```text
    ✅ OpenTelemetry SDK initialized successfully
    🔍 Service: conductor-app
    📊 Exporting to: http://localhost:4318
@@ -242,6 +259,7 @@ Create alerts in SigNoz for:
    ```
 
 4. **Test connectivity**
+
    ```powershell
    curl http://localhost:4318/v1/metrics
    ```
@@ -253,6 +271,7 @@ Create alerts in SigNoz for:
    - Check for any imports before this line
 
 2. **Check dependencies**
+
    ```powershell
    npm ls @opentelemetry/sdk-node
    ```
@@ -266,6 +285,7 @@ Create alerts in SigNoz for:
 The OpenTelemetry SDK uses ~20-50MB of memory. If you see excessive usage:
 
 1. **Reduce metric export frequency** (in `instrumentation.js`)
+
    ```javascript
    periodicExportingMetricReader: {
      exportIntervalMillis: 30000, // Change from 10s to 30s
@@ -273,10 +293,11 @@ The OpenTelemetry SDK uses ~20-50MB of memory. If you see excessive usage:
    ```
 
 2. **Disable auto-instrumentation** for unused libraries
+
    ```javascript
    instrumentations: [
      getNodeAutoInstrumentations({
-       '@opentelemetry/instrumentation-fs': { enabled: false }, // Disable if not needed
+       '@opentelemetry/instrumentation-fs': { enabled: false },
      }),
    ],
    ```
@@ -309,13 +330,14 @@ SERVICE_NAME=conductor-app
 
 ## Resources
 
-- [SigNoz Documentation](https://signoz.io/docs/)
-- [OpenTelemetry JavaScript](https://opentelemetry.io/docs/languages/js/)
-- [SigNoz Cloud](https://signoz.io/teams/)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [SigNoz Documentation](<https://signoz.io/docs/>)
+- [OpenTelemetry JavaScript](<https://opentelemetry.io/docs/languages/js/>)
+- [SigNoz Cloud](<https://signoz.io/teams/>)
+- [Docker Desktop](<https://www.docker.com/products/docker-desktop/>)
 
 ## Contact
 
 For issues or questions:
-- Check SigNoz community Slack: https://signoz.io/slack
-- OpenTelemetry GitHub: https://github.com/open-telemetry/opentelemetry-js
+
+- Check SigNoz community Slack: <https://signoz.io/slack>
+- OpenTelemetry GitHub: <https://github.com/open-telemetry/opentelemetry-js>
