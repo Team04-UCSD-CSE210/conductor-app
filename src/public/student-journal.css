@@ -275,6 +275,7 @@ body.dashboard-page {
     margin-right: 0;
     padding: 1.5rem 1rem;
     height: auto;
+    overflow-y: visible;
   }
 
   .header-container {
@@ -282,7 +283,11 @@ body.dashboard-page {
   }
 
   .wj-right {
-    display: none;
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 1.5rem 1rem;
+    margin-top: 2rem;
   }
 
   body.dashboard-page.menu-open {
