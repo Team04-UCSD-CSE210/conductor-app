@@ -14,9 +14,9 @@ body.dashboard-page {
 .wj-main {
   position: relative;
   height: 100vh;
-  margin-left: 240px;  /* sidebar width from dashboard-global.css */
+  margin-left: 180px;  /* sidebar width from dashboard-global.css */
   margin-right: 320px; /* width of right sidebar */
-  padding: 2rem 2.5rem;
+  padding: 1.25rem;
   box-sizing: border-box;
   overflow-y: auto;
 }
@@ -38,6 +38,10 @@ body.dashboard-page {
   padding: 1.75rem;
   box-shadow: 0 12px 30px rgb(15 23 42 / 6%);
   border: 1px solid var(--gray-100, #e5e7eb);
+}
+
+.wj-card:first-of-type {
+  margin-top: 1.5rem;
 }
 
 .wj-card + .wj-card {

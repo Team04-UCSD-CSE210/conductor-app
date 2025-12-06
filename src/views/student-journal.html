@@ -20,12 +20,10 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <nav aria-label="Dashboard navigation">
-      <a href="/courses">Courses</a>
-      <a href="/attendance">Attendance</a>
-      <a href="/work-journal" class="active">Work Journal</a>
-      <a href="/my-team">My Team</a>
-    </nav>
+    
+    <div class="main-menu-header">Main Menu</div>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
@@ -33,8 +31,12 @@
 
   <!-- Scrollable center column -->
   <main class="wj-main" aria-labelledby="page-title">
-    <header class="wj-page-header">
-      <h1 id="page-title">Work Journal/Stand-up</h1>
+    <header class="header-container">
+        <header class="header-info">
+        <p class="eyebrow">Stand up meetings</p>
+        <h2 id="header-title">Work Journal</h2>
+        <p class="header-subtitle">Log what you have done and any blockers you are facing</p>
+        </header>
     </header>
 
     <!-- Logging Activity -->

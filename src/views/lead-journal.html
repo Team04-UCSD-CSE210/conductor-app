@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/css/dashboard-global.css" />
   <!-- Reuse same page-specific styles + a few extra rules -->
   <link rel="stylesheet" href="/student-journal.css" />
-    <link rel="stylesheet" href="/lead-journal.css" />
+  <link rel="stylesheet" href="/lead-journal.css" />
 </head>
 
 <body class="dashboard-page">
@@ -20,11 +20,10 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
@@ -32,8 +31,12 @@
 
   <!-- Scrollable center column -->
   <main class="wj-main" aria-labelledby="page-title">
-    <header class="wj-page-header">
-      <h1 id="page-title">Work Journal/Stand-up</h1>
+    <header class="header-container">
+        <header class="header-info">
+        <p class="eyebrow">Stand up meetings</p>
+        <h2 id="header-title">Work Journal</h2>
+        <p class="header-subtitle">Log what you have done and any blockers you are facing</p>
+        </header>
     </header>
 
     <!-- NEW: Team Overview card for team leads -->
