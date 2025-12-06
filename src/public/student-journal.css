@@ -94,6 +94,7 @@ body.dashboard-page {
   font: inherit;
   background: var(--gray-50, #f9fafb);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  resize: none;
 }
 
 .wj-fieldset textarea::placeholder {
