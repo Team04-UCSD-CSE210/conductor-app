@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Settings</title>
+
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/instructor-dashboard.css">
+  <link rel="stylesheet" href="/css/student-dashboard.css">
+  <link rel="stylesheet" href="/css/course-settings.css">
+</head>
+
+<body class="dashboard-page instructor-dashboard">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    
+    <!-- Colorblind Mode Toggle -->
+    <div class="colorblind-toggle-container">
+      <label class="colorblind-toggle-label">
+        <input type="checkbox" id="colorblindToggle" class="colorblind-toggle-input">
+        <span class="colorblind-toggle-slider"></span>
+        <span class="colorblind-toggle-text">Colorblind Mode</span>
+      </label>
+    </div>
+    
+    <div class="main-menu-header">Main Menu</div>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    
+    <footer>
+      <a href="/" class="btn btn-ghost">Sign out</a>
+    </footer>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-container" id="main">
+    <div class="dashboard-header">
+      <img src="/assets/user.png" alt="User Profile" class="user-profile-icon">
+    </div>
+
+    <div class="settings-page">
+      <h1 class="page-title">Course Settings</h1>
+
+      <!-- Color Palette Configuration -->
+      <section class="settings-section">
+        <h2>Color Palette Configuration</h2>
+        <p class="settings-description">Choose a color palette for the course website. This will affect the overall theme and appearance.</p>
+        
+        <div class="palette-options">
+          <div class="palette-option" data-palette="default">
+            <div class="palette-preview">
+              <div class="palette-color" style="background: #0F766E;"></div>
+              <div class="palette-color" style="background: #83D7CF;"></div>
+              <div class="palette-color" style="background: #99F6E4;"></div>
+              <div class="palette-color" style="background: #F0FDFA;"></div>
+            </div>
+            <div class="palette-info">
+              <h3>Default Teal</h3>
+              <p>Original teal and emerald color scheme</p>
+            </div>
+            <input type="radio" name="colorPalette" value="default" id="palette-default" checked>
+            <label for="palette-default" class="palette-select-label"></label>
+          </div>
+
+          <div class="palette-option" data-palette="blue">
+            <div class="palette-preview">
+              <div class="palette-color" style="background: #1E40AF;"></div>
+              <div class="palette-color" style="background: #60A5FA;"></div>
+              <div class="palette-color" style="background: #93C5FD;"></div>
+              <div class="palette-color" style="background: #EFF6FF;"></div>
+            </div>
+            <div class="palette-info">
+              <h3>Ocean Blue</h3>
+              <p>Cool blue tones for a professional look</p>
+            </div>
+            <input type="radio" name="colorPalette" value="blue" id="palette-blue">
+            <label for="palette-blue" class="palette-select-label"></label>
+          </div>
+
+          <div class="palette-option" data-palette="purple">
+            <div class="palette-preview">
+              <div class="palette-color" style="background: #6B21A8;"></div>
+              <div class="palette-color" style="background: #A78BFA;"></div>
+              <div class="palette-color" style="background: #C4B5FD;"></div>
+              <div class="palette-color" style="background: #F3E8FF;"></div>
+            </div>
+            <div class="palette-info">
+              <h3>Royal Purple</h3>
+              <p>Rich purple shades for elegance</p>
+            </div>
+            <input type="radio" name="colorPalette" value="purple" id="palette-purple">
+            <label for="palette-purple" class="palette-select-label"></label>
+          </div>
+
+          <div class="palette-option" data-palette="green">
+            <div class="palette-preview">
+              <div class="palette-color" style="background: #166534;"></div>
+              <div class="palette-color" style="background: #4ADE80;"></div>
+              <div class="palette-color" style="background: #86EFAC;"></div>
+              <div class="palette-color" style="background: #F0FDF4;"></div>
+            </div>
+            <div class="palette-info">
+              <h3>Forest Green</h3>
+              <p>Natural green tones for a fresh feel</p>
+            </div>
+            <input type="radio" name="colorPalette" value="green" id="palette-green">
+            <label for="palette-green" class="palette-select-label"></label>
+          </div>
+
+          <div class="palette-option" data-palette="orange">
+            <div class="palette-preview">
+              <div class="palette-color" style="background: #C2410C;"></div>
+              <div class="palette-color" style="background: #FB923C;"></div>
+              <div class="palette-color" style="background: #FDBA74;"></div>
+              <div class="palette-color" style="background: #FFF7ED;"></div>
+            </div>
+            <div class="palette-info">
+              <h3>Sunset Orange</h3>
+              <p>Warm orange hues for energy</p>
+            </div>
+            <input type="radio" name="colorPalette" value="orange" id="palette-orange">
+            <label for="palette-orange" class="palette-select-label"></label>
+          </div>
+
+          <div class="palette-option" data-palette="red">
+            <div class="palette-preview">
+              <div class="palette-color" style="background: #991B1B;"></div>
+              <div class="palette-color" style="background: #F87171;"></div>
+              <div class="palette-color" style="background: #FCA5A5;"></div>
+              <div class="palette-color" style="background: #FEF2F2;"></div>
+            </div>
+            <div class="palette-info">
+              <h3>Classic Red</h3>
+              <p>Bold red for high visibility</p>
+            </div>
+            <input type="radio" name="colorPalette" value="red" id="palette-red">
+            <label for="palette-red" class="palette-select-label"></label>
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button type="button" class="btn btn-primary" id="savePaletteBtn">Save Color Palette</button>
+          <button type="button" class="btn btn-ghost" id="resetPaletteBtn">Reset to Default</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/js/dashboard.service.js"></script>
+  <script src="/js/palette-loader.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
+  <script src="/js/course-settings.js" defer></script>
+</body>
+</html>
+

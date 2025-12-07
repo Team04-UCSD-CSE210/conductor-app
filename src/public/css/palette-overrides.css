@@ -1,0 +1,366 @@
+/**
+ * Comprehensive Palette Color Overrides
+ * All palette color replacements in one file - replaces hardcoded colors with CSS variables
+ */
+
+/* ============================================================================
+   ROOT VARIABLES - Override emerald/teal color variables
+   ============================================================================ */
+:root {
+  --emerald-50: var(--palette-background, #ecfdf5);
+  --emerald-100: var(--palette-accent, #d1fae5);
+  --emerald-200: var(--palette-accent, #a7f3d0);
+  --emerald-300: var(--palette-secondary, #6ee7b7);
+  --emerald-400: var(--palette-secondary, #34d399);
+  --emerald-500: var(--palette-secondary, #10b981);
+  --emerald-600: var(--palette-primary, #059669);
+  --emerald-700: var(--palette-primary, #047857);
+  --teal-50: var(--palette-background, #f0fdfa);
+  --teal-500: var(--palette-secondary, #14b8a6);
+  --teal-600: var(--palette-primary, #0d9488);
+  --teal-700: var(--palette-primary, #0f766e);
+}
+
+/* ============================================================================
+   BACKGROUND COLORS
+   ============================================================================ */
+body,
+.instructor-dashboard,
+.student-dashboard,
+.main-container,
+.dashboard-page {
+  background: var(--palette-background, #F0FDFA) !important;
+}
+
+.dashboard-card,
+.card,
+.attendance-card,
+.attendance-item,
+.announcement-item,
+.status-content,
+.week-item,
+.todo-item,
+.journal-entry {
+  background: var(--palette-background, #F0FDFA) !important;
+}
+
+/* Yellow welcome banner - always yellow, not configurable */
+.welcome-section {
+  background: #FFF6B6 !important;
+}
+
+/* ============================================================================
+   SHADOWS (using neutral colors that work with all palettes)
+   ============================================================================ */
+
+/* ============================================================================
+   BORDERS
+   ============================================================================ */
+.dashboard-card,
+.attendance-card,
+.attendance-item,
+.announcement-item,
+.status-content,
+.week-item,
+.todo-item,
+.journal-entry,
+.announcements-card .card-header,
+.attendance-card .card-header {
+  border-color: var(--palette-accent, #99F6E4) !important;
+}
+
+.week-item {
+  border-left-color: var(--palette-secondary, #83D7CF) !important;
+}
+
+.week-item.current {
+  border-left-color: var(--palette-primary, #0F766E) !important;
+}
+
+/* ============================================================================
+   TEXT COLORS
+   ============================================================================ */
+h1,
+h2,
+h3,
+h4,
+h5,
+.welcome-content h2,
+.welcome-content p,
+.course-info h3,
+.course-info p,
+.attendance-label,
+.announcement-content h5,
+.announcement-content p,
+.week-number,
+.week-status.upcoming,
+.week-status.completed,
+.progress-text,
+.legend-item,
+.todo-item span,
+.progress-placeholder {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.dashboard-card h4 {
+  border-bottom-color: var(--palette-accent, #99F6E4) !important;
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.instructor-dashboard .card,
+.instructor-dashboard .dashboard-card {
+  background: var(--palette-background, #F8FFFC) !important;
+}
+
+.week-dates {
+  color: var(--palette-secondary, #83D7CF) !important;
+  background: var(--palette-background, #F0FDFA) !important;
+}
+
+a {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+a:hover {
+  color: var(--palette-secondary, #83D7CF) !important;
+}
+
+/* ============================================================================
+   PROGRESS BARS
+   ============================================================================ */
+.progress-bar {
+  background: var(--palette-accent, #99F6E4) !important;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, var(--palette-primary, #0F766E), var(--palette-secondary, #83D7CF)) !important;
+}
+
+.progress-percentage {
+  color: var(--palette-primary, #0F766E) !important;
+  background: var(--palette-accent, #99F6E4) !important;
+}
+
+/* ============================================================================
+   LEGEND DOTS
+   ============================================================================ */
+.legend-dot.completed {
+  background: var(--palette-primary, #0F766E) !important;
+}
+
+.legend-dot.in-progress {
+  background: var(--palette-secondary, #83D7CF) !important;
+}
+
+/* ============================================================================
+   SCROLLBARS
+   ============================================================================ */
+.announcements-list::-webkit-scrollbar-track,
+.weeks-timeline::-webkit-scrollbar-track,
+.todo-list::-webkit-scrollbar-track,
+::-webkit-scrollbar-track {
+  background: var(--palette-background, #F0FDFA) !important;
+}
+
+.announcements-list::-webkit-scrollbar-thumb,
+.weeks-timeline::-webkit-scrollbar-thumb,
+.todo-list::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
+  background: var(--palette-secondary, #83D7CF) !important;
+}
+
+.announcements-list::-webkit-scrollbar-thumb:hover,
+.weeks-timeline::-webkit-scrollbar-thumb:hover,
+.todo-list::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:hover {
+  background: var(--palette-primary, #0F766E) !important;
+}
+
+/* ============================================================================
+   ANNOUNCEMENTS
+   ============================================================================ */
+.announcement-date {
+  background: linear-gradient(135deg, var(--palette-primary, #0F766E), var(--palette-secondary, #83D7CF)) !important;
+}
+
+/* ============================================================================
+   TODO ITEMS
+   ============================================================================ */
+.todo-item:hover {
+  background: var(--palette-accent, #99F6E4) !important;
+}
+
+.todo-checkbox {
+  border-color: var(--palette-primary, #0F766E) !important;
+}
+
+.todo-item.completed .todo-checkbox {
+  border-color: var(--palette-primary, #0F766E) !important;
+  background: var(--palette-primary, #0F766E) !important;
+}
+
+.todo-item.completed .todo-checkbox::before {
+  background: var(--emerald-200, #A7F3D0) !important;
+}
+
+.todo-delete {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.todo-add {
+  border-color: var(--palette-accent, #99F6E4) !important;
+  background: var(--emerald-50, #ECFEFF) !important;
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.todo-add:hover {
+  background: var(--emerald-100, #CFFAFE) !important;
+}
+
+/* ============================================================================
+   CHART BARS
+   ============================================================================ */
+.bar-chart .bar {
+  background: linear-gradient(180deg, var(--palette-secondary, #83D7CF) 0%, var(--palette-primary, #0F766E) 100%) !important;
+}
+
+.meeting-chart-bar.green {
+  background-color: var(--palette-primary, #0F766E) !important;
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+.btn-primary,
+button.btn-primary {
+  background-color: var(--palette-primary, #0F766E) !important;
+  border-color: var(--palette-primary, #0F766E) !important;
+}
+
+.btn-primary:hover {
+  background-color: var(--palette-secondary, #83D7CF) !important;
+  border-color: var(--palette-secondary, #83D7CF) !important;
+}
+
+/* ============================================================================
+   SHADOWS (using neutral colors that work with all palettes)
+   ============================================================================ */
+.attendance-item,
+.announcement-item,
+.week-item,
+.journal-entry {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%) !important;
+}
+
+.polaroid {
+  box-shadow: 0 8px 20px rgb(0 0 0 / 12%) !important;
+}
+
+.circular-progress {
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%) !important;
+}
+
+/* Circular progress SVG circles */
+.circular-progress-bg {
+  stroke: var(--palette-secondary, #83D7CF) !important;
+}
+
+.circular-progress-fill {
+  stroke: var(--palette-primary, #0F766E) !important;
+}
+
+/* ============================================================================
+   ATTENDANCE ITEMS - CONFIGURABLE COLORS AND BORDERS
+   ============================================================================ */
+.attendance-item {
+  background: var(--palette-background, #F0FDFA) !important;
+  border-color: var(--palette-accent, #99F6E4) !important;
+}
+
+.attendance-label,
+.attendance-title {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.attendance-meta {
+  color: var(--gray-600, #4b5563) !important;
+}
+
+/* ============================================================================
+   INSTRUCTOR DASHBOARD SPECIFIC
+   ============================================================================ */
+.instructor-dashboard .attendance-item {
+  background: var(--palette-background, #F0FDFA) !important;
+}
+
+.instructor-dashboard .progress-fill {
+  background: var(--palette-secondary, #83D7CF) !important;
+}
+
+.instructor-dashboard .attendance-label {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+/* ============================================================================
+.attendance-item {
+  background: var(--palette-background, #F0FDFA) !important;
+  border-color: var(--palette-accent, #99F6E4) !important;
+}
+
+.attendance-label,
+.attendance-title {
+  color: var(--palette-primary, #0F766E) !important;
+}
+
+.attendance-meta {
+  color: var(--gray-600, #4b5563) !important;
+}
+
+/* ============================================================================
+   SIDEBAR NAVIGATION - Use palette colors
+   ============================================================================ */
+.sidebar {
+  background: var(--palette-background, var(--teal-50, #f0fdfa)) !important;
+}
+
+.sidebar-title {
+  color: var(--palette-primary, var(--teal-600, #0d9488)) !important;
+}
+
+.main-menu-header {
+  color: var(--gray-600, #4b5563) !important;
+}
+
+.sidebar nav a:hover {
+  background: var(--palette-background, var(--emerald-50, #ecfdf5)) !important;
+  color: var(--palette-primary, var(--teal-600, #0d9488)) !important;
+}
+
+.sidebar nav a.active {
+  background: var(--palette-accent, var(--emerald-100, #d1fae5)) !important;
+  color: var(--palette-primary, var(--teal-700, #0f766e)) !important;
+}
+
+/* ============================================================================
+   TA/TUTOR DASHBOARD SPECIFIC ELEMENTS
+   ============================================================================ */
+.team-item {
+  background: var(--palette-background, var(--gray-50, #f9fafb)) !important;
+}
+
+.team-item:hover {
+  background: var(--palette-hover-background, var(--palette-background, var(--emerald-50, #ecfdf5))) !important;
+  border-color: var(--palette-hover-border, var(--palette-primary, #0F766E)) !important;
+}
+
+.team-item-name {
+  color: var(--palette-primary, var(--gray-900, #111827)) !important;
+}
+
+.course-code {
+  color: var(--palette-primary, var(--teal-600, #0d9488)) !important;
+}
+
+.stat-value {
+  color: var(--palette-primary, var(--teal-600, #0d9488)) !important;
+}

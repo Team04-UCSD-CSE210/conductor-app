@@ -336,7 +336,7 @@
     labelsContainer.style.flexWrap = 'wrap';
     labelsContainer.style.gap = '15px';
 
-    options.forEach((option, index) => {
+    options.forEach((option) => {
       const count = counts[option] || 0;
 
       if (count > 0) {

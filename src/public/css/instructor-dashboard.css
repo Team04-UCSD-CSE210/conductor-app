@@ -11,7 +11,35 @@
 
 @import url('/css/student-dashboard.css');
 
-/* Instructor-specific overrides (applied after imported student styles) */
+/* Instructor layout: two independent rows with their own column sizing */
+.instructor-dashboard .dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.instructor-dashboard .dashboard-row {
+  display: grid;
+  gap: 16px;
+}
+
+/* Top row: Attendance (wider), Announcements, Teams */
+.instructor-dashboard .dashboard-row-top {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr) minmax(0, 0.8fr);
+}
+
+/* Bottom row: Course Status, Recent Progress, TODO */
+.instructor-dashboard .dashboard-row-bottom {
+  grid-template-columns:
+    minmax(0, 0.8fr)
+    minmax(0, 1.4fr)
+    minmax(0, 0.63fr);
+}
+
+.instructor-dashboard .dashboard-row-bottom .recent-progress-card {
+  grid-column: auto;
+}
+
 .card-course-info .course-stats {
   display: flex;
   flex-flow: row nowrap;
@@ -26,6 +54,25 @@
   padding: 0 0.5rem; /* Slight extra horizontal breathing room */
 }
 
+/* Fixed height for all cards */
+.dashboard-card {
+  height: 400px !important;
+  min-height: 400px !important;
+  max-height: 400px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Ensure top row cards (Attendance, Announcements, Teams) share the same vertical size */
+.instructor-dashboard .dashboard-row-top .dashboard-card {
+  min-height: 190px;
+}
+
+/* Ensure bottom row cards (Course Status, Recent Progress, TODO) share the same vertical size */
+.instructor-dashboard .dashboard-row-bottom .dashboard-card {
+  min-height: 260px;
+}
+
 /* Small tweak: slightly larger team list items for instructor view */
 .teams-list .team-item {
   display: flex;
@@ -33,8 +80,8 @@
   align-items: center;
   padding: 12px 14px;
   border-radius: 8px;
-  background: #F8FFFC;
-  border: 1px solid #E6FFFA;
+  background: var(--palette-background, #F8FFFC);
+  border: 1px solid var(--palette-accent, #E6FFFA);
   margin-bottom: 8px;
 }
 
@@ -78,19 +125,19 @@
 
 .teams-list::-webkit-scrollbar-track,
 .pulse-list::-webkit-scrollbar-track {
-  background: #F0FDFA;
+  background: var(--palette-background, #F0FDFA);
   border-radius: 3px;
 }
 
 .teams-list::-webkit-scrollbar-thumb,
 .pulse-list::-webkit-scrollbar-thumb {
-  background: #83D7CF;
+  background: var(--palette-secondary, #83D7CF);
   border-radius: 3px;
 }
 
 .teams-list::-webkit-scrollbar-thumb:hover,
 .pulse-list::-webkit-scrollbar-thumb:hover {
-  background: #0F766E;
+  background: var(--palette-primary, #0F766E);
 }
 
 /* Announcements header: align title and action button */
@@ -100,7 +147,7 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
-  border-bottom: 2px solid #99F6E4;
+  border-bottom: 2px solid var(--palette-accent, #99F6E4);
   padding-bottom: 8px;
 }
 
@@ -116,12 +163,6 @@
 }
 
 /* Prevent the default h4 border from showing and ensure it doesn't add extra spacing */
-.announcements-card .card-header h4,
-.attendance-card .card-header h4 {
-  margin: 0;
-  padding: 0;
-  border-bottom: none;
-}
 
 /* Announcement modal fields: ensure subject and message have identical widths */
 #announcement-form {
@@ -150,23 +191,82 @@
 }
 
 #announcement-form textarea {
+  height: 140px;
   min-height: 140px;
-  resize: vertical;
+  max-height: 140px;
+  resize: none;
+  overflow-y: auto;
 }
 
 #announcement-form input[type="text"]:focus,
 #announcement-form textarea:focus {
   outline: none;
-  border-color: #83D7CF;
-  box-shadow: 0 0 0 4px rgba(131,215,207,0.12);
+  border-color: var(--palette-secondary, #83D7CF);
+  box-shadow: 0 0 0 4px rgb(131 215 207 / 12%);
+}
+
+#announcement-form .char-counter {
+  font-size: 0.75rem;
+  color: var(--gray-400, #9ca3af);
+  margin-top: 0.25rem;
+  text-align: right;
+  margin-bottom: 0.5rem;
+}
+
+/* Fixed height for announcement items - consistent sizing */
+.announcement-item {
+  height: 100px !important;
+  min-height: 100px !important;
+  max-height: 100px !important;
+}
+
+.announcement-content h5 {
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  max-height: 21px !important;
+}
+
+.announcement-content p {
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  max-height: 18px !important;
+}
+
+.announcements-list {
+  max-height: 320px !important;
+}
+
+/* Fixed height for journal entries */
+.journal-entry {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Fixed height for todo items */
+.todo-item {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+}
+
+.todo-item span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 /* Attendance list scroll behaviour */
 .attendance-list {
-  max-height: 180px;
+  max-height: 220px;
   overflow-y: auto;
   padding-right: 8px;
   margin-top: 8px;
+  min-height: 0; /* Prevent premature white space */
 }
 
 .attendance-list::-webkit-scrollbar {
@@ -174,17 +274,17 @@
 }
 
 .attendance-list::-webkit-scrollbar-track {
-  background: #F0FDFA;
+  background: var(--palette-background, #F0FDFA);
   border-radius: 3px;
 }
 
 .attendance-list::-webkit-scrollbar-thumb {
-  background: #83D7CF;
+  background: var(--palette-secondary, #83D7CF);
   border-radius: 3px;
 }
 
 .attendance-list::-webkit-scrollbar-thumb:hover {
-  background: #0F766E;
+  background: var(--palette-primary, #0F766E);
 }
 
 /* Attendance card header: inline header with action button to the right */
@@ -193,26 +293,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
   /* match announcements header: underline on the header container */
-  border-bottom: 2px solid #99F6E4;
+  border-bottom: 2px solid var(--palette-accent, #99F6E4);
   padding-bottom: 8px;
   margin-bottom: 8px;
-}
-
-.attendance-card .card-header h4 {
-  margin: 0;
-  padding: 0;
-}
-
-.btn-create-attendance {
-  font-size: 13px;
-  padding: 4px 8px;
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
 }
 
 /* Make the attendance action button smaller (compact '+') */
@@ -224,6 +309,45 @@
   border-radius: 6px;
 }
 
+/* Instructor attendance items: lecture mini-chart layout */
+.attendance-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.attendance-item:last-child {
+  margin-bottom: 0;
+}
+
+.attendance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.attendance-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--palette-primary, #0F766E);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attendance-meta {
+  font-size: 0.75rem;
+  color: var(--gray-600, #4b5563);
+}
+
+.attendance-item .progress-container {
+  min-width: 120px;
+  max-width: 180px;
+}
+
 /* Ensure the header underline for attendance spans the full card header width
    (override h4's individual underline and rely on the card-header border) */
 .attendance-card h4 {
@@ -231,3 +355,143 @@
   padding: 0;
   border-bottom: none;
 }
+
+.announcements-card .card-header h4,
+.attendance-card .card-header h4 {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVE STYLES
+   ============================================================================ */
+
+/* Tablet and smaller: Stack rows vertically */
+@media (width < 1200px) {
+  .instructor-dashboard .dashboard-row-top,
+  .instructor-dashboard .dashboard-row-bottom {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .instructor-dashboard .dashboard-row-top .dashboard-card,
+  .instructor-dashboard .dashboard-row-bottom .dashboard-card {
+    min-height: 0;
+  }
+}
+
+/* Mobile: Full single column layout */
+@media (width < 768px) {
+  .instructor-dashboard .dashboard-grid {
+    gap: 12px;
+  }
+
+  .instructor-dashboard .dashboard-row-top,
+  .instructor-dashboard .dashboard-row-bottom {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .instructor-dashboard .dashboard-row-top .dashboard-card,
+  .instructor-dashboard .dashboard-row-bottom .dashboard-card {
+    min-height: 0;
+  }
+
+  /* Make attendance items stack vertically on mobile */
+  .attendance-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .attendance-item .progress-container {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  /* Compact header buttons */
+  .btn-create-announcement,
+  .btn-create-attendance {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  /* Make team list items more compact */
+  .teams-list .team-item {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  /* Adjust announcement header layout for mobile */
+  .announcements-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .announcements-card .card-header .btn-create-announcement {
+    width: 100%;
+  }
+
+  /* Adjust attendance header layout for mobile */
+  .attendance-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .attendance-card .card-header .btn-create-attendance {
+    width: 100%;
+    height: auto;
+    padding: 6px 12px;
+  }
+
+  /* Make card course info stats wrap on mobile */
+  .card-course-info .course-stats {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .card-course-info .course-stats .stat-item {
+    flex: 1 1 auto;
+    min-width: calc(50% - 0.5rem);
+  }
+
+  /* Adjust attendance title for mobile readability */
+  .attendance-title {
+    font-size: 0.85rem;
+    white-space: normal;
+  }
+}
+
+/* Very small mobile devices */
+@media (width < 480px) {
+  .instructor-dashboard .dashboard-grid {
+    gap: 10px;
+  }
+
+  .instructor-dashboard .dashboard-row-top,
+  .instructor-dashboard .dashboard-row-bottom {
+    gap: 10px;
+  }
+
+  .card-course-info .course-stats {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .card-course-info .course-stats .stat-item {
+    min-width: 100%;
+  }
+
+  /* Further reduce font sizes for very small screens */
+  .attendance-title {
+    font-size: 0.8rem;
+  }
+
+  .attendance-meta {
+    font-size: 0.7rem;
+  }
+}
+

@@ -278,6 +278,7 @@ export class DatabaseInitializer {
         DROP TABLE IF EXISTS auth_logs CASCADE;
         DROP TABLE IF EXISTS access_requests CASCADE;
         DROP TABLE IF EXISTS whitelist CASCADE;
+        DROP TABLE IF EXISTS dashboard_todos CASCADE;
         DROP TABLE IF EXISTS users CASCADE;
         
         -- Drop permission tables (from migration 04)

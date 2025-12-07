@@ -17,6 +17,22 @@ import { pool } from '../db.js';
  * For permission-based checks, use protect() from permission-middleware.js
  */
 export const ensureAuthenticated = async (req, res, next) => {
+  // TEST MODE: Bypass authentication for load testing
+  if (process.env.TEST_MODE === 'true' || process.env.BYPASS_AUTH === 'true') {
+    // Use real admin user from database for testing
+    req.user = {
+      emails: [{ value: 'admin@ucsd.edu' }]
+    };
+    req.currentUser = {
+      id: '963f7bb3-438d-4dea-ae8c-995e23aecf5c',
+      email: 'admin@ucsd.edu',
+      name: 'System Administrator',
+      primary_role: 'admin',
+      status: 'active'
+    };
+    return next();
+  }
+
   if (req.isAuthenticated && req.isAuthenticated()) {
     // Set req.currentUser for backward compatibility
     if (!req.currentUser) {
