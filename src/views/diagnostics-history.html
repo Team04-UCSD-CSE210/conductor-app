@@ -219,7 +219,7 @@
             d.db_errors || 0
           ];
         });
-        const csv = [header, ...rows].map(r => r.join(',')).join('\\n');
+        const csv = [header, ...rows].map(r => r.join(',')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -232,7 +232,8 @@
 
     const loadHistory = async (params = '') => {
       try {
-        const res = await fetch(`/api/diagnostics/history${params ? `?${params}` : ''}`);
+        const query = params ? `?${params}` : '';
+        const res = await fetch(`/api/diagnostics/history${query}`);
         if (!res.ok) throw new Error('Failed to load history');
         const data = await res.json();
         renderHistory(data);

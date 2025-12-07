@@ -1,5 +1,5 @@
-import os from 'os';
-import { performance } from 'perf_hooks';
+import os from 'node:os';
+import { performance } from 'node:perf_hooks';
 import { getDiagnosticsSnapshot } from './diagnostics.js';
 import { pool } from '../db.js';
 

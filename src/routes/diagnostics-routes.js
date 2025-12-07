@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { ensureAuthenticated } from '../middleware/auth.js';
-import { getDiagnosticsSnapshot } from '../observability/diagnostics.js';
-import { buildDiagnosticsSnapshot, persistDiagnosticsSnapshot } from '../observability/collector.js';
+import { buildDiagnosticsSnapshot } from '../observability/collector.js';
 import { pool } from '../db.js';
 
 const router = Router();
