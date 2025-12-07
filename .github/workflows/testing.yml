@@ -160,7 +160,6 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
           NODE_ENV: test
           PORT: 3000
-          PORT: 3000
           SESSION_SECRET: test-secret-key-for-ci
           GOOGLE_CLIENT_ID: fake-client-id
           GOOGLE_CLIENT_SECRET: fake-client-secret
@@ -211,7 +210,7 @@ jobs:
           if [[ "${{ needs.unit-tests.result }}" == "success" && 
                 "${{ needs.e2e-tests.result }}" == "success" && 
                 "${{ needs.load-tests.result }}" == "success" ]]; then
-            echo "ï¿?All tests passed!" >> $GITHUB_STEP_SUMMARY
+            echo "All tests passed!" >> $GITHUB_STEP_SUMMARY
           else
-            echo "ï¿?Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
+            echo "Some tests failed. Please review the job logs." >> $GITHUB_STEP_SUMMARY
           fi
