@@ -56,15 +56,21 @@
       box-shadow: 0 6px 14px rgba(15, 118, 110, 0.12);
     }
     .logout-btn {
-      display: inline-block;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 120px;
       margin-top: 2rem;
       padding: 10px 20px;
       background: #0F766E;
-      color: white;
+      color: #ffffff !important;
       text-decoration: none;
+      font-weight: 700;
+      font-size: 16px;
       border-radius: 8px;
       transition: background 0.3s, transform 0.2s;
     }
+    .logout-btn:visited { color: #ffffff !important; }
     .logout-btn:hover {
       background: #0c5f58;
       transform: translateY(-2px);
