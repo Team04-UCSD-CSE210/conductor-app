@@ -1767,7 +1767,7 @@ app.use("/api/enrollments", trackApiCategory("enrollments"), enrollmentRoutes);
 app.use("/api/teams", trackApiCategory("teams"), teamRoutes);
 app.use("/api/offerings", trackApiCategory("offerings"), offeringRoutes);
 app.use("/api/interactions", trackApiCategory("interactions"), interactionRoutes);
-app.use("/api/dashboard-todos", trackApiCategory("dashboard_todos"), dashboardTodoRoutes);
+app.use("/api/dashboard-todos", trackApiCategory("dashboard-todos"), dashboardTodoRoutes);
 app.use("/api/sessions", trackApiCategory("sessions"), sessionRoutes);
 app.use("/api/attendance", trackApiCategory("attendance"), attendanceRoutes);
 app.use("/api/announcements", trackApiCategory("announcements"), announcementRoutes);
