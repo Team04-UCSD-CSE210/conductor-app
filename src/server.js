@@ -28,6 +28,9 @@ import instructorJournalRoutes from "./routes/instructor-journal-routes.js";
 import taJournalRoutes from "./routes/ta-journal-routes.js";
 import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
+import { trackApiCategory } from "./observability/diagnostics.js";
+import diagnosticsRoutes from "./routes/diagnostics-routes.js";
+import { buildDiagnosticsSnapshot, persistDiagnosticsSnapshot } from "./observability/collector.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,6 +67,16 @@ try {
 }
 
 const app = express();
+const trackAuth = trackApiCategory("auth");
+
+// Diagnostics view auth guard
+const ensureDiagnosticsAccess = (req, res, next) => {
+  const role = req.currentUser?.primary_role || req.user?.primary_role;
+  if (!role || role !== 'admin') {
+    return res.status(403).send('Forbidden');
+  }
+  return next();
+};
 
 // Disable ETag generation to prevent 304 caching issues
 app.set('etag', false);
@@ -735,6 +748,15 @@ app.get("/test-session", (req, res) => {
 // Root route
 app.get("/", (req, res) => {
   res.send('<h1>Conductor App</h1><a href="/login">Login</a>');
+});
+
+// Fancy diagnostics dashboard (auth: admin/instructor)
+app.get("/diagnostics-dashboard", ensureAuthenticated, ensureDiagnosticsAccess, (req, res) => {
+  res.sendFile(buildFullViewPath("diagnostics-dashboard.html"));
+});
+// Diagnostics history page (admin only)
+app.get("/diagnostics-history", ensureAuthenticated, ensureDiagnosticsAccess, (req, res) => {
+  res.sendFile(buildFullViewPath("diagnostics-history.html"));
 });
 
 // Parse JSON and URL-encoded request bodies (must be before API routes)
@@ -1440,7 +1462,7 @@ app.get('/', (req, res) => {
 });
 
 // Handle Google OAuth errors (e.g., org_internal)
-app.get("/auth/error", (req, res) => {
+app.get("/auth/error", trackAuth, (req, res) => {
   console.warn("⚠️ OAuth error detected:", req.query);
 
   const attemptedEmail =
@@ -1463,7 +1485,7 @@ app.get("/auth/error", (req, res) => {
 });
 
 // Always force account chooser on each login attempt
-app.get("/auth/google", (req, res, next) => {
+app.get("/auth/google", trackAuth, (req, res, next) => {
   safeLogout(req);
 
   const loginHint = req.query.email || req.query.login_hint || ""; // capture hint if provided
@@ -1483,6 +1505,7 @@ app.get("/auth/google", (req, res, next) => {
 
 app.get(
   "/auth/google/callback",
+  trackAuth,
   passport.authenticate("google", { failureRedirect: "/auth/failure" }),
   async (req, res) => {
     const email = req.user?.emails?.[0]?.value || "unknown";
@@ -1601,7 +1624,7 @@ app.get(
   });
 
 // Failed login route
-app.get("/auth/failure", async (req, res) => {
+app.get("/auth/failure", trackAuth, async (req, res) => {
   console.warn("⚠️ Google OAuth failed or unauthorized user.");
   await logAuthEvent("LOGIN_FAILURE", {
     req,
@@ -1737,18 +1760,40 @@ app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) =
 
 // API routes for user and enrollment management
 app.use("/api/users", userRoutes);
-app.use("/api/enrollments", enrollmentRoutes);
-app.use("/api/teams", teamRoutes);
-app.use("/api/offerings", offeringRoutes);
-app.use("/api/interactions", interactionRoutes);
-app.use("/api/sessions", sessionRoutes);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/journals", ensureAuthenticated, journalRoutes);
-app.use("/api/instructor-journals", ensureAuthenticated, instructorJournalRoutes);
-app.use("/api/ta-journals", ensureAuthenticated, taJournalRoutes);
-app.use("/api/tutor-journals", ensureAuthenticated, tutorJournalRoutes);
-app.use("/api/class", courseOfferingRoutes);
-app.use("/api/class-directory", classDirectoryRoutes);
+app.use("/api/enrollments", trackApiCategory("enrollments"), enrollmentRoutes);
+app.use("/api/teams", trackApiCategory("teams"), teamRoutes);
+app.use("/api/offerings", trackApiCategory("offerings"), offeringRoutes);
+app.use("/api/interactions", trackApiCategory("interactions"), interactionRoutes);
+app.use("/api/sessions", trackApiCategory("sessions"), sessionRoutes);
+app.use("/api/attendance", trackApiCategory("attendance"), attendanceRoutes);
+app.use("/api/journals", ensureAuthenticated, trackApiCategory("journals"), journalRoutes);
+app.use("/api/instructor-journals", ensureAuthenticated, trackApiCategory("instructor_journals"), instructorJournalRoutes);
+app.use("/api/ta-journals", ensureAuthenticated, trackApiCategory("ta_journals"), taJournalRoutes);
+app.use("/api/tutor-journals", ensureAuthenticated, trackApiCategory("tutor_journals"), tutorJournalRoutes);
+app.use("/api/class", trackApiCategory("class"), courseOfferingRoutes);
+app.use("/api/class-directory", trackApiCategory("class_directory"), classDirectoryRoutes);
+app.use("/api/diagnostics", trackApiCategory("diagnostics"), diagnosticsRoutes);
+
+// Persist diagnostics daily (aligned to midnight server time)
+const scheduleDiagnosticsPersistence = () => {
+  const now = new Date();
+  const nextMidnight = new Date(now);
+  nextMidnight.setHours(24, 0, 0, 0);
+  const delay = nextMidnight.getTime() - now.getTime();
+  setTimeout(async () => {
+    try {
+      const snapshot = buildDiagnosticsSnapshot();
+      await persistDiagnosticsSnapshot(snapshot);
+      console.log("[diagnostics] Daily snapshot persisted");
+    } catch (err) {
+      console.error("[diagnostics] Failed to persist daily snapshot:", err.message);
+    } finally {
+      scheduleDiagnosticsPersistence();
+    }
+  }, delay);
+};
+
+scheduleDiagnosticsPersistence();
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnostics History</title>
+  <style>
+    :root {
+      --bg: #f0fdf4;
+      --card: rgba(255, 255, 255, 0.95);
+      --text: #064e3b;
+      --muted: #0f766e;
+      --accent: #22c55e;
+      --accent-2: #34d399;
+      --shadow: 0 18px 45px rgba(12, 83, 71, 0.16);
+      --radius: 16px;
+      font-family: "Inter", "SF Pro Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(52, 211, 153, 0.35), transparent 25%),
+        radial-gradient(circle at 80% 0%, rgba(34, 197, 94, 0.25), transparent 25%),
+        var(--bg);
+      color: var(--text);
+      padding: 28px clamp(16px, 4vw, 48px);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0; font-size: clamp(26px, 4vw, 34px); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(52,211,153,0.32), rgba(101,163,13,0.28));
+      color: var(--text);
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    .pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 22px rgba(12, 83, 71, 0.18);
+      filter: brightness(1.02);
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0 18px;
+      align-items: center;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .grid { display: grid; gap: 12px; }
+    .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    #charts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+    #data-table { margin-top: 16px; }
+    .metric-sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    #history-meta { margin-left: auto; align-self: center; padding: 4px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 10px; text-align: left; }
+    th { color: var(--muted); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+    tr { border-bottom: 1px solid rgba(15,118,110,0.08); }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Diagnostics History</h1>
+    <a href="/diagnostics-dashboard" class="pill">← Live Dashboard</a>
+    <a href="/admin-dashboard" class="pill" style="background:rgba(52,211,153,0.22);">← Admin Dashboard</a>
+  </header>
+
+  <div class="controls card">
+    <button class="pill" data-period="1D">1D</button>
+    <button class="pill" data-period="1W">1W</button>
+    <button class="pill" data-period="1M">1M</button>
+    <button class="pill" data-period="1Y">1Y</button>
+    <button class="pill" data-period="WTD">WTD</button>
+    <button class="pill" data-period="MTD">MTD</button>
+    <button class="pill" data-period="YTD">YTD</button>
+    <div class="pill" style="background:rgba(255,255,255,0.75); color:#064e3b; box-shadow:none;">
+      Custom:
+      <input type="date" id="custom-start" style="border:none; background:transparent; color:#064e3b; outline:none;">
+      <input type="date" id="custom-end" style="border:none; background:transparent; color:#064e3b; outline:none;">
+      <button id="custom-apply" style="border:none; background:rgba(52,211,153,0.4); border-radius:12px; padding:6px 10px; color:#064e3b; cursor:pointer;">Apply</button>
+    </div>
+    <div id="history-meta" class="metric-sub" style="margin-left:auto; align-self:center;">No history loaded</div>
+    <button id="export-btn" class="pill" style="background:rgba(52,211,153,0.22);">⬇ Export CSV</button>
+  </div>
+
+  <div id="charts">
+    <div id="chart-api" style="height:320px;" class="card"></div>
+    <div id="chart-db" style="height:320px;" class="card"></div>
+  </div>
+
+  <div class="card" id="data-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>API Requests</th>
+          <th>API Avg (ms)</th>
+          <th>Success %</th>
+          <th>DB Avg (ms)</th>
+          <th>DB Slow</th>
+          <th>DB Errors</th>
+        </tr>
+      </thead>
+      <tbody id="history-table-body"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const nf = new Intl.NumberFormat();
+    const two = (v) => Math.round(v * 100) / 100;
+    const fmtDate = (iso) => iso ? iso.slice(0, 10) : '';
+
+    const chartApi = echarts.init(document.getElementById('chart-api'));
+    const chartDb = echarts.init(document.getElementById('chart-db'));
+
+    const renderHistory = (payload) => {
+      const entries = payload.entries || [];
+      const meta = document.getElementById('history-meta');
+      const tbody = document.getElementById('history-table-body');
+      tbody.innerHTML = '';
+      meta.textContent = entries.length
+        ? `Showing ${entries.length} days from ${payload.start} to ${payload.end}`
+        : 'No history data';
+
+      if (!entries.length) {
+        chartApi.clear(); chartDb.clear();
+        return;
+      }
+
+      const dates = entries.map(e => fmtDate(e.snapshot_date));
+      const apiReq = entries.map(e => e.data.api_total || 0);
+      const apiAvg = entries.map(e => two(e.data.api_avg_ms || 0));
+      const apiSuccess = entries.map(e => two((e.data.api_success_ratio || 0) * 100));
+      const dbAvg = entries.map(e => two(e.data.db_avg_ms || 0));
+      const dbSlow = entries.map(e => e.data.db_slow || 0);
+      const dbErr = entries.map(e => e.data.db_errors || 0);
+
+      chartApi.setOption({
+        backgroundColor: 'transparent',
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['API Requests', 'API Avg (ms)', 'Success %'], textStyle: { color: '#064e3b' } },
+        xAxis: { type: 'category', data: dates, boundaryGap: false, axisLabel: { color: '#064e3b' } },
+        yAxis: [
+          { type: 'value', name: 'Requests', axisLabel: { color: '#064e3b' } },
+          { type: 'value', name: 'Latency / %', axisLabel: { color: '#064e3b' } }
+        ],
+        series: [
+          { name: 'API Requests', type: 'line', smooth: true, data: apiReq, areaStyle: { color: 'rgba(52,211,153,0.2)' }, lineStyle: { color: '#22c55e' } },
+          { name: 'API Avg (ms)', type: 'line', smooth: true, yAxisIndex: 1, data: apiAvg, lineStyle: { color: '#10b981' } },
+          { name: 'Success %', type: 'line', smooth: true, yAxisIndex: 1, data: apiSuccess, lineStyle: { color: '#65a30d' } },
+        ]
+      });
+
+      chartDb.setOption({
+        backgroundColor: 'transparent',
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['DB Avg (ms)', 'DB Slow', 'DB Errors'], textStyle: { color: '#064e3b' } },
+        xAxis: { type: 'category', data: dates, boundaryGap: false, axisLabel: { color: '#064e3b' } },
+        yAxis: { type: 'value', axisLabel: { color: '#064e3b' } },
+        series: [
+          { name: 'DB Avg (ms)', type: 'line', smooth: true, data: dbAvg, areaStyle: { color: 'rgba(16,185,129,0.18)' }, lineStyle: { color: '#16a34a' } },
+          { name: 'DB Slow', type: 'bar', data: dbSlow, itemStyle: { color: '#65a30d' } },
+          { name: 'DB Errors', type: 'bar', data: dbErr, itemStyle: { color: '#ef4444' } },
+        ]
+      });
+
+      entries.forEach(e => {
+        const d = e.data;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${fmtDate(e.snapshot_date)}</td>
+          <td>${nf.format(d.api_total || 0)}</td>
+          <td>${two(d.api_avg_ms || 0)}</td>
+          <td>${two((d.api_success_ratio || 0) * 100)}%</td>
+          <td>${two(d.db_avg_ms || 0)}</td>
+          <td>${nf.format(d.db_slow || 0)}</td>
+          <td>${nf.format(d.db_errors || 0)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Attach export data to button
+      const exportBtn = document.getElementById('export-btn');
+      exportBtn.onclick = () => {
+        const header = ['Date','API Requests','API Avg (ms)','Success %','DB Avg (ms)','DB Slow','DB Errors'];
+        const rows = entries.map(e => {
+          const d = e.data;
+          return [
+            fmtDate(e.snapshot_date),
+            d.api_total || 0,
+            two(d.api_avg_ms || 0),
+            two((d.api_success_ratio || 0) * 100),
+            two(d.db_avg_ms || 0),
+            d.db_slow || 0,
+            d.db_errors || 0
+          ];
+        });
+        const csv = [header, ...rows].map(r => r.join(',')).join('\\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `diagnostics-history-${payload.start}-to-${payload.end}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+    };
+
+    const loadHistory = async (params = '') => {
+      try {
+        const res = await fetch(`/api/diagnostics/history${params ? `?${params}` : ''}`);
+        if (!res.ok) throw new Error('Failed to load history');
+        const data = await res.json();
+        renderHistory(data);
+      } catch (err) {
+        document.getElementById('history-meta').textContent = 'Failed to load history';
+        console.error(err);
+      }
+    };
+
+    const initControls = () => {
+      document.querySelectorAll('button.pill[data-period]').forEach(btn => {
+        btn.addEventListener('click', () => loadHistory(`period=${btn.dataset.period}`));
+      });
+      document.getElementById('custom-apply').addEventListener('click', () => {
+        const start = document.getElementById('custom-start').value;
+        const end = document.getElementById('custom-end').value;
+        if (start && end) loadHistory(`start=${start}&end=${end}`);
+      });
+    };
+
+    initControls();
+    loadHistory('period=1W');
+  </script>
+</body>
+</html>
