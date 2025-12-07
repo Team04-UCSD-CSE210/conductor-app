@@ -1,0 +1,88 @@
+/* Tutor Dashboard specific overrides. */
+
+/* Top row: Attendance, Announcements, Journal Entries */
+.dashboard-row-top {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 0.8fr);
+}
+
+/* Bottom row: Course Status, Recent Progress, TODO */
+.dashboard-row-bottom {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr) minmax(0, 0.8fr);
+}
+
+/* Loading, Empty, and Error States */
+.dashboard-loading-state,
+.dashboard-empty-state,
+.dashboard-error-state {
+  padding: 1rem;
+  color: var(--palette-primary, var(--gray-600));
+  font-size: 0.95rem;
+  text-align: center;
+  }
+
+.dashboard-loading-state {
+  color: var(--palette-primary, var(--gray-500));
+  }
+
+.dashboard-error-state {
+  color: var(--error-color, #EF4444);
+}
+
+/* Fixed height for announcement items - consistent sizing */
+.announcement-item {
+  height: 100px !important;
+  min-height: 100px !important;
+  max-height: 100px !important;
+}
+
+.announcement-content h5 {
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  max-height: 21px !important;
+}
+
+.announcement-content p {
+  -webkit-line-clamp: 1 !important;
+  line-clamp: 1 !important;
+  max-height: 18px !important;
+}
+
+.announcements-list {
+  max-height: 320px !important;
+}
+
+/* Fixed height for all cards */
+.dashboard-card {
+  height: 400px !important;
+  min-height: 400px !important;
+  max-height: 400px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Fixed height for journal entries */
+.journal-entry {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Fixed height for todo items */
+.todo-item {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  overflow: hidden !important;
+}
+
+.todo-item span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+
+

@@ -169,7 +169,60 @@
     });
   };
 
+  // Ensure global sidebar elements exist (Main Menu header and colorblind toggle)
+  function ensureGlobalSidebarElements() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    const sidebarTitle = sidebar.querySelector('.sidebar-title');
+    if (!sidebarTitle) return;
+
+    // Ensure colorblind toggle exists
+    let colorblindToggle = document.getElementById('colorblindToggle');
+    if (!colorblindToggle) {
+      const toggleContainer = document.createElement('div');
+      toggleContainer.className = 'colorblind-toggle-container';
+      
+      const label = document.createElement('label');
+      label.className = 'colorblind-toggle-label';
+      
+      colorblindToggle = document.createElement('input');
+      colorblindToggle.type = 'checkbox';
+      colorblindToggle.id = 'colorblindToggle';
+      colorblindToggle.className = 'colorblind-toggle-input';
+      
+      const slider = document.createElement('span');
+      slider.className = 'colorblind-toggle-slider';
+      
+      const text = document.createElement('span');
+      text.className = 'colorblind-toggle-text';
+      text.textContent = 'Colorblind Mode';
+      
+      label.appendChild(colorblindToggle);
+      label.appendChild(slider);
+      label.appendChild(text);
+      toggleContainer.appendChild(label);
+      
+      // Insert right after the title
+      sidebarTitle.parentElement.insertBefore(toggleContainer, sidebarTitle.nextSibling);
+    }
+
+    // Ensure Main Menu header exists (before nav)
+    const navEl = sidebar.querySelector('nav');
+    if (navEl && !sidebar.querySelector('.main-menu-header')) {
+      const mainMenuHeader = document.createElement('div');
+      mainMenuHeader.className = 'main-menu-header';
+      mainMenuHeader.textContent = 'Main Menu';
+      
+      // Insert before the nav element
+      navEl.parentElement.insertBefore(mainMenuHeader, navEl);
+    }
+  }
+
   const init = async () => {
+    // Ensure global sidebar elements first
+    ensureGlobalSidebarElements();
+    
     const navEl = document.querySelector(".sidebar nav");
     if (!navEl) return;
 
@@ -205,6 +258,14 @@
     renderNav(navEl, links);
   };
 
+  // Run global sidebar elements setup immediately (doesn't depend on nav)
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureGlobalSidebarElements);
+  } else {
+    ensureGlobalSidebarElements();
+  }
+
+  // Initialize navigation
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
