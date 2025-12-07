@@ -8,7 +8,9 @@ export default [
       '**/node_modules/**',
       '**/coverage/**',
       '**/dist/**',
-      '**/build/**'
+      '**/build/**',
+      // Ignore vendored/minified assets
+      'src/public/js/echarts.min.js'
     ],
     languageOptions: {
       globals: {
