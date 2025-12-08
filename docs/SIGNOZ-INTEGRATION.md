@@ -157,7 +157,7 @@ The instrumentation will:
 HTTP server duration, database operations, memory usage, and garbage
 collection metrics*
 
-3. Create custom dashboards:
+1. Create custom dashboards:
    - Use metric names like `http_requests`, `user_logins`, `db_queries`
    - Filter by labels: `method`, `route`, `status`, `role`, etc.
    - Set up alerts for anomalies
@@ -338,7 +338,3 @@ SERVICE_NAME=conductor-app
 - **Never expose SigNoz endpoint publicly** - Use firewall rules
 - **Rotate access tokens** regularly (if using cloud)
 - **Sanitize PII** from traces and metrics (email, passwords, etc.)
-
-
-
-
