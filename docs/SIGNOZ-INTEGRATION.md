@@ -151,10 +151,21 @@ The instrumentation will:
    - **Metrics** - Custom metrics dashboard
    - **Logs** - Application logs (if log ingestion configured)
 
+![SigNoz Metrics Explorer](images/image_2.png)
+
+*Figure 1: SigNoz Metrics Explorer showing all collected metrics including
+HTTP server duration, database operations, memory usage, and garbage
+collection metrics*
+
 3. Create custom dashboards:
    - Use metric names like `http_requests`, `user_logins`, `db_queries`
    - Filter by labels: `method`, `route`, `status`, `role`, etc.
    - Set up alerts for anomalies
+
+![Database Performance Visualization](images/image.png)
+
+*Figure 2: Time series visualization of database client operation duration,
+showing performance trends over time*
 
 ### Adding Custom Tracking
 
@@ -328,16 +339,6 @@ SERVICE_NAME=conductor-app
 - **Rotate access tokens** regularly (if using cloud)
 - **Sanitize PII** from traces and metrics (email, passwords, etc.)
 
-## Resources
 
-- [SigNoz Documentation](<https://signoz.io/docs/>)
-- [OpenTelemetry JavaScript](<https://opentelemetry.io/docs/languages/js/>)
-- [SigNoz Cloud](<https://signoz.io/teams/>)
-- [Docker Desktop](<https://www.docker.com/products/docker-desktop/>)
 
-## Contact
 
-For issues or questions:
-
-- Check SigNoz community Slack: <https://signoz.io/slack>
-- OpenTelemetry GitHub: <https://github.com/open-telemetry/opentelemetry-js>
