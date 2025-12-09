@@ -43,7 +43,21 @@ test.describe('Dashboard - Public Access', () => {
 });
 
 test.describe('Dashboard - Navigation', () => {
-  test('should have navigation menu', async ({ page }) => {
+  test('should have navigation menu with mocked auth', async ({ page }) => {
+    // Mock the /api/user endpoint to simulate authenticated user
+    await page.route('**/api/user', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 1,
+          name: 'Test Student',
+          email: 'test@ucsd.edu',
+          picture: null
+        })
+      });
+    });
+
     await page.goto(`${BASE_URL}/dashboard.html`);
     await page.waitForLoadState('networkidle');
     
@@ -51,20 +65,34 @@ test.describe('Dashboard - Navigation', () => {
     await page.waitForSelector('#linksContainer a, .link-button', { timeout: 10000 });
     
     // Look for navigation elements or links
-    const links = await page.locator('#linksContainer a, .link-button, a[href]').count();
+    const links = await page.locator('#linksContainer a, .link-button').count();
     
     expect(links).toBeGreaterThan(0);
   });
 
-  test('should navigate to different sections', async ({ page }) => {
+  test('should navigate to different sections with mocked auth', async ({ page }) => {
+    // Mock the /api/user endpoint to simulate authenticated user
+    await page.route('**/api/user', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 1,
+          name: 'Test Student',
+          email: 'test@ucsd.edu',
+          picture: null
+        })
+      });
+    });
+
     await page.goto(`${BASE_URL}/dashboard.html`);
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(500); // Give Firefox time to render
     
-    // Look for common navigation links
-    const links = page.locator('a[href*="dashboard"], a[href*="profile"], a[href*="teams"], a[href*="sessions"]');
-    await page.waitForTimeout(300);
-    const linkCount = await links.count();
+    // Wait for links to render
+    await page.waitForSelector('#linksContainer a', { timeout: 10000 });
+    
+    // Look for the navigation links that should be rendered
+    const linkCount = await page.locator('#linksContainer a.link-button').count();
     
     // Should have at least some navigation
     expect(linkCount).toBeGreaterThan(0);
