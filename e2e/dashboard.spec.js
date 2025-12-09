@@ -12,6 +12,23 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
+// Helper function to mock authenticated user API
+async function mockAuthenticatedUser(page, userData = {}) {
+  await page.route('**/api/user', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 1,
+        name: 'Test Student',
+        email: 'test@ucsd.edu',
+        picture: null,
+        ...userData
+      })
+    });
+  });
+}
+
 test.describe('Dashboard - Public Access', () => {
   test('should load dashboard page', async ({ page }) => {
     const response = await page.goto(`${BASE_URL}/dashboard.html`);
@@ -44,20 +61,7 @@ test.describe('Dashboard - Public Access', () => {
 
 test.describe('Dashboard - Navigation', () => {
   test('should have navigation menu with mocked auth', async ({ page }) => {
-    // Mock the /api/user endpoint to simulate authenticated user
-    await page.route('**/api/user', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          id: 1,
-          name: 'Test Student',
-          email: 'test@ucsd.edu',
-          picture: null
-        })
-      });
-    });
-
+    await mockAuthenticatedUser(page);
     await page.goto(`${BASE_URL}/dashboard.html`);
     await page.waitForLoadState('networkidle');
     
@@ -71,20 +75,7 @@ test.describe('Dashboard - Navigation', () => {
   });
 
   test('should navigate to different sections with mocked auth', async ({ page }) => {
-    // Mock the /api/user endpoint to simulate authenticated user
-    await page.route('**/api/user', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          id: 1,
-          name: 'Test Student',
-          email: 'test@ucsd.edu',
-          picture: null
-        })
-      });
-    });
-
+    await mockAuthenticatedUser(page);
     await page.goto(`${BASE_URL}/dashboard.html`);
     await page.waitForLoadState('networkidle');
     
