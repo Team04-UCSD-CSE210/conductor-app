@@ -186,62 +186,18 @@
 
   <!-- Fixed right sidebar -->
   <aside class="wj-right" aria-label="Support options">
-    <section class="wj-right-card">
-      <h2 class="wj-right-title">If you need to reach out:</h2>
-
-      <!-- TA can contact professor -->
-      <button type="button" class="wj-right-btn">
-        <span class="wj-right-icon" aria-hidden="true">
-          <!-- Person icon -->
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            role="img"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
-            <path
-              d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-            />
-          </svg>
-        </span>
-        <span class="wj-right-text">Contact Professor</span>
-      </button>
-
-      <!-- TA can contact students -->
-      <button type="button" class="wj-right-btn">
-        <span class="wj-right-icon" aria-hidden="true">
-          <!-- Envelope / message SVG -->
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            role="img"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <rect x="3" y="5" width="18" height="14" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
-            <polyline points="4 7 12 12 20 7" fill="none" stroke="currentColor" stroke-width="1.6" />
-          </svg>
-        </span>
-        <span class="wj-right-text">Contact Students</span>
-      </button>
-
-      <p class="wj-right-description">
-        Your activity logs help your instructors understand your progress and provide better support.
-      </p>
-    </section>
+    <div class="help-box">
+      <p>If you believe there's been an error, feel free to reach out:</p>
+      <div class="contact-buttons">
+        <button class="btn-contact" id="contact-professor">Contact Professor</button>
+        <button class="btn-contact" id="contact-students">Contact Students</button>
+      </div>
+    </div>
   </aside>
   <script src="/js/dashboard.service.js"></script>
+  <script src="/js/palette-loader.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
   <script src="/ta-journal.js" defer></script>
 </body>
 </html>

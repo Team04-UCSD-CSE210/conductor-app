@@ -22,6 +22,15 @@ export default defineConfig({
     },
     fileParallelism: false,         // Don't run test files in parallel
     globalSetup: './setup.js', // Initialize database before all tests
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/cypress/**',
+      '**/e2e/**',                    // Exclude Playwright E2E tests
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/rbac.test.js',              // Custom test file, not Vitest format
+      '**/permission-service.test.js', // Custom test with complex pool mocking, run separately
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -34,14 +43,6 @@ export default defineConfig({
         }
       }
     },
-    exclude: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/cypress/**',
-      '**/.{idea,git,cache,output,temp}/**',
-      '**/rbac.test.js',              // Custom test file, not Vitest format
-      '**/permission-service.test.js', // Custom test with complex pool mocking, run separately
-    ],
     env: {
       // Set test environment variables if not already set
       NODE_ENV: process.env.NODE_ENV || 'test',

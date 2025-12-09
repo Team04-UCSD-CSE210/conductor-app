@@ -51,20 +51,21 @@
         <p class="dashboard-eyebrow">Class directory</p>
         <h1 class="dashboard-title">Software Engineering</h1>
         <p class="dashboard-subtitle">
-          Detailed contact and availability information for your instructors and teaching team.
+          Detailed contact and availability information for your instructors, tutors, and teaching team.
         </p>
       </div>
       <div class="dashboard-header-right">
         <span class="offering-label">Active course</span>
-        <span class="offering-name" id="activeOfferingName">CSE 210 – Software Engineering</span>
+        <span class="offering-name" id="activeOfferingName">
+          Loading…
+        </span>
       </div>
     </header>
-
 
     <!-- Directory Content -->
     <section class="class-directory">
       <!-- Tabs -->
-      <div
+      <nav
         class="directory-tabs"
         role="tablist"
         aria-label="Directory sections"
@@ -74,43 +75,66 @@
           data-tab="professors"
           role="tab"
           aria-selected="true"
+          aria-controls="professors-section"
         >
           Professors
         </button>
+
+        <button
+          class="tab-btn"
+          data-tab="tutors"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tutors-section"
+        >
+          Tutors
+        </button>
+
         <button
           class="tab-btn"
           data-tab="tas"
           role="tab"
           aria-selected="false"
+          aria-controls="tas-section"
         >
           TAs
         </button>
+
         <button
           class="tab-btn"
           data-tab="students"
           role="tab"
           aria-selected="false"
+          aria-controls="students-section"
         >
           Students
         </button>
+
         <button
           class="tab-btn"
-          data-tab="groups"
+          data-tab="teams"
           role="tab"
           aria-selected="false"
+          aria-controls="teams-section"
         >
-          Groups
+          Teams
         </button>
-      </div>
+      </nav>
 
       <!-- Professors Section -->
       <section
         id="professors-section"
         class="directory-section active"
+        role="tabpanel"
         aria-label="Professors"
       >
         <div class="section-header">
-          <h3>Professors</h3>
+          <div class="section-header-left">
+            <h3>Professors</h3>
+            <p class="section-subtitle">
+              Primary instructors and course coordinators.
+            </p>
+          </div>
           <div class="section-controls">
             <input
               type="search"
@@ -125,10 +149,58 @@
         </div>
       </section>
 
-      <!-- TAs Section -->
-      <section id="tas-section" class="directory-section" aria-label="TAs">
+      <!-- Tutors Section -->
+      <section
+        id="tutors-section"
+        class="directory-section"
+        role="tabpanel"
+        aria-label="Tutors"
+        hidden
+      >
         <div class="section-header">
-          <h3>Teaching Assistants</h3>
+          <div class="section-header-left">
+            <h3>Tutors</h3>
+            <p class="section-subtitle">
+              Small-group and 1:1 support for assignments and projects.
+            </p>
+          </div>
+          <div class="section-controls">
+            <input
+              type="search"
+              id="tutor-search"
+              class="search-input"
+              placeholder="Search tutors..."
+            />
+            <div class="activity-filter">
+              <label for="tutor-activity">Activity:</label>
+              <select id="tutor-activity" class="select-input">
+                <option value="all">All</option>
+                <option value="active">Active (last 7 days)</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="cards-grid" id="tutors-grid">
+          <div class="loading-state">Loading tutors...</div>
+        </div>
+      </section>
+
+      <!-- TAs Section -->
+      <section
+        id="tas-section"
+        class="directory-section"
+        role="tabpanel"
+        aria-label="Teaching Assistants"
+        hidden
+      >
+        <div class="section-header">
+          <div class="section-header-left">
+            <h3>Teaching Assistants</h3>
+            <p class="section-subtitle">
+              Discussion leaders and core course support.
+            </p>
+          </div>
           <div class="section-controls">
             <input
               type="search"
@@ -155,10 +227,17 @@
       <section
         id="students-section"
         class="directory-section"
+        role="tabpanel"
         aria-label="Students"
+        hidden
       >
         <div class="section-header">
-          <h3>Students</h3>
+          <div class="section-header-left">
+            <h3>Students</h3>
+            <p class="section-subtitle">
+              Browse classmates and see which team they belong to.
+            </p>
+          </div>
           <div class="section-controls">
             <input
               type="search"
@@ -168,9 +247,9 @@
             />
             <div class="filter-group">
               <div class="activity-filter">
-                <label for="student-group">Group:</label>
-                <select id="student-group" class="select-input">
-                  <option value="all">All Groups</option>
+                <label for="student-team">Team:</label>
+                <select id="student-team" class="select-input">
+                  <option value="all">All Teams</option>
                 </select>
               </div>
               <div class="activity-filter">
@@ -189,32 +268,42 @@
         </div>
       </section>
 
-      <!-- Groups Section -->
+      <!-- Teams Section -->
       <section
-        id="groups-section"
+        id="teams-section"
         class="directory-section"
-        aria-label="Groups"
+        role="tabpanel"
+        aria-label="Teams"
+        hidden
       >
         <div class="section-header">
-          <h3>Project Groups</h3>
+          <div class="section-header-left">
+            <h3>Project Teams</h3>
+            <p class="section-subtitle">
+              See project teams, their members, and quick links.
+            </p>
+          </div>
           <div class="section-controls">
             <input
               type="search"
-              id="group-search"
+              id="team-search"
               class="search-input"
-              placeholder="Search groups..."
+              placeholder="Search teams..."
             />
           </div>
         </div>
-        <div class="cards-grid groups-grid" id="groups-grid">
-          <div class="loading-state">Loading groups...</div>
+        <div class="cards-grid groups-grid" id="teams-grid">
+          <div class="loading-state">Loading teams...</div>
         </div>
       </section>
     </section>
   </main>
 
-  <!-- JS: sidebar (nav + hamburger) + page logic -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="/js/palette-loader.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
   <script src="/js/class-directory.js" defer></script>
 </body>
 </html>

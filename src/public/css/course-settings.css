@@ -1,0 +1,157 @@
+/* Course Settings Page Styles */
+
+.settings-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.settings-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid #99F6E4;
+  box-shadow: 0 2px 8px rgb(15 118 110 / 10%);
+}
+
+.settings-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0F766E;
+  margin: 0 0 0.5rem;
+}
+
+.settings-description {
+  color: var(--gray-600, #4b5563);
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+}
+
+/* Color Palette Options */
+.palette-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.palette-option {
+  position: relative;
+  border: 2px solid #E6FFFA;
+  border-radius: 12px;
+  padding: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.palette-option:hover {
+  border-color: #83D7CF;
+  box-shadow: 0 4px 12px rgb(15 118 110 / 15%);
+  transform: translateY(-2px);
+}
+
+.palette-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.palette-select-label {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  background: #0F766E;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.palette-select-label::before {
+  content: '✓';
+}
+
+.palette-option.selected {
+  border-color: #0F766E;
+  background: #F0FDFA;
+  box-shadow: 0 0 0 3px rgb(15 118 110 / 10%);
+}
+
+.palette-option.selected .palette-select-label {
+  display: flex;
+}
+
+.palette-option input[type="radio"]:checked + .palette-select-label {
+  display: flex;
+}
+
+.palette-preview {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 60px;
+}
+
+.palette-color {
+  flex: 1;
+  height: 100%;
+}
+
+.palette-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0F766E;
+  margin: 0 0 0.25rem;
+}
+
+.palette-info p {
+  font-size: 0.85rem;
+  color: var(--gray-600, #4b5563);
+  margin: 0;
+}
+
+/* Settings Actions */
+.settings-actions {
+  display: flex;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #E6FFFA;
+}
+
+.settings-actions .btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Success/Error Messages */
+.settings-message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.settings-message.success {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #10B981;
+}
+
+.settings-message.error {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #EF4444;
+}
+
