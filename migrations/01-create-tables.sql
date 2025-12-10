@@ -98,16 +98,17 @@ END $$;
 -- =====================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
+DECLARE
+    users_table CONSTANT TEXT := 'users';
+    attendance_table CONSTANT TEXT := 'attendance';
+    session_responses_table CONSTANT TEXT := 'session_responses';
 BEGIN
   NEW.updated_at = NOW();
-    -- Preserve created_by and created_at
     IF TG_OP = 'UPDATE' THEN
-        -- Only preserve created_by if the column exists (not on users, attendance, session_responses)
-        IF TG_TABLE_NAME NOT IN ('users', 'attendance', 'session_responses') THEN
+        IF TG_TABLE_NAME NOT IN (users_table, attendance_table, session_responses_table) THEN
             NEW.created_by = OLD.created_by;
         END IF;
-        -- Only preserve created_at if the column exists (not on session_responses)
-        IF TG_TABLE_NAME != 'session_responses' THEN
+        IF TG_TABLE_NAME != session_responses_table THEN
             NEW.created_at = OLD.created_at;
         END IF;
     END IF;

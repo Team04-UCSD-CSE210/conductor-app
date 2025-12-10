@@ -119,7 +119,7 @@
         // Use attendance_percentage if available, otherwise calculate from present_count/total_count
         let percentage = 0;
         if (stats) {
-          if (typeof stats.attendance_percentage === 'number' && !isNaN(stats.attendance_percentage)) {
+          if (typeof stats.attendance_percentage === 'number' && !Number.isNaN(stats.attendance_percentage)) {
             percentage = Math.round(stats.attendance_percentage);
           } else if (typeof stats.present_count === 'number' && typeof stats.total_count === 'number' && stats.total_count > 0) {
             percentage = Math.round((stats.present_count / stats.total_count) * 100);

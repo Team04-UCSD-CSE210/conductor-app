@@ -645,7 +645,11 @@
   }
   
   .welcome-content h2 {
-    font-size: 22px;
+    font-size: 1.75rem;
+  }
+  
+  .welcome-content p {
+    font-size: 0.9375rem;
   }
   
   .attendance-label {

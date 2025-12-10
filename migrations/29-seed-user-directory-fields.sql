@@ -2,142 +2,162 @@
 -- Seed data for user directory profile fields
 
 DO $$
+DECLARE
+    email_bhchandna CONSTANT TEXT := 'bhchandna@ucsd.edu';
+    email_lhardy CONSTANT TEXT := 'lhardy@ucsd.edu';
+    email_instructor2 CONSTANT TEXT := 'instructor2@ucsd.edu';
+    email_instructor3 CONSTANT TEXT := 'instructor3@ucsd.edu';
+    email_instructor4 CONSTANT TEXT := 'instructor4@ucsd.edu';
+    email_zhkan CONSTANT TEXT := 'zhkan@ucsd.edu';
+    email_haxing CONSTANT TEXT := 'haxing@ucsd.edu';
+    email_grad1 CONSTANT TEXT := 'grad1@ucsd.edu';
+    email_grad2 CONSTANT TEXT := 'grad2@ucsd.edu';
+    email_grad3 CONSTANT TEXT := 'grad3@ucsd.edu';
+    email_student1 CONSTANT TEXT := 'student1@ucsd.edu';
+    email_student2 CONSTANT TEXT := 'student2@ucsd.edu';
+    email_student3 CONSTANT TEXT := 'student3@ucsd.edu';
+    email_student4 CONSTANT TEXT := 'student4@ucsd.edu';
+    email_student5 CONSTANT TEXT := 'student5@ucsd.edu';
+    email_student6 CONSTANT TEXT := 'student6@ucsd.edu';
+    email_student7 CONSTANT TEXT := 'student7@ucsd.edu';
+    email_student8 CONSTANT TEXT := 'student8@ucsd.edu';
+    email_hhundhausen CONSTANT TEXT := 'hhundhausen@ucsd.edu';
 BEGIN
   -- Update instructors with directory profile information
   UPDATE users
   SET
     pronunciation = CASE 
-      WHEN email = 'bhchandna@ucsd.edu' THEN 'AL-iss SMITH'
-      WHEN email = 'lhardy@ucsd.edu' THEN 'AL-iss SMITH'
-      WHEN email = 'instructor2@ucsd.edu' THEN 'BOB LEE'
-      WHEN email = 'instructor3@ucsd.edu' THEN 'KAR-ul CHEN'
-      WHEN email = 'instructor4@ucsd.edu' THEN 'DAY-vid KIM'
-      WHEN email = 'zhkan@ucsd.edu' THEN 'GAD'
-      WHEN email = 'haxing@ucsd.edu' THEN 'HAI-yee'
+      WHEN email = email_bhchandna THEN 'AL-iss SMITH'
+      WHEN email = email_lhardy THEN 'AL-iss SMITH'
+      WHEN email = email_instructor2 THEN 'BOB LEE'
+      WHEN email = email_instructor3 THEN 'KAR-ul CHEN'
+      WHEN email = email_instructor4 THEN 'DAY-vid KIM'
+      WHEN email = email_zhkan THEN 'GAD'
+      WHEN email = email_haxing THEN 'HAI-yee'
       ELSE NULL
     END,
     availability_general = CASE 
-      WHEN email IN ('bhchandna@ucsd.edu', 'lhardy@ucsd.edu', 'zhkan@ucsd.edu', 'haxing@ucsd.edu') THEN 'Office hours: Mon/Wed 2-4pm, or by appointment'
-      WHEN email = 'instructor2@ucsd.edu' THEN 'Office hours: Tue/Thu 1-3pm'
-      WHEN email = 'instructor3@ucsd.edu' THEN 'Office hours: Mon 10am-12pm, Wed 2-4pm'
-      WHEN email = 'instructor4@ucsd.edu' THEN 'Available by appointment only'
+      WHEN email IN (email_bhchandna, email_lhardy, email_zhkan, email_haxing) THEN 'Office hours: Mon/Wed 2-4pm, or by appointment'
+      WHEN email = email_instructor2 THEN 'Office hours: Tue/Thu 1-3pm'
+      WHEN email = email_instructor3 THEN 'Office hours: Mon 10am-12pm, Wed 2-4pm'
+      WHEN email = email_instructor4 THEN 'Available by appointment only'
       ELSE NULL
     END,
     availability_specific = CASE 
-      WHEN email IN ('bhchandna@ucsd.edu', 'lhardy@ucsd.edu') THEN 
+      WHEN email IN (email_bhchandna, email_lhardy) THEN 
         '{"office_hours": [{"day": "Monday", "start": "14:00", "end": "16:00"}, {"day": "Wednesday", "start": "14:00", "end": "16:00"}], "location": "CSE Building, Room 4204", "appointment_required": false}'::jsonb
-      WHEN email = 'instructor2@ucsd.edu' THEN 
+      WHEN email = email_instructor2 THEN 
         '{"office_hours": [{"day": "Tuesday", "start": "13:00", "end": "15:00"}, {"day": "Thursday", "start": "13:00", "end": "15:00"}], "location": "ECE Building, Room 2101", "appointment_required": false}'::jsonb
-      WHEN email = 'instructor3@ucsd.edu' THEN 
+      WHEN email = email_instructor3 THEN
         '{"office_hours": [{"day": "Monday", "start": "10:00", "end": "12:00"}, {"day": "Wednesday", "start": "14:00", "end": "16:00"}], "location": "CSE Building, Room 3102", "appointment_required": false}'::jsonb
-      WHEN email = 'instructor4@ucsd.edu' THEN 
+      WHEN email = email_instructor4 THEN 
         '{"office_hours": [], "location": "Data Science Building, Room 1501", "appointment_required": true}'::jsonb
-      WHEN email = 'zhkan@ucsd.edu' THEN 
+      WHEN email = email_zhkan THEN 
         '{"office_hours": [{"day": "Monday", "start": "14:00", "end": "16:00"}, {"day": "Wednesday", "start": "14:00", "end": "16:00"}], "location": "Data Science Building, Room 2201", "appointment_required": false}'::jsonb
-      WHEN email = 'haxing@ucsd.edu' THEN 
+      WHEN email = email_haxing THEN 
         '{"office_hours": [{"day": "Monday", "start": "14:00", "end": "16:00"}, {"day": "Wednesday", "start": "14:00", "end": "16:00"}], "location": "CSE Building, Room 4204", "appointment_required": false}'::jsonb
       ELSE NULL
     END,
     class_chat = CASE 
-      WHEN email IN ('bhchandna@ucsd.edu', 'lhardy@ucsd.edu', 'zhkan@ucsd.edu', 'haxing@ucsd.edu') THEN 'cse210-instructors'
-      WHEN email = 'instructor2@ucsd.edu' THEN 'ece210-instructors'
-      WHEN email = 'instructor3@ucsd.edu' THEN 'cse210-instructors'
-      WHEN email = 'instructor4@ucsd.edu' THEN 'ds210-instructors'
+      WHEN email IN (email_bhchandna, email_lhardy, email_zhkan, email_haxing) THEN 'cse210-instructors'
+      WHEN email = email_instructor2 THEN 'ece210-instructors'
+      WHEN email = email_instructor3 THEN 'cse210-instructors'
+      WHEN email = email_instructor4 THEN 'ds210-instructors'
       ELSE NULL
     END,
     slack_handle = CASE 
-      WHEN email = 'bhchandna@ucsd.edu' THEN '@alice.smith'
-      WHEN email = 'lhardy@ucsd.edu' THEN '@alice.smith'
-      WHEN email = 'instructor2@ucsd.edu' THEN '@bob.lee'
-      WHEN email = 'instructor3@ucsd.edu' THEN '@carol.chen'
-      WHEN email = 'instructor4@ucsd.edu' THEN '@david.kim'
-      WHEN email = 'zhkan@ucsd.edu' THEN '@gad'
-      WHEN email = 'haxing@ucsd.edu' THEN '@haiyi'
+      WHEN email = email_bhchandna THEN '@alice.smith'
+      WHEN email = email_lhardy THEN '@alice.smith'
+      WHEN email = email_instructor2 THEN '@bob.lee'
+      WHEN email = email_instructor3 THEN '@carol.chen'
+      WHEN email = email_instructor4 THEN '@david.kim'
+      WHEN email = email_zhkan THEN '@gad'
+      WHEN email = email_haxing THEN '@haiyi'
       ELSE NULL
     END
   WHERE email IN (
-    'bhchandna@ucsd.edu', 'lhardy@ucsd.edu', 'instructor2@ucsd.edu', 
-    'instructor3@ucsd.edu', 'instructor4@ucsd.edu', 'zhkan@ucsd.edu', 'haxing@ucsd.edu'
+    email_bhchandna, email_lhardy, email_instructor2, 
+    email_instructor3, email_instructor4, email_zhkan, email_haxing
   );
 
   -- Update TAs (graduate students) with directory profile information
   UPDATE users
   SET
     pronunciation = CASE 
-      WHEN email = 'grad1@ucsd.edu' THEN 'CHAR-lee GREEN'
-      WHEN email = 'grad2@ucsd.edu' THEN 'dee-AH-na mar-TEE-nez'
-      WHEN email = 'grad3@ucsd.edu' THEN 'EE-than WONG'
+      WHEN email = email_grad1 THEN 'CHAR-lee GREEN'
+      WHEN email = email_grad2 THEN 'dee-AH-na mar-TEE-nez'
+      WHEN email = email_grad3 THEN 'EE-than WONG'
       ELSE NULL
     END,
     availability_general = CASE 
-      WHEN email = 'grad1@ucsd.edu' THEN 'TA office hours: Tue/Thu 11am-1pm'
-      WHEN email = 'grad2@ucsd.edu' THEN 'TA office hours: Mon/Wed 3-5pm'
-      WHEN email = 'grad3@ucsd.edu' THEN 'TA office hours: Fri 10am-12pm'
+      WHEN email = email_grad1 THEN 'TA office hours: Tue/Thu 11am-1pm'
+      WHEN email = email_grad2 THEN 'TA office hours: Mon/Wed 3-5pm'
+      WHEN email = email_grad3 THEN 'TA office hours: Fri 10am-12pm'
       ELSE NULL
     END,
     availability_specific = CASE 
-      WHEN email = 'grad1@ucsd.edu' THEN 
+      WHEN email = email_grad1 THEN 
         '{"office_hours": [{"day": "Tuesday", "start": "11:00", "end": "13:00"}, {"day": "Thursday", "start": "11:00", "end": "13:00"}], "location": "CSE Building, Room 1202", "appointment_required": false}'::jsonb
-      WHEN email = 'grad2@ucsd.edu' THEN 
+      WHEN email = email_grad2 THEN 
         '{"office_hours": [{"day": "Monday", "start": "15:00", "end": "17:00"}, {"day": "Wednesday", "start": "15:00", "end": "17:00"}], "location": "CSE Building, Room 1202", "appointment_required": false}'::jsonb
-      WHEN email = 'grad3@ucsd.edu' THEN 
+      WHEN email = email_grad3 THEN 
         '{"office_hours": [{"day": "Friday", "start": "10:00", "end": "12:00"}], "location": "Data Science Building, Room 1502", "appointment_required": false}'::jsonb
       ELSE NULL
     END,
     class_chat = CASE 
-      WHEN email IN ('grad1@ucsd.edu', 'grad2@ucsd.edu') THEN 'cse210-tas'
-      WHEN email = 'grad3@ucsd.edu' THEN 'ds210-tas'
+      WHEN email IN (email_grad1, email_grad2) THEN 'cse210-tas'
+      WHEN email = email_grad3 THEN 'ds210-tas'
       ELSE NULL
     END,
     slack_handle = CASE 
-      WHEN email = 'grad1@ucsd.edu' THEN '@charlie.green'
-      WHEN email = 'grad2@ucsd.edu' THEN '@diana.martinez'
-      WHEN email = 'grad3@ucsd.edu' THEN '@ethan.wong'
+      WHEN email = email_grad1 THEN '@charlie.green'
+      WHEN email = email_grad2 THEN '@diana.martinez'
+      WHEN email = email_grad3 THEN '@ethan.wong'
       ELSE NULL
     END
-  WHERE email IN ('grad1@ucsd.edu', 'grad2@ucsd.edu', 'grad3@ucsd.edu');
+  WHERE email IN (email_grad1, email_grad2, email_grad3);
 
   -- Update some students with directory profile information
   UPDATE users
   SET
     pronunciation = CASE 
-      WHEN email = 'student1@ucsd.edu' THEN 'FRANK MIL-ler'
-      WHEN email = 'student2@ucsd.edu' THEN 'GRAYCE CHEN'
-      WHEN email = 'student3@ucsd.edu' THEN 'HEN-ree WIL-son'
-      WHEN email = 'student4@ucsd.edu' THEN 'iz-ah-BEL-la gar-SEE-ah'
-      WHEN email = 'student5@ucsd.edu' THEN 'JACK THOM-son'
-      WHEN email = 'student6@ucsd.edu' THEN 'KAT-uh-rin LEE'
-      WHEN email = 'student7@ucsd.edu' THEN 'LEE-um BROWN'
-      WHEN email = 'student8@ucsd.edu' THEN 'MEE-ah DAY-vis'
-      WHEN email = 'hhundhausen@ucsd.edu' THEN 'heh-LAY-nah BEN-der'
+      WHEN email = email_student1 THEN 'FRANK MIL-ler'
+      WHEN email = email_student2 THEN 'GRAYCE CHEN'
+      WHEN email = email_student3 THEN 'HEN-ree WIL-son'
+      WHEN email = email_student4 THEN 'iz-ah-BEL-la gar-SEE-ah'
+      WHEN email = email_student5 THEN 'JACK THOM-son'
+      WHEN email = email_student6 THEN 'KAT-uh-rin LEE'
+      WHEN email = email_student7 THEN 'LEE-um BROWN'
+      WHEN email = email_student8 THEN 'MEE-ah DAY-vis'
+      WHEN email = email_hhundhausen THEN 'heh-LAY-nah BEN-der'
       ELSE NULL
     END,
     availability_general = CASE 
-      WHEN email IN ('student1@ucsd.edu', 'student2@ucsd.edu', 'student3@ucsd.edu') THEN 'Available for study groups'
-      WHEN email IN ('student4@ucsd.edu', 'student5@ucsd.edu', 'student6@ucsd.edu') THEN 'Usually available evenings'
+      WHEN email IN (email_student1, email_student2, email_student3) THEN 'Available for study groups'
+      WHEN email IN (email_student4, email_student5, email_student6) THEN 'Usually available evenings'
       ELSE NULL
     END,
     class_chat = CASE 
-      WHEN email LIKE 'student%@ucsd.edu' THEN 'cse210-students'
-      WHEN email = 'hhundhausen@ucsd.edu' THEN 'cse210-students'
+      WHEN email >= 'student@ucsd.edu' AND email < 'studenz@ucsd.edu' THEN 'cse210-students'
+      WHEN email = email_hhundhausen THEN 'cse210-students'
       ELSE NULL
     END,
     slack_handle = CASE 
-      WHEN email = 'student1@ucsd.edu' THEN '@frank.miller'
-      WHEN email = 'student2@ucsd.edu' THEN '@grace.chen'
-      WHEN email = 'student3@ucsd.edu' THEN '@henry.wilson'
-      WHEN email = 'student4@ucsd.edu' THEN '@isabella.garcia'
-      WHEN email = 'student5@ucsd.edu' THEN '@jack.thompson'
-      WHEN email = 'student6@ucsd.edu' THEN '@katherine.lee'
-      WHEN email = 'student7@ucsd.edu' THEN '@liam.brown'
-      WHEN email = 'student8@ucsd.edu' THEN '@mia.davis'
-      WHEN email = 'hhundhausen@ucsd.edu' THEN '@helena.bender'
+      WHEN email = email_student1 THEN '@frank.miller'
+      WHEN email = email_student2 THEN '@grace.chen'
+      WHEN email = email_student3 THEN '@henry.wilson'
+      WHEN email = email_student4 THEN '@isabella.garcia'
+      WHEN email = email_student5 THEN '@jack.thompson'
+      WHEN email = email_student6 THEN '@katherine.lee'
+      WHEN email = email_student7 THEN '@liam.brown'
+      WHEN email = email_student8 THEN '@mia.davis'
+      WHEN email = email_hhundhausen THEN '@helena.bender'
       ELSE NULL
     END
   WHERE email IN (
-    'student1@ucsd.edu', 'student2@ucsd.edu', 'student3@ucsd.edu', 
-    'student4@ucsd.edu', 'student5@ucsd.edu', 'student6@ucsd.edu',
-    'student7@ucsd.edu', 'student8@ucsd.edu', 'hhundhausen@ucsd.edu'
+    email_student1, email_student2, email_student3, 
+    email_student4, email_student5, email_student6,
+    email_student7, email_student8, email_hhundhausen
   );
 
   -- Update extension students

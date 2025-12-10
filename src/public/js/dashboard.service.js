@@ -225,7 +225,7 @@
     }
 
     teamsList.innerHTML = teams.map(team => {
-      const memberCount = parseInt(team.member_count || team.members?.length || 0);
+      const memberCount = Number.parseInt(team.member_count || team.members?.length || 0, 10);
       const teamName = team.name || (team.team_number ? `Team ${team.team_number}` : `Team ${team.id}`);
       return `
         <a href="/teams/${team.id}" class="team-item" aria-label="${teamName}">
@@ -468,7 +468,7 @@
       const parts = timeStr.split(':');
       if (parts.length < 2) return timeStr;
 
-      let hours = parseInt(parts[0], 10);
+      let hours = Number.parseInt(parts[0], 10);
       const minutes = parts[1];
       const ampm = hours >= 12 ? 'pm' : 'am';
       
@@ -584,7 +584,7 @@
       const now = new Date();
 
       // Validate dates
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
         weeksTimeline.innerHTML = '<p class="dashboard-empty-state">Invalid course dates</p>';
         return;
       }
