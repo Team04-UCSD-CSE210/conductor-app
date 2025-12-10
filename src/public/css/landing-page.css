@@ -114,7 +114,7 @@ body {
 .hero-title {
     font-size: 3.5rem;
     font-weight: 800;
-    color: #000;
+    color: #000 !important;
     line-height: 1.1;
     margin-bottom: 2rem;
     letter-spacing: -0.03em;
@@ -131,8 +131,8 @@ body {
 
 .cta-button {
     padding: 1rem 2.5rem;
-    background: #000;
-    color: white;
+    background: #000 !important;
+    color: white !important;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 600;

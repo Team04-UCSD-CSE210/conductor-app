@@ -13,9 +13,9 @@ const state = {
   currentUser: null, 
   filters: {
     professors: { search: '' },
-    tutors: { search: '', activity: 'all' },
-    tas: { search: '', activity: 'all' },
-    students: { search: '', team: 'all', activity: 'all' },
+    tutors: { search: '' },
+    tas: { search: '' },
+    students: { search: '' },
     teams: { search: '' }
   }
 };
@@ -156,11 +156,7 @@ const initializeElements = () => {
     profSearch: document.getElementById('prof-search'),
     tutorSearch: document.getElementById('tutor-search'),
     taSearch: document.getElementById('ta-search'),
-    studentSearch: document.getElementById('student-search'),
-    studentTeamFilter: document.getElementById('student-team'),
-    studentActivityFilter: document.getElementById('student-activity'),
-    tutorActivityFilter: document.getElementById('tutor-activity'),
-    taActivityFilter: document.getElementById('ta-activity')
+    studentSearch: document.getElementById('student-search')
   };
 };
 
@@ -552,9 +548,6 @@ const renderTeamCard = (team) => {
   if (team.team_number) {
     teamInfo.push(`Team #${team.team_number}`);
   }
-  if (team.status) {
-    teamInfo.push(team.status);
-  }
   const teamInfoText = teamInfo.length > 0 ? teamInfo.join(' • ') : 'Project team';
 
   return `
@@ -571,10 +564,6 @@ const renderTeamCard = (team) => {
         <div class="stat-item">
           <div class="stat-value">${memberCount}</div>
           <div class="stat-label">Members</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${team.status || 'Active'}</div>
-          <div class="stat-label">Status</div>
         </div>
         ${team.team_number ? `
         <div class="stat-item">
@@ -719,67 +708,23 @@ const getFilteredProfessors = () => {
 };
 
 const getFilteredTutors = () => {
-  const { search, activity } = state.filters.tutors;
-  return state.tutors.filter(
-    (t) =>
-      matchesSearch(t, search) &&
-      isActiveByFilter(t.last_activity, activity)
-  );
+  const { search } = state.filters.tutors;
+  return state.tutors.filter((t) => matchesSearch(t, search));
 };
 
 const getFilteredTas = () => {
-  const { search, activity } = state.filters.tas;
-  return state.tas.filter(
-    (t) =>
-      matchesSearch(t, search) &&
-      isActiveByFilter(t.last_activity, activity)
-  );
+  const { search } = state.filters.tas;
+  return state.tas.filter((t) => matchesSearch(t, search));
 };
 
 const getFilteredStudents = () => {
-  const { search, team, activity } = state.filters.students;
-  return state.students.filter((s) => {
-    if (!matchesSearch(s, search)) return false;
-
-    const teamName = s.team_name || s.team || null;
-    if (team !== 'all' && teamName !== team) return false;
-
-    if (!isActiveByFilter(s.last_activity, activity)) return false;
-
-    return true;
-  });
+  const { search } = state.filters.students;
+  return state.students.filter((s) => matchesSearch(s, search));
 };
 
 const getFilteredTeams = () => {
   const { search } = state.filters.teams;
   return state.teams.filter((g) => matchesSearch(g, search));
-};
-
-const populateStudentTeamFilter = () => {
-  const select = elements.studentTeamFilter;
-  if (!select) return;
-
-  const teams = new Set();
-  state.students.forEach((s) => {
-    const teamName = s.team_name || s.team;
-    if (teamName) teams.add(teamName);
-  });
-
-  const current = select.value || 'all';
-
-  select.innerHTML = `
-    <option value="all">All Teams</option>
-    ${Array.from(teams)
-      .sort()
-      .map(
-        (t) => `<option value="${t}">${t}</option>`
-      )
-      .join('')}
-  `;
-
-  if ([...teams, 'all'].includes(current)) {
-    select.value = current;
-  }
 };
 
 // ---------- Tab switching ----------
@@ -863,33 +808,7 @@ const setupEventListeners = () => {
     });
   }
 
-  if (elements.tutorActivityFilter) {
-    elements.tutorActivityFilter.addEventListener('change', (e) => {
-      state.filters.tutors.activity = e.target.value || 'all';
-      renderTutorsGrid();
-    });
-  }
 
-  if (elements.taActivityFilter) {
-    elements.taActivityFilter.addEventListener('change', (e) => {
-      state.filters.tas.activity = e.target.value || 'all';
-      renderTasGrid();
-    });
-  }
-
-  if (elements.studentActivityFilter) {
-    elements.studentActivityFilter.addEventListener('change', (e) => {
-      state.filters.students.activity = e.target.value || 'all';
-      renderStudentsGrid();
-    });
-  }
-
-  if (elements.studentTeamFilter) {
-    elements.studentTeamFilter.addEventListener('change', (e) => {
-      state.filters.students.team = e.target.value || 'all';
-      renderStudentsGrid();
-    });
-  }
 };
 
 // ---------- Data load ----------
@@ -921,8 +840,6 @@ const loadData = async () => {
     state.tas = data.tas || [];
     state.students = data.students || [];
     state.teams = data.teams || data.groups || [];
-
-    populateStudentTeamFilter();
 
     // 首次渲染：保持預設 tab（professors）
     renderProfessorsGrid();

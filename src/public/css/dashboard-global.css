@@ -160,7 +160,7 @@ body.dashboard-page.class-directory-page {
 
 /* Sidebar Navigation */
 .sidebar {
-  width: 180px;
+  width: 220px;
   background: var(--teal-50, #f0fdfa);
   border-right: 2px solid var(--gray-200, #e5e7eb);
   padding: 1.5rem 1rem;
@@ -279,8 +279,8 @@ body.dashboard-page.class-directory-page {
 
 .sidebar nav a::before {
   content: '';
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -301,6 +301,29 @@ body.dashboard-page.class-directory-page {
 .sidebar nav a[href*="meeting"]::before,
 .sidebar nav a[href*="team-meetings"]::before,
 .sidebar nav a[href*="instructor-meetings"]::before,
+
+/* Header icons for Team Meetings and Course Settings */
+.attendance-icon,
+.page-title-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Navigation icons in sidebar */
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* Disable ::before icons for navigation items that have explicit icons */
+.sidebar nav a.has-icon::before {
+  display: none;
+}
 .sidebar nav a[href*="instructor-team-meetings"]::before {
   background-image: url('/assets/talk.png');
 }
@@ -349,9 +372,9 @@ body.dashboard-page.class-directory-page {
 
 /* Main Container */
 .main-container {
-  margin-left: 180px;
+  margin-left: 220px;
   padding: 1.25rem;
-  width: calc(100% - 180px);
+  width: calc(100% - 220px);
   display: flex;
   flex-direction: column;
   height: 100%;
