@@ -153,6 +153,11 @@ body.dashboard-page {
   overflow: hidden;
 }
 
+body.dashboard-page.class-directory-page {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* Sidebar Navigation */
 .sidebar {
   width: 180px;

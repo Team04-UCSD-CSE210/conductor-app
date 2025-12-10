@@ -46,13 +46,57 @@ const formatShortAvailability = (text) => {
   return text;
 };
 
+const formatAvailabilitySpecific = (data) => {
+  if (!data) return 'Not specified';
+  
+  // Handle string JSON
+  let parsed;
+  if (typeof data === 'string') {
+    try {
+      parsed = JSON.parse(data);
+    } catch {
+      return data; // Return as-is if not valid JSON
+    }
+  } else if (typeof data === 'object') {
+    parsed = data;
+  } else {
+    return String(data);
+  }
+
+  const parts = [];
+  
+  // Location
+  if (parsed.location) {
+    parts.push(`<div class="availability-item"><span class="availability-field-label">Location</span><span class="availability-field-value">${parsed.location}</span></div>`);
+  }
+  
+  // Office hours
+  if (parsed.office_hours && Array.isArray(parsed.office_hours) && parsed.office_hours.length > 0) {
+    const hoursHtml = parsed.office_hours.map(oh => {
+      const day = oh.day || '';
+      const start = oh.start || '';
+      const end = oh.end || '';
+      const timeStr = start && end ? `${start}–${end}` : start || end || '';
+      return `<div class="office-hour-item"><span class="office-hour-day">${day}</span>${timeStr ? `<span class="office-hour-time">${timeStr}</span>` : ''}</div>`;
+    }).join('');
+    parts.push(`<div class="availability-item"><span class="availability-field-label">Office Hours</span><div class="office-hours-list">${hoursHtml}</div></div>`);
+  }
+  
+  // Appointment required
+  if (parsed.appointment_required !== undefined) {
+    parts.push(`<div class="availability-item"><span class="availability-field-label">Appointment</span><span class="availability-field-value">${parsed.appointment_required ? 'Required' : 'Not required'}</span></div>`);
+  }
+  
+  return parts.length > 0 ? parts.join('') : 'Not specified';
+};
+
 const computeActivityStatus = (lastActivity) => {
   if (!lastActivity) {
-    return { label: 'No data', kind: 'unknown' };
+    return null; // Return null instead of "No data"
   }
   const last = new Date(lastActivity);
   if (Number.isNaN(last.getTime())) {
-    return { label: 'No data', kind: 'unknown' };
+    return null; // Return null instead of "No data"
   }
   const now = new Date();
   const diffMs = now - last;
@@ -86,8 +130,8 @@ const canCurrentUserEditAvatar = (user) => {
   const ctx = state.currentUser;
   if (!ctx) return false;
 
+  // Only allow users to upload their own avatar
   if (ctx.id && user.id && ctx.id === user.id) return true;
-  if (ctx.primary_role === 'admin' || ctx.primary_role === 'instructor') return true;
 
   return false;
 };
@@ -233,21 +277,23 @@ const renderPersonCard = (user, options = {}) => {
     tags.push(`<span class="tag">Team ${user.team_name || user.team}</span>`);
   }
 
-  const activityClass =
-    activity.kind === 'active'
+  const activityClass = activity
+    ? activity.kind === 'active'
       ? 'status-pill-active'
       : activity.kind === 'recent'
       ? 'status-pill-recent'
       : activity.kind === 'inactive'
       ? 'status-pill-inactive'
-      : 'status-pill-unknown';
+      : 'status-pill-unknown'
+    : null;
 
-  const displayName = user.preferred_name || user.name;
-  const initials = getInitials(displayName);
-  const hasAvatar = !!user.avatar_url;
+  const fullName = user.name || 'Unnamed';
+  const preferredName = user.preferred_name && user.preferred_name !== fullName ? user.preferred_name : null;
+  const initials = getInitials(fullName || preferredName);
+  const hasAvatar = !!(user.avatar_url || user.image_url);
 
   const avatarHtml = hasAvatar
-    ? `<img class="person-avatar-img" src="${user.avatar_url}" alt="${displayName || 'Avatar'}" />`
+    ? `<img class="person-avatar-img" src="${user.avatar_url || user.image_url}" alt="${fullName || 'Avatar'}" />`
     : `<span>${initials}</span>`;
 
   const uploadControls =
@@ -286,7 +332,12 @@ const renderPersonCard = (user, options = {}) => {
           ${avatarHtml}
         </div>
         <header class="person-heading">
-          <h3 class="person-name">${displayName}</h3>
+          <h3 class="person-name">${fullName}</h3>
+          ${
+            preferredName
+              ? `<p class="person-preferred-name">Preferred: ${preferredName}</p>`
+              : ''
+          }
           <p class="person-role-line">
             <span class="person-role">${roleLabel || user.role || ''}</span>
             ${
@@ -295,6 +346,7 @@ const renderPersonCard = (user, options = {}) => {
                 : ''
             }
           </p>
+          ${user.email ? `<p class="person-email">${user.email}</p>` : ''}
         </header>
       </section>
 
@@ -304,26 +356,48 @@ const renderPersonCard = (user, options = {}) => {
             <h4>Contact</h4>
             <div class="info-body contact-body">
               ${contactHtml}
+              ${user.phone_number ? `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${user.phone_number}</span></div>` : ''}
+              ${user.github_username ? `<div class="detail-row"><span class="detail-label">GitHub</span><span class="detail-value">@${user.github_username}</span></div>` : ''}
+              ${user.linkedin_url ? `<div class="detail-row"><span class="detail-label">LinkedIn</span><span class="detail-value">${user.linkedin_url}</span></div>` : ''}
+              ${user.class_chat ? `<div class="detail-row"><span class="detail-label">Class Chat</span><span class="detail-value">${user.class_chat}</span></div>` : ''}
+              ${user.slack_handle ? `<div class="detail-row"><span class="detail-label">Slack</span><span class="detail-value">${user.slack_handle}</span></div>` : ''}
             </div>
           </div>
           <div class="info-section">
             <h4>Availability</h4>
-            <div class="info-body">
-              <div class="detail-row">
-                <span class="detail-label">General</span>
-                <span class="detail-value">${formatShortAvailability(
-                  availabilityGeneral
-                )}</span>
-              </div>
+            <div class="info-body availability-body">
               ${
-                availabilitySpecific
+                availabilityGeneral || user.availability_general
                   ? `
-              <div class="detail-row">
-                <span class="detail-label">Specific</span>
-                <span class="detail-value">${availabilitySpecific}</span>
+              <div class="availability-section">
+                <div class="availability-label">General</div>
+                <div class="availability-value">${formatShortAvailability(
+                  availabilityGeneral || user.availability_general
+                )}</div>
               </div>`
                   : ''
               }
+              ${
+                availabilitySpecific || user.availability_specific
+                  ? `
+              <div class="availability-section">
+                <div class="availability-label">Specific</div>
+                <div class="availability-value availability-specific">${formatAvailabilitySpecific(
+                  availabilitySpecific || user.availability_specific
+                )}</div>
+              </div>`
+                  : ''
+              }
+            </div>
+          </div>
+          <div class="info-section">
+            <h4>Background</h4>
+            <div class="info-body">
+              ${user.pronunciation ? `<div class="detail-row"><span class="detail-label">Pronunciation</span><span class="detail-value">${user.pronunciation}</span></div>` : ''}
+              ${user.department ? `<div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${user.department}</span></div>` : ''}
+              ${user.major ? `<div class="detail-row"><span class="detail-label">Major</span><span class="detail-value">${user.major}</span></div>` : ''}
+              ${user.degree_program ? `<div class="detail-row"><span class="detail-label">Degree</span><span class="detail-value">${user.degree_program}</span></div>` : ''}
+              ${user.academic_year ? `<div class="detail-row"><span class="detail-label">Year</span><span class="detail-value">${user.academic_year}</span></div>` : ''}
             </div>
           </div>
         </div>
@@ -338,9 +412,13 @@ const renderPersonCard = (user, options = {}) => {
           }
         </div>
         <div class="person-footer">
-          <span class="status-pill ${activityClass}">
-            ${activity.label}
-          </span>
+          ${
+            activity
+              ? `<span class="status-pill ${activityClass}">
+                  ${activity.label}
+                </span>`
+              : ''
+          }
           ${contactButtonHtml}
           <button
             type="button"
@@ -442,26 +520,42 @@ const renderTeamCard = (team) => {
     : [];
 
   const memberCount = team.member_count || members.length || 0;
+  const leaderId = team.leader_id || (team.leader && team.leader.id);
 
+  // Identify leaders - check both leader_id and role='leader'
   const memberListHtml = members.length
     ? `
       <ul class="group-members-list">
         ${members
           .map(
-            (m) => `
+            (m) => {
+              const isLeader = m.id === leaderId || m.role === 'leader';
+              return `
           <li>
             <span class="member-name">${m.name}</span>
+            ${isLeader ? '<span class="member-role member-lead">(lead)</span>' : ''}
             ${
-              m.role
+              m.role && m.role !== 'leader'
                 ? `<span class="member-role"> – ${m.role}</span>`
                 : ''
             }
-          </li>`
+          </li>`;
+            }
           )
           .join('')}
       </ul>
     `
     : `<p class="group-members-empty">No members assigned yet.</p>`;
+
+  // Build team info section
+  const teamInfo = [];
+  if (team.team_number) {
+    teamInfo.push(`Team #${team.team_number}`);
+  }
+  if (team.status) {
+    teamInfo.push(team.status);
+  }
+  const teamInfoText = teamInfo.length > 0 ? teamInfo.join(' • ') : 'Project team';
 
   return `
     <article class="group-card" data-team-id="${team.id}">
@@ -469,9 +563,7 @@ const renderTeamCard = (team) => {
         <div class="group-logo">${getInitials(team.name)}</div>
         <div class="group-header-text">
           <h4 class="group-name">${team.name}</h4>
-          <p class="group-subtitle">${
-            team.mantra || 'Project team'
-          }</p>
+          <p class="group-subtitle">${teamInfoText}</p>
         </div>
       </header>
 
@@ -484,6 +576,12 @@ const renderTeamCard = (team) => {
           <div class="stat-value">${team.status || 'Active'}</div>
           <div class="stat-label">Status</div>
         </div>
+        ${team.team_number ? `
+        <div class="stat-item">
+          <div class="stat-value">#${team.team_number}</div>
+          <div class="stat-label">Team Number</div>
+        </div>
+        ` : ''}
       </section>
 
       <section class="group-members">

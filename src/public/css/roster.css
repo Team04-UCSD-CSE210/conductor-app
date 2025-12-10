@@ -732,15 +732,15 @@ tbody tr.row-selected:hover {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--emerald-400), var(--teal-600));
-  color: white;
+  background: linear-gradient(135deg, var(--palette-secondary, var(--emerald-400, #34d399)), var(--palette-primary, var(--teal-600, #0d9488)));
+  color: var(--palette-background, white);
   font-weight: 700;
   font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgb(16 185 129 / 20%);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--palette-secondary, var(--emerald-400, #34d399)) 20%, transparent);
 }
 
 .role-pill {

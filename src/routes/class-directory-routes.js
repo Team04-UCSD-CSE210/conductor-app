@@ -53,27 +53,34 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 
     const offeringId = offering_id;
 
-    // ---------- Professors ----------
+    // ---------- Professors (Instructors) ----------
     const professorsQuery = `
       SELECT DISTINCT
         u.id,
         u.name,
+        u.preferred_name,
         u.email,
         u.phone_number,
         u.github_username,
         u.linkedin_url,
-        u.pronouns,
-        u.availability        AS availability_general,
-        u.social_links,
-        u.last_activity,
+        u.pronunciation,
+        u.availability_general,
+        u.availability_specific,
+        u.class_chat,
+        u.slack_handle,
+        u.avatar_url,
+        u.image_url,
+        u.department,
+        u.major,
+        u.degree_program,
+        u.academic_year,
         e.course_role,
-        u.primary_role,
-        u.avatar_url
+        u.primary_role
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
       WHERE e.offering_id = $1::uuid
         AND e.status = 'enrolled'::enrollment_status_enum
-        AND e.course_role = 'professor'::enrollment_role_enum
+        AND e.course_role = 'instructor'::enrollment_role_enum
       ORDER BY u.name;
     `;
 
@@ -82,17 +89,24 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       SELECT DISTINCT
         u.id,
         u.name,
+        u.preferred_name,
         u.email,
         u.phone_number,
         u.github_username,
         u.linkedin_url,
-        u.pronouns,
-        u.availability        AS availability_general,
-        u.social_links,
-        u.last_activity,
+        u.pronunciation,
+        u.availability_general,
+        u.availability_specific,
+        u.class_chat,
+        u.slack_handle,
+        u.avatar_url,
+        u.image_url,
+        u.department,
+        u.major,
+        u.degree_program,
+        u.academic_year,
         e.course_role,
-        u.primary_role,
-        u.avatar_url
+        u.primary_role
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
       WHERE e.offering_id = $1::uuid
@@ -106,17 +120,24 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       SELECT DISTINCT
         u.id,
         u.name,
+        u.preferred_name,
         u.email,
         u.phone_number,
         u.github_username,
         u.linkedin_url,
-        u.pronouns,
-        u.availability        AS availability_general,
-        u.social_links,
-        u.last_activity,
+        u.pronunciation,
+        u.availability_general,
+        u.availability_specific,
+        u.class_chat,
+        u.slack_handle,
+        u.avatar_url,
+        u.image_url,
+        u.department,
+        u.major,
+        u.degree_program,
+        u.academic_year,
         e.course_role,
-        u.primary_role,
-        u.avatar_url
+        u.primary_role
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
       WHERE e.offering_id = $1::uuid
@@ -130,23 +151,30 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       SELECT DISTINCT
         u.id,
         u.name,
+        u.preferred_name,
         u.email,
         u.phone_number,
         u.github_username,
         u.linkedin_url,
-        u.pronouns,
-        u.availability        AS availability_general,
-        u.social_links,
-        u.last_activity,
+        u.pronunciation,
+        u.availability_general,
+        u.availability_specific,
+        u.class_chat,
+        u.slack_handle,
+        u.avatar_url,
+        u.image_url,
+        u.department,
+        u.major,
+        u.degree_program,
+        u.academic_year,
         e.course_role,
         u.primary_role,
-        u.avatar_url,
         tm.team_id,
         t.name AS team_name,
         tm.role AS team_role
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
-      LEFT JOIN team_members tm ON tm.user_id = u.id
+      LEFT JOIN team_members tm ON tm.user_id = u.id AND tm.left_at IS NULL
       LEFT JOIN team t
         ON t.id = tm.team_id
        AND t.offering_id = $1::uuid
@@ -174,14 +202,15 @@ router.get('/', ensureAuthenticated, async (req, res) => {
             DISTINCT jsonb_build_object(
               'id', u.id,
               'name', u.name,
-              'email', u.email
+              'email', u.email,
+              'role', tm.role
             )
-          ) FILTER (WHERE u.id IS NOT NULL),
+          ) FILTER (WHERE u.id IS NOT NULL AND tm.left_at IS NULL),
           '[]'::jsonb
         ) AS members
       FROM team t
       LEFT JOIN users leader ON leader.id = t.leader_id
-      LEFT JOIN team_members tm ON tm.team_id = t.id
+      LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.left_at IS NULL
       LEFT JOIN users u ON u.id = tm.user_id
       WHERE t.offering_id = $1::uuid
       GROUP BY t.id, leader.id
