@@ -416,7 +416,7 @@
 .office-hour-time {
   color: var(--palette-primary, var(--teal-700, #0f766e));
   font-weight: 500;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', monospace;
 }
 
 /* Contact inlined dots */
@@ -741,6 +741,11 @@
   text-decoration: none;
 }
 
+.team-member-email a {
+  color: var(--palette-primary, var(--teal-700, #0f766e));
+  text-decoration: none;
+}
+
 .team-leader-email a:hover {
   text-decoration: underline;
 }
@@ -771,11 +776,6 @@
   font-size: 0.8rem;
   color: var(--gray-600, #4b5563);
   padding-left: 12px;
-}
-
-.team-member-email a {
-  color: var(--palette-primary, var(--teal-700, #0f766e));
-  text-decoration: none;
 }
 
 .team-member-email a:hover {

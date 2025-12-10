@@ -805,15 +805,6 @@ const renderTeamsGrid = () => {
 
 // ---------- Filtering ----------
 
-const isActiveByFilter = (lastActivity, filterValue) => {
-  if (filterValue === 'all') return true;
-  const status = computeActivityStatus(lastActivity);
-  if (filterValue === 'active') return status.kind === 'active';
-  if (filterValue === 'inactive')
-    return status.kind === 'inactive';
-  return true;
-};
-
 const getFilteredProfessors = () => {
   const { search } = state.filters.professors;
   return state.professors.filter((p) => matchesSearch(p, search));

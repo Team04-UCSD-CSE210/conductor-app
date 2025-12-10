@@ -154,8 +154,7 @@ body.dashboard-page {
 }
 
 body.dashboard-page.class-directory-page {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
 }
 
 /* Sidebar Navigation */
@@ -324,6 +323,7 @@ body.dashboard-page.class-directory-page {
 .sidebar nav a.has-icon::before {
   display: none;
 }
+
 .sidebar nav a[href*="instructor-team-meetings"]::before {
   background-image: url('/assets/talk.png');
 }
