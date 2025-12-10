@@ -7,22 +7,9 @@
   padding: 16px;
 }
 
-/* Dashboard Header */
-.dashboard-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  margin-bottom: 8px;
-  position: relative;
-  z-index: 10;
-}
 
-.user-profile-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
+
+
 
 /* Welcome Section - Uses global compact sticky header styles */
 
