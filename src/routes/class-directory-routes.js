@@ -192,10 +192,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         t.team_number,
         t.status,
         t.leader_id,
-        t.formed_at,
         t.created_at,
-        t.logo_url,
         t.mantra,
+        t.logo_url,
         t.links,
         jsonb_build_object(
           'id', leader.id,
@@ -210,16 +209,15 @@ router.get('/', ensureAuthenticated, async (req, res) => {
               'email', u.email,
               'role', tm.role
             )
-          ) FILTER (WHERE u.id IS NOT NULL AND tm.left_at IS NULL),
-          '[]'::jsonb
-        ) AS members
+          ) FILTER (WHERE u.id IS NOT NULL), '[]'::jsonb
+        ) AS members,
+        COUNT(DISTINCT tm.user_id) FILTER (WHERE tm.left_at IS NULL) AS member_count
       FROM team t
-      LEFT JOIN users leader ON leader.id = t.leader_id
-      LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.left_at IS NULL
-      LEFT JOIN users u ON u.id = tm.user_id
-      WHERE t.offering_id = $1::uuid
-      GROUP BY t.id, leader.id, t.formed_at, t.created_at, t.logo_url, t.mantra, t.links
-      ORDER BY t.team_number NULLS LAST, t.name;
+      LEFT JOIN users leader ON t.leader_id = leader.id
+      LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.left_at IS NULL
+      LEFT JOIN users u ON tm.user_id = u.id
+      GROUP BY t.id, t.name, t.team_number, t.status, t.leader_id, t.created_at, t.mantra, t.logo_url, t.links, leader.id, leader.name, leader.email
+      ORDER BY t.team_number, t.name
     `;
 
     const [
@@ -233,7 +231,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       pool.query(tasQuery, [offeringId]),
       pool.query(tutorsQuery, [offeringId]),
       pool.query(studentsQuery, [offeringId]),
-      pool.query(teamsQuery, [offeringId])
+      pool.query(teamsQuery) // No offering_id parameter for teams
     ]);
 
     res.json({
