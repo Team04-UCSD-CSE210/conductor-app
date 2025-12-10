@@ -1,4 +1,4 @@
-﻿# Quick Start Guide
+# Quick Start Guide
 
 Get Conductor up and running in under 5 minutes!
 
@@ -112,14 +112,14 @@ npx nodemon src/server.js
 
 ```
 src/
-├── server.js           # Entry point
-├── routes/             # API endpoints
-│   ├── user-routes.js
-│   ├── attendance-routes.js
-│   └── ...
-├── views/              # HTML pages
-├── public/             # CSS, JS, images
-└── middleware/         # Express middleware
++-- server.js           # Entry point
++-- routes/             # API endpoints
+�   +-- user-routes.js
+�   +-- attendance-routes.js
+�   +-- ...
++-- views/              # HTML pages
++-- public/             # CSS, JS, images
++-- middleware/         # Express middleware
 ```
 
 ### Learn More
@@ -185,6 +185,6 @@ npm run docs             # Generate JSDoc
 
 ---
 
-**You're all set!** 
+**You're all set!**
 
 Next: [Learn about the architecture](../architecture/overview.md) or [start contributing](../contributing/workflow.md)

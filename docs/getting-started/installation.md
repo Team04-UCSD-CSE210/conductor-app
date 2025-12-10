@@ -1,4 +1,4 @@
-﻿# Installation Guide
+# Installation Guide
 
 Complete installation and setup guide for the Conductor application.
 
@@ -188,7 +188,7 @@ ENVIRONMENT=development
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing
 3. Enable Google+ API
-4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
+4. Go to "Credentials" ? "Create Credentials" ? "OAuth 2.0 Client ID"
 5. Application type: "Web application"
 6. Authorized redirect URIs: `http://localhost:8443/auth/google/callback`
 7. Copy Client ID and Client Secret to `.env`
@@ -536,4 +536,4 @@ npm uninstall -g nodemon
 
 ---
 
-**Congratulations!** Your Conductor development environment is ready. 
+**Congratulations!** Your Conductor development environment is ready.

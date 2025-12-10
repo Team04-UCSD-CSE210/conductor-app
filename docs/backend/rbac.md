@@ -7,7 +7,7 @@ Comprehensive guide to Conductor's permission-based RBAC system.
 Conductor uses a **3-layer permission-based RBAC system** instead of simple role checks:
 
 1. **Global Permissions** - Based on `users.primary_role`
-2. **Course Permissions** - Based on `enrollments.course_role` 
+2. **Course Permissions** - Based on `enrollments.course_role`
 3. **Team Permissions** - Based on `team_members.role`
 
 ```mermaid
@@ -102,8 +102,8 @@ Stored in `users.primary_role`:
 **Database Mapping** (`user_role_permissions`):
 ```sql
 INSERT INTO user_role_permissions (user_role, permission_id)
-SELECT 'instructor', p.id 
-FROM permissions p 
+SELECT 'instructor', p.id
+FROM permissions p
 WHERE p.code IN ('user.view', 'user.manage', 'roster.export');
 ```
 
@@ -123,9 +123,9 @@ Stored in `enrollments.course_role`:
 **Database Mapping** (`enrollment_role_permissions`):
 ```sql
 INSERT INTO enrollment_role_permissions (enrollment_role, permission_id)
-SELECT 'ta', p.id 
-FROM permissions p 
-WHERE p.code LIKE 'roster.%' 
+SELECT 'ta', p.id
+FROM permissions p
+WHERE p.code LIKE 'roster.%'
    OR p.code LIKE 'enrollment.%'
    OR p.code LIKE 'course.%';
 ```
@@ -210,19 +210,19 @@ class PermissionService {
     // 1. Check global role permissions
     const globalPerms = await this.getGlobalPermissions(userId);
     if (globalPerms.includes(permissionCode)) return true;
-    
+
     // 2. If course scope, check course role permissions
     if (scope === 'course' && resourceId) {
       const coursePerms = await this.getCoursePermissions(userId, resourceId);
       if (coursePerms.includes(permissionCode)) return true;
     }
-    
+
     // 3. If team scope, check team role permissions
     if (scope === 'team' && resourceId) {
       const teamPerms = await this.getTeamPermissions(userId, resourceId);
       if (teamPerms.includes(permissionCode)) return true;
     }
-    
+
     return false;
   }
 }
@@ -236,7 +236,7 @@ sequenceDiagram
     participant M as protect() Middleware
     participant PS as PermissionService
     participant DB as Database
-    
+
     R->>M: Request with userId
     M->>PS: hasPermission(userId, 'roster.import', 'course', offeringId)
     PS->>DB: SELECT global role permissions
@@ -338,9 +338,9 @@ VALUES ('course', 'roster', 'view', 'roster.view');
 
 -- Map to ALL course roles
 INSERT INTO enrollment_role_permissions (enrollment_role, permission_id)
-SELECT role, p.id 
+SELECT role, p.id
 FROM unnest(ARRAY['student', 'ta', 'tutor', 'instructor', 'professor']) AS role
-CROSS JOIN permissions p 
+CROSS JOIN permissions p
 WHERE p.code = 'roster.view';
 ```
 
@@ -461,7 +461,7 @@ describe('Assignment Management', () => {
       .send({ title: 'Homework 1' });
     expect(response.status).toBe(201);
   });
-  
+
   it('should deny student from creating assignment', async () => {
     const response = await request(app)
       .post('/api/offerings/xxx/assignments')
@@ -494,8 +494,8 @@ describe('Assignment Management', () => {
 4. Permission exists: `SELECT * FROM permissions WHERE code = 'roster.import'`
 5. Role has permission mapping:
    ```sql
-   SELECT * FROM user_role_permissions 
-   WHERE user_role = 'ta' 
+   SELECT * FROM user_role_permissions
+   WHERE user_role = 'ta'
      AND permission_id = (SELECT id FROM permissions WHERE code = 'roster.import');
    ```
 

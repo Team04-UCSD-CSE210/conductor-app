@@ -1,4 +1,4 @@
-﻿# Local Development Guide
+# Local Development Guide
 
 Best practices and workflows for developing Conductor locally.
 
@@ -84,51 +84,51 @@ npx nodemon --watch src --watch migrations src/server.js
 
 ```
 conductor-app/
-├── src/
-│   ├── server.js              # Application entry point
-│   ├── db.js                  # Database connection pool
-│   ├── instrumentation.js     # OpenTelemetry setup
-│   │
-│   ├── routes/                # API route handlers
-│   │   ├── user-routes.js
-│   │   ├── attendance-routes.js
-│   │   ├── team-routes.js
-│   │   └── ... (18 route files)
-│   │
-│   ├── middleware/            # Express middleware
-│   │   ├── auth-middleware.js
-│   │   ├── rbac-middleware.js
-│   │   ├── error-handler.js
-│   │   └── metrics-middleware.js
-│   │
-│   ├── models/                # Data models
-│   │   ├── user-model.js
-│   │   ├── attendance-model.js
-│   │   └── ...
-│   │
-│   ├── services/              # Business logic
-│   │   ├── permission-service.js
-│   │   ├── enrollment-service.js
-│   │   └── ...
-│   │
-│   ├── database/              # Database utilities
-│   │   └── init.js
-│   │
-│   ├── views/                 # HTML templates
-│   │   ├── index.html
-│   │   ├── student-dashboard.html
-│   │   └── ...
-│   │
-│   └── public/                # Static assets
-│       ├── css/               # Stylesheets
-│       ├── js/                # Client-side JavaScript
-│       └── assets/            # Images, fonts
-│
-├── migrations/                # Database migrations (33 files)
-├── scripts/                   # Utility scripts
-├── e2e/                       # End-to-end tests
-├── config/                    # Configuration files
-└── docs/                      # Documentation
++-- src/
+�   +-- server.js              # Application entry point
+�   +-- db.js                  # Database connection pool
+�   +-- instrumentation.js     # OpenTelemetry setup
+�   �
+�   +-- routes/                # API route handlers
+�   �   +-- user-routes.js
+�   �   +-- attendance-routes.js
+�   �   +-- team-routes.js
+�   �   +-- ... (18 route files)
+�   �
+�   +-- middleware/            # Express middleware
+�   �   +-- auth-middleware.js
+�   �   +-- rbac-middleware.js
+�   �   +-- error-handler.js
+�   �   +-- metrics-middleware.js
+�   �
+�   +-- models/                # Data models
+�   �   +-- user-model.js
+�   �   +-- attendance-model.js
+�   �   +-- ...
+�   �
+�   +-- services/              # Business logic
+�   �   +-- permission-service.js
+�   �   +-- enrollment-service.js
+�   �   +-- ...
+�   �
+�   +-- database/              # Database utilities
+�   �   +-- init.js
+�   �
+�   +-- views/                 # HTML templates
+�   �   +-- index.html
+�   �   +-- student-dashboard.html
+�   �   +-- ...
+�   �
+�   +-- public/                # Static assets
+�       +-- css/               # Stylesheets
+�       +-- js/                # Client-side JavaScript
+�       +-- assets/            # Images, fonts
+�
++-- migrations/                # Database migrations (33 files)
++-- scripts/                   # Utility scripts
++-- e2e/                       # End-to-end tests
++-- config/                    # Configuration files
++-- docs/                      # Documentation
 ```
 
 ## Common Development Tasks
@@ -487,4 +487,4 @@ npm run docs
 
 ---
 
-**Happy Coding!** 
+**Happy Coding!**
