@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { ClassService } from '../services/class-service.js';
+import { ensureAuthenticated } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -25,6 +26,43 @@ router.get('/', async (req, res) => {
   } catch (err) {
     console.error('Error fetching courses:', err);
     res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * Update current user's card details
+ * PUT /api/class/user/:userId
+ * Authenticated users only; must match the userId in params
+ */
+router.put('/user/:userId', ensureAuthenticated, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.currentUser?.id;
+
+    if (!currentUserId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (currentUserId !== userId) {
+      return res.status(403).json({ error: 'Forbidden: can only edit your own card' });
+    }
+
+    const updated = await ClassService.updateUserCard(userId, req.body, currentUserId);
+    res.json(updated);
+  } catch (err) {
+    if (err.message === 'INVALID_UUID') {
+      return res.status(400).json({ error: 'Invalid user ID format' });
+    }
+    if (err.message === 'NO_FIELDS_PROVIDED' || err.name === 'VALIDATION_ERROR') {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err.message === 'FORBIDDEN') {
+      return res.status(403).json({ error: 'Forbidden: can only edit your own card' });
+    }
+    if (err.name === 'NOT_FOUND') {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    console.error('Error updating user card:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

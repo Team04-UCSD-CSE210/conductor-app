@@ -268,4 +268,59 @@ export class ClassService {
       availability: extra.availability ?? [],
     };
   }
+
+  /**
+   * Allow a user to update their own user card fields
+   * @param {string} userId - User UUID
+   * @param {Object} payload - Fields to update
+   * @param {string} actingUserId - ID of the user performing the update
+   * @returns {Promise<Object>} Updated user record subset
+   */
+  static async updateUserCard(userId, payload = {}, actingUserId) {
+    if (!isUuid(userId)) {
+      throw new Error("INVALID_UUID");
+    }
+    if (actingUserId && userId !== actingUserId) {
+      const err = new Error("FORBIDDEN");
+      err.statusCode = 403;
+      throw err;
+    }
+
+    // Whitelist fields users are allowed to edit on their own card
+    const allowedFields = [
+      'preferred_name',
+      'phone_number',
+      'github_username',
+      'linkedin_url',
+      'class_chat',
+      'slack_handle',
+      'availability_general',
+      'availability_specific',
+      'pronunciation',
+      'department',
+      'major',
+      'degree_program',
+      'academic_year',
+      'profile_url',
+      'image_url'
+    ];
+
+    const sanitized = {};
+    allowedFields.forEach((field) => {
+      if (payload[field] !== undefined) {
+        const value = payload[field];
+        sanitized[field] =
+          typeof value === 'string' ? value.trim() : value;
+      }
+    });
+
+    // If nothing to update, short-circuit
+    if (Object.keys(sanitized).length === 0) {
+      const err = new Error("NO_FIELDS_PROVIDED");
+      err.statusCode = 400;
+      throw err;
+    }
+
+    return UserModel.updateCardFields(userId, sanitized);
+  }
 }
