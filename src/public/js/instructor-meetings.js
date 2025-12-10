@@ -26,7 +26,6 @@ async function fetchTeams() {
         if (offeringRes.ok) {
           const data = await offeringRes.json();
           offeringId = data?.id || null;
-        } else {
         }
       } catch (err) {
         console.warn('Error fetching /api/offerings/active', err);
