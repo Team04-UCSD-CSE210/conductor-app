@@ -456,6 +456,7 @@ See detailed ADRs in `docs/adrs/`:
 - [ADR-0004: Server Framework](../adrs/adr-0004-server-selection.md)
 - [ADR-0005: Frontend Technology Selection](../adrs/adr-0005-frontend-technology-selection.md)
 - [ADR-0006: Testing Strategy](../adrs/adr-0006-testing-strategy.md)
+- [ADR-0007: Observability Stack](../adrs/adr-0007-observability-stack.md)
 
 ## Next Steps
 

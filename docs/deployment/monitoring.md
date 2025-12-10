@@ -20,6 +20,8 @@ Comprehensive guide to monitoring the Conductor application using OpenTelemetry 
 
 The Conductor application uses **OpenTelemetry SDK** to collect metrics and traces, which are exported to **SigNoz** for visualization and analysis. This integration is embedded into the application code to provide comprehensive observability.
 
+> **Technology Selection**: See [ADR-0007: Observability Stack](../adrs/adr-0007-observability-stack.md) for the decision rationale and alternatives considered.
+
 ### Key Benefits
 
 -  **Real-time Metrics** - Track application performance and business KPIs

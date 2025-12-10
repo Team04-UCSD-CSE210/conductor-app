@@ -63,17 +63,17 @@ The "Create Attendance" button exists but has no JavaScript event handler:
 **Priority**: Medium
 
 #### Student Dashboard (`student-dashboard.js` lines 55-68)
-- [X] **Group Members**: Hardcoded to `0` (needs team members endpoint)
-- [X] **Assignments Due**: Hardcoded to `0` (needs assignments endpoint)
-- [X] **Weeks Left**: Hardcoded to `4` (placeholder value)
+- **Group Members**: Hardcoded to `0` (needs team members endpoint)
+- **Assignments Due**: Hardcoded to `0` (needs assignments endpoint)
+- **Weeks Left**: Hardcoded to `4` (placeholder value)
 
 #### TA Dashboard (`ta-dashboard.js` lines 58-69)
-- [X] **To Grade**: Hardcoded to `0` (needs assignments/grading endpoint)
-- [!] **Teams Assigned**: Shows all teams, should be filtered by TA assignment
+- **To Grade**: Hardcoded to `0` (needs assignments/grading endpoint)
+- **Teams Assigned**: Shows all teams, should be filtered by TA assignment
 
 #### Tutor Dashboard (`tutor-dashboard.js` lines 65-74)
-- [X] **To Grade**: Hardcoded to `0` (needs assignments/grading endpoint)
-- [!] **Teams Assigned**: Shows all teams, should be filtered by tutor assignment
+- **To Grade**: Hardcoded to `0` (needs assignments/grading endpoint)
+- **Teams Assigned**: Shows all teams, should be filtered by tutor assignment
 
 **Backend APIs Needed**:
 1. `GET /api/teams/:teamId/members/count` - Team member count
@@ -85,7 +85,7 @@ The "Create Attendance" button exists but has no JavaScript event handler:
 
 ### 4. Course Title Flash of Incorrect Content
 
-**Status**: [!] Minor Issue  
+**Status**: Minor Issue  
 **Priority**: Low  
 **Affected Files**: All dashboard HTML files
 
@@ -107,7 +107,7 @@ Use a placeholder or loading state in HTML:
 
 ### 5. Course Description Placeholder
 
-**Status**: [!] Minor Issue  
+**Status**: Minor Issue  
 **Priority**: Low  
 **Affected Files**: All dashboard HTML files
 
@@ -219,15 +219,15 @@ Add real-time notifications for:
 
 These issues can be resolved quickly with minimal effort:
 
-1. [OK] **Copy loadRecentProgress() function** (1 hour)
+1. **Copy loadRecentProgress() function** (1 hour)
    - Copy from student-leader-dashboard.js to 4 other dashboard files
    - Test on each dashboard
 
-2. [OK] **Fix course title flash** (30 minutes)
+2. **Fix course title flash** (30 minutes)
    - Add loading state to HTML
    - Update CSS for loading animation
 
-3. [OK] **Remove/implement Create Attendance button** (15 minutes)
+3. **Remove/implement Create Attendance button** (15 minutes)
    - Either add event handler or remove button
 
 ---
@@ -264,7 +264,7 @@ Found a bug or want to fix technical debt?
 1. Check this document for known issues
 2. Create a new branch: `fix/issue-name`
 3. Implement the fix
-4. Update this document to mark as [OK] Fixed
+4. Update this document to mark as Fixed
 5. Submit a PR
 
 See [Contributing Workflow](contributing/workflow.md) for detailed steps.

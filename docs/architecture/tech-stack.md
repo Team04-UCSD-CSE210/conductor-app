@@ -27,7 +27,7 @@ Conductor is built with a modern, production-ready technology stack prioritizing
 | **Testing (Unit)** | Vitest | 4.0.7 | [ADR-0006](../adrs/adr-0006-testing-strategy.md) |
 | **Testing (E2E)** | Playwright | 1.40.0 | [ADR-0006](../adrs/adr-0006-testing-strategy.md) |
 | **Testing (Load)** | Autocannon | 8.0.0 | [ADR-0006](../adrs/adr-0006-testing-strategy.md) |
-| **Observability** | OpenTelemetry + SigNoz | 0.208.0 | - |
+| **Observability** | OpenTelemetry + SigNoz | 0.208.0 | [ADR-0007](../adrs/adr-0007-observability-stack.md) |
 | **CI/CD** | GitHub Actions | - | [ADR-0001](../adrs/adr-0001-cicd-pipeline-architecture.md) |
 | **Hosting** | Render | - | - |
 | **Containers** | Docker | - | - |

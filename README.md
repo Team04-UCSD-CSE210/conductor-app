@@ -40,11 +40,11 @@ npm start
 
 Visit `http://localhost:8443` to access the application.
 
-📖 **For detailed setup**, see [Installation Guide](docs/getting-started/installation.md)
+**For detailed setup**, see [Installation Guide](docs/getting-started/installation.md)
 
 ## Documentation
 
-### 📚 Core Documentation
+### Core Documentation
 
 | Document | Description |
 |----------|-------------|
@@ -57,7 +57,7 @@ Visit `http://localhost:8443` to access the application.
 | [Testing Guide](docs/testing/overview.md) | Unit, E2E, and load testing |
 | [Deployment](docs/deployment/ci-cd.md) | CI/CD pipeline and Docker |
 
-### 🎯 Additional Resources
+### Additional Resources
 
 - [Database Migrations](docs/database/migrations.md) - Schema change management
 - [Contributing Guide](docs/contributing/workflow.md) - Development workflow
@@ -72,7 +72,7 @@ Visit `http://localhost:8443` to access the application.
 **DevOps**: GitHub Actions, Docker, Render, AWS ECS  
 **Observability**: SigNoz, OpenTelemetry
 
-📖 **Details**: [Architecture Overview](docs/architecture/overview.md)
+**Details**: [Architecture Overview](docs/architecture/overview.md)
 
 
 ## Development
@@ -135,17 +135,17 @@ Comprehensive test coverage across multiple levels:
 
 | Test Type | Tool | Coverage | Results |
 |-----------|------|----------|---------|
-| **Unit Tests** | Vitest | 80%+ | All passing ✅ |
-| **E2E Tests** | Playwright | 46 tests | All passing ✅ |
-| **Load Tests** | Autocannon | 274K requests | 100% success ✅ |
+| **Unit Tests** | Vitest | 80%+ | All passing |
+| **E2E Tests** | Playwright | 46 tests | All passing |
+| **Load Tests** | Autocannon | 274K requests | 100% success |
 
 **Key Achievements:**
-- ✅ Handles 150+ concurrent students with 100% success rate
-- ✅ Dashboard supports 90 concurrent users flawlessly
-- ✅ Zero errors across 274,691 load test requests
-- ✅ Average latency under 220ms for all scenarios
+- Handles 150+ concurrent students with 100% success rate
+- Dashboard supports 90 concurrent users flawlessly
+- Zero errors across 274,691 load test requests
+- Average latency under 220ms for all scenarios
 
-📊 **Full Results**: [Testing Documentation](docs/testing/overview.md)
+**Full Results**: [Testing Documentation](docs/testing/overview.md)
 
 
 ## CI/CD Pipeline
@@ -154,11 +154,11 @@ Comprehensive test coverage across multiple levels:
 
 Automated validation on every pull request and push:
 
-- ✅ **Linting**: JavaScript (ESLint), CSS (Stylelint), HTML (HTMLHint), Markdown
-- ✅ **Testing**: Unit tests, E2E tests, load tests
-- ✅ **Documentation**: JSDoc generation
-- ✅ **Commit Validation**: Conventional commit format enforcement
-- ✅ **Slack Notifications**: Automated status updates
+- **Linting**: JavaScript (ESLint), CSS (Stylelint), HTML (HTMLHint), Markdown
+- **Testing**: Unit tests, E2E tests, load tests
+- **Documentation**: JSDoc generation
+- **Commit Validation**: Conventional commit format enforcement
+- **Slack Notifications**: Automated status updates
 
 ### Continuous Deployment
 
@@ -167,7 +167,7 @@ Automated validation on every pull request and push:
 - **Infrastructure**: AWS CloudFormation (ECS cluster, ECR, networking)
 - **Monitoring**: Automated health checks and rollback capability
 
-📦 **Details**: [CI/CD Documentation](docs/deployment/ci-cd.md)
+**Details**: [CI/CD Documentation](docs/deployment/ci-cd.md)
 
 
 ## Contributing
@@ -215,7 +215,7 @@ docs(api): update API documentation
 | **Classes** | PascalCase | `UserManager` |
 | **Functions** | camelCase | `getUserData()` |
 
-📖 **Full Guidelines**: [Contributing Guide](docs/contributing/workflow.md)
+**Full Guidelines**: [Contributing Guide](docs/contributing/workflow.md)
 
 ## Team
 
@@ -261,7 +261,7 @@ SERVICE_NAME=conductor-app
 ENVIRONMENT=development
 ```
 
-📖 **Setup Guide**: [Installation Documentation](docs/getting-started/installation.md)
+**Setup Guide**: [Installation Documentation](docs/getting-started/installation.md)
 
 ## License
 
@@ -270,10 +270,10 @@ This project is part of UCSD CSE 210 coursework.
 
 ## Support & Resources
 
-- 📖 [Documentation](docs/) - Comprehensive guides and references
-- 🐛 [Issue Tracker](https://github.com/Team04-UCSD-CSE210/conductor-app/issues) - Report bugs
-- 💬 [Project Wiki](https://github.com/Team04-UCSD-CSE210/conductor-app/wiki) - Team resources
-- 🎓 [Course Page](https://ucsd.edu) - UC San Diego CSE 210
+- [Documentation](docs/) - Comprehensive guides and references
+- [Issue Tracker](https://github.com/Team04-UCSD-CSE210/conductor-app/issues) - Report bugs
+- [Project Wiki](https://github.com/Team04-UCSD-CSE210/conductor-app/wiki) - Team resources
+- [Course Page](https://ucsd.edu) - UC San Diego CSE 210
 
 ---
 
