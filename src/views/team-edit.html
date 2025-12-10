@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Team - Conductor</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/course-settings.css">
+</head>
+
+<body class="dashboard-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    
+    <div class="colorblind-toggle-container">
+      <label class="colorblind-toggle-label">
+        <input type="checkbox" id="colorblindToggle" class="colorblind-toggle-input">
+        <span class="colorblind-toggle-slider"></span>
+        <span class="colorblind-toggle-text">Colorblind Mode</span>
+      </label>
+    </div>
+    
+    <div class="main-menu-header">Main Menu</div>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    
+    <footer>
+      <a href="/" class="btn btn-ghost">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <div class="settings-page">
+      <h1 class="page-title">Edit Team</h1>
+
+      <!-- Team Information -->
+      <section class="settings-section">
+        <h2>Team Information</h2>
+        <p class="settings-description">Update your team's basic information and identity.</p>
+        
+        <form id="teamEditForm" class="course-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="teamName">Team Name</label>
+              <input type="text" id="teamName" name="name" placeholder="Enter team name" required>
+            </div>
+            <div class="form-group">
+              <label for="teamMantra">Team Mantra</label>
+              <input type="text" id="teamMantra" name="mantra" placeholder="Enter your team's motto or slogan">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Team Info</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Team Logo -->
+      <section class="settings-section">
+        <h2>Team Logo</h2>
+        <p class="settings-description">Upload a custom logo for your team.</p>
+        
+        <div class="logo-upload-section">
+          <div class="current-logo-display">
+            <img id="currentLogo" src="/assets/leadership.png" alt="Current team logo" class="logo-preview">
+            <p class="logo-label">Current Logo</p>
+          </div>
+          
+          <div class="upload-controls">
+            <input type="file" id="logoUpload" name="logo" accept="image/*" style="display: none;">
+            <button type="button" onclick="document.getElementById('logoUpload').click()" class="btn btn-secondary">
+              Choose New Logo
+            </button>
+            <button type="button" id="saveImageBtn" class="btn btn-primary" style="display: none;">
+              Save Image
+            </button>
+            <p class="upload-hint">Recommended: 200x200px, PNG or JPG, max 5MB</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Team Links -->
+      <section class="settings-section">
+        <h2>Team Links</h2>
+        <p class="settings-description">Add links to your team's communication channels and resources.</p>
+        
+        <form class="course-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="slackLink">Slack Channel</label>
+              <input type="url" id="slackLink" name="slack" placeholder="https://your-workspace.slack.com/channels/...">
+            </div>
+            <div class="form-group">
+              <label for="repoLink">Repository</label>
+              <input type="url" id="repoLink" name="repo" placeholder="https://github.com/...">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="mmLink">Mattermost</label>
+              <input type="url" id="mmLink" name="mattermost" placeholder="https://your-mattermost.com/...">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Links</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p>Saving changes...</p>
+    </div>
+  </main>
+
+  <script src="/js/palette-loader.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
+  <script src="/js/team-edit.js"></script>
+</body>
+</html>

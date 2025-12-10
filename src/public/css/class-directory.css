@@ -887,3 +887,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Team mantra section */
+.team-mantra-section {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--palette-accent, var(--emerald-200, #99F6E4));
+  margin-bottom: 1rem;
+}
+
+.team-mantra-text {
+  font-style: italic;
+  color: var(--palette-secondary, var(--teal-600, #0D9488));
+  text-align: center;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}

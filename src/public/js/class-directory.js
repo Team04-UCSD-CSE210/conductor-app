@@ -585,11 +585,6 @@ const renderTeamCard = (team) => {
           <div class="team-member-item">
             <div class="team-member-header">
               <span class="member-name">${m.name}</span>
-              ${
-                m.role && m.role !== 'leader'
-                  ? `<span class="member-role"> – ${m.role}</span>`
-                  : ''
-              }
             </div>
             ${m.email ? `<div class="team-member-email"><a href="mailto:${m.email}">${m.email}</a></div>` : ''}
           </div>`;
@@ -640,22 +635,11 @@ const renderTeamCard = (team) => {
         </div>
       </header>
 
-      <section class="group-stats">
-        <div class="stat-item">
-          <div class="stat-value">${memberCount}</div>
-          <div class="stat-label">Members</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${team.status || 'Active'}</div>
-          <div class="stat-label">Status</div>
-        </div>
-        ${team.team_number ? `
-        <div class="stat-item">
-          <div class="stat-value">#${team.team_number}</div>
-          <div class="stat-label">Team Number</div>
-        </div>
-        ` : ''}
+      ${team.mantra ? `
+      <section class="team-mantra-section">
+        <p class="team-mantra-text">"${team.mantra}"</p>
       </section>
+      ` : ''}
 
       ${leader && leader.name ? `
       <section class="team-info-section">

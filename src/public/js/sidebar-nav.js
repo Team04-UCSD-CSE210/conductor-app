@@ -51,6 +51,7 @@
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
       { href: "/meetings", text: "Meetings", icon: "/assets/conversation.png" },
+      { href: "/team-edit", text: "Edit Team", icon: "/assets/settings.png" },
       {
         href: "/work-journal",
         text: "Work Journal",
