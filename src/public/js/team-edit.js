@@ -169,6 +169,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       selectedFile = null;
       document.getElementById('saveImageBtn').style.display = 'none';
       
+      // Refresh class directory if on that page
+      if (window.location.pathname.includes('class-directory') && typeof refreshTeamsData === 'function') {
+        refreshTeamsData();
+      }
+      
     } catch (error) {
       console.error('Error updating team logo:', error);
       alert('Failed to update team logo: ' + error.message);
@@ -224,6 +229,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       currentTeam = updatedTeam;
       populateForm(currentTeam);
       selectedFile = null; // Clear selected file after successful upload
+      
+      // Refresh class directory if on that page
+      if (window.location.pathname.includes('class-directory') && typeof refreshTeamsData === 'function') {
+        refreshTeamsData();
+      }
       
     } catch (error) {
       console.error('Error updating team:', error);

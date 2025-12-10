@@ -223,7 +223,8 @@ const initializeElements = () => {
     profSearch: document.getElementById('prof-search'),
     tutorSearch: document.getElementById('tutor-search'),
     taSearch: document.getElementById('ta-search'),
-    studentSearch: document.getElementById('student-search')
+    studentSearch: document.getElementById('student-search'),
+    teamSearch: document.getElementById('team-search')
   };
 };
 
@@ -1226,6 +1227,13 @@ const setupEventListeners = () => {
     });
   }
 
+  if (elements.teamSearch) {
+    elements.teamSearch.addEventListener('input', (e) => {
+      state.filters.teams.search = e.target.value || '';
+      renderTeamsGrid();
+    });
+  }
+
 
 };
 
@@ -1274,6 +1282,16 @@ const loadData = async () => {
 };
 
 // ---------- Init ----------
+
+// Public refresh function for external use
+window.refreshTeamsData = async () => {
+  try {
+    await loadTeams();
+    renderTeamsGrid();
+  } catch (error) {
+    console.error('Error refreshing teams data:', error);
+  }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeElements();
