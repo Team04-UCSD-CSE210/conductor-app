@@ -172,6 +172,7 @@ jobs:
       
       - name: Run load tests
         env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conductor_test
           BASE_URL: http://localhost:3000
           DURATION: 20
           STUDENT_COUNT: 100
