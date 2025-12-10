@@ -1286,8 +1286,7 @@ const loadData = async () => {
 // Public refresh function for external use
 window.refreshTeamsData = async () => {
   try {
-    await loadTeams();
-    renderTeamsGrid();
+    await loadData();
   } catch (error) {
     console.error('Error refreshing teams data:', error);
   }
