@@ -160,7 +160,7 @@ role_instructor, status_active, inst_ucsd,
 
  ('jic201@ucsd.edu', 'A00001013', 'Jialang Cheng', 'Jialang',
     'Computer Science', 'BS', 2026, 'Computer Science & Engineering', 'Undergraduate',
-    role_admin, status_active, inst_ucsd,
+    role_student, status_active, inst_ucsd,
     NULL, NULL, '+1-858-555-0310', 'jialangcheng', 'https://linkedin.com/in/jialang-cheng'
  ),
 

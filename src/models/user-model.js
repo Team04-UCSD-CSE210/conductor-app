@@ -494,6 +494,112 @@ export class UserModel {
   }
 
   /**
+   * Update a subset of user card fields (self-edit)
+   * Only allows profile/contact/availability fields, not roles or email.
+   * @param {string} id - User ID
+   * @param {Object} data - Partial user card fields
+   */
+  static async updateCardFields(id, data = {}) {
+    // Validate inputs
+    const errors = [];
+    if (data.linkedin_url && !validator.isURL(String(data.linkedin_url))) {
+      errors.push('Invalid linkedin_url');
+    }
+    if (data.image_url && !validator.isURL(String(data.image_url))) {
+      errors.push('Invalid image_url');
+    }
+    if (data.profile_url && !validator.isURL(String(data.profile_url))) {
+      errors.push('Invalid profile_url');
+    }
+    if (data.academic_year !== undefined && data.academic_year !== null) {
+      const year = Number(data.academic_year);
+      if (!Number.isInteger(year)) {
+        errors.push('Invalid academic_year');
+      }
+    }
+    if (errors.length) {
+      const error = new Error(errors.join(', '));
+      error.name = 'VALIDATION_ERROR';
+      throw error;
+    }
+
+    // Build dynamic SET clause only with provided fields
+    const allowedFields = [
+      'preferred_name',
+      'phone_number',
+      'github_username',
+      'linkedin_url',
+      'class_chat',
+      'slack_handle',
+      'availability_general',
+      'availability_specific',
+      'pronunciation',
+      'department',
+      'major',
+      'degree_program',
+      'academic_year',
+      'profile_url',
+      'image_url'
+    ];
+
+    const setClauses = [];
+    const params = [];
+    let idx = 1;
+
+    allowedFields.forEach((field) => {
+      if (data[field] !== undefined) {
+        setClauses.push(`${field} = $${idx++}`);
+        params.push(data[field]);
+      }
+    });
+
+    if (!setClauses.length) {
+      const error = new Error('No updatable fields provided');
+      error.name = 'VALIDATION_ERROR';
+      throw error;
+    }
+
+    setClauses.push(`updated_at = NOW()`);
+    params.push(id);
+
+    const query = `
+      UPDATE users
+      SET ${setClauses.join(', ')}
+      WHERE id = $${idx}::uuid AND deleted_at IS NULL
+      RETURNING
+        id,
+        email,
+        name,
+        preferred_name,
+        phone_number,
+        github_username,
+        linkedin_url,
+        class_chat,
+        slack_handle,
+        availability_general,
+        availability_specific,
+        pronunciation,
+        department,
+        major,
+        degree_program,
+        academic_year,
+        profile_url,
+        image_url,
+        primary_role,
+        status,
+        updated_at
+    `;
+
+    const { rows, rowCount } = await pool.query(query, params);
+    if (rowCount === 0) {
+      const error = new Error('User not found');
+      error.name = 'NOT_FOUND';
+      throw error;
+    }
+    return rows[0];
+  }
+
+  /**
    * Find users by primary_role
    */
   static async findByRole(role, limit = 50, offset = 0) {
