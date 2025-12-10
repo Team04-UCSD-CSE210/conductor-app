@@ -149,14 +149,12 @@
   }
 
   function createPulseBarGraph(responses, question) {
-    console.log('createPulseBarGraph called with:', { responses, question });
     
     const container = document.createElement('div');
     container.className = 'pulse-results-container';
 
     // Get question options (the pulse labels) - Use only 3 options
     const options = question.options || ['Confident', 'Neutral', 'Not Confident'];
-    console.log('Pulse options:', options);
     
     // Only use 1st, 3rd, and 5th emoji (very_happy, neutral, angry)
     const emojis = ['very_happy.svg', 'neutral.svg', 'angry.svg'];
@@ -168,13 +166,10 @@
     
     responses.forEach(response => {
       const answer = response.response || response.response_text || response.response_option;
-      console.log('Response answer:', answer);
       if (answer && counts[answer] !== undefined) {
         counts[answer]++;
       }
     });
-
-    console.log('Counts:', counts);
     
     const totalResponses = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -254,14 +249,12 @@
   }
 
   function createMultipleChoiceBarGraph(responses, question) {
-    console.log('createMultipleChoiceBarGraph called with:', { responses, question });
     
     const container = document.createElement('div');
     container.className = 'multiple-choice-results-container';
 
     // Get question options
     const options = question.options || [];
-    console.log('Multiple choice options:', options);
     
     const colors = ['#60a5fa', '#a78bfa', '#f472b6', '#fb923c', '#34d399', '#fbbf24'];
     
@@ -271,13 +264,10 @@
     
     responses.forEach(response => {
       const answer = response.response || response.response_text || response.response_option;
-      console.log('Response answer:', answer);
       if (answer && counts[answer] !== undefined) {
         counts[answer]++;
       }
     });
-
-    console.log('Counts:', counts);
     
     const totalResponses = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -403,24 +393,17 @@
 
       // Find the current question to check its type
       const currentQuestion = lecture.questions.find(q => q.id == questionId);
-      console.log('Current question:', currentQuestion);
-      console.log('Question ID:', questionId);
-      console.log('All questions:', lecture.questions);
       
       const questionType = currentQuestion?.type || currentQuestion?.question_type;
-      console.log('Question type:', questionType);
 
       // If it's a pulse question, show bar graph (check for both 'pulse' and 'pulse_check')
       if (questionType === 'pulse' || questionType === 'pulse_check') {
-        console.log("Creating pulse graph!", responses);
         const pulseGraph = createPulseBarGraph(responses, currentQuestion);
         selectors.responseList.appendChild(pulseGraph);
       } else if (questionType === 'multiple_choice') {
-        console.log("Creating multiple choice graph!", responses);
         const mcqGraph = createMultipleChoiceBarGraph(responses, currentQuestion);
         selectors.responseList.appendChild(mcqGraph);
       } else {
-        console.log('Text question, showing response cards');
         // For text questions, show response cards
     responses.forEach((response) => {
       selectors.responseList.appendChild(createResponseCard(response));
@@ -445,7 +428,6 @@
       
       // If we had no responses before and now we do, do a full re-render
       if (currentResponses.length === 0 && responses.length > 0) {
-        console.log(`First response${responses.length !== 1 ? 's' : ''} received, re-rendering`);
         await renderResponses(currentQuestionId, true);
         return;
       }
@@ -478,12 +460,6 @@
       const hasChanges = newResponses.length > 0 || editedResponses.length > 0;
       
       if (hasChanges) {
-        if (newResponses.length > 0) {
-          console.log(`${newResponses.length} new response${newResponses.length !== 1 ? 's' : ''} received`);
-        }
-        if (editedResponses.length > 0) {
-          console.log(`${editedResponses.length} response${editedResponses.length !== 1 ? 's' : ''} edited`);
-        }
         
         // Get current question to check type
         const currentQuestion = lecture.questions.find(q => q.id == currentQuestionId);
@@ -525,7 +501,6 @@
   function startLiveUpdates() {
     stopLiveUpdates();
     checkInterval = setInterval(checkAndAddNewResponses, CHECK_INTERVAL_MS);
-    console.log('Live updates started (checking every 3 seconds)');
   }
 
   function stopLiveUpdates() {
@@ -540,7 +515,6 @@
     
     selectors.questionSelect.addEventListener('change', (event) => {
       const questionId = event.target.value;
-      console.log('Question dropdown changed to:', questionId);
       currentQuestionId = questionId;
       renderResponses(questionId);
       startLiveUpdates();

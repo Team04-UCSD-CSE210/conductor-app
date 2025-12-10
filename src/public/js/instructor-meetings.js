@@ -27,21 +27,20 @@ async function fetchTeams() {
           const data = await offeringRes.json();
           offeringId = data?.id || null;
         } else {
-          console.log('/api/offerings/active request failed:', offeringRes.status, offeringRes.statusText);
         }
       } catch (err) {
         console.warn('Error fetching /api/offerings/active', err);
       }
     }
   } catch (e) {
-    console.log('Error determining active offering:', e);
+    console.err('Error determining active offering:', e);
   }
 
   if (!offeringId) return { teams: [], offeringId: null };
 
   const res = await fetch(`/api/teams?offering_id=${offeringId}&includeStats=true`, { credentials: 'include' });
   if (!res.ok) {
-    console.log('Teams API request failed:', res.status, res.statusText);
+    console.error('Teams API request failed:', res.status, res.statusText);
     return { teams: [], offeringId };
   }
   const result = await res.json();
@@ -100,7 +99,6 @@ async function renderTeams() {
     // Batch fetch all statistics in ONE request
     let statsMap = {};
     if (closedSessionIds.length > 0) {
-      console.log('Fetching batch statistics for sessions:', closedSessionIds);
       const statsRes = await fetch(
         `/api/attendance/sessions/batch/statistics?session_ids=${closedSessionIds.join(',')}`,
         { credentials: 'include' }
@@ -108,7 +106,6 @@ async function renderTeams() {
       
       if (statsRes.ok) {
         statsMap = await statsRes.json();
-        console.log('Batch statistics received:', statsMap);
       } else {
         const errorText = await statsRes.text();
         console.warn('Failed to fetch batch statistics:', statsRes.status, errorText);

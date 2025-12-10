@@ -345,11 +345,9 @@
     // Function to check code and check in
     const checkCodeAndCheckIn = async () => {
       const code = inputs.map(input => input.value.trim().toUpperCase()).join('');
-      console.log('Checking code:', code, 'Length:', code.length);
       
       // Validate: 6 alphanumeric characters (A-Z, 0-9)
       if (code.length !== 6 || !/^[A-Z0-9]{6}$/.test(code)) {
-        console.log('Code validation failed:', code);
         return;
       }
       
@@ -361,15 +359,12 @@
       });
       
       try {
-        console.log('Verifying access code...');
           // Verify code first
           const verification = await window.LectureService.verifyAccessCode(code);
-        console.log('Verification result:', verification);
           
         if (!verification || !verification.valid) {
             // Code is incorrect or session is closed - reset and show error
           const errorMsg = verification?.message || 'Incorrect access code. Please try again.';
-          console.log('Code invalid:', errorMsg);
           errorDiv.textContent = errorMsg;
             errorDiv.style.display = 'block';
           errorDiv.classList.add('show');
@@ -385,10 +380,8 @@
           }
 
           // Code is correct and session is open - check in with access code
-        console.log('Code valid, checking in...');
           try {
             await window.LectureService.checkIn(code, []);
-          console.log('Check-in successful, redirecting...');
             
             // Successfully checked in - redirect to response page
             window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;

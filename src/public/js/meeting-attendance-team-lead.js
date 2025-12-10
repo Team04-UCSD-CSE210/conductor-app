@@ -67,8 +67,6 @@
       return; // Nothing to update
     }
     
-    console.log(`Refreshing data for ${openMeetings.length} open meeting(s)`);
-    
     try {
       // Re-fetch meetings to get updated attendance counts
       const updatedMeetings = await fetchMeetings();
@@ -103,7 +101,6 @@
                 badge.style.transform = 'scale(1)';
               }, 200);
               
-              console.log(`Attendance updated for ${updated.title}: ${newCount}/${totalMembers}`);
             }
           }
         }
@@ -116,7 +113,6 @@
   function startLiveUpdates() {
     stopLiveUpdates();
     const openMeetings = state.meetings.filter(m => determineMeetingStatus(m) === 'open');
-    console.log(`Starting live updates for ${openMeetings.length} open meeting(s)`);
     if (openMeetings.length > 0) {
       liveUpdateInterval = setInterval(updateMeetingStats, LIVE_UPDATE_INTERVAL_MS);
       // Do an immediate update

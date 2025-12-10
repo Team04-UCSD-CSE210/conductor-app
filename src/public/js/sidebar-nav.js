@@ -250,11 +250,6 @@
       }
     }
 
-    // Debug: Log context to help troubleshoot
-    if (context) {
-      console.log('[sidebar-nav] Context received:', context);
-    }
-
     renderNav(navEl, links);
   };
 

@@ -735,8 +735,6 @@
         throw new Error('Please fill in all required fields (label, date, start time, end time).');
       }
 
-      // Log for debugging
-      console.log(editingSessionId ? 'Updating lecture' : 'Creating lecture with offering_id:', finalOfferingId);
 
       let lecture;
       if (editingSessionId) {
@@ -1060,14 +1058,12 @@
       // Get offering ID on load
       try {
         const fetchedOfferingId = await window.LectureService.getActiveOfferingId();
-        console.log('Fetched offering ID on load:', fetchedOfferingId, typeof fetchedOfferingId);
         
         if (fetchedOfferingId && fetchedOfferingId !== 'undefined' && fetchedOfferingId !== 'null') {
           offeringId = fetchedOfferingId; // Update module-level variable
           if (container) {
             container.setAttribute('data-offering-id', offeringId);
           }
-          console.log('offeringId set successfully:', offeringId);
         } else {
           console.warn('No active offering ID found or invalid:', fetchedOfferingId);
           offeringId = null; // Explicitly set to null
