@@ -330,8 +330,7 @@
 .info-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 32px;
-  row-gap: 14px;
+  gap: 14px 32px;
   width: 100%;
 }
 
@@ -485,8 +484,7 @@
   word-break: break-word;
 }
 
-.contact-value,
-.contact-body .clickable-link {
+.contact-value {
   word-break: break-word;
 }
 
@@ -574,6 +572,10 @@
   color: var(--palette-primary, var(--teal-600, #0d9488));
   border-bottom-color: var(--palette-primary, var(--teal-600, #0d9488));
   text-decoration: none;
+}
+
+.contact-body .clickable-link {
+  word-break: break-word;
 }
 
 .clickable-link:visited {

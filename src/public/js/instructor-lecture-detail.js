@@ -16,7 +16,9 @@
   let lecture = null;
   let isLoading = false;
   let currentQuestionId = null;
-  const REFRESH_INTERVAL_MS = 5000;
+  let currentResponses = [];
+  let checkInterval = null;
+  const CHECK_INTERVAL_MS = 5000;
 
   function truncateText(text, maxLength = 20) {
     if (text.length <= maxLength) return text;

@@ -53,6 +53,7 @@
   opacity: 0.8;
 }
 
+/* stylelint-disable selector-id-pattern */
 #edit-team-btn {
   display: flex;
   align-items: center;
