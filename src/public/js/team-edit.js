@@ -184,12 +184,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Handle all form submissions
   async function saveTeamData() {
+    console.log('saveTeamData called');
     const teamName = document.getElementById('teamName').value.trim();
     if (!teamName) {
       alert('Team name is required');
       return;
     }
 
+    console.log('Preparing form data...');
     const formData = new FormData();
     
     // Add form fields
@@ -247,8 +249,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (teamEditForm) {
     teamEditForm.addEventListener('submit', async function(e) {
       e.preventDefault();
+      console.log('Form submitted, calling saveTeamData...');
       await saveTeamData();
     });
+  } else {
+    console.error('teamEditForm element not found');
   }
 
   // Handle links form submission
