@@ -223,7 +223,8 @@ const initializeElements = () => {
     profSearch: document.getElementById('prof-search'),
     tutorSearch: document.getElementById('tutor-search'),
     taSearch: document.getElementById('ta-search'),
-    studentSearch: document.getElementById('student-search')
+    studentSearch: document.getElementById('student-search'),
+    teamSearch: document.getElementById('team-search')
   };
 };
 
@@ -943,13 +944,15 @@ const renderTeamCard = (team) => {
     ? `<img src="${team.logo_url}" alt="${team.name} logo" class="team-logo-img" />`
     : `<span>${getInitials(team.name)}</span>`;
 
-  // Links HTML (only Slack and Repo)
+  // Links HTML (only Slack and Repo) - make them actually clickable
   const linksHtml = [];
   if (links.slack) {
-    linksHtml.push(`<a href="${links.slack.startsWith('#') ? '#' : links.slack}" class="team-link team-link-slack" target="_blank" rel="noopener noreferrer">Slack</a>`);
+    const slackUrl = links.slack.startsWith('http') ? links.slack : `https://${links.slack}`;
+    linksHtml.push(`<a href="${slackUrl}" class="team-link team-link-slack" target="_blank" rel="noopener noreferrer">Slack</a>`);
   }
   if (links.repo) {
-    linksHtml.push(`<a href="${links.repo}" class="team-link team-link-repo" target="_blank" rel="noopener noreferrer">GitHub</a>`);
+    const repoUrl = links.repo.startsWith('http') ? links.repo : `https://${links.repo}`;
+    linksHtml.push(`<a href="${repoUrl}" class="team-link team-link-repo" target="_blank" rel="noopener noreferrer">GitHub</a>`);
   }
 
   return `
@@ -957,7 +960,7 @@ const renderTeamCard = (team) => {
       <header class="group-header">
         <div class="group-logo">${logoHtml}</div>
         <div class="group-header-text">
-          <h4 class="group-name">${team.name}</h4>
+          <h4 class="group-name">${team.name || 'Unnamed Team'}</h4>
           ${team.mantra ? `<p class="team-mantra">"${team.mantra}"</p>` : ''}
         </div>
       </header>
@@ -1223,6 +1226,13 @@ const setupEventListeners = () => {
     elements.studentSearch.addEventListener('input', (e) => {
       state.filters.students.search = e.target.value || '';
       renderStudentsGrid();
+    });
+  }
+
+  if (elements.teamSearch) {
+    elements.teamSearch.addEventListener('input', (e) => {
+      state.filters.teams.search = e.target.value || '';
+      renderTeamsGrid();
     });
   }
 
