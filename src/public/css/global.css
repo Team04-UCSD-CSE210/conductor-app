@@ -649,7 +649,7 @@ body > :not(.footer) {
   }
 
   .hamburger-menu {
-    display: flex;
+    display: flex !important;
   }
 
   .sidebar {

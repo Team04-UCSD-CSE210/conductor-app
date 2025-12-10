@@ -1339,32 +1339,6 @@ const init = async () => {
     }
   }
   
-  // Hamburger menu toggle
-  const hamburger = document.querySelector('.hamburger-menu');
-  const sidebar = document.querySelector('.sidebar');
-  const body = document.body;
-  
-  if (hamburger && sidebar) {
-    hamburger.addEventListener('click', () => {
-      const isExpanded = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', String(!isExpanded));
-      sidebar.classList.toggle('open');
-      body.classList.toggle('menu-open');
-    });
-    
-    // Close menu when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 768 &&
-          sidebar.classList.contains('open') &&
-          !sidebar.contains(e.target) &&
-          !hamburger.contains(e.target)) {
-        hamburger.setAttribute('aria-expanded', 'false');
-        sidebar.classList.remove('open');
-        body.classList.remove('menu-open');
-      }
-    });
-  }
-  
   bindEvents();
   await checkEditPermissions();
   await loadOfferings();

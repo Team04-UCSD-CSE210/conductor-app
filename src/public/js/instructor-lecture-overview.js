@@ -367,22 +367,7 @@
     });
   }
 
-  function initHamburger() {
-    const hamburger = document.querySelector('.hamburger-menu');
-    const sidebar = document.querySelector('.sidebar');
-    const body = document.body;
-    if (!hamburger || !sidebar) return;
-
-    hamburger.addEventListener('click', () => {
-      const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', String(!isOpen));
-      sidebar.classList.toggle('open');
-      body.classList.toggle('menu-open');
-    });
-  }
-
   function init() {
-    initHamburger();
     initNewLectureButton();
     hydrate();
   }

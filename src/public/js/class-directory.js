@@ -554,7 +554,6 @@ const renderTeamCard = (team) => {
     ? team.members.filter((m) => m && m.name)
     : [];
 
-  const memberCount = team.member_count || members.length || 0;
   const leaderId = team.leader_id || (team.leader && team.leader.id);
   const leader = team.leader;
 

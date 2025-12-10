@@ -257,6 +257,39 @@
     renderNav(navEl, links);
   };
 
+  // Hamburger menu toggle for mobile
+  function initHamburger() {
+    console.log("init hamburger called");
+    const hamburger = document.querySelector('.hamburger-menu');
+    const sidebar = document.querySelector('.sidebar');
+    
+    console.log('Hamburger found:', hamburger);
+    console.log('Sidebar found:', sidebar);
+    
+    if (!hamburger || !sidebar) {
+      console.log('Hamburger or sidebar not found, exiting');
+      return;
+    }
+
+    console.log('Setting up hamburger event listeners');
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('Hamburger clicked!');
+      const isExpanded = hamburger.getAttribute('aria-expanded') === 'true';
+      hamburger.setAttribute('aria-expanded', !isExpanded);
+      sidebar.classList.toggle('open');
+      console.log('Sidebar open class toggled, sidebar classes:', sidebar.classList);
+    });
+
+    // Close sidebar when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+        hamburger.setAttribute('aria-expanded', 'false');
+        sidebar.classList.remove('open');
+      }
+    });
+  }
+
   // Run global sidebar elements setup immediately (doesn't depend on nav)
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", ensureGlobalSidebarElements);
@@ -266,9 +299,13 @@
 
   // Initialize navigation
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", () => {
+      init();
+      initHamburger();
+    });
   } else {
     init();
+    initHamburger();
   }
 })();
 

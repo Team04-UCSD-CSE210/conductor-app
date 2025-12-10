@@ -310,7 +310,7 @@ router.put('/:teamId', ensureAuthenticated, upload.single('logo'), async (req, r
   try {
     const { teamId } = req.params;
     const userId = req.currentUser.id;
-    const { name, team_number, leader_id, status, mantra, links } = req.body;
+    const { name, mantra, links } = req.body;
 
     // Check if user is the leader of this team (simplified permission check)
     const { rows: teamRows } = await pool.query(
