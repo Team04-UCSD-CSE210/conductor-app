@@ -44,12 +44,105 @@
 
   <!-- Main Content -->
   <main class="main-container" id="main">
-    <div class="dashboard-header">
-      <img src="/assets/user.png" alt="User Profile" class="user-profile-icon">
-    </div>
+
 
     <div class="settings-page">
       <h1 class="page-title">Course Settings</h1>
+
+      <!-- Course Information -->
+      <section class="settings-section">
+        <h2>Course Information</h2>
+        <p class="settings-description">Update basic course details and information.</p>
+        
+        <form id="courseInfoForm" class="course-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="courseCode">Course Code</label>
+              <input type="text" id="courseCode" name="code" placeholder="e.g., CSE 210" required>
+            </div>
+            <div class="form-group">
+              <label for="courseName">Course Name</label>
+              <input type="text" id="courseName" name="name" placeholder="e.g., Software Engineering" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="department">Department</label>
+              <input type="text" id="department" name="department" placeholder="e.g., Computer Science & Engineering">
+            </div>
+            <div class="form-group">
+              <label for="credits">Credits</label>
+              <input type="number" id="credits" name="credits" min="0" placeholder="e.g., 4">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="term">Term</label>
+              <select id="term" name="term">
+                <option value="">Select term</option>
+                <option value="Fall">Fall</option>
+                <option value="Winter">Winter</option>
+                <option value="Spring">Spring</option>
+                <option value="Summer">Summer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="year">Year</label>
+              <input type="number" id="year" name="year" min="2000" max="2100" placeholder="e.g., 2025">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="startDate">Start Date</label>
+              <input type="date" id="startDate" name="start_date" required>
+            </div>
+            <div class="form-group">
+              <label for="endDate">End Date</label>
+              <input type="date" id="endDate" name="end_date" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="location">Location</label>
+              <input type="text" id="location" name="location" placeholder="e.g., CSE Building, Room 120">
+            </div>
+            <div class="form-group">
+              <label for="enrollmentCap">Enrollment Cap</label>
+              <input type="number" id="enrollmentCap" name="enrollment_cap" min="0" placeholder="e.g., 100">
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="classTimings">Class Timings (JSON format)</label>
+            <textarea id="classTimings" name="class_timings" rows="4" placeholder="{&quot;days&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;], &quot;time&quot;: &quot;10:30-11:20&quot;, &quot;timezone&quot;: &quot;PT&quot;}"></textarea>
+            <small>Enter class schedule in JSON format. Example: {"days": ["Monday", "Wednesday"], "time": "10:30-11:20", "timezone": "PT"}</small>
+          </div>
+
+          <div class="form-group">
+            <label for="syllabusUrl">Syllabus URL</label>
+            <input type="url" id="syllabusUrl" name="syllabus_url" placeholder="https://example.com/syllabus.pdf">
+          </div>
+
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="">Select status</option>
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
+          <div class="settings-actions">
+            <button type="submit" class="btn btn-primary" id="saveCourseInfoBtn">Save Course Information</button>
+            <button type="button" class="btn btn-ghost" id="resetCourseInfoBtn">Reset</button>
+          </div>
+        </form>
+      </section>
 
       <!-- Color Palette Configuration -->
       <section class="settings-section">

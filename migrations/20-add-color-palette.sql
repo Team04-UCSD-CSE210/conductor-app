@@ -5,4 +5,3 @@ ALTER TABLE course_offerings
 ADD COLUMN IF NOT EXISTS color_palette TEXT DEFAULT 'default' CHECK (color_palette IN ('default', 'blue', 'purple', 'green', 'orange', 'red'));
 
 COMMENT ON COLUMN course_offerings.color_palette IS 'Global color palette for the course website. Applies to all users.';
-

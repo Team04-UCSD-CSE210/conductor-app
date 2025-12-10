@@ -1,269 +1,92 @@
-/* Student Leader (Team Lead) Dashboard */
+/* Team Management Section */
+.team-management-section {
+  margin: 2rem 0;
+}
 
-/* Import shared student dashboard styles */
-@import url('/css/student-dashboard.css');
-
-/* Card header with action button */
-.card-header-with-action {
+.team-info-card {
+  background: var(--surface-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
 }
 
-.card-header-with-action h4 {
-  margin: 0;
-}
-
-/* Announcements header: align title and action button */
-.announcements-card .card-header {
+.team-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-  border-bottom: 2px solid var(--palette-accent, #99F6E4);
-  padding-bottom: 8px;
+  gap: 1rem;
 }
 
-.btn-create-announcement {
-  font-size: 13px;
-  padding: 6px 10px;
+.team-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
-.announcements-card .card-header h4 {
-  margin: 0;
-  padding: 0;
-  border-bottom: none;
-}
-
-/* Announcement modal fields: ensure subject and message have identical widths */
-#announcement-form {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-#announcement-form label {
-  display: block;
-  margin-bottom: 0.35rem;
+.team-details h3 {
+  margin: 0 0 0.25rem 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
-#announcement-form input[type="text"],
-#announcement-form textarea {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--gray-200, #e6eef0);
-  border-radius: 8px;
-  background: var(--bg-input, #fff);
-  font-size: 0.95rem;
-  color: var(--gray-900, #0f172a);
+.team-mantra {
+  margin: 0;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.9rem;
 }
 
-#announcement-form textarea {
-  height: 140px;
-  min-height: 140px;
-  max-height: 140px;
-  resize: none;
-  overflow-y: auto;
+.team-actions {
+  display: flex;
+  gap: 0.75rem;
 }
 
-#announcement-form input[type="text"]:focus,
-#announcement-form textarea:focus {
-  outline: none;
-  border-color: var(--palette-secondary, #83D7CF);
-  box-shadow: 0 0 0 3px rgb(131 215 207 / 10%);
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.5rem;
+  opacity: 0.8;
 }
 
-#announcement-form .char-counter {
-  font-size: 0.75rem;
-  color: var(--gray-400, #9ca3af);
-  margin-top: 0.25rem;
-  text-align: right;
-  margin-bottom: 0.5rem;
-}
-
-.btn-create {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--palette-primary, #0F766E);
-  color: white;
-  border: none;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
+#editTeamBtn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  padding: 0;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.btn-create:hover {
-  background: var(--palette-secondary, #14b8a6);
-  transform: scale(1.1);
+#editTeamBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
 
-.btn-create:active {
-  transform: scale(0.95);
-}
-
-/* Override dashboard row layouts for team lead specific ordering */
-.dashboard-page .dashboard-row-top {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) !important;
-}
-
-.dashboard-page .dashboard-row-bottom {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 0.8fr) !important;
-}
-
-/* Fix all text colors to use palette variables */
-.attendance-label {
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-.progress-percentage {
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-.announcement-content h5 {
-  color: var(--palette-primary, #0F766E) !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-  word-break: break-word !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 1 !important;
-  line-clamp: 1 !important;
-  -webkit-box-orient: vertical !important;
-  line-height: 1.4 !important;
-  max-height: 21px !important;
-  margin: 0 0 6px !important;
-}
-
-.announcement-content p {
-  color: var(--palette-primary, #0F766E) !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 1 !important;
-  line-clamp: 1 !important;
-  -webkit-box-orient: vertical !important;
-  max-height: 18px !important;
-  line-height: 1.4 !important;
-  margin: 0 !important;
-}
-
-/* Fixed height for all cards */
-.dashboard-card {
-  height: 400px !important;
-  min-height: 400px !important;
-  max-height: 400px !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-/* Fixed height for journal entries */
-.journal-entry {
-  height: 60px !important;
-  min-height: 60px !important;
-  max-height: 60px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-/* Fixed height for todo items */
-.todo-item {
-  height: 60px !important;
-  min-height: 60px !important;
-  max-height: 60px !important;
-  overflow: hidden !important;
-}
-
-.todo-item span {
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-}
-
-.announcements-list {
-  max-height: 320px !important;
-}
-
-.journal-list {
-  max-height: 320px !important;
-  overflow-y: auto !important;
-}
-
-.todo-list {
-  max-height: 320px !important;
-}
-
-.progress-text {
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-.legend-item span:not(.legend-dot) {
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-.week-number {
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-.week-status {
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-/* Responsive Design */
-@media (width < 1200px) {
-  .dashboard-row-top,
-  .dashboard-row-bottom {
-    grid-template-columns: 1fr; /* Stack all cards in a single column */
-  }
-}
-
-@media (width < 768px) {
-  .dashboard-grid {
-    gap: 16px;
-  }
-  
-  .dashboard-row-top,
-  .dashboard-row-bottom {
-    gap: 16px;
-  }
-  
-  .dashboard-card {
-    padding: 16px;
-  }
-
-  /* Adjust announcement header layout for mobile */
-  .announcements-card .card-header {
+/* Responsive design */
+@media (max-width: 768px) {
+  .team-info-card {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .announcements-card .card-header .btn-create-announcement {
-    width: 100%;
-  }
-}
-
-@media (width < 480px) {
-  .dashboard-card h4 {
-    font-size: 16px;
+    gap: 1rem;
+    text-align: center;
   }
   
-  .welcome-content h2 {
-    font-size: 22px;
+  .team-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .team-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  #editTeamBtn {
+    width: 100%;
+    justify-content: center;
   }
 }
-

@@ -1,22 +1,6 @@
-/* Instructor Dashboard
-   This file imports the shared student dashboard styles to keep instructor and student
-   dashboards visually consistent, then applies small instructor-specific overrides.
-*/
-
-/* Instructor Dashboard
-   This file imports the shared student dashboard styles to keep instructor and student
-   dashboards visually consistent, then applies small instructor-specific overrides.
-*/
-
-/* Instructor Dashboard specific overrides.
-   This file contains layout tweaks unique to the instructor view. */
-
-/* Force the four course stats (Students, Teams, TAs, Tutors) into a single horizontal row.
-   This reverts the shared responsive grid to the original single-line layout for instructors only. */
 
 @import url('/css/student-dashboard.css');
 
-/* Instructor layout: two independent rows with their own column sizing */
 .instructor-dashboard .dashboard-grid {
   display: flex;
   flex-direction: column;
@@ -28,7 +12,6 @@
   gap: 16px;
 }
 
-/* Top row: Attendance (wider), Announcements, Teams */
 .instructor-dashboard .dashboard-row-top {
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr) minmax(0, 0.8fr);
 }

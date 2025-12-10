@@ -8,26 +8,26 @@
     admin: [
       { href: "/admin-dashboard", text: "Admin Dashboard" },
       { href: "/instructor-dashboard", text: "Instructor View" },
-      { href: "/course-settings", text: "Course Settings" },
+      { href: "/course-settings", text: "Course Settings", icon: "/assets/settings.png" },
       {
         href: "/instructor-lectures",
         text: "Attendance",
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
-      { href: "/roster", text: "Roster" },
+      { href: "/roster", text: "Roster", icon: "/assets/roster.png" },
       { href: "/class-directory", text: "Directory" }
     ],
     instructor: [
       { href: "/instructor-dashboard", text: "Dashboard" },
-      { href: "/course-settings", text: "Course Settings" },
+      { href: "/course-settings", text: "Course Settings", icon: "/assets/settings.png" },
       {
         href: "/instructor-lectures",
         text: "Attendance",
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
-      { href: "/roster", text: "Roster" },
+      { href: "/roster", text: "Roster", icon: "/assets/roster.png" },
       { href: "/class-directory", text: "Directory" },
-      { href: "/instructor-meetings", text: "Team Meetings" }
+      { href: "/instructor-meetings", text: "Team Meetings", icon: "/assets/conversation.png" }
     ],
     ta: [
       { href: "/ta-dashboard", text: "Dashboard" },
@@ -36,7 +36,7 @@
         text: "Attendance",
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
-      { href: "/roster", text: "Roster" },
+      { href: "/roster", text: "Roster", icon: "/assets/roster.png" },
       { href: "/class-directory", text: "Directory" }
     ],
     teamLead: [
@@ -50,7 +50,8 @@
         text: "Lectures",
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
-      { href: "/meetings", text: "Meetings" },
+      { href: "/meetings", text: "Meetings", icon: "/assets/conversation.png" },
+      { href: "/team-edit", text: "Edit Team", icon: "/assets/settings.png" },
       {
         href: "/work-journal",
         text: "Work Journal",
@@ -69,7 +70,7 @@
         text: "Lectures",
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
-      { href: "/meetings", text: "Meetings" },
+      { href: "/meetings", text: "Meetings", icon: "/assets/conversation.png" },
       {
         href: "/work-journal",
         text: "Work Journal",
@@ -154,8 +155,11 @@
   const renderNav = (navEl, links) => {
     navEl.innerHTML = links
       .map(
-        (link) =>
-          `<a href="${link.href}" data-match='${JSON.stringify(link.match || [link.href])}'>${link.text}</a>`
+        (link) => {
+          const iconHtml = link.icon ? `<img src="${link.icon}" alt="${link.text}" class="nav-icon">` : '';
+          const hasIconClass = link.icon ? ' has-icon' : '';
+          return `<a href="${link.href}" data-match='${JSON.stringify(link.match || [link.href])}' class="${hasIconClass}">${iconHtml}${link.text}</a>`;
+        }
       )
       .join("");
 

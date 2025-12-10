@@ -1,119 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Conductor · Class Directory</title>
-  <link rel="stylesheet" href="/css/global.css">
-  <link rel="stylesheet" href="/css/dashboard-global.css">
-  <link rel="stylesheet" href="/css/class-directory.css">
-  <link rel="stylesheet" href="/css/stats.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class Directory – Conductor</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/dashboard-global.css" />
+  <link rel="stylesheet" href="/css/class-directory.css" />
 </head>
+
 <body class="dashboard-page class-directory-page">
-  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+  <!-- Mobile hamburger -->
+  <button
+    class="hamburger-menu"
+    aria-label="Toggle navigation menu"
+    aria-expanded="false"
+  >
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
   </button>
 
-  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
-      <img src="/assets/temp-logo.png" alt="Conductor logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo" />
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    
-    <div class="main-menu-header">Main Menu</div>
+
+    <div class="main-menu-header">Main menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
-    
-    <footer class="sidebar-footer">
-      <a href="/logout" class="btn btn-ghost btn-footer">Sign out</a>
-    </footer>
-  </header>
 
-  <main class="main-container" id="main">
-    <div class="directory-header">
-      <h2 class="page-title">Class Directory</h2>
-      <div class="active-offering-display">
-        <span class="offering-label">Active Offering:</span>
-        <span class="offering-name" id="activeOfferingName">Loading...</span>
-      </div>
-    </div>
-
-    <div class="directory-tabs">
-      <button class="tab-btn active" data-tab="professors">Professors</button>
-      <button class="tab-btn" data-tab="tas">TAs</button>
-      <button class="tab-btn" data-tab="students">Students</button>
-      <button class="tab-btn" data-tab="groups">Groups</button>
-    </div>
-
-    <!-- Professors Section -->
-    <section id="professors-section" class="directory-section active">
-      <div class="section-header">
-        <h3>Professors</h3>
-        <div class="section-controls">
-          <input type="search" id="prof-search" class="search-input" placeholder="Search professors...">
-        </div>
-      </div>
-      <div class="cards-grid" id="professors-grid">
-        <div class="loading-state">Loading professors...</div>
-      </div>
+    <section
+      id="sidebarUser"
+      class="sidebar-user"
+      aria-label="Signed-in user info"
+    >
+      <p class="sidebar-user-label">Signed in as</p>
+      <p class="sidebar-user-name" id="sidebarUserName">Loading...</p>
+      <button type="button" class="sidebar-signout">Sign out</button>
     </section>
+  </aside>
 
-    <!-- TAs Section -->
-    <section id="tas-section" class="directory-section">
-      <div class="section-header">
-        <h3>Teaching Assistants</h3>
-        <div class="section-controls">
-          <input type="search" id="ta-search" class="search-input" placeholder="Search TAs...">
-          <div class="activity-filter">
-            <label for="ta-activity">Activity:</label>
-            <select id="ta-activity" class="search-input">
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+  <!-- MAIN CONTENT -->
+  <main class="dashboard-main">
+    <header class="dashboard-header">
+      <div class="dashboard-header-left">
+        <h1 class="dashboard-eyebrow">CLASS DIRECTORY</h1>
+        <p class="dashboard-subtitle">
+          Detailed contact and availability information for your instructors, tutors, and teaching team.
+        </p>
+      </div>
+      <div class="dashboard-header-right">
+        <span class="offering-label">Active course</span>
+        <span class="offering-name" id="activeOfferingName">
+          Loading…
+        </span>
+      </div>
+    </header>
+
+    <!-- Directory Content -->
+    <section class="class-directory">
+      <!-- Tabs -->
+      <nav
+        class="directory-tabs"
+        role="tablist"
+        aria-label="Directory sections"
+      >
+        <button
+          class="tab-btn active"
+          data-tab="professors"
+          role="tab"
+          aria-selected="true"
+          aria-controls="professors-section"
+        >
+          Professors
+        </button>
+
+        <button
+          class="tab-btn"
+          data-tab="tutors"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tutors-section"
+        >
+          Tutors
+        </button>
+
+        <button
+          class="tab-btn"
+          data-tab="tas"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tas-section"
+        >
+          TAs
+        </button>
+
+        <button
+          class="tab-btn"
+          data-tab="students"
+          role="tab"
+          aria-selected="false"
+          aria-controls="students-section"
+        >
+          Students
+        </button>
+
+        <button
+          class="tab-btn"
+          data-tab="teams"
+          role="tab"
+          aria-selected="false"
+          aria-controls="teams-section"
+        >
+          Teams
+        </button>
+      </nav>
+
+      <!-- Professors Section -->
+      <section
+        id="professors-section"
+        class="directory-section active"
+        role="tabpanel"
+        aria-label="Professors"
+      >
+        <div class="section-header">
+          <div class="section-header-left">
+            <h3>Professors</h3>
+            <p class="section-subtitle">
+              Primary instructors and course coordinators.
+            </p>
+          </div>
+          <div class="section-controls">
+            <input
+              type="search"
+              id="prof-search"
+              class="search-input"
+              placeholder="Search professors..."
+            />
           </div>
         </div>
-      </div>
-      <div class="cards-grid" id="tas-grid">
-        <div class="loading-state">Loading TAs...</div>
-      </div>
-    </section>
+        <div class="cards-grid" id="professors-grid">
+          <div class="loading-state">Loading professors...</div>
+        </div>
+      </section>
 
-    <!-- Students Section -->
-    <section id="students-section" class="directory-section">
-      <div class="section-header">
-        <h3>Students</h3>
-        <div class="section-controls">
-          <input type="search" id="student-search" class="search-input" placeholder="Search students...">
-          <div class="filter-group">
-            <select id="student-group" class="search-input">
-              <option value="all">All Groups</option>
-            </select>
-            <select id="student-activity" class="search-input">
-              <option value="all">All Activity</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+      <!-- Tutors Section -->
+      <section
+        id="tutors-section"
+        class="directory-section"
+        role="tabpanel"
+        aria-label="Tutors"
+        hidden
+      >
+        <div class="section-header">
+          <div class="section-header-left">
+            <h3>Tutors</h3>
+            <p class="section-subtitle">
+              Small-group and 1:1 support for assignments and projects.
+            </p>
+          </div>
+          <div class="section-controls">
+            <input
+              type="search"
+              id="tutor-search"
+              class="search-input"
+              placeholder="Search tutors..."
+            />
           </div>
         </div>
-      </div>
-      <div class="cards-grid" id="students-grid">
-        <div class="loading-state">Loading students...</div>
-      </div>
-    </section>
-
-    <!-- Groups Section -->
-    <section id="groups-section" class="directory-section">
-      <div class="section-header">
-        <h3>Groups</h3>
-        <div class="section-controls">
-          <input type="search" id="group-search" class="search-input" placeholder="Search groups...">
+        <div class="cards-grid" id="tutors-grid">
+          <div class="loading-state">Loading tutors...</div>
         </div>
-      </div>
-      <div class="cards-grid groups-grid" id="groups-grid">
-        <div class="loading-state">Loading groups...</div>
-      </div>
+      </section>
+
+      <!-- TAs Section -->
+      <section
+        id="tas-section"
+        class="directory-section"
+        role="tabpanel"
+        aria-label="Teaching Assistants"
+        hidden
+      >
+        <div class="section-header">
+          <div class="section-header-left">
+            <h3>Teaching Assistants</h3>
+            <p class="section-subtitle">
+              Discussion leaders and core course support.
+            </p>
+          </div>
+          <div class="section-controls">
+            <input
+              type="search"
+              id="ta-search"
+              class="search-input"
+              placeholder="Search TAs..."
+            />
+          </div>
+        </div>
+        <div class="cards-grid" id="tas-grid">
+          <div class="loading-state">Loading TAs...</div>
+        </div>
+      </section>
+
+      <!-- Students Section -->
+      <section
+        id="students-section"
+        class="directory-section"
+        role="tabpanel"
+        aria-label="Students"
+        hidden
+      >
+        <div class="section-header">
+          <div class="section-header-left">
+            <h3>Students</h3>
+            <p class="section-subtitle">
+              Browse classmates and see which team they belong to.
+            </p>
+          </div>
+          <div class="section-controls">
+            <input
+              type="search"
+              id="student-search"
+              class="search-input"
+              placeholder="Search students..."
+            />
+          </div>
+        </div>
+        <div class="cards-grid" id="students-grid">
+          <div class="loading-state">Loading students...</div>
+        </div>
+      </section>
+
+      <!-- Teams Section -->
+      <section
+        id="teams-section"
+        class="directory-section"
+        role="tabpanel"
+        aria-label="Teams"
+        hidden
+      >
+        <div class="section-header">
+          <div class="section-header-left">
+            <h3>Project Teams</h3>
+            <p class="section-subtitle">
+              See project teams, their members, and quick links.
+            </p>
+          </div>
+          <div class="section-controls">
+            <input
+              type="search"
+              id="team-search"
+              class="search-input"
+              placeholder="Search teams..."
+            />
+          </div>
+        </div>
+        <div class="cards-grid groups-grid" id="teams-grid">
+          <div class="loading-state">Loading teams...</div>
+        </div>
+      </section>
     </section>
   </main>
 
