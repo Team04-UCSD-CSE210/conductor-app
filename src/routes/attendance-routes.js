@@ -129,6 +129,34 @@ router.get('/sessions/:sessionId/attendance/:userId', ensureAuthenticated, async
 });
 
 /**
+ * Get attendance statistics for multiple sessions (batch)
+ * GET /api/attendance/sessions/batch/statistics?session_ids=uuid1,uuid2,uuid3
+ * Requires: attendance.view permission (course scope) - Professor/Instructor/TA
+ * NOTE: This route MUST come before /sessions/:sessionId routes to avoid matching "batch" as a sessionId
+ */
+router.get('/sessions/batch/statistics', ...protect('attendance.view', 'course'), async (req, res) => {
+  try {
+    const { session_ids } = req.query;
+    
+    if (!session_ids) {
+      return res.status(400).json({ error: 'session_ids query parameter is required (comma-separated UUIDs)' });
+    }
+
+    const sessionIdArray = session_ids.split(',').map(id => id.trim()).filter(id => id);
+    
+    if (sessionIdArray.length === 0) {
+      return res.json({});
+    }
+
+    // Fetch statistics for all sessions in one query
+    const stats = await AttendanceModel.getBatchSessionStatistics(sessionIdArray);
+    res.json(stats);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
  * Get attendance for a session
  * GET /api/attendance/sessions/:sessionId?status=present
  * Requires: attendance.view permission (course scope) - Professor/Instructor/TA

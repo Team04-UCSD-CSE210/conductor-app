@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Team Meetings - Team Lead Dashboard</title>
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/dashboard-global.css">
@@ -12,101 +15,8 @@
   <link rel="stylesheet" href="/css/date-picker.css">
   <link rel="stylesheet" href="/css/time-picker.css">
   <link rel="stylesheet" href="/css/lecture-attendance-student.css">
-  <style>
-    .flip-card {
-      perspective: 1000px;
-      min-height: 200px;
-    }
-    .flip-card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transition: transform 0.6s;
-      transform-style: preserve-3d;
-    }
-    .flip-card.flipped .flip-card-inner {
-      transform: rotateY(180deg);
-    }
-    .flip-card-front,
-    .flip-card-back {
-      position: absolute;
-      width: 100%;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-    .flip-card-back {
-      transform: rotateY(180deg);
-    }
-    .flip-button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 0.25rem;
-      color: var(--gray-500);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      transition: all 0.2s;
-    }
-    .flip-button:hover {
-      background: var(--gray-100);
-      color: var(--gray-700);
-    }
-    .member-attendance-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.5rem 0.75rem;
-      background: var(--gray-50);
-      border-radius: 6px;
-      border-left: 3px solid var(--teal-500);
-    }
-    .member-name {
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--gray-700);
-    }
-    .member-percentage {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--teal-600);
-    }
-    .badge-container {
-      display: flex;
-      flex-direction: row;
-      gap: 0.5rem;
-      flex-shrink: 0;
-      align-items: center;
-    }
-    .lecture-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex: 1;
-      justify-content: space-between;
-    }
-    .lecture-info > div:nth-child(2) {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .lecture-info > .lecture-meta {
-      margin-left: auto;
-    }
-    .btn-delete {
-      background-color: var(--red-600, #dc2626) !important;
-      color: white !important;
-      border: none !important;
-    }
-    .btn-delete:hover:not(:disabled) {
-      background-color: var(--red-700, #b91c1c) !important;
-    }
-    .btn-delete:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  </style>
+  <link rel="stylesheet" href="/css/meeting-attendance-team-lead.css">
+
 </head>
 
 <body class="dashboard-page">
@@ -121,15 +31,10 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
     
     <div class="main-menu-header">Main Menu</div>
-    <nav aria-label="Dashboard navigation" id="sidebarNav">
-      <!-- Navigation will be dynamically populated based on user role -->
-    </nav>
+    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    
     <footer>
       <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
@@ -140,9 +45,9 @@
       <section class="attendance-content" data-offering-id="">
         <div class="attendance-title">
           <div>
-            <p class="eyebrow">Team Lead Dashboard</p>
-            <h2 id="course-title">Loading...</h2>
-            <p class="subtitle">Create and manage team meetings. Track attendance, view participation, and manage your team's schedule.</p>
+            <p class="eyebrow">Your Team's Meetings</p>
+            <h2 class="header-title" id="course-title">Loading...</h2>
+            <p class="header-subtitle">Create and manage team meetings. Track attendance, view participation, and manage your team's schedule.</p>
           </div>
           <div class="attendance-filter">
             <label for="meeting-filter">Filter</label>
@@ -169,19 +74,19 @@
       </section>
 
       <aside class="attendance-sidebar">
-        <div class="stats-box flip-card" id="attendance-card" style="background-color: #f0fdfa; border: 1px solid #d1d5db; padding: 2rem; min-height: 250px;">
+        <div class="stats-box flip-card" id="attendance-card">
           <div class="flip-card-inner">
             <!-- Front: Team Average -->
             <div class="flip-card-front">
               <div style="position: relative;">
-                <h3 style="margin: 0; text-align: center; margin-bottom: 1rem; color: #000000; font-size: 1.5rem;">Team Attendance</h3>
+                <h3 style="margin: 0; text-align: center; margin-bottom: 0.5rem;">Team Attendance</h3>
                 <button class="flip-button" id="flip-to-members" aria-label="View individual attendance" title="View individual attendance" style="position: absolute; top: 0; right: 0;">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M14 8H2M14 8L10 4M14 8L10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>
-              <div class="attendance-percentage" id="team-attendance-percentage" style="font-size: 2.5rem; font-weight: 700; color: var(--teal-600, #0d9488); margin: 0.5rem 0; text-align: center;">0%</div>
+              <div class="attendance-percentage" id="team-attendance-percentage"></div>
               <p style="font-size: 0.85rem; color: var(--gray-600); margin-top: 0.5rem; text-align: center;">Average attendance across all completed team meetings</p>
             </div>
             <!-- Back: Team Leader's Personal Attendance -->
@@ -194,20 +99,20 @@
                   </svg>
                 </button>
               </div>
-              <div id="member-attendance-list" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+              <div id="member-attendance-list" style="display: flex; flex-direction: column; gap: 0rem; margin-top: -1rem;">
                 <!-- Individual member attendance will be populated here -->
               </div>
             </div>
           </div>
         </div>
 
-        <div class="help-box team-lead-card" style="background-color: #f0fdfa; border: 1px solid #d1d5db; padding: 1.5rem; overflow: hidden; width: 100%; max-width: 300px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-            <h3 style="margin: 0; color: #000000; font-size: 1.2rem;">Create Team Meeting</h3>
-          </div>
-          <form id="create-meeting-form" style="display: flex; flex-direction: column; gap: 0.75rem; background: transparent;">
+        <div class="help-box team-lead-card">
+          <header class="team-lead-header">
+            Create Team Meeting
+          </header>
+          <form id="create-meeting-form" class="create-meeting-form">
             <div class="form-field">
-              <label for="meeting-name" style="font-size: 0.9rem;">
+              <label for="meeting-name">
                 Meeting Name
                 <span class="required-indicator" aria-label="required">*</span>
               </label>
@@ -219,12 +124,11 @@
                 class="text-input"
                 required
                 aria-required="true"
-                style="font-size: 0.9rem; padding: 0.5rem;"
               >
             </div>
 
             <div class="form-field">
-              <label for="meeting-date" style="font-size: 0.9rem;">
+              <label for="meeting-date">
                 Date
                 <span class="required-indicator" aria-label="required">*</span>
               </label>
@@ -235,13 +139,12 @@
                 class="date-picker"
                 required
                 aria-required="true"
-                style="font-size: 0.9rem; padding: 0.5rem;"
               >
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-              <div class="form-field" style="margin: 0;">
-                <label for="meeting-start" style="font-size: 0.9rem;">
+            <div class="meeting-time-grid">
+              <div class="form-field">
+                <label for="meeting-start">
                   Start Time
                   <span class="required-indicator" aria-label="required">*</span>
                 </label>
@@ -252,12 +155,11 @@
                   class="time-picker"
                   required
                   aria-required="true"
-                  style="font-size: 0.9rem; padding: 0.5rem;"
                 >
               </div>
 
-              <div class="form-field" style="margin: 0;">
-                <label for="meeting-end" style="font-size: 0.9rem;">
+              <div class="form-field">
+                <label for="meeting-end">
                   End Time
                   <span class="required-indicator" aria-label="required">*</span>
                 </label>
@@ -268,18 +170,14 @@
                   class="time-picker"
                   required
                   aria-required="true"
-                  style="font-size: 0.9rem; padding: 0.5rem;"
                 >
               </div>
             </div>
 
             <button 
               type="submit" 
-              class="btn btn-primary" 
+              class="btn-contact btn-primary" 
               id="create-meeting-btn"
-              style="background: #83d7cf; color: #000000; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 0.75rem; font-size: 0.9rem;"
-              onmouseover="this.style.background='#67d3c8'"
-              onmouseout="this.style.background='#83d7cf'"
             >
               Create Meeting
             </button>
@@ -296,5 +194,7 @@
   <script src="/js/colorblind-mode.js" defer></script>
   <script src="/js/student-nav.js?v=42"></script>
   <script src="/js/meeting-attendance-team-lead.js?v=67" defer></script>
+  <script src="/js/time-picker.js?v=100" defer></script>
+  <script src="/js/date-picker.js?v=100" defer></script>
 </body>
 </html>

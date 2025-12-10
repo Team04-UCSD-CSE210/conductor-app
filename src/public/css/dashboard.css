@@ -77,7 +77,7 @@
     width:20px;
     height:20px;
     flex:0 0 20px;
-    color:#6b7280; /* subtle gray like the screenshot */
+    color:#6b7280;
   }
   
   /* ensure shapes are outlined, not filled */

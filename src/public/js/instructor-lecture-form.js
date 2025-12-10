@@ -468,13 +468,9 @@
     
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
-    removeButton.className = 'remove-question';
+    removeButton.className = 'btn-link btn-delete remove-question';
     removeButton.setAttribute('aria-label', 'Delete question');
-    removeButton.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 4H14M12.6667 4V13.3333C12.6667 14 12 14.6667 11.3333 14.6667H4.66667C4 14.6667 3.33333 14 3.33333 13.3333V4M5.33333 4V2.66667C5.33333 2 6 1.33333 6.66667 1.33333H9.33333C10 1.33333 10.6667 2 10.6667 2.66667V4M6.66667 7.33333V11.3333M9.33333 7.33333V11.3333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
+    removeButton.textContent = 'Delete';
     removeButton.addEventListener('click', () => {
       if (questionList.children.length === 1) {
         alert('You must have at least one question.');
@@ -736,8 +732,6 @@
         throw new Error('Please fill in all required fields (label, date, start time, end time).');
       }
 
-      // Log for debugging
-      console.log(editingSessionId ? 'Updating lecture' : 'Creating lecture with offering_id:', finalOfferingId);
 
       let lecture;
       if (editingSessionId) {
@@ -1055,14 +1049,12 @@
       // Get offering ID on load
       try {
         const fetchedOfferingId = await window.LectureService.getActiveOfferingId();
-        console.log('Fetched offering ID on load:', fetchedOfferingId, typeof fetchedOfferingId);
         
         if (fetchedOfferingId && fetchedOfferingId !== 'undefined' && fetchedOfferingId !== 'null') {
           offeringId = fetchedOfferingId;
           if (container) {
             container.setAttribute('data-offering-id', offeringId);
           }
-          console.log('offeringId set successfully:', offeringId);
         } else {
           console.warn('No active offering ID found or invalid:', fetchedOfferingId);
           offeringId = null; // Explicitly set to null
