@@ -10,7 +10,6 @@ import https from "node:https";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
-import validator from "validator";
 import { pool } from "./db.js";
 import { DatabaseInitializer } from "./database/init.js";
 import bodyParser from "body-parser";
@@ -113,12 +112,6 @@ const escapeHtml = (str) => {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;');
-};
-
-const isValidRedirectHost = (host) => {
-  if (!host || typeof host !== 'string') return false;
-  const hostname = host.split(':')[0];
-  return validator.isFQDN(hostname) || hostname === 'localhost' || hostname === '127.0.0.1';
 };
 
 const LOGIN_FAILURE_THRESHOLD = parsePositiveInt(process.env.LOGIN_FAILURE_THRESHOLD, 3);
