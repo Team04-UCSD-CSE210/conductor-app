@@ -1,185 +1,281 @@
-# Conductor-App
+# Conductor
 
-Final project for CSE 210.
+> **A comprehensive course management platform for CSE 210 Software Engineering**
 
-## Wiki
+[![CI Pipeline](https://github.com/Team04-UCSD-CSE210/conductor-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Team04-UCSD-CSE210/conductor-app/actions/workflows/ci.yml)
+[![Testing Suite](https://github.com/Team04-UCSD-CSE210/conductor-app/actions/workflows/testing.yml/badge.svg)](https://github.com/Team04-UCSD-CSE210/conductor-app/actions/workflows/testing.yml)
 
-For detailed documentation, guides, and team resources, visit our [project wiki](https://github.com/Team04-UCSD-CSE210/conductor-app/wiki).
+## Overview
 
-## Pipeline
+Conductor is a full-stack web application designed to streamline course management, team collaboration, attendance tracking, and student engagement for CSE 210 at UC San Diego. Built with modern web technologies and enterprise-grade architecture, it provides role-based dashboards for administrators, instructors, TAs, tutors, and students.
 
-### CI Pipeline
+### Key Features
 
-This project includes automated CI validation through GitHub Actions that
-runs on all pull requests and pushes:
+- **Role-Based Dashboards**: Customized interfaces for 6 user roles (Admin, Instructor, Professor, TA, Tutor, Student/Student Leader)
+- **Attendance Management**: QR code-based check-in with session questions and analytics
+- **Team Collaboration**: Team formation, member management, and team-specific announcements
+- **Journal System**: Role-specific journaling for students, TAs, tutors, and instructors
+- **RBAC Permissions**: Fine-grained permission system with global, course, and team scopes
+- **Real-time Analytics**: Performance metrics, attendance statistics, and course progress tracking
+- **Observability**: SigNoz/OpenTelemetry integration for metrics, traces, and monitoring
 
-- **Linting**: JavaScript (ESLint), CSS (Stylelint), and HTML (HTMLHint) validation
-- **Testing**: Automated test execution
-- **Documentation**: JSDoc generation
-- **Commit Title Validation**: Ensures commit message conventions
-- **Slack Notifications**: Automated status updates to team channel
+## Quick Start
 
-The pipeline ensures code quality and consistency across all contributions.
+```bash
+# Clone and install
+git clone https://github.com/Team04-UCSD-CSE210/conductor-app.git
+cd conductor-app
+npm install
 
-### CD Pipeline
+# Setup environment
+cp .env.example .env
+# Edit .env with your database credentials
 
-Automated Docker builds for all branches and deployment to Render for main:
+# Initialize database with demo data
+npm run db:seed
 
-- **Docker Build**: All branches get containerized with branch-specific tags
-- **Infrastructure**: CloudFormation template deploys ECS cluster, ECR repository, and networking
-- **Production Deployment**: Only `main` branch deploys to Render with health checks
-- **Branch Isolation**: Feature branches get Docker images for testing without deployment
-- **Notifications**: PR comments with build status and deployment URLs (main only)
+# Start the server
+npm start
+```
 
-## Team Standards & Deployment Policies
+Visit `http://localhost:8443` to access the application.
 
-## On-Call Rotation
+📖 **For detailed setup**, see [Installation Guide](docs/getting-started/installation.md)
 
-Each sprint requires one designated on-call engineer to ensure system reliability.
+## Documentation
 
-**Assignments:**
+### 📚 Core Documentation
 
-- **Primary On-call:** Per sub-team
+| Document | Description |
+|----------|-------------|
+| [Getting Started](docs/getting-started/quick-start.md) | Quick setup and first steps |
+| [Architecture Overview](docs/architecture/overview.md) | System design and tech stack |
+| [Database Schema](docs/database/schema.md) | Complete database reference |
+| [API Reference](docs/backend/api-reference.md) | All API endpoints and contracts |
+| [RBAC System](docs/backend/rbac.md) | Permission system guide |
+| [Frontend Guide](docs/frontend/overview.md) | UI components and flows |
+| [Testing Guide](docs/testing/overview.md) | Unit, E2E, and load testing |
+| [Deployment](docs/deployment/ci-cd.md) | CI/CD pipeline and Docker |
 
-**Responsibilities:**
+### 🎯 Additional Resources
 
-- First responder for all pull requests and merge conflicts to `main` branch
-- Rotate assignments at the start of each sprint
+- [Database Migrations](docs/database/migrations.md) - Schema change management
+- [Contributing Guide](docs/contributing/workflow.md) - Development workflow
+- [ADRs](docs/architecture/adrs/) - Architecture decision records
+- [Project Wiki](https://github.com/Team04-UCSD-CSE210/conductor-app/wiki) - Team resources
 
-## Testing Requirements
+## Tech Stack
 
-All code changes must include comprehensive test coverage to maintain system reliability.
+**Backend**: Node.js 18+, Express.js, PostgreSQL 18, Passport.js (OAuth)  
+**Frontend**: HTML5, CSS3, Vanilla JavaScript (ES6+)  
+**Testing**: Vitest, Playwright, Autocannon  
+**DevOps**: GitHub Actions, Docker, Render, AWS ECS  
+**Observability**: SigNoz, OpenTelemetry
 
-**Mandatory Testing:**
+📖 **Details**: [Architecture Overview](docs/architecture/overview.md)
 
-- Unit tests for all new functionality
-- Integration tests for API endpoints
-- End-to-end tests for critical user flows
-- Minimum 80% code coverage required
 
-**Test Naming Convention:**
+## Development
 
-- Descriptive test names: `should_return_user_data_when_valid_id_provided`
+### Project Structure
 
-## Sprint Process
+```
+conductor-app/
+├── src/
+│   ├── server.js              # Application entry point
+│   ├── routes/                # API route handlers (18 files)
+│   ├── middleware/            # Express middleware
+│   ├── models/                # Data models
+│   ├── database/              # Database utilities
+│   ├── views/                 # HTML templates
+│   └── public/                # Static assets (CSS, JS, images)
+├── migrations/                # Database migrations (33 files)
+├── scripts/                   # Utility scripts
+│   ├── init-db.js            # Database initialization
+│   ├── load-test.js          # Load testing
+│   └── perf-*.js             # Performance benchmarks
+├── e2e/                       # End-to-end tests (5 suites)
+├── docs/                      # Documentation
+└── config/                    # Linting & tool configuration
+```
 
-**Duration:** 1-week sprints
-**Start Date:** November 3rd, 2025
-**Schedule:**
+### Available Scripts
 
-- Sprint Planning: First Saturday of each sprint
-- Standups: Via slack-bot in `#status` slack channel
-- Sprint Review & Retrospective: Last Friday of sprint
+```bash
+# Development
+npm start                 # Start server (port 8443)
+npm run db:init          # Initialize database schema
+npm run db:seed          # Initialize with demo data
+npm run db:reset         # Drop and recreate database
+npm run db:force         # Force re-run migrations
 
-## Branching Strategy
+# Testing
+npm test                 # Run unit tests with coverage
+npm run test:e2e         # Run E2E tests (all browsers)
+npm run test:e2e:chromium # Run E2E tests (Chromium only)
+npm run test:e2e:ui      # Run E2E tests with UI
+npm run test:load        # Run load tests (150+ concurrent users)
 
-Structured branching ensures clean code organization & deployment safety.
+# Quality & Linting
+npm run lint             # Run all linters
+npm run lint:js          # ESLint only
+npm run lint:css         # Stylelint only
+npm run lint:html        # HTMLHint only
+npm run lint:md          # Markdownlint only
 
-- **`main`**: Production-ready code only - requires PR approval
-- **`spec/[description]`**: Documentation (`bugfix/login-timeout`)
-- **`feature/[description]`**: New features (`feature/user-login`)
-- **`bugfix/[description]`**: Bug fixes (`bugfix/login-timeout`)
+# Documentation & Performance
+npm run docs             # Generate JSDoc documentation
+npm run perf:db          # Database performance benchmarks
+npm run perf:api         # API performance benchmarks
+```
 
-**Branch Protection Rules:**
+## Testing
 
-- Direct pushes to `main` are prohibited
-- All branches must be up-to-date before merging
-- Delete feature branches after successful merge
+Comprehensive test coverage across multiple levels:
 
-## Naming Conventions
+| Test Type | Tool | Coverage | Results |
+|-----------|------|----------|---------|
+| **Unit Tests** | Vitest | 80%+ | All passing ✅ |
+| **E2E Tests** | Playwright | 46 tests | All passing ✅ |
+| **Load Tests** | Autocannon | 274K requests | 100% success ✅ |
 
-**Commit Message Guidelines:** Follow [Conventional Commits](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13)
-for structured commit messages.
+**Key Achievements:**
+- ✅ Handles 150+ concurrent students with 100% success rate
+- ✅ Dashboard supports 90 concurrent users flawlessly
+- ✅ Zero errors across 274,691 load test requests
+- ✅ Average latency under 220ms for all scenarios
 
-Consistent naming improves code readability and maintainability.
+📊 **Full Results**: [Testing Documentation](docs/testing/overview.md)
 
-| Type | Convention | Example |
-| ------ | ---------- | ------- |
-| **Files** | kebab-case | `user-profile.js`, `api-client.ts` |
+
+## CI/CD Pipeline
+
+### Continuous Integration
+
+Automated validation on every pull request and push:
+
+- ✅ **Linting**: JavaScript (ESLint), CSS (Stylelint), HTML (HTMLHint), Markdown
+- ✅ **Testing**: Unit tests, E2E tests, load tests
+- ✅ **Documentation**: JSDoc generation
+- ✅ **Commit Validation**: Conventional commit format enforcement
+- ✅ **Slack Notifications**: Automated status updates
+
+### Continuous Deployment
+
+- **Docker Builds**: All branches containerized with branch-specific tags
+- **Production**: Only `main` branch deploys to Render with health checks
+- **Infrastructure**: AWS CloudFormation (ECS cluster, ECR, networking)
+- **Monitoring**: Automated health checks and rollback capability
+
+📦 **Details**: [CI/CD Documentation](docs/deployment/ci-cd.md)
+
+
+## Contributing
+
+### Branching Strategy
+
+- `main` - Production-ready code (protected, requires PR approval)
+- `feature/[description]` - New features
+- `bugfix/[description]` - Bug fixes  
+- `docs/[description]` - Documentation updates
+- `spec/[description]` - Specification documents
+
+### Commit Conventions
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <description>
+
+Examples:
+feat(attendance): add QR code generation
+fix(auth): resolve session timeout issue
+docs(api): update API documentation
+```
+
+**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+
+### Pull Request Workflow
+
+1. **Create branch** from `main`
+2. **Implement changes** with tests
+3. **Run quality checks**: `npm run lint && npm test`
+4. **Submit PR** with conventional commit title
+5. **Code review** by team members
+6. **CI pipeline** must pass
+7. **Merge to main** (auto-deploys to production)
+
+### Code Standards
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| **Files** | kebab-case | `user-profile.js` |
 | **Variables** | camelCase | `userName`, `isAuthenticated` |
-| **Constants** | UPPER_SNAKE_CASE | `API_BASE_URL`, `MAX_RETRY_ATTEMPTS` |
-| **Classes** | PascalCase | `UserManager`, `DatabaseConnection` |
-| **Functions** | camelCase | `getUserData()`, `validateInput()` |
-| **Branches** | lowercase-with-hyphens | `feature/add-search` |
-| **Commits** | conventional commits | `<type>: <description>` |
-| **PRs** | conventional commits | `feat: Add user search functionality` |
+| **Constants** | UPPER_SNAKE_CASE | `API_BASE_URL` |
+| **Classes** | PascalCase | `UserManager` |
+| **Functions** | camelCase | `getUserData()` |
 
-### 1. Branch Creation
+📖 **Full Guidelines**: [Contributing Guide](docs/contributing/workflow.md)
 
-bash
-git checkout main
-git pull origin main
-git checkout -b feature/[description]
+## Team
 
-### 2. Development Process
+### Sprint Process
 
-- Implement changes following coding standards `npm run lint`
-- Write corresponding test cases
-- Run local tests: `npm test` or equivalent
-- Ensure code coverage meets minimum threshold
+- **Duration**: 1-week sprints
+- **Standups**: Tuesdays & Thursdays via Slack bot
+- **Reviews**: End of sprint (demo + retrospective)
+- **Planning**: Start of sprint (story pointing + assignment)
 
-### 3. Pre-Submission Checklist
+### On-Call Rotation
 
-- [ ] All tests pass locally
-- [ ] Code follows naming conventions
-- [ ] Documentation updated if needed
-- [ ] No console.log or debug statements
-- [ ] Security best practices followed & No API keys provided
+- **Responsibility**: First responder for PRs and merge conflicts
+- **Rotation**: Per sub-team, rotates each sprint
 
-### 4. Pull Request Submission
-
-- Create PR with naming convention and detailed description
-- Link related GitHub issues
-- Add appropriate labels (feature, bugfix, etc.)
-- Request review from on-call team member(s)
-- Ensure CI/CD pipeline passes all checks
-
-### 5. Code Review Process
-
-- Address all reviewer feedback
-- Maintain clean commit history (squash if necessary)
-- Obtain required approvals before merging
-
-### 6. Deployment
-
-- Merge to `main` triggers automated deployment
-- Monitor deployment metrics and logs
-- Verify functionality in production environment
-- Rollback plan ready if issues arise
-
-## Code Review Standards
-
-All pull requests require review.
-
-**Review Criteria:**
-
-- Code functionality and correctness
-- Adherence to naming conventions and standards
-- Test coverage and quality
-- Security considerations
-- Performance implications
-- Documentation completeness
-
-## Communication & Feedback
-
-Regular communication ensures team alignment and continuous improvement.
-
-### Standups (10:00 AM PST on Tuesdays & Thursdays via Slack Bot)
-
-- What you completed since last check-in
-- What you're working on today
-- Any blockers or dependencies
-
-### Sprint Review & Retrospectives
-
-- What went well this sprint
-- What could be improved
-- Action items for next sprint
-- Process adjustments and team feedback
-
-### Issue Tracking
+### Communication
 
 - **GitHub Issues**: Bug reports and feature requests
-- **Labels**: Use appropriate labels (bug, enhancement, documentation)
-- **Assignments**: Assign issues during sprint planning
-- **Updates**: Comment on progress and blockers
+- **Slack**: Daily standups and quick questions
+- **Wiki**: Team documentation and resources
+
+## Environment Variables
+
+Create a `.env` file with:
+
+```env
+# Server Configuration
+PORT=8443
+NODE_ENV=development
+SESSION_SECRET=your-secret-key-min-32-chars
+
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/conductor
+
+# Google OAuth 2.0
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:8443/auth/google/callback
+
+# Observability (Optional - for SigNoz integration)
+SIGNOZ_ENDPOINT=http://localhost:4318
+SERVICE_NAME=conductor-app
+ENVIRONMENT=development
+```
+
+📖 **Setup Guide**: [Installation Documentation](docs/getting-started/installation.md)
+
+## License
+
+This project is part of UCSD CSE 210 coursework.  
+© 2025 Team04-UCSD-CSE210
+
+## Support & Resources
+
+- 📖 [Documentation](docs/) - Comprehensive guides and references
+- 🐛 [Issue Tracker](https://github.com/Team04-UCSD-CSE210/conductor-app/issues) - Report bugs
+- 💬 [Project Wiki](https://github.com/Team04-UCSD-CSE210/conductor-app/wiki) - Team resources
+- 🎓 [Course Page](https://ucsd.edu) - UC San Diego CSE 210
+
+---
+
+**Built with ❤️ by Team04 for UC San Diego CSE 210 Software Engineering**
+
