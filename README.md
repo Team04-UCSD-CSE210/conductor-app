@@ -1,9 +1,6 @@
 # Conductor
 
-> **A comprehensive course management platform for CSE 210 Software Engineering**
-
-[![CI Pipeline](https://github.com/Team04-UCSD-CSE210/conductor-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Team04-UCSD-CSE210/conductor-app/actions/workflows/ci.yml)
-[![Testing Suite](https://github.com/Team04-UCSD-CSE210/conductor-app/actions/workflows/testing.yml/badge.svg)](https://github.com/Team04-UCSD-CSE210/conductor-app/actions/workflows/testing.yml)
+**A comprehensive course management platform for CSE 210 Software Engineering**
 
 ## Overview
 
