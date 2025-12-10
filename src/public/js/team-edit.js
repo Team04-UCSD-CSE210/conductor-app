@@ -13,6 +13,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     logoUpload.addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('File size must be less than 5MB');
+          logoUpload.value = '';
+          return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          alert('Please select an image file');
+          logoUpload.value = '';
+          return;
+        }
+
         selectedFile = file;
         
         // Show preview
@@ -34,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (saveImageBtn) {
     saveImageBtn.addEventListener('click', async function() {
       if (selectedFile && currentTeam) {
-        await saveTeamData();
+        await saveLogoOnly();
       }
     });
   }
@@ -98,50 +112,25 @@ document.addEventListener('DOMContentLoaded', async function() {
       currentLogo.src = team.logo_url;
     }
     
-    // Populate links
-    const links = team.links || {};
+    // Populate links - handle both string and object formats
+    let links = team.links || {};
+    if (typeof links === 'string') {
+      try {
+        links = JSON.parse(links);
+      } catch (e) {
+        console.warn('Failed to parse team links JSON:', e);
+        links = {};
+      }
+    }
+    
     document.getElementById('slackLink').value = links.slack || '';
     document.getElementById('repoLink').value = links.repo || '';
   }
 
-  // Handle logo file selection
-  logoUpload.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const saveImageBtn = document.getElementById('saveImageBtn');
-    
-    if (file) {
-      // Validate file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
-        logoUpload.value = '';
-        return;
-      }
-
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
-        logoUpload.value = '';
-        return;
-      }
-
-      selectedFile = file;
-      
-      // Preview the selected image
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        currentLogo.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-      
-      // Show save image button
-      saveImageBtn.style.display = 'inline-block';
-    }
-  });
-
-  // Handle separate image save
-  document.getElementById('saveImageBtn').addEventListener('click', async function() {
-    if (!selectedFile) {
-      alert('No image selected');
+  // Save logo only
+  async function saveLogoOnly() {
+    if (!selectedFile || !currentTeam) {
+      alert('No image selected or team not loaded');
       return;
     }
 
@@ -153,6 +142,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       
       const response = await fetch(`/api/teams/${currentTeam.id}`, {
         method: 'PUT',
+        credentials: 'include',
         body: formData
       });
       
@@ -167,7 +157,14 @@ document.addEventListener('DOMContentLoaded', async function() {
       // Update current team data and hide save button
       currentTeam = updatedTeam;
       selectedFile = null;
-      document.getElementById('saveImageBtn').style.display = 'none';
+      if (saveImageBtn) {
+        saveImageBtn.style.display = 'none';
+      }
+      
+      // Update logo display
+      if (updatedTeam.logo_url) {
+        currentLogo.src = updatedTeam.logo_url;
+      }
       
     } catch (error) {
       console.error('Error updating team logo:', error);
@@ -175,9 +172,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     } finally {
       loadingOverlay.style.display = 'none';
     }
-  });
+  }
 
-  // Handle all form submissions
+  // Save all team data
   async function saveTeamData() {
     const teamName = document.getElementById('teamName').value.trim();
     if (!teamName) {
@@ -194,8 +191,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Add links as JSON
     const links = {
       slack: document.getElementById('slackLink').value.trim(),
-      repo: document.getElementById('repoLink').value.trim(),
-      mattermost: document.getElementById('mmLink').value.trim()
+      repo: document.getElementById('repoLink').value.trim()
     };
     formData.append('links', JSON.stringify(links));
     
@@ -209,6 +205,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       
       const response = await fetch(`/api/teams/${currentTeam.id}`, {
         method: 'PUT',
+        credentials: 'include',
         body: formData
       });
       
@@ -224,6 +221,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       currentTeam = updatedTeam;
       populateForm(currentTeam);
       selectedFile = null; // Clear selected file after successful upload
+      
+      // Hide save image button
+      if (saveImageBtn) {
+        saveImageBtn.style.display = 'none';
+      }
       
     } catch (error) {
       console.error('Error updating team:', error);
@@ -242,7 +244,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   // Handle links form submission
-  const linksForm = document.querySelector('.settings-section:last-child form');
+  const linksForm = document.getElementById('teamLinksForm');
   if (linksForm) {
     linksForm.addEventListener('submit', async function(e) {
       e.preventDefault();

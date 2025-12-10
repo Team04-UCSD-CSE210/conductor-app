@@ -197,6 +197,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         t.status,
         t.leader_id,
         t.created_at,
+        t.formed_at,
         t.mantra,
         t.logo_url,
         t.links,
@@ -220,7 +221,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       LEFT JOIN users leader ON t.leader_id = leader.id
       LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.left_at IS NULL
       LEFT JOIN users u ON tm.user_id = u.id
-      GROUP BY t.id, t.name, t.team_number, t.status, t.leader_id, t.created_at, t.mantra, t.logo_url, t.links, leader.id, leader.name, leader.email
+      WHERE t.offering_id = $1::uuid
+      GROUP BY t.id, t.name, t.team_number, t.status, t.leader_id, t.created_at, t.formed_at, t.mantra, t.logo_url, t.links, leader.id, leader.name, leader.email
       ORDER BY t.team_number, t.name
     `;
 
@@ -235,7 +237,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       pool.query(tasQuery, [offeringId]),
       pool.query(tutorsQuery, [offeringId]),
       pool.query(studentsQuery, [offeringId]),
-      pool.query(teamsQuery) // No offering_id parameter for teams
+      pool.query(teamsQuery, [offeringId]) // Now includes offering_id parameter
     ]);
 
     res.json({
