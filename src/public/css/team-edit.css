@@ -262,8 +262,6 @@
   transition: all 0.2s;
   font-size: 1rem;
   margin-top: 1rem;
-  text-decoration: none;
-  display: inline-block;
 }
 
 .btn-outline-blue:hover {
@@ -274,47 +272,4 @@
 .btn-outline-blue:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgb(59 130 246 / 30%);
-}
-
-.btn-outline-blue:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Team Links Styling */
-.team-links {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.team-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.team-link-slack {
-  background: #4a154b;
-  color: white;
-}
-
-.team-link-slack:hover {
-  background: #611f69;
-  color: white;
-}
-
-.team-link-repo {
-  background: #24292e;
-  color: white;
-}
-
-.team-link-repo:hover {
-  background: #2f363d;
-  color: white;
 }

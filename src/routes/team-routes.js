@@ -376,17 +376,7 @@ router.put('/:teamId', ensureAuthenticated, upload.single('logo'), async (req, r
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    // Return the updated team with parsed links
-    const updatedTeam = result.rows[0];
-    if (updatedTeam.links && typeof updatedTeam.links === 'string') {
-      try {
-        updatedTeam.links = JSON.parse(updatedTeam.links);
-      } catch (e) {
-        // Keep as string if parsing fails
-      }
-    }
-
-    res.json(updatedTeam);
+    res.json(result.rows[0]);
   } catch (err) {
     console.error('Error updating team:', err);
     res.status(400).json({ error: err.message });
