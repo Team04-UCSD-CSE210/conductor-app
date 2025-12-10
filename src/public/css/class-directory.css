@@ -195,9 +195,6 @@
 
 /* ===== Person card (Professors / Tutors / TAs / Students) ===== */
 
-
-
-
 .person-card {
   display: grid;
   grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.2fr);
@@ -210,11 +207,9 @@
   box-shadow: 0 14px 30px rgb(15 118 110 / 6%);
 }
 
-
 .person-card .person-info {
   display: none;
 }
-
 
 .person-card.profile-open {
   grid-template-columns: minmax(0, 1.7fr) minmax(0, 2.1fr) minmax(0, 1.2fr);
@@ -224,26 +219,37 @@
   display: block;
 }
 
-
-
-
 .person-identity {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+/* 头像：固定 48x48，圆形 + 裁剪 */
 .person-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 20%, #a7f3d0, #22c55e);
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  overflow: hidden;
+  flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
+  /* 背景用于没有头像时的 initials 圆形 */
+  background: radial-gradient(circle at 30% 20%, #a7f3d0, #22c55e);
   color: #022c22;
   font-weight: 700;
   font-size: 16px;
+}
+
+/* 上传后真正的头像图片，填满容器并等比裁剪 */
+.person-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .person-heading {
@@ -274,8 +280,6 @@
 }
 
 /* 中間 – Contact + Availability */
-
-
 
 .info-grid {
   display: grid;
@@ -587,5 +591,3 @@
     grid-template-columns: 1fr;
   }
 }
-
-

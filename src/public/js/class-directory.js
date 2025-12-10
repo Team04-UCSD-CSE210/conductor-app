@@ -10,6 +10,7 @@ const state = {
   students: [],
   teams: [],
   currentTab: 'professors',
+  currentUser: null, // 新增：当前登录用户（从 navigation-context 拿）
   filters: {
     professors: { search: '' },
     tutors: { search: '', activity: 'all' },
@@ -80,6 +81,17 @@ const matchesSearch = (item, search) => {
   return fields.some((f) => f && String(f).toLowerCase().includes(q));
 };
 
+// 当前用户是否可以给这个 user 改头像
+const canCurrentUserEditAvatar = (user) => {
+  const ctx = state.currentUser;
+  if (!ctx) return false;
+
+  if (ctx.id && user.id && ctx.id === user.id) return true;
+  if (ctx.primary_role === 'admin' || ctx.primary_role === 'instructor') return true;
+
+  return false;
+};
+
 // ---------- DOM Init ----------
 
 const initializeElements = () => {
@@ -126,6 +138,38 @@ const api = {
     );
     if (!res.ok) throw new Error('Failed to fetch class directory');
     return res.json();
+  },
+
+  async getNavigationContext() {
+    const res = await fetch('/api/users/navigation-context', {
+      credentials: 'include'
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch navigation context: ${res.status}`);
+    }
+    return res.json();
+  },
+
+  async uploadAvatar(userId, file) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const res = await fetch(
+      `/api/class-directory/user/${encodeURIComponent(userId)}/avatar`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const message = err.error || `Upload failed with status ${res.status}`;
+      throw new Error(message);
+    }
+
+    return res.json();
   }
 };
 
@@ -135,7 +179,8 @@ const renderPersonCard = (user, options = {}) => {
   const {
     roleLabel,
     showTeam = false,
-    highlightTag = null
+    highlightTag = null,
+    canUploadAvatar = false
   } = options;
 
   const social = safeJsonParse(user.social_links);
@@ -143,7 +188,10 @@ const renderPersonCard = (user, options = {}) => {
 
   const pronouns = user.pronouns || '';
   const availabilityGeneral =
-    user.availability || social.availability || social.availability_general;
+    user.availability_general ||
+    user.availability ||
+    social.availability ||
+    social.availability_general;
   const availabilitySpecific =
     social.availability_specific || social.availability_details;
 
@@ -179,14 +227,10 @@ const renderPersonCard = (user, options = {}) => {
 
   const tags = [];
   if (highlightTag) {
-    tags.push(
-      `<span class="tag tag-accent">${highlightTag}</span>`
-    );
+    tags.push(`<span class="tag tag-accent">${highlightTag}</span>`);
   }
   if (showTeam && (user.team_name || user.team)) {
-    tags.push(
-      `<span class="tag">Team ${user.team_name || user.team}</span>`
-    );
+    tags.push(`<span class="tag">Team ${user.team_name || user.team}</span>`);
   }
 
   const activityClass =
@@ -198,14 +242,42 @@ const renderPersonCard = (user, options = {}) => {
       ? 'status-pill-inactive'
       : 'status-pill-unknown';
 
+  const displayName = user.preferred_name || user.name;
+  const initials = getInitials(displayName);
+  const hasAvatar = !!user.avatar_url;
+
+  const avatarHtml = hasAvatar
+    ? `<img class="person-avatar-img" src="${user.avatar_url}" alt="${displayName || 'Avatar'}" />`
+    : `<span>${initials}</span>`;
+
+  const uploadControls =
+    canUploadAvatar && user.id
+      ? `
+      <button
+        type="button"
+        class="btn btn-ghost avatar-upload-btn"
+        data-user-id="${user.id}"
+      >
+        Upload photo
+      </button>
+      <input
+        type="file"
+        accept="image/*"
+        class="avatar-file-input"
+        data-user-id="${user.id}"
+        hidden
+      />
+    `
+      : '';
+
   return `
     <article class="person-card" data-user-id="${user.id || ''}">
       <section class="person-identity">
         <div class="person-avatar">
-          <span>${getInitials(user.preferred_name || user.name)}</span>
+          ${avatarHtml}
         </div>
         <header class="person-heading">
-          <h3 class="person-name">${user.preferred_name || user.name}</h3>
+          <h3 class="person-name">${displayName}</h3>
           <p class="person-role-line">
             <span class="person-role">${roleLabel || user.role || ''}</span>
             ${
@@ -272,11 +344,14 @@ const renderPersonCard = (user, options = {}) => {
           >
             View details
           </button>
+          ${uploadControls}
         </div>
       </section>
     </article>
   `;
 };
+
+
 // ---------- Profile expand / collapse ----------
 
 const initProfileTogglesForGrid = (gridEl) => {
@@ -297,6 +372,59 @@ const initProfileTogglesForGrid = (gridEl) => {
     btn.addEventListener('click', () => {
       const isOpen = card.classList.toggle('profile-open');
       btn.textContent = isOpen ? 'Hide details' : baseLabel;
+    });
+  });
+};
+
+// ---------- Avatar upload init ----------
+
+const initAvatarUploadForGrid = (gridEl) => {
+  if (!gridEl) return;
+
+  const buttons = gridEl.querySelectorAll('.avatar-upload-btn');
+  if (!buttons.length) return;
+
+  buttons.forEach((btn) => {
+    const userId = btn.dataset.userId;
+    if (!userId) return;
+
+    const input = gridEl.querySelector(
+      `.avatar-file-input[data-user-id="${userId}"]`
+    );
+    if (!input) return;
+
+    btn.addEventListener('click', () => {
+      input.click();
+    });
+
+    input.addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = 'Uploading...';
+
+      try {
+        const result = await api.uploadAvatar(userId, file);
+
+        const card = gridEl.querySelector(
+          `.person-card[data-user-id="${userId}"]`
+        );
+        if (card) {
+          const avatarEl = card.querySelector('.person-avatar');
+          if (avatarEl && result.avatar_url) {
+            avatarEl.innerHTML = `<img src="${result.avatar_url}" alt="Profile photo" />`;
+          }
+        }
+      } catch (err) {
+        console.error('Avatar upload failed:', err);
+        alert(err.message || 'Failed to upload avatar.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        input.value = '';
+      }
     });
   });
 };
@@ -380,14 +508,15 @@ const renderProfessorsGrid = () => {
     .map((prof) =>
       renderPersonCard(prof, {
         roleLabel: prof.role || 'Professor',
-        highlightTag: 'Instructor'
+        highlightTag: 'Instructor',
+        canUploadAvatar: canCurrentUserEditAvatar(prof)
       })
     )
     .join('');
 
   initProfileTogglesForGrid(grid);
+  initAvatarUploadForGrid(grid);
 };
-
 
 const renderTutorsGrid = () => {
   const grid = elements.tutorsGrid;
@@ -402,14 +531,15 @@ const renderTutorsGrid = () => {
     .map((tutor) =>
       renderPersonCard(tutor, {
         roleLabel: tutor.role || 'Tutor',
-        highlightTag: 'Tutor'
+        highlightTag: 'Tutor',
+        canUploadAvatar: canCurrentUserEditAvatar(tutor)
       })
     )
     .join('');
 
   initProfileTogglesForGrid(grid);
+  initAvatarUploadForGrid(grid);
 };
-
 
 const renderTasGrid = () => {
   const grid = elements.tasGrid;
@@ -424,14 +554,15 @@ const renderTasGrid = () => {
     .map((ta) =>
       renderPersonCard(ta, {
         roleLabel: ta.role || 'Teaching Assistant',
-        highlightTag: 'TA'
+        highlightTag: 'TA',
+        canUploadAvatar: canCurrentUserEditAvatar(ta)
       })
     )
     .join('');
 
   initProfileTogglesForGrid(grid);
+  initAvatarUploadForGrid(grid);
 };
-
 
 const renderStudentsGrid = () => {
   const grid = elements.studentsGrid;
@@ -446,14 +577,15 @@ const renderStudentsGrid = () => {
     .map((student) =>
       renderPersonCard(student, {
         roleLabel: student.role || 'Student',
-        showTeam: true
+        showTeam: true,
+        canUploadAvatar: canCurrentUserEditAvatar(student)
       })
     )
     .join('');
 
   initProfileTogglesForGrid(grid);
+  initAvatarUploadForGrid(grid);
 };
-
 
 const renderTeamsGrid = () => {
   const grid = elements.teamsGrid;
@@ -565,7 +697,6 @@ const setActiveTab = (tab) => {
     section.classList.toggle('active', isActive);
   });
 
-  // 避免切 tab 時 grid 還沒更新
   switch (tab) {
     case 'professors':
       renderProfessorsGrid();
@@ -662,6 +793,14 @@ const setupEventListeners = () => {
 
 const loadData = async () => {
   try {
+    // 0) 当前用户（用于权限 / 按钮显示）
+    try {
+      const context = await api.getNavigationContext();
+      state.currentUser = context;
+    } catch (err) {
+      console.warn('Failed to load navigation context:', err.message);
+    }
+
     // 1) active offering
     const offering = await api.getActiveOffering();
     state.offeringId = offering.id;

@@ -2,7 +2,37 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 
+// ---- 新增：头像上传相关 ----
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
 const router = Router();
+
+// 确保 uploads/avatars 目录存在
+const avatarDir = path.resolve('uploads/avatars');
+if (!fs.existsSync(avatarDir)) {
+  fs.mkdirSync(avatarDir, { recursive: true });
+}
+
+// 配置 multer 存储
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, avatarDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '');
+    const userId = req.params.userId || 'user';
+    cb(null, `${userId}-${Date.now()}${ext || '.png'}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  }
+});
 
 /**
  * GET /api/class-directory?offering_id=:id
@@ -37,7 +67,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.social_links,
         u.last_activity,
         e.course_role,
-        u.primary_role
+        u.primary_role,
+        u.avatar_url
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
       WHERE e.offering_id = $1::uuid
@@ -60,7 +91,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.social_links,
         u.last_activity,
         e.course_role,
-        u.primary_role
+        u.primary_role,
+        u.avatar_url
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
       WHERE e.offering_id = $1::uuid
@@ -83,7 +115,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.social_links,
         u.last_activity,
         e.course_role,
-        u.primary_role
+        u.primary_role,
+        u.avatar_url
       FROM enrollments e
       JOIN users u ON e.user_id = u.id
       WHERE e.offering_id = $1::uuid
@@ -107,6 +140,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.last_activity,
         e.course_role,
         u.primary_role,
+        u.avatar_url,
         tm.team_id,
         t.name AS team_name,
         tm.role AS team_role
@@ -182,9 +216,54 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 });
 
 /**
+ * POST /api/class-directory/user/:userId/avatar
+ * Body: FormData { avatar: <file> }
+ */
+router.post(
+  '/user/:userId/avatar',
+  ensureAuthenticated,
+  upload.single('avatar'),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({ error: 'userId is required' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'avatar file is required' });
+      }
+
+      
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const relativePath = `/uploads/avatars/${req.file.filename}`;
+      const absoluteUrl = `${req.protocol}://${req.get('host')}${relativePath}`;
+
+      await pool.query(
+        `
+        UPDATE users
+        SET avatar_url = $2,
+            updated_at = now()
+        WHERE id = $1::uuid
+        `,
+        [userId, absoluteUrl]
+      );
+
+      return res.json({ avatar_url: absoluteUrl });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      return res.status(500).json({ error: 'Failed to upload avatar' });
+    }
+  }
+);
+
+
+/**
  * GET /api/class-directory/:userId/activity?days=7
- * 取某位使用者最近若干天的活動紀錄 & 出勤情況
- * （目前前端不一定用得到，但保留這個端點以後可以做 drill-down）
  */
 router.get('/:userId/activity', ensureAuthenticated, async (req, res) => {
   try {
@@ -195,8 +274,6 @@ router.get('/:userId/activity', ensureAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'userId is required' });
     }
 
-    // 這裡假設有 activity_logs / attendance 兩張表，
-    // 如果你的實際欄位名字不同，可以對應改掉。
     const activityQuery = `
       SELECT
         al.id,
