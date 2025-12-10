@@ -551,11 +551,22 @@ const renderPersonCard = (user, options = {}) => {
 
   const availabilityGeneralVal = availabilityGeneral || user.availability_general || '';
   const availabilitySpecificVal = availabilitySpecific || user.availability_specific || '';
-  const formId = user.id
-    ? `edit-${user.id}`
-    : `edit-${(typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : Math.random().toString(36).slice(2))}`;
+  const generateSafeId = () => {
+    if (typeof crypto !== 'undefined') {
+      if (typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+      if (typeof crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+      }
+    }
+    // As a last resort, fall back to a timestamp string (avoids Math.random)
+    return `ts-${Date.now().toString(36)}`;
+  };
+
+  const formId = user.id ? `edit-${user.id}` : `edit-${generateSafeId()}`;
 
   return `
     <article class="${cardClasses.join(' ')}" data-user-id="${user.id || ''}">
