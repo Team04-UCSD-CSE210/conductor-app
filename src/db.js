@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import pg from 'pg';
+import { recordDbSample } from './observability/diagnostics.js';
 
 // Use DATABASE_URL from environment, or default to a test database URL for CI/tests
 // This allows tests to run in CI environments without requiring a .env file
@@ -28,6 +29,22 @@ export const pool = new pg.Pool({
 pool.on('connect', () => {
   if (process.env.DEBUG_DB) console.log('[db] connect event');
 });
+
+// Wrap pool.query to capture duration/errors for diagnostics
+const baseQuery = pool.query.bind(pool);
+pool.query = async (...args) => {
+  const start = process.hrtime.bigint();
+  try {
+    const result = await baseQuery(...args);
+    const durationMs = Number(process.hrtime.bigint() - start) / 1e6;
+    recordDbSample({ durationMs });
+    return result;
+  } catch (err) {
+    const durationMs = Number(process.hrtime.bigint() - start) / 1e6;
+    recordDbSample({ durationMs, error: err.message });
+    throw err;
+  }
+};
 
 export async function assertDb() {
   try {
