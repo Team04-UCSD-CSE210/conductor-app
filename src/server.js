@@ -978,6 +978,41 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
   }
 });
 
+// Team edit page - accessible only to team leads for their own team
+app.get("/team-edit", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Admin and instructor can access team edit (for any team)
+    if (user.user_type === 'admin' || user.user_type === 'instructor') {
+      return res.sendFile(buildFullViewPath("team-edit.html"));
+    }
+
+    // For team leads, check if they have a team
+    const { rows } = await pool.query(
+      'SELECT id FROM team WHERE leader_id = $1',
+      [user.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(403).send("Forbidden: You are not a team leader");
+    }
+
+    return res.sendFile(buildFullViewPath("team-edit.html"));
+  } catch (error) {
+    console.error("Error accessing team edit page:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
 app.get("/student-dashboard", ensureAuthenticated, async (req, res) => {
   try {
     const email = req.user?.emails?.[0]?.value;

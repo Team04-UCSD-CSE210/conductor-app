@@ -601,6 +601,7 @@
   height: 100%;
   object-fit: cover;
   border-radius: 12px;
+  background: transparent;
 }
 
 .group-header-text .group-name {
@@ -886,4 +887,33 @@
   .info-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Team mantra section */
+.team-mantra-section {
+  display: none;
+}
+
+.team-mantra-text {
+  font-style: italic;
+  color: var(--palette-secondary, var(--teal-600, #0D9488));
+  text-align: center;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.team-members-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.member-bubble {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 16px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--gray-700);
+  font-weight: 500;
 }
