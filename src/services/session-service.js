@@ -67,7 +67,7 @@ async function checkAndAutoOpenSession(session) {
     const sessionStart = new Date(year, month - 1, day, hours, minutes, seconds);
     
     // Validate the date was parsed correctly
-    if (isNaN(sessionStart.getTime())) {
+    if (Number.isNaN(sessionStart.getTime())) {
       console.warn('[SessionService] Invalid date/time for auto-open check:', {
         session_id: session.id,
         session_date: session.session_date,
@@ -314,7 +314,7 @@ export class SessionService {
         let sessionStart = new Date(year, month - 1, day, hours, minutes, seconds);
         
         // Validate the date was parsed correctly
-        if (isNaN(sessionStart.getTime())) {
+        if (Number.isNaN(sessionStart.getTime())) {
           console.error('[SessionService] Invalid date/time for auto-open:', { 
             dateStr, 
             timeStr, 
@@ -526,7 +526,7 @@ export class SessionService {
           
           const sessionStart = new Date(year, month - 1, day, hours, minutes, seconds);
           
-          if (!isNaN(sessionStart.getTime()) && sessionStart <= now) {
+          if (!Number.isNaN(sessionStart.getTime()) && sessionStart <= now) {
             sessionsToOpen.push(session);
           }
         } catch (error) {
@@ -588,7 +588,7 @@ export class SessionService {
     if (endsAt) {
       try {
         const endDate = new Date(endsAt);
-        if (!isNaN(endDate.getTime())) {
+        if (!Number.isNaN(endDate.getTime())) {
           sessionUpdates.code_expires_at = endDate;
         }
       } catch (error) {
@@ -629,7 +629,7 @@ export class SessionService {
 
   /**
    * Delete session
-   * Only the creator may delete the session
+   * Only the creator or the instructor of the active course offering may delete the session
    */
   static async deleteSession(sessionId, userId) {
     const session = await SessionModel.findById(sessionId);
@@ -638,7 +638,29 @@ export class SessionService {
       throw new Error('Session not found');
     }
 
-    if (session.created_by !== userId) {
+    // Check if user is the creator
+    const isCreator = session.created_by === userId;
+    
+    // Check if user is the instructor of the active course offering
+    let isInstructor = false;
+    if (session.offering_id) {
+      const offeringResult = await pool.query(
+        `SELECT instructor_id, is_active 
+         FROM course_offerings 
+         WHERE id = $1`,
+        [session.offering_id]
+      );
+      
+      if (offeringResult.rows.length > 0) {
+        const offering = offeringResult.rows[0];
+        // Only allow if the offering is active and user is the instructor
+        if (offering.is_active && offering.instructor_id === userId) {
+          isInstructor = true;
+        }
+      }
+    }
+
+    if (!isCreator && !isInstructor) {
       throw new Error('Not authorized to manage this session');
     }
 

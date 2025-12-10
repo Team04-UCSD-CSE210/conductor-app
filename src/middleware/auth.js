@@ -33,8 +33,7 @@ export const ensureAuthenticated = async (req, res, next) => {
     return next();
   }
 
-  if (req.isAuthenticated && req.isAuthenticated()) {
-    // Set req.currentUser for backward compatibility
+  if (req.isAuthenticated?.()) {
     if (!req.currentUser) {
       const user = await getCurrentUser(req);
       if (user) {
@@ -59,7 +58,7 @@ export const ensureAuthenticated = async (req, res, next) => {
  * Get current user from session and database
  */
 export const getCurrentUser = async (req) => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
+  if (!req.isAuthenticated?.()) {
     return null;
   }
 

@@ -30,9 +30,9 @@
     // dateInput.value is in format YYYY-MM-DD
     const dateParts = dateInput.value.split('-');
     if (dateParts.length === 3) {
-      const year = parseInt(dateParts[0], 10);
-      const month = parseInt(dateParts[1], 10) - 1; // Month is 0-indexed
-      const day = parseInt(dateParts[2], 10);
+      const year = Number.parseInt(dateParts[0], 10);
+      const month = Number.parseInt(dateParts[1], 10) - 1;
+      const day = Number.parseInt(dateParts[2], 10);
       const date = new Date(year, month, day);
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
@@ -51,7 +51,7 @@
       
       // Update placeholder/display if there's a display element
       const displayElement = dateInput.nextElementSibling;
-      if (displayElement && displayElement.classList.contains('date-display')) {
+      if (displayElement?.classList.contains('date-display')) {
         displayElement.textContent = formatted || 'Select date';
       }
     }
@@ -104,11 +104,9 @@
         document.getElementById('lecture-end').classList.add('error');
       }
       return false;
-    } else {
-      if (endError) {
-        endError.classList.remove('show');
-        document.getElementById('lecture-end').classList.remove('error');
-      }
+    } else if (endError) {
+      endError.classList.remove('show');
+      document.getElementById('lecture-end').classList.remove('error');
     }
 
     return true;
@@ -570,7 +568,7 @@
     const dateObj = new Date(year, month - 1, day, hours, minutes, seconds);
     
     // Validate the date
-    if (isNaN(dateObj.getTime())) {
+    if (Number.isNaN(dateObj.getTime())) {
       console.error('Invalid date/time combination:', date, time);
       return null;
     }
@@ -601,8 +599,7 @@
 
   // Show toast - only called after successful lecture creation
   function showToast(lecture) {
-    if (!toast || !lecture || !lecture.id) {
-      // Ensure toast stays hidden if invalid
+    if (!toast || !lecture?.id) {
       if (toast) {
         toast.setAttribute('hidden', 'true');
       }
@@ -766,14 +763,11 @@
       }
 
       // Only show toast after successful creation (not for updates)
-      if (lecture && lecture.id && !editingSessionId) {
-        // Reset form
+      if (lecture?.id && !editingSessionId) {
         form.reset();
         questionList.innerHTML = '';
         addQuestion();
         showSaved();
-        
-        // Show toast notification
         showToast(lecture);
       } else if (editingSessionId) {
         // For updates, just show saved message and redirect
@@ -859,7 +853,7 @@
 
         // Pre-fill end time from code_expires_at (which stores the end time)
         const endTimeInput = document.getElementById('lecture-end');
-        if (lecture.endsAt && endTimeInput && sessionDate && sessionTime) {
+        if (lecture?.endsAt && endTimeInput && sessionDate && sessionTime) {
           // Parse endsAt - it's an ISO string, extract local time components
           const endDate = new Date(lecture.endsAt);
           
@@ -885,8 +879,8 @@
           const endDay = endDate.getDate();
           const isSameDay = endYear === startYear && endMonth === startMonth && endDay === startDay;
           const timeDiff = endDate.getTime() - startDateObj.getTime();
-          const isValidEndTime = !isNaN(endDate.getTime()) && 
-                                 !isNaN(startDateObj.getTime()) && 
+          const isValidEndTime = !Number.isNaN(endDate.getTime()) && 
+                                 !Number.isNaN(startDateObj.getTime()) && 
                                  isSameDay &&
                                  timeDiff > 0 && 
                                  timeDiff < 24 * 60 * 60 * 1000; // Less than 24 hours
@@ -897,8 +891,7 @@
             const minutes = String(endDate.getMinutes()).padStart(2, '0');
             endTimeInput.value = `${hours}:${minutes}`;
           } else {
-            // Invalid end time, default to 30 minutes after start
-            if (startTimeInput && startTimeInput.value) {
+            if (startTimeInput?.value) {
               const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
               const defaultEndDate = new Date(startYear, startMonth - 1, startDay, startHours, startMinutes, 0);
               defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
@@ -907,8 +900,7 @@
               endTimeInput.value = `${hours}:${minutes}`;
             }
           }
-        } else if (endTimeInput && startTimeInput && startTimeInput.value && sessionDate) {
-          // No end time provided, default to 30 minutes after start
+        } else if (endTimeInput && startTimeInput?.value && sessionDate) {
           let year, month, day;
           if (sessionDate instanceof Date) {
             year = sessionDate.getFullYear();
@@ -964,8 +956,7 @@
             const minutes = String(endDate.getMinutes()).padStart(2, '0');
             endTimeInput.value = `${hours}:${minutes}`;
           } else {
-            // End time is on different day, default to 30 minutes after start
-            if (startTimeInput && startTimeInput.value) {
+            if (startTimeInput?.value) {
               const [startHours, startMinutes] = startTimeInput.value.split(':').map(Number);
               const defaultEndDate = new Date(startYear, startMonth, startDay, startHours, startMinutes, 0);
               defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
@@ -1067,7 +1058,7 @@
         console.log('Fetched offering ID on load:', fetchedOfferingId, typeof fetchedOfferingId);
         
         if (fetchedOfferingId && fetchedOfferingId !== 'undefined' && fetchedOfferingId !== 'null') {
-          offeringId = fetchedOfferingId; // Update module-level variable
+          offeringId = fetchedOfferingId;
           if (container) {
             container.setAttribute('data-offering-id', offeringId);
           }
@@ -1079,7 +1070,7 @@
           const errorMsg = document.createElement('div');
           errorMsg.className = 'error-message';
           errorMsg.style.cssText = 'padding: 1rem; background: #fee; color: #c33; border-radius: 4px; margin-bottom: 1rem;';
-          errorMsg.innerHTML = '<strong>⚠️ No active course offering found.</strong><br>Please ensure you have an active course offering set up.';
+          errorMsg.innerHTML = '<strong> No active course offering found.</strong><br>Please ensure you have an active course offering set up.';
           if (container) {
             container.insertBefore(errorMsg, container.firstChild);
           }
@@ -1090,7 +1081,7 @@
         const errorMsg = document.createElement('div');
         errorMsg.className = 'error-message';
         errorMsg.style.cssText = 'padding: 1rem; background: #fee; color: #c33; border-radius: 4px; margin-bottom: 1rem;';
-        errorMsg.innerHTML = `<strong>⚠️ Error loading course offering:</strong><br>${error.message || 'Please refresh the page or contact support.'}`;
+        errorMsg.innerHTML = `<strong> Error loading course offering:</strong><br>${error.message || 'Please refresh the page or contact support.'}`;
         if (container) {
           container.insertBefore(errorMsg, container.firstChild);
         }
@@ -1139,7 +1130,7 @@
             const displayBtn = datePickerWrapper.querySelector('.date-picker-display');
             if (displayBtn && dateInput.value) {
               const date = new Date(dateInput.value + 'T00:00:00');
-              if (!isNaN(date.getTime())) {
+              if (!Number.isNaN(date.getTime())) {
                 displayBtn.textContent = formatDateDisplay(dateInput);
               }
             }
@@ -1170,7 +1161,14 @@
             const displayBtn = startPicker.querySelector('.time-picker-display');
             if (displayBtn) {
               const [h, m] = startTimeInput.value.split(':').map(Number);
-              const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+              let hour12;
+              if (h === 0) {
+                hour12 = 12;
+              } else if (h > 12) {
+                hour12 = h - 12;
+              } else {
+                hour12 = h;
+              }
               const ampm = h >= 12 ? ' PM' : ' AM';
               displayBtn.textContent = `${String(hour12).padStart(2, '0')}:${String(m).padStart(2, '0')}${ampm}`;
             }
@@ -1186,14 +1184,14 @@
       const startValue = startTimeInput.value;
       if (!startValue) return;
       
-        const [startHours, startMinutes] = startValue.split(':').map(Number);
-        const startDate = new Date();
-        startDate.setHours(startHours, startMinutes, 0, 0);
-        startDate.setMinutes(startDate.getMinutes() + 30);
-        
-        const endHours = String(startDate.getHours()).padStart(2, '0');
-        const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
-        endTimeInput.value = `${endHours}:${endMinutes}`;
+      const [startHours, startMinutes] = startValue.split(':').map(Number);
+      const startDate = new Date();
+      startDate.setHours(startHours, startMinutes, 0, 0);
+      startDate.setMinutes(startDate.getMinutes() + 30);
+      
+      const endHours = String(startDate.getHours()).padStart(2, '0');
+      const endMinutes = String(startDate.getMinutes()).padStart(2, '0');
+      endTimeInput.value = `${endHours}:${endMinutes}`;
       
       // Update time picker display if it exists
       setTimeout(() => {
@@ -1213,7 +1211,7 @@
     }
     
     // Pre-fill end time as 30 minutes after start time (default)
-    if (endTimeInput && !endTimeInput.value && startTimeInput && startTimeInput.value) {
+    if (endTimeInput && !endTimeInput.value && startTimeInput?.value) {
       updateEndTimeFromStart();
     }
     

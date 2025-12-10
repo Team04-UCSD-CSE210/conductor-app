@@ -5,14 +5,11 @@ import database from '../src/database/database.js';
 /**
  * Example demonstrating user CRUD operations
  */
-async function runExample() {
+try {
   console.log('=== User CRUD Operations Example ===\n');
   
-  try {
-    // Initialize database
     await initializeDatabase();
     
-    // 1. Create users
     console.log('1. Creating users...');
     
     const user1 = await UserService.createUser({
@@ -29,12 +26,10 @@ async function runExample() {
     });
     console.log('✓ Created regular user:', user2.name);
     
-    // 2. Read user by ID
     console.log('\n2. Reading user by ID...');
     const foundUser = await UserService.getUserById(user1.id);
     console.log('✓ Found user:', foundUser.name, `(${foundUser.email})`);
     
-    // 3. Update user
     console.log('\n3. Updating user...');
     const updatedUser = await UserService.updateUser(user2.id, {
       name: 'Robert Smith',
@@ -42,7 +37,6 @@ async function runExample() {
     });
     console.log('✓ Updated user:', updatedUser.name, `- Role: ${updatedUser.role}`);
     
-    // 4. List all users
     console.log('\n4. Listing all users...');
     const allUsers = await UserService.getUsers();
     console.log(`✓ Found ${allUsers.total} users:`);
@@ -50,7 +44,6 @@ async function runExample() {
       console.log(`  - ${user.name} (${user.role})`);
     });
     
-    // 5. Filter users by role
     console.log('\n5. Filtering users by role...');
     const adminUsers = await UserService.getUsers({ role: 'admin' });
     console.log(`✓ Found ${adminUsers.users.length} admin users:`);
@@ -58,12 +51,10 @@ async function runExample() {
       console.log(`  - ${user.name}`);
     });
     
-    // 6. Delete user
     console.log('\n6. Deleting user...');
     await UserService.deleteUser(user2.id);
     console.log('✓ Deleted user:', user2.name);
     
-    // 7. Verify deletion
     console.log('\n7. Verifying deletion...');
     const remainingUsers = await UserService.getUsers();
     console.log(`✓ Remaining users: ${remainingUsers.total}`);
@@ -72,10 +63,7 @@ async function runExample() {
     
   } catch (error) {
     console.error('Example failed:', error.message);
+  process.exit(1);
   } finally {
     await database.close();
   }
-}
-
-// Run the example
-runExample();

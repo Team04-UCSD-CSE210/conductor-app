@@ -1,11 +1,10 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
-
-
+import validator from 'validator';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 
 const router = Router();
 
@@ -21,9 +20,14 @@ const storage = multer.diskStorage({
     cb(null, avatarDir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '');
-    const userId = req.params.userId || 'user';
-    cb(null, `${userId}-${Date.now()}${ext || '.png'}`);
+    const ext = path.extname(file.originalname || '') || '.png';
+    const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, '');
+    let userId = req.params.userId || 'user';
+    if (!validator.isUUID(userId)) {
+      userId = 'user';
+    }
+    const sanitizedUserId = userId.replace(/[^a-zA-Z0-9-]/g, '');
+    cb(null, `${sanitizedUserId}-${Date.now()}${safeExt}`);
   }
 });
 

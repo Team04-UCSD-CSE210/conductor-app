@@ -218,8 +218,8 @@ export class CourseOfferingModel {
    * Find all course offerings with pagination
    */
   static async findAll(options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
 
     let whereClause = 'WHERE 1=1';
     const params = [];
@@ -295,8 +295,8 @@ export class CourseOfferingModel {
    * Find course offerings by instructor
    */
   static async findByInstructor(instructorId, options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
 
     const { rows } = await pool.query(
       `
@@ -510,7 +510,7 @@ export class CourseOfferingModel {
       `SELECT COUNT(*) as count FROM course_offerings ${whereClause}`,
       params
     );
-    return parseInt(rows[0].count, 10);
+    return Number.parseInt(rows[0].count, 10);
   }
 
   /**

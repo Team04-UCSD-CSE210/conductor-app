@@ -80,8 +80,20 @@ DECLARE
     student_ids UUID[];
     session_idx INTEGER;
     student_idx INTEGER;
-    chars TEXT := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; -- Exclude confusing chars (I, O, 0, 1)
+    chars TEXT := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     new_access_code TEXT;
+    time_1400 CONSTANT TIME := '14:00:00'::TIME;
+    time_1600 CONSTANT TIME := '16:00:00'::TIME;
+    code_length CONSTANT INTEGER := 6;
+    is_active_true CONSTANT BOOLEAN := TRUE;
+    is_required_true CONSTANT BOOLEAN := TRUE;
+    is_required_false CONSTANT BOOLEAN := FALSE;
+    col_question_type CONSTANT TEXT := 'question_type';
+    col_is_required CONSTANT TEXT := 'is_required';
+    col_created_by CONSTANT TEXT := 'created_by';
+    col_updated_by CONSTANT TEXT := 'updated_by';
+    first_student_index CONSTANT INTEGER := 1;
+    date_cast_suffix CONSTANT TEXT := '::DATE';
     session_titles TEXT[] := ARRAY[
         'Lecture 1: Introduction to Software Engineering',
         'Lecture 2: Requirements and Design',
@@ -103,14 +115,14 @@ DECLARE
         '2025-11-17'::DATE   -- Monday, Nov 17 (Lecture 8 - Last class before Nov 18)
     ];
     session_times TIME[] := ARRAY[
-        '14:00:00'::TIME,    -- 2:00 PM
-        '14:00:00'::TIME,
-        '14:00:00'::TIME,
-        '14:00:00'::TIME,
-        '16:00:00'::TIME,    -- 4:00 PM
-        '16:00:00'::TIME,
-        '16:00:00'::TIME,
-        '16:00:00'::TIME
+        time_1400,
+        time_1400,
+        time_1400,
+        time_1400,
+        time_1600,
+        time_1600,
+        time_1600,
+        time_1600
     ];
     attendance_percentages INTEGER[] := ARRAY[92, 88, 85, 90, 87, 91, 89, 86]; -- Different attendance rates
     code_char_idx INTEGER;
@@ -189,7 +201,7 @@ BEGIN
             WHILE NOT unique_code AND attempts < 20 LOOP
                 -- Generate random 6-character code
                 code_result := '';
-                FOR loop_i IN 1..6 LOOP
+                FOR loop_i IN 1..code_length LOOP
                     code_char_idx := floor(random() * length(chars) + 1)::INTEGER;
                     code_result := code_result || substr(chars, code_char_idx, 1);
                 END LOOP;
@@ -234,7 +246,7 @@ BEGIN
                 session_times[session_idx],
                 new_access_code,
                 code_expires_at,
-                TRUE,
+                is_active_true,
                 opened_at,
                 closed_at,
                 instructor_id,
@@ -261,7 +273,7 @@ BEGIN
             -- Ensure we have present students
             IF present_students IS NULL OR array_length(present_students, 1) = 0 THEN
                 -- Fallback: at least first student is present
-                present_students := ARRAY[student_ids[1]];
+                present_students := ARRAY[student_ids[first_student_index]];
             END IF;
             
             -- Get absent students (all students not in present list)
@@ -354,7 +366,7 @@ BEGIN
                 'text',
                 1,
                 NULL,
-                TRUE,
+                is_required_true,
                 instructor_id,
                 instructor_id
             )
@@ -376,7 +388,7 @@ BEGIN
                 'multiple_choice',
                 2,
                 '["Very well", "Well", "Somewhat", "Not well"]'::JSONB,
-                TRUE,
+                is_required_true,
                 instructor_id,
                 instructor_id
             )
@@ -398,7 +410,7 @@ BEGIN
                 'pulse_check',
                 3,
                 '["Yes", "Partially", "No"]'::JSONB,
-                FALSE,
+                is_required_false,
                 instructor_id,
                 instructor_id
             )

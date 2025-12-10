@@ -12,8 +12,14 @@ DECLARE
     ta3_id UUID;
     tutor1_id UUID;
     tutor2_id UUID;
-    active_status CONSTANT team_status_enum := 'active'::team_status_enum;
     current_date_val DATE := CURRENT_DATE;
+    active_status CONSTANT team_status_enum := 'active'::team_status_enum;
+    role_ta CONSTANT enrollment_role_enum := 'ta'::enrollment_role_enum;
+    role_tutor CONSTANT enrollment_role_enum := 'tutor'::enrollment_role_enum;
+    role_student_enroll CONSTANT enrollment_role_enum := 'student'::enrollment_role_enum;
+    status_enrolled CONSTANT enrollment_status_enum := 'enrolled'::enrollment_status_enum;
+    team_role_leader CONSTANT team_member_role_enum := 'leader'::team_member_role_enum;
+    team_role_member CONSTANT team_member_role_enum := 'member'::team_member_role_enum;
 BEGIN
     -- Get instructor ID first (try multiple possible emails)
     SELECT id INTO instructor_id 
@@ -104,33 +110,33 @@ BEGIN
     -- Enroll TAs
     IF ta1_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, ta1_id, 'ta'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, current_date_val)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::enrollment_role_enum;
+        VALUES (offering_id_var, ta1_id, role_ta, status_enrolled, current_date_val)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = role_ta;
     END IF;
     
     IF ta2_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, ta2_id, 'ta'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, current_date_val)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::enrollment_role_enum;
+        VALUES (offering_id_var, ta2_id, role_ta, status_enrolled, current_date_val)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = role_ta;
     END IF;
     
     IF ta3_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, ta3_id, 'ta'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, current_date_val)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'ta'::enrollment_role_enum;
+        VALUES (offering_id_var, ta3_id, role_ta, status_enrolled, current_date_val)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = role_ta;
     END IF;
     
     -- Enroll Tutors
     IF tutor1_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, tutor1_id, 'tutor'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, current_date_val)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'tutor'::enrollment_role_enum;
+        VALUES (offering_id_var, tutor1_id, role_tutor, status_enrolled, current_date_val)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = role_tutor;
     END IF;
     
     IF tutor2_id IS NOT NULL THEN
         INSERT INTO enrollments (offering_id, user_id, course_role, status, enrolled_at)
-        VALUES (offering_id_var, tutor2_id, 'tutor'::enrollment_role_enum, 'enrolled'::enrollment_status_enum, current_date_val)
-        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = 'tutor'::enrollment_role_enum;
+        VALUES (offering_id_var, tutor2_id, role_tutor, status_enrolled, current_date_val)
+        ON CONFLICT (offering_id, user_id) DO UPDATE SET course_role = role_tutor;
     END IF;
     
     -- Auto-enroll ALL students (primary_role = 'student') - both UCSD and extension
@@ -139,8 +145,8 @@ BEGIN
     SELECT 
         offering_id_var,
         id,
-        'student'::enrollment_role_enum,
-        'enrolled'::enrollment_status_enum,
+        role_student_enroll,
+        status_enrolled,
         current_date_val
     FROM users
     WHERE primary_role = 'student'::user_role_enum
@@ -194,18 +200,18 @@ BEGIN
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-            VALUES (team_id_var, student1_id, 'leader'::team_member_role_enum, current_date_val, instructor_id)
+            VALUES (team_id_var, student1_id, team_role_leader, current_date_val, instructor_id)
             ON CONFLICT (team_id, user_id) DO NOTHING;
             
             IF student3_id IS NOT NULL THEN
                 INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-                VALUES (team_id_var, student3_id, 'member'::team_member_role_enum, current_date_val, instructor_id)
+                VALUES (team_id_var, student3_id, team_role_member, current_date_val, instructor_id)
                 ON CONFLICT (team_id, user_id) DO NOTHING;
             END IF;
             
             IF ext2_id IS NOT NULL THEN
                 INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-                VALUES (team_id_var, ext2_id, 'member'::team_member_role_enum, current_date_val, instructor_id)
+                VALUES (team_id_var, ext2_id, team_role_member, current_date_val, instructor_id)
                 ON CONFLICT (team_id, user_id) DO NOTHING;
             END IF;
             
@@ -219,12 +225,12 @@ BEGIN
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-            VALUES (team_id_var, student4_id, 'leader'::team_member_role_enum, current_date_val, instructor_id)
+            VALUES (team_id_var, student4_id, team_role_leader, current_date_val, instructor_id)
             ON CONFLICT (team_id, user_id) DO NOTHING;
             
             IF student5_id IS NOT NULL THEN
                 INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-                VALUES (team_id_var, student5_id, 'member'::team_member_role_enum, current_date_val, instructor_id)
+                VALUES (team_id_var, student5_id, team_role_member, current_date_val, instructor_id)
                 ON CONFLICT (team_id, user_id) DO NOTHING;
             END IF;
             
@@ -238,18 +244,18 @@ BEGIN
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-            VALUES (team_id_var, student6_id, 'leader'::team_member_role_enum, current_date_val, instructor_id)
+            VALUES (team_id_var, student6_id, team_role_leader, current_date_val, instructor_id)
             ON CONFLICT (team_id, user_id) DO NOTHING;
             
             IF student7_id IS NOT NULL THEN
                 INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-                VALUES (team_id_var, student7_id, 'member'::team_member_role_enum, current_date_val, instructor_id)
+                VALUES (team_id_var, student7_id, team_role_member, current_date_val, instructor_id)
                 ON CONFLICT (team_id, user_id) DO NOTHING;
             END IF;
             
             IF ext3_id IS NOT NULL THEN
                 INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-                VALUES (team_id_var, ext3_id, 'member'::team_member_role_enum, current_date_val, instructor_id)
+                VALUES (team_id_var, ext3_id, team_role_member, current_date_val, instructor_id)
                 ON CONFLICT (team_id, user_id) DO NOTHING;
             END IF;
             
@@ -263,12 +269,12 @@ BEGIN
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-            VALUES (team_id_var, student8_id, 'leader'::team_member_role_enum, current_date_val, instructor_id)
+            VALUES (team_id_var, student8_id, team_role_leader, current_date_val, instructor_id)
             ON CONFLICT (team_id, user_id) DO NOTHING;
             
             IF ext4_id IS NOT NULL THEN
                 INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-                VALUES (team_id_var, ext4_id, 'member'::team_member_role_enum, current_date_val, instructor_id)
+                VALUES (team_id_var, ext4_id, team_role_member, current_date_val, instructor_id)
                 ON CONFLICT (team_id, user_id) DO NOTHING;
             END IF;
             
@@ -282,12 +288,12 @@ BEGIN
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-            VALUES (team_id_var, ext5_id, 'leader'::team_member_role_enum, current_date_val, instructor_id)
+            VALUES (team_id_var, ext5_id, team_role_leader, current_date_val, instructor_id)
             ON CONFLICT (team_id, user_id) DO NOTHING;
             
             IF bhavikgmail_id IS NOT NULL THEN
                 INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-                VALUES (team_id_var, bhavikgmail_id, 'member'::team_member_role_enum, current_date_val, instructor_id)
+                VALUES (team_id_var, bhavikgmail_id, team_role_member, current_date_val, instructor_id)
                 ON CONFLICT (team_id, user_id) DO NOTHING;
             END IF;
             
@@ -301,7 +307,7 @@ BEGIN
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-            VALUES (team_id_var, bgyawali_id, 'leader'::team_member_role_enum, current_date_val, instructor_id)
+            VALUES (team_id_var, bgyawali_id, team_role_leader, current_date_val, instructor_id)
             ON CONFLICT (team_id, user_id) DO NOTHING;
             
             RAISE NOTICE '✅ Created Team 6 with 1 member';
@@ -323,7 +329,7 @@ BEGIN
        OR user_id IN (
            SELECT user_id FROM enrollments 
            WHERE offering_id = offering_id_var 
-             AND course_role IN ('ta'::enrollment_role_enum, 'tutor'::enrollment_role_enum)
+             AND course_role IN (role_ta, role_tutor)
          );
     
     -- Also remove TAs/tutors from team leader_id and reassign if needed
@@ -334,7 +340,7 @@ BEGIN
            OR leader_id IN (
                SELECT user_id FROM enrollments 
                WHERE offering_id = offering_id_var 
-                 AND course_role IN ('ta'::enrollment_role_enum, 'tutor'::enrollment_role_enum)
+                 AND course_role IN (role_ta, role_tutor)
              ));
     
     -- For teams that lost their leader, assign a new leader from team members
@@ -347,7 +353,7 @@ BEGIN
           AND tm.user_id NOT IN (
               SELECT user_id FROM enrollments 
               WHERE offering_id = t.offering_id 
-                AND course_role IN ('ta'::enrollment_role_enum, 'tutor'::enrollment_role_enum)
+                AND course_role IN (role_ta, role_tutor)
           )
         ORDER BY tm.role DESC, tm.joined_at ASC
         LIMIT 1
@@ -389,7 +395,7 @@ BEGIN
             VALUES (
                 team11_id,
                 zhekan_id,
-                'leader'::team_member_role_enum,
+                team_role_leader,
                 current_date_val,
                 instructor_id
             )
@@ -400,7 +406,7 @@ BEGIN
             VALUES (
                 team11_id,
                 jack_id,
-                'member'::team_member_role_enum,
+                team_role_member,
                 current_date_val,
                 instructor_id
             )
@@ -441,7 +447,7 @@ BEGIN
             VALUES (
                 team12_id,
                 liam_id,
-                'leader'::team_member_role_enum,
+                team_role_leader,
                 current_date_val,
                 instructor_id
             )

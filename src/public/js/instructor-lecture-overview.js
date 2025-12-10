@@ -21,7 +21,7 @@
     const end = new Date(endIso);
       
       // Validate dates
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -48,7 +48,7 @@
     if (!dateIso) return '';
     try {
     const date = new Date(dateIso);
-      if (isNaN(date.getTime())) return '';
+      if (Number.isNaN(date.getTime())) return '';
       // Always format in local timezone
       return new Intl.DateTimeFormat('en-US', { 
         month: 'short', 
@@ -283,8 +283,7 @@
     
     navLinks.forEach(link => {
       const href = link.getAttribute('href');
-      if (href && href.includes('/courses/cse210/')) {
-        // Update hardcoded cse210 references with actual course code
+      if (href?.includes('/courses/cse210/')) {
         const newHref = href.replace('/courses/cse210/', `/courses/${courseCode.toLowerCase()}/`);
         link.setAttribute('href', newHref);
       }
@@ -311,7 +310,6 @@
       offeringId = selectors.container.getAttribute('data-offering-id');
       
       if (!offeringId) {
-        // Fetch active offering
         offeringId = await window.LectureService.getActiveOfferingId();
         if (!offeringId) {
           throw new Error('No active course offering found');
@@ -332,21 +330,19 @@
       ]);
 
       // Process offering info if available
-      if (offeringResponse && offeringResponse.ok) {
+      if (offeringResponse?.ok) {
         offeringInfo = await offeringResponse.json();
         updateNavigationLinks();
       }
 
       const { summaryPercent, history, lectures, currentLectureId } = overviewResult;
     
-    // Last session should be the most recent lecture (first in array)
-    const lastLecture = lectures && lectures.length > 0 ? lectures[0] : null;
+    const lastLecture = lectures?.length > 0 ? lectures[0] : null;
     const lastSessionPercent = lastLecture ? lastLecture.attendancePercent : summaryPercent;
     
     if (selectors.percent) selectors.percent.textContent = `${lastSessionPercent}%`;
     
-    // Add dates to history for chart
-      const historyWithDates = history.map((entry) => ({
+    const historyWithDates = history.map((entry) => ({
         ...entry,
         date: entry.startsAt || null
       }));

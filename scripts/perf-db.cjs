@@ -70,7 +70,7 @@ function ms(s, e){ return Number(e - s) / 1e6; }
     console.log(`filter role=admin (100 cap): ${ms(f0,f1).toFixed(1)} ms (returned ${admins.rowCount})`);
 
     // 4) lookup by id
-    if (probe && probe.id) {
+    if (probe?.id) {
       const l0 = now();
       await client.query('SELECT id,name,email FROM users WHERE id = $1::uuid', [probe.id]);
       const l1 = now();
