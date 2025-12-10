@@ -38,7 +38,7 @@ body {
 .browser-header {
     background: #f1f5f9;
     padding: 12px 20px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--gray-200, #e2e8f0);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -64,7 +64,7 @@ body {
 .address-bar {
     flex: 1;
     background: white;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--gray-300, #d1d5db);
     border-radius: 6px;
     padding: 6px 12px;
     margin-left: 20px;
@@ -114,7 +114,7 @@ body {
 .hero-title {
     font-size: 3.5rem;
     font-weight: 800;
-    color: #000;
+    color: #000 !important;
     line-height: 1.1;
     margin-bottom: 2rem;
     letter-spacing: -0.03em;
@@ -131,8 +131,8 @@ body {
 
 .cta-button {
     padding: 1rem 2.5rem;
-    background: #000;
-    color: white;
+    background: #000 !important;
+    color: white !important;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 600;

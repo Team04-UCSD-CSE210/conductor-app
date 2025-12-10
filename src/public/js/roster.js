@@ -594,7 +594,7 @@ const renderRoster = () => {
             <div class="avatar" aria-hidden="true">${initials}</div>
             <div class="name-info">
               <div class="person-name">${entry.user?.name || 'Unknown'}</div>
-              <div class="person-email">${entry.user?.email || ''}</div>
+              ${entry.user?.email ? `<div class="person-email"><a href="mailto:${entry.user.email}" class="clickable-link">${entry.user.email}</a></div>` : '<div class="person-email"></div>'}
             </div>
           </div>
         </td>
