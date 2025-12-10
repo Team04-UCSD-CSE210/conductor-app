@@ -10,7 +10,7 @@ const state = {
   students: [],
   teams: [],
   currentTab: 'professors',
-  currentUser: null, // 新增：当前登录用户（从 navigation-context 拿）
+  currentUser: null, 
   filters: {
     professors: { search: '' },
     tutors: { search: '', activity: 'all' },
@@ -81,7 +81,7 @@ const matchesSearch = (item, search) => {
   return fields.some((f) => f && String(f).toLowerCase().includes(q));
 };
 
-// 当前用户是否可以给这个 user 改头像
+
 const canCurrentUserEditAvatar = (user) => {
   const ctx = state.currentUser;
   if (!ctx) return false;
@@ -175,7 +175,7 @@ const api = {
 
 // ---------- Rendering: common card ----------
 
-const renderPersonCard = (user, options = {}) => {
+const renderPersonCard = (user, options = {}) => { 
   const {
     roleLabel,
     showTeam = false,
@@ -270,6 +270,15 @@ const renderPersonCard = (user, options = {}) => {
     `
       : '';
 
+  const contactButtonHtml = user.email
+    ? `<a
+         class="btn btn-ghost person-contact-btn"
+         href="mailto:${encodeURIComponent(user.email)}"
+       >
+         Contact
+       </a>`
+    : '';
+
   return `
     <article class="person-card" data-user-id="${user.id || ''}">
       <section class="person-identity">
@@ -332,11 +341,7 @@ const renderPersonCard = (user, options = {}) => {
           <span class="status-pill ${activityClass}">
             ${activity.label}
           </span>
-          ${
-            user.email
-              ? `<a class="btn btn-ghost" href="mailto:${user.email}">Email</a>`
-              : ''
-          }
+          ${contactButtonHtml}
           <button
             type="button"
             class="btn btn-ghost profile-toggle"

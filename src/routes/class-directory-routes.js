@@ -2,20 +2,20 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 
-// ---- 新增：头像上传相关 ----
+
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
 const router = Router();
 
-// 确保 uploads/avatars 目录存在
+
 const avatarDir = path.resolve('uploads/avatars');
 if (!fs.existsSync(avatarDir)) {
   fs.mkdirSync(avatarDir, { recursive: true });
 }
 
-// 配置 multer 存储
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, avatarDir);
@@ -36,12 +36,12 @@ const upload = multer({
 
 /**
  * GET /api/class-directory?offering_id=:id
- * 返回某一個 offering 的班級通訊錄資料：
+ * 
  * - professors
  * - tas
  * - tutors
- * - students（含 team 資訊）
- * - teams（含成員列表）
+ * - students
+ * - teams
  */
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
@@ -125,7 +125,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       ORDER BY u.name;
     `;
 
-    // ---------- Students（含 team 資訊） ----------
+    // ---------- Students ----------
     const studentsQuery = `
       SELECT DISTINCT
         u.id,
@@ -156,7 +156,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       ORDER BY u.name;
     `;
 
-    // ---------- Teams（含 leader + 成員） ----------
+    // ---------- Teams ----------
     const teamsQuery = `
       SELECT
         t.id,
