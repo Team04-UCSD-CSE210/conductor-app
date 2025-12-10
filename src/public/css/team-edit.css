@@ -87,6 +87,7 @@
   border-radius: 8px;
   border: 2px solid var(--border-color);
   margin-bottom: 0.5rem;
+  background: transparent;
 }
 
 .current-logo p {
@@ -188,4 +189,138 @@
   .form-actions {
     flex-direction: column;
   }
+}
+/* Team Header Box */
+.team-header-box {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background: var(--palette-background, #f0fdfa);
+  border: 2px solid var(--palette-accent, #99f6e4);
+  border-radius: 12px;
+}
+
+.team-header-box .eyebrow {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--palette-primary, #0f766e);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.team-header-box h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--palette-primary, #0f766e);
+}
+
+.team-header-box .subtitle {
+  margin: 0;
+  color: var(--palette-primary, #0f766e);
+  font-size: 1rem;
+}
+
+/* Settings Content Layout - Stacked Vertically */
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Settings Cards */
+.settings-card {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.settings-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Logo Section */
+.logo-section {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.current-logo {
+  text-align: center;
+}
+
+.current-logo img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: transparent;
+  border: 2px solid var(--border-color);
+  margin-bottom: 0.5rem;
+}
+
+.current-logo p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.logo-upload {
+  flex: 1;
+}
+
+.upload-hint {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Blue Outlined Buttons */
+.btn-outline-blue {
+  background: transparent;
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-outline-blue:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-outline-blue:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }

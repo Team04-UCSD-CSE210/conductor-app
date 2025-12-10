@@ -569,7 +569,7 @@ const renderTeamCard = (team) => {
     }
   };
 
-  // Member list with emails (exclude leader since they're shown separately)
+  // Member list without emails (exclude leader since they're shown separately)
   const membersExcludingLeader = members.filter(m => {
     const isLeader = m.id === leaderId || m.role === 'leader';
     return !isLeader;
@@ -578,19 +578,11 @@ const renderTeamCard = (team) => {
   const memberListHtml = membersExcludingLeader.length
     ? `
       <div class="team-members-list">
-        ${membersExcludingLeader
-          .map(
-            (m) => {
-              return `
-          <div class="team-member-item">
-            <div class="team-member-header">
-              <span class="member-name">${m.name}</span>
-            </div>
-            ${m.email ? `<div class="team-member-email"><a href="mailto:${m.email}">${m.email}</a></div>` : ''}
-          </div>`;
-            }
-          )
-          .join('')}
+        <div class="team-members-bubbles">
+          ${membersExcludingLeader
+            .map(m => `<span class="member-bubble">${m.name}</span>`)
+            .join('')}
+        </div>
       </div>
     `
     : `<p class="group-members-empty">No other members assigned yet.</p>`;
@@ -646,7 +638,6 @@ const renderTeamCard = (team) => {
         <h5 class="team-section-label">Team Leader</h5>
         <div class="team-leader-info">
           <div class="team-leader-name">${leader.name}</div>
-          ${leader.email ? `<div class="team-leader-email"><a href="mailto:${leader.email}">${leader.email}</a></div>` : ''}
         </div>
       </section>
       ` : ''}

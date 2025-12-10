@@ -1,17 +1,56 @@
 document.addEventListener('DOMContentLoaded', async function() {
   const teamEditForm = document.getElementById('teamEditForm');
   const logoUpload = document.getElementById('logoUpload');
+  const saveImageBtn = document.getElementById('saveImageBtn');
   const currentLogo = document.getElementById('currentLogo');
   const loadingOverlay = document.getElementById('loadingOverlay');
   
   let currentTeam = null;
   let selectedFile = null;
 
-  // Get user's team automatically (simplified)
+  // Handle logo file selection
+  if (logoUpload) {
+    logoUpload.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        selectedFile = file;
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          currentLogo.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+        
+        // Show save button
+        if (saveImageBtn) {
+          saveImageBtn.style.display = 'inline-block';
+        }
+      }
+    });
+  }
+
+  // Handle save image button
+  if (saveImageBtn) {
+    saveImageBtn.addEventListener('click', async function() {
+      if (selectedFile && currentTeam) {
+        await saveTeamData();
+      }
+    });
+  }
+
+  // Get user's team automatically
   async function getUserTeam() {
     try {
-      const teamResponse = await fetch(`/api/teams/my-team`);
-      if (!teamResponse.ok) throw new Error('Failed to get user team');
+      const teamResponse = await fetch('/api/teams/my-team', {
+        credentials: 'include'
+      });
+      if (!teamResponse.ok) {
+        if (teamResponse.status === 404) {
+          throw new Error('You are not assigned as a team leader');
+        }
+        throw new Error('Failed to get user team');
+      }
       
       const data = await teamResponse.json();
       return data.team || data;
@@ -27,15 +66,19 @@ document.addEventListener('DOMContentLoaded', async function() {
       currentTeam = await getUserTeam();
       if (!currentTeam || !currentTeam.id) {
         alert('You are not assigned to a team or are not a team leader');
-        window.location.href = '/team-lead-dashboard';
+        window.location.href = '/dashboard';
         return;
       }
       
       populateForm(currentTeam);
     } catch (error) {
       console.error('Error loading team:', error);
-      alert('Failed to load team data. Please check your connection and try again.');
-      window.location.href = '/team-lead-dashboard';
+      if (error.message.includes('team leader')) {
+        alert('You must be a team leader to access team settings');
+      } else {
+        alert('Failed to load team data. Please check your connection and try again.');
+      }
+      window.location.href = '/dashboard';
     }
   }
 
@@ -43,6 +86,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   function populateForm(team) {
     document.getElementById('teamName').value = team.name || '';
     document.getElementById('teamMantra').value = team.mantra || '';
+    
+    // Update header team name
+    const teamNameTitle = document.getElementById('team-name-title');
+    if (teamNameTitle) {
+      teamNameTitle.textContent = team.name || 'Team Settings';
+    }
     
     // Set current logo
     if (team.logo_url) {
@@ -53,7 +102,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const links = team.links || {};
     document.getElementById('slackLink').value = links.slack || '';
     document.getElementById('repoLink').value = links.repo || '';
-    document.getElementById('mmLink').value = links.mattermost || '';
   }
 
   // Handle logo file selection

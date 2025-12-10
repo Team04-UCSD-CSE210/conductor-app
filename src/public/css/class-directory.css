@@ -601,6 +601,7 @@
   height: 100%;
   object-fit: cover;
   border-radius: 12px;
+  background: transparent;
 }
 
 .group-header-text .group-name {
@@ -890,9 +891,7 @@
 
 /* Team mantra section */
 .team-mantra-section {
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--palette-accent, var(--emerald-200, #99F6E4));
-  margin-bottom: 1rem;
+  display: none;
 }
 
 .team-mantra-text {
@@ -902,4 +901,19 @@
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.4;
+}
+.team-members-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.member-bubble {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-radius: 16px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--gray-700);
+  font-weight: 500;
 }
