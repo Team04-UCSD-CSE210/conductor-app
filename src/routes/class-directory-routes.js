@@ -192,6 +192,11 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         t.team_number,
         t.status,
         t.leader_id,
+        t.formed_at,
+        t.created_at,
+        t.logo_url,
+        t.mantra,
+        t.links,
         jsonb_build_object(
           'id', leader.id,
           'name', leader.name,
@@ -213,7 +218,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.left_at IS NULL
       LEFT JOIN users u ON u.id = tm.user_id
       WHERE t.offering_id = $1::uuid
-      GROUP BY t.id, leader.id
+      GROUP BY t.id, leader.id, t.formed_at, t.created_at, t.logo_url, t.mantra, t.links
       ORDER BY t.team_number NULLS LAST, t.name;
     `;
 

@@ -1080,14 +1080,12 @@ app.get("/courses/:courseId/roster", ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Class Directory route - similar permissions to roster
-const classDirectoryMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
-
-app.get("/class-directory", ...classDirectoryMiddleware, (req, res) => {
+// Class Directory route - accessible to all authenticated users
+app.get("/class-directory", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("class-directory.html"));
 });
 
-app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, (req, res) => {
+app.get("/courses/:courseId/class-directory", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("class-directory.html"));
 });
 

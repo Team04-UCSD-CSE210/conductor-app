@@ -41,6 +41,45 @@ const getInitials = (name) => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
+// Utility function to make links clickable
+const makeLinkClickable = (text, type = 'auto') => {
+  if (!text) return text;
+  const str = String(text).trim();
+  
+  // If it's already a URL (starts with http:// or https://)
+  if (/^https?:\/\//i.test(str)) {
+    return `<a href="${str}" target="_blank" rel="noopener noreferrer" class="clickable-link">${str}</a>`;
+  }
+  
+  // If it's an email address
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str)) {
+    return `<a href="mailto:${str}" class="clickable-link">${str}</a>`;
+  }
+  
+  // GitHub username (starts with @ or just username)
+  if (type === 'github' || str.startsWith('@') || /^[a-zA-Z0-9]([a-zA-Z0-9]|-(?![.-])){0,38}$/.test(str)) {
+    const username = str.replace(/^@/, '');
+    return `<a href="https://github.com/${username}" target="_blank" rel="noopener noreferrer" class="clickable-link">@${username}</a>`;
+  }
+  
+  // LinkedIn URL (without http)
+  if (type === 'linkedin' && str.includes('linkedin.com')) {
+    return `<a href="https://${str.replace(/^https?:\/\//, '')}" target="_blank" rel="noopener noreferrer" class="clickable-link">${str}</a>`;
+  }
+  
+  // Slack handle (starts with @)
+  if (type === 'slack' && str.startsWith('@')) {
+    return `<a href="slack://user?team=${encodeURIComponent(str)}" class="clickable-link">${str}</a>`;
+  }
+  
+  // Class chat (might be a channel or handle)
+  if (type === 'class_chat' && str.startsWith('#')) {
+    return `<a href="slack://channel?team=${encodeURIComponent(str)}" class="clickable-link">${str}</a>`;
+  }
+  
+  return str; // Return as-is if no pattern matches
+};
+
 const formatShortAvailability = (text) => {
   if (!text) return 'Not specified';
   return text;
@@ -238,27 +277,27 @@ const renderPersonCard = (user, options = {}) => {
   const contactLines = [];
   if (user.email) {
     contactLines.push(
-      `<span class="contact-item"><span class="contact-label">Email</span><span class="contact-value">${user.email}</span></span>`
+      `<span class="contact-item"><span class="contact-label">Email</span><span class="contact-value">${makeLinkClickable(user.email, 'email')}</span></span>`
     );
   }
   if (social.slack) {
     contactLines.push(
-      `<span class="contact-item"><span class="contact-label">Slack</span><span class="contact-value">${social.slack}</span></span>`
+      `<span class="contact-item"><span class="contact-label">Slack</span><span class="contact-value">${makeLinkClickable(social.slack, 'slack')}</span></span>`
     );
   }
   if (social.github) {
     contactLines.push(
-      `<span class="contact-item"><span class="contact-label">GitHub</span><span class="contact-value">${social.github}</span></span>`
+      `<span class="contact-item"><span class="contact-label">GitHub</span><span class="contact-value">${makeLinkClickable(social.github, 'github')}</span></span>`
     );
   }
   if (social.discord) {
     contactLines.push(
-      `<span class="contact-item"><span class="contact-label">Discord</span><span class="contact-value">${social.discord}</span></span>`
+      `<span class="contact-item"><span class="contact-label">Discord</span><span class="contact-value">${makeLinkClickable(social.discord)}</span></span>`
     );
   }
   if (social.class_chat) {
     contactLines.push(
-      `<span class="contact-item"><span class="contact-label">Class chat</span><span class="contact-value">${social.class_chat}</span></span>`
+      `<span class="contact-item"><span class="contact-label">Class chat</span><span class="contact-value">${makeLinkClickable(social.class_chat, 'class_chat')}</span></span>`
     );
   }
   const contactHtml = contactLines.length
@@ -342,7 +381,7 @@ const renderPersonCard = (user, options = {}) => {
                 : ''
             }
           </p>
-          ${user.email ? `<p class="person-email">${user.email}</p>` : ''}
+          ${user.email ? `<p class="person-email">${makeLinkClickable(user.email, 'email')}</p>` : ''}
         </header>
       </section>
 
@@ -352,11 +391,11 @@ const renderPersonCard = (user, options = {}) => {
             <h4>Contact</h4>
             <div class="info-body contact-body">
               ${contactHtml}
-              ${user.phone_number ? `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${user.phone_number}</span></div>` : ''}
-              ${user.github_username ? `<div class="detail-row"><span class="detail-label">GitHub</span><span class="detail-value">@${user.github_username}</span></div>` : ''}
-              ${user.linkedin_url ? `<div class="detail-row"><span class="detail-label">LinkedIn</span><span class="detail-value">${user.linkedin_url}</span></div>` : ''}
-              ${user.class_chat ? `<div class="detail-row"><span class="detail-label">Class Chat</span><span class="detail-value">${user.class_chat}</span></div>` : ''}
-              ${user.slack_handle ? `<div class="detail-row"><span class="detail-label">Slack</span><span class="detail-value">${user.slack_handle}</span></div>` : ''}
+              ${user.phone_number ? `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value"><a href="tel:${user.phone_number.replace(/\D/g, '')}" class="clickable-link">${user.phone_number}</a></span></div>` : ''}
+              ${user.github_username ? `<div class="detail-row"><span class="detail-label">GitHub</span><span class="detail-value">${makeLinkClickable(user.github_username, 'github')}</span></div>` : ''}
+              ${user.linkedin_url ? `<div class="detail-row"><span class="detail-label">LinkedIn</span><span class="detail-value">${makeLinkClickable(user.linkedin_url, 'linkedin')}</span></div>` : ''}
+              ${user.class_chat ? `<div class="detail-row"><span class="detail-label">Class Chat</span><span class="detail-value">${makeLinkClickable(user.class_chat, 'class_chat')}</span></div>` : ''}
+              ${user.slack_handle ? `<div class="detail-row"><span class="detail-label">Slack</span><span class="detail-value">${makeLinkClickable(user.slack_handle, 'slack')}</span></div>` : ''}
             </div>
           </div>
           <div class="info-section">
@@ -517,46 +556,87 @@ const renderTeamCard = (team) => {
 
   const memberCount = team.member_count || members.length || 0;
   const leaderId = team.leader_id || (team.leader && team.leader.id);
+  const leader = team.leader;
 
-  // Identify leaders - check both leader_id and role='leader'
-  const memberListHtml = members.length
+  // Format dates
+  const formatDate = (dateStr) => {
+    if (!dateStr) return null;
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return null;
+    }
+  };
+
+  // Member list with emails (exclude leader since they're shown separately)
+  const membersExcludingLeader = members.filter(m => {
+    const isLeader = m.id === leaderId || m.role === 'leader';
+    return !isLeader;
+  });
+
+  const memberListHtml = membersExcludingLeader.length
     ? `
-      <ul class="group-members-list">
-        ${members
+      <div class="team-members-list">
+        ${membersExcludingLeader
           .map(
             (m) => {
-              const isLeader = m.id === leaderId || m.role === 'leader';
               return `
-          <li>
-            <span class="member-name">${m.name}</span>
-            ${isLeader ? '<span class="member-role member-lead">(lead)</span>' : ''}
-            ${
-              m.role && m.role !== 'leader'
-                ? `<span class="member-role"> – ${m.role}</span>`
-                : ''
-            }
-          </li>`;
+          <div class="team-member-item">
+            <div class="team-member-header">
+              <span class="member-name">${m.name}</span>
+              ${
+                m.role && m.role !== 'leader'
+                  ? `<span class="member-role"> – ${m.role}</span>`
+                  : ''
+              }
+            </div>
+            ${m.email ? `<div class="team-member-email"><a href="mailto:${m.email}">${m.email}</a></div>` : ''}
+          </div>`;
             }
           )
           .join('')}
-      </ul>
+      </div>
     `
-    : `<p class="group-members-empty">No members assigned yet.</p>`;
+    : `<p class="group-members-empty">No other members assigned yet.</p>`;
 
-  // Build team info section
-  const teamInfo = [];
-  if (team.team_number) {
-    teamInfo.push(`Team #${team.team_number}`);
+
+  const formedDate = formatDate(team.formed_at);
+
+  // Parse links JSON if it's a string
+  let links = team.links;
+  if (typeof links === 'string') {
+    try {
+      links = JSON.parse(links);
+    } catch {
+      links = {};
+    }
   }
-  const teamInfoText = teamInfo.length > 0 ? teamInfo.join(' • ') : 'Project team';
+  if (!links || typeof links !== 'object') {
+    links = {};
+  }
+
+  // Logo display
+  const logoHtml = team.logo_url
+    ? `<img src="${team.logo_url}" alt="${team.name} logo" class="team-logo-img" />`
+    : `<span>${getInitials(team.name)}</span>`;
+
+  // Links HTML (only Slack and Repo)
+  const linksHtml = [];
+  if (links.slack) {
+    linksHtml.push(`<a href="${links.slack.startsWith('#') ? '#' : links.slack}" class="team-link team-link-slack" target="_blank" rel="noopener noreferrer">Slack</a>`);
+  }
+  if (links.repo) {
+    linksHtml.push(`<a href="${links.repo}" class="team-link team-link-repo" target="_blank" rel="noopener noreferrer">GitHub</a>`);
+  }
 
   return `
-    <article class="group-card" data-team-id="${team.id}">
+    <article class="group-card team-card" data-team-id="${team.id}">
       <header class="group-header">
-        <div class="group-logo">${getInitials(team.name)}</div>
+        <div class="group-logo">${logoHtml}</div>
         <div class="group-header-text">
           <h4 class="group-name">${team.name}</h4>
-          <p class="group-subtitle">${teamInfoText}</p>
+          ${team.mantra ? `<p class="team-mantra">"${team.mantra}"</p>` : ''}
         </div>
       </header>
 
@@ -564,6 +644,10 @@ const renderTeamCard = (team) => {
         <div class="stat-item">
           <div class="stat-value">${memberCount}</div>
           <div class="stat-label">Members</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${team.status || 'Active'}</div>
+          <div class="stat-label">Status</div>
         </div>
         ${team.team_number ? `
         <div class="stat-item">
@@ -573,10 +657,38 @@ const renderTeamCard = (team) => {
         ` : ''}
       </section>
 
-      <section class="group-members">
-        <h4 class="group-members-title">Members</h4>
+      ${leader && leader.name ? `
+      <section class="team-info-section">
+        <h5 class="team-section-label">Team Leader</h5>
+        <div class="team-leader-info">
+          <div class="team-leader-name">${leader.name}</div>
+          ${leader.email ? `<div class="team-leader-email"><a href="mailto:${leader.email}">${leader.email}</a></div>` : ''}
+        </div>
+      </section>
+      ` : ''}
+
+      <section class="team-info-section">
+        <h5 class="team-section-label">Members</h5>
         ${memberListHtml}
       </section>
+
+      ${linksHtml.length > 0 ? `
+      <section class="team-info-section">
+        <h5 class="team-section-label">Links</h5>
+        <div class="team-links">
+          ${linksHtml.join('')}
+        </div>
+      </section>
+      ` : ''}
+
+      ${formedDate ? `
+      <section class="team-info-section">
+        <div class="team-date-info">
+          <span class="team-date-label">Formed:</span>
+          <span class="team-date-value">${formedDate}</span>
+        </div>
+      </section>
+      ` : ''}
     </article>
   `;
 };
