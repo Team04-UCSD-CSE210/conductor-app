@@ -1926,11 +1926,10 @@ app.get("/switch-account", (req, res) => {
 app.use((req, res, next) => {
   if (HTTPS_AVAILABLE) {
     if (!req.secure) {
-      // Use a fixed, configured redirect target instead of user-controlled host header
-      // This prevents open redirect vulnerabilities
+      // Redirect to HTTPS using only the configured base URL
+      // Do not include any user-controlled path data to prevent open redirect vulnerabilities
       const redirectUrl = process.env.HTTPS_REDIRECT_URL || 'https://localhost:8443';
-      const safePath = req.path.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, '');
-      return res.redirect(`${redirectUrl}${safePath}`);
+      return res.redirect(redirectUrl);
     }
   }
   next();
