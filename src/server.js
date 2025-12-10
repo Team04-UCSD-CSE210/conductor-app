@@ -92,7 +92,7 @@ app.set('etag', false);
 app.use(express.static(path.join(__dirname, "views")));
 app.use(express.static(path.join(__dirname, "public")));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
-
+app.use('/uploads', express.static('uploads'));
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -1109,14 +1109,12 @@ app.get("/courses/:courseId/roster", ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Class Directory route - similar permissions to roster
-const classDirectoryMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
-
-app.get("/class-directory", ...classDirectoryMiddleware, (req, res) => {
+// Class Directory route - accessible to all authenticated users
+app.get("/class-directory", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("class-directory.html"));
 });
 
-app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, (req, res) => {
+app.get("/courses/:courseId/class-directory", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("class-directory.html"));
 });
 

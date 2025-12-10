@@ -54,7 +54,7 @@ body,
    ============================================================================ */
 
 /* ============================================================================
-   BORDERS
+   BORDERS - Make all borders use palette colors
    ============================================================================ */
 .dashboard-card,
 .attendance-card,
@@ -65,7 +65,13 @@ body,
 .todo-item,
 .journal-entry,
 .announcements-card .card-header,
-.attendance-card .card-header {
+.attendance-card .card-header,
+.card,
+.dashboard-widget,
+.widget,
+.group-card,
+.person-card,
+.team-card {
   border-color: var(--palette-accent, #99F6E4) !important;
 }
 

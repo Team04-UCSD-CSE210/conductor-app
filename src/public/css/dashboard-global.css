@@ -25,7 +25,7 @@
 
 .btn-negative.interaction-btn.selected {
   box-shadow: 0 0 0 2px var(--red-400, #f87171);
-  border-color: var(--red-500, #ef4444);
+  border-color: var(--red-500, #ef4444); /* Error state - keep red */
   background: var(--red-200, #fecaca);
 }
 
@@ -90,7 +90,7 @@
   width: 100%;
   padding: 0.5rem;
   border-radius: 0.375rem;
-  border: 1px solid var(--gray-300, #d1d5db);
+  border: 1px solid var(--palette-accent, var(--gray-300, #d1d5db));
   color: var(--gray-900, #111827);
 }
 
@@ -105,7 +105,7 @@
 .btn-negative.interaction-btn {
 	background: var(--red-100, #fee);
 	color: var(--red-700, #b91c1c);
-	border: 1px solid var(--red-300, #fca5a5);
+	border: 1px solid var(--red-300, #fca5a5); /* Error state - keep red */
 }
 
 .interaction-details {
@@ -121,7 +121,7 @@
   flex: 1 1 auto;
   padding: 0.75rem;
   border-radius: 0.375rem;
-  border: 1px solid var(--gray-300, #d1d5db);
+  border: 1px solid var(--palette-accent, var(--gray-300, #d1d5db));
 }
 
 .interaction-submit-row {
@@ -132,7 +132,7 @@
 /* Disabled state for submit button */
 .interaction-submit-row .btn-primary:disabled {
   background: var(--gray-300, #d1d5db);
-  border-color: var(--gray-300, #d1d5db);
+  border-color: var(--palette-accent, var(--gray-300, #d1d5db));
   color: var(--gray-600, #4b5563);
   cursor: not-allowed;
   opacity: 0.7;
@@ -153,11 +153,15 @@ body.dashboard-page {
   overflow: hidden;
 }
 
+body.dashboard-page.class-directory-page {
+  overflow: hidden auto;
+}
+
 /* Sidebar Navigation */
 .sidebar {
-  width: 180px;
+  width: 220px;
   background: var(--teal-50, #f0fdfa);
-  border-right: 2px solid var(--gray-200, #e5e7eb);
+  border-right: 2px solid var(--palette-accent, var(--gray-200, #e5e7eb));
   padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
@@ -274,8 +278,8 @@ body.dashboard-page {
 
 .sidebar nav a::before {
   content: '';
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -296,6 +300,30 @@ body.dashboard-page {
 .sidebar nav a[href*="meeting"]::before,
 .sidebar nav a[href*="team-meetings"]::before,
 .sidebar nav a[href*="instructor-meetings"]::before,
+
+/* Header icons for Team Meetings and Course Settings */
+.attendance-icon,
+.page-title-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Navigation icons in sidebar */
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* Disable ::before icons for navigation items that have explicit icons */
+.sidebar nav a.has-icon::before {
+  display: none;
+}
+
 .sidebar nav a[href*="instructor-team-meetings"]::before {
   background-image: url('/assets/talk.png');
 }
@@ -333,7 +361,7 @@ body.dashboard-page {
 
 .sidebar footer {
   margin-top: auto;
-  border-top: 1px solid var(--gray-200, #e5e7eb);
+  border-top: 1px solid var(--palette-accent, var(--gray-200, #e5e7eb));
   padding-top: 1rem;
 }
 
@@ -344,9 +372,9 @@ body.dashboard-page {
 
 /* Main Container */
 .main-container {
-  margin-left: 180px;
+  margin-left: 220px;
   padding: 1.25rem;
-  width: calc(100% - 180px);
+  width: calc(100% - 220px);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -402,7 +430,7 @@ body.dashboard-page {
 /* Card Base */
 .card {
   background: var(--gray-100, #f3f4f6);
-  border: 1px solid var(--gray-200, #e5e7eb);
+  border: 1px solid var(--palette-accent, var(--gray-200, #e5e7eb));
   border-radius: 0.5rem;
   padding: 0.625rem;
   box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
@@ -455,7 +483,7 @@ body.dashboard-page {
 .report-box {
   flex: 1;
   background: var(--gray-50, #f9fafb);
-  border: 1px solid var(--gray-200, #e5e7eb);
+  border: 1px solid var(--palette-accent, var(--gray-200, #e5e7eb));
   border-radius: 0.5rem;
   margin-top: 0.4rem;
   min-height: 200px;
@@ -680,7 +708,7 @@ body.dashboard-page {
   justify-content: space-between;
   padding: 0.5rem;
   background: var(--gray-50, #f9fafb);
-  border: 1px solid var(--gray-200, #e5e7eb);
+  border: 1px solid var(--palette-accent, var(--gray-200, #e5e7eb));
   border-radius: 0.375rem;
   cursor: pointer;
   text-decoration: none;
@@ -873,14 +901,14 @@ body.dashboard-page {
 }
 
 .announcement-delete-btn {
-  border-color: var(--red-200, #fecaca);
+  border-color: var(--red-200, #fecaca); /* Error state - keep red */
   background: var(--red-50, #fef2f2);
   color: var(--red-600, #dc2626);
 }
 
 .announcement-delete-btn:hover {
   background: var(--red-100, #fee2e2);
-  border-color: var(--red-300, #fca5a5);
+  border-color: var(--red-300, #fca5a5); /* Error state - keep red */
   color: var(--red-700, #b91c1c);
   transform: scale(1.05);
   box-shadow: 0 2px 4px rgb(220 38 38 / 15%);
@@ -1191,7 +1219,7 @@ body.dashboard-page {
   left: 1rem;
   z-index: 1000;
   background: white;
-  border: 1px solid var(--gray-300, #d1d5db);
+  border: 1px solid var(--palette-accent, var(--gray-300, #d1d5db));
   border-radius: 0.375rem;
   padding: 0.5rem;
   cursor: pointer;

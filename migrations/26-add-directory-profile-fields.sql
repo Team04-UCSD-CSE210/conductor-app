@@ -1,0 +1,6 @@
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS pronunciation TEXT,
+ADD COLUMN IF NOT EXISTS class_chat TEXT,
+ADD COLUMN IF NOT EXISTS slack_handle TEXT,
+ADD COLUMN IF NOT EXISTS availability_general TEXT,
+ADD COLUMN IF NOT EXISTS availability_specific JSONB;

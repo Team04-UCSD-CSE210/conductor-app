@@ -7,18 +7,18 @@
 }
 
 .settings-section {
-  background: white;
+  background: var(--palette-background, white);
   border-radius: 12px;
   padding: 2rem;
   margin-bottom: 2rem;
-  border: 1px solid #99F6E4;
-  box-shadow: 0 2px 8px rgb(15 118 110 / 10%);
+  border: 1px solid var(--palette-accent, var(--emerald-200, #99F6E4));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--palette-primary, var(--teal-700, #0F766E)) 10%, transparent);
 }
 
 .settings-section h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #0F766E;
+  color: var(--palette-primary, var(--teal-700, #0F766E));
   margin: 0 0 0.5rem;
 }
 
@@ -38,17 +38,17 @@
 
 .palette-option {
   position: relative;
-  border: 2px solid #E6FFFA;
+  border: 2px solid var(--palette-background, var(--emerald-50, #E6FFFA));
   border-radius: 12px;
   padding: 1rem;
-  background: white;
+  background: var(--palette-background, white);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .palette-option:hover {
-  border-color: #83D7CF;
-  box-shadow: 0 4px 12px rgb(15 118 110 / 15%);
+  border-color: var(--palette-secondary, var(--emerald-400, #83D7CF));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--palette-primary, var(--teal-700, #0F766E)) 15%, transparent);
   transform: translateY(-2px);
 }
 
@@ -66,12 +66,12 @@
   right: 0.5rem;
   width: 24px;
   height: 24px;
-  background: #0F766E;
+  background: var(--palette-primary, var(--teal-700, #0F766E));
   border-radius: 50%;
   display: none;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--palette-background, white);
   font-size: 14px;
   font-weight: bold;
 }
@@ -81,9 +81,9 @@
 }
 
 .palette-option.selected {
-  border-color: #0F766E;
-  background: #F0FDFA;
-  box-shadow: 0 0 0 3px rgb(15 118 110 / 10%);
+  border-color: var(--palette-primary, var(--teal-700, #0F766E));
+  background: var(--palette-background, var(--emerald-50, #F0FDFA));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--palette-primary, var(--teal-700, #0F766E)) 10%, transparent);
 }
 
 .palette-option.selected .palette-select-label {
@@ -111,7 +111,7 @@
 .palette-info h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: #0F766E;
+  color: var(--palette-primary, var(--teal-700, #0F766E));
   margin: 0 0 0.25rem;
 }
 
@@ -126,7 +126,7 @@
   display: flex;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #E6FFFA;
+  border-top: 1px solid var(--palette-background, var(--emerald-50, #E6FFFA));
 }
 
 .settings-actions .btn {
@@ -144,14 +144,79 @@
 }
 
 .settings-message.success {
-  background: #D1FAE5;
-  color: #065F46;
-  border: 1px solid #10B981;
+  background: color-mix(in srgb, var(--palette-secondary, var(--emerald-400, #34d399)) 20%, var(--palette-background, white));
+  color: var(--palette-primary, var(--teal-700, #0F766E));
+  border: 1px solid var(--palette-secondary, var(--emerald-400, #34d399));
 }
 
 .settings-message.error {
-  background: #FEE2E2;
+  background: color-mix(in srgb, #EF4444 20%, var(--palette-background, white));
   color: #991B1B;
   border: 1px solid #EF4444;
+}
+
+/* Course Form Styles */
+.course-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: var(--gray-700, #374151);
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--gray-300, #d1d5db);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--palette-primary, var(--teal-700, #0F766E));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--palette-primary, var(--teal-700, #0F766E)) 10%, transparent);
+}
+
+.form-group small {
+  font-size: 0.85rem;
+  color: var(--gray-500, #6b7280);
+  margin-top: 0.25rem;
+}
+
+@media (width <= 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 

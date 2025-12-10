@@ -126,6 +126,133 @@ router.post('/color-palette', ...protectAny(['course.manage'], 'course'), async 
 });
 
 /**
+ * Update active course offering
+ * PUT /api/offerings/active
+ * Requires: course.manage permission (course scope) - Instructors/Admins only
+ */
+router.put('/active', ...protectAny(['course.manage'], 'course'), async (req, res) => {
+  try {
+    const userId = req.currentUser?.id;
+    const {
+      code,
+      name,
+      department,
+      term,
+      year,
+      credits,
+      instructor_id,
+      start_date,
+      end_date,
+      enrollment_cap,
+      status,
+      location,
+      class_timings,
+      syllabus_url,
+      color_palette
+    } = req.body;
+
+    const updateFields = [];
+    const updateValues = [];
+    let paramIndex = 1;
+
+    if (code !== undefined) {
+      updateFields.push(`code = $${paramIndex++}`);
+      updateValues.push(code);
+    }
+    if (name !== undefined) {
+      updateFields.push(`name = $${paramIndex++}`);
+      updateValues.push(name);
+    }
+    if (department !== undefined) {
+      updateFields.push(`department = $${paramIndex++}`);
+      updateValues.push(department);
+    }
+    if (term !== undefined) {
+      updateFields.push(`term = $${paramIndex++}`);
+      updateValues.push(term);
+    }
+    if (year !== undefined) {
+      updateFields.push(`year = $${paramIndex++}`);
+      updateValues.push(year);
+    }
+    if (credits !== undefined) {
+      updateFields.push(`credits = $${paramIndex++}`);
+      updateValues.push(credits);
+    }
+    if (instructor_id !== undefined) {
+      updateFields.push(`instructor_id = $${paramIndex++}`);
+      updateValues.push(instructor_id);
+    }
+    if (start_date !== undefined) {
+      updateFields.push(`start_date = $${paramIndex++}`);
+      updateValues.push(start_date);
+    }
+    if (end_date !== undefined) {
+      updateFields.push(`end_date = $${paramIndex++}`);
+      updateValues.push(end_date);
+    }
+    if (enrollment_cap !== undefined) {
+      updateFields.push(`enrollment_cap = $${paramIndex++}`);
+      updateValues.push(enrollment_cap);
+    }
+    if (status !== undefined) {
+      updateFields.push(`status = $${paramIndex++}::course_offering_status_enum`);
+      updateValues.push(status);
+    }
+    if (location !== undefined) {
+      updateFields.push(`location = $${paramIndex++}`);
+      updateValues.push(location);
+    }
+    if (class_timings !== undefined) {
+      updateFields.push(`class_timings = $${paramIndex++}::jsonb`);
+      updateValues.push(typeof class_timings === 'string' ? class_timings : JSON.stringify(class_timings));
+    }
+    if (syllabus_url !== undefined) {
+      updateFields.push(`syllabus_url = $${paramIndex++}`);
+      updateValues.push(syllabus_url);
+    }
+    if (color_palette !== undefined) {
+      const validPalettes = ['default', 'blue', 'purple', 'green', 'orange', 'red'];
+      if (!validPalettes.includes(color_palette)) {
+        return res.status(400).json({ error: `Invalid color palette. Must be one of: ${validPalettes.join(', ')}` });
+      }
+      updateFields.push(`color_palette = $${paramIndex++}`);
+      updateValues.push(color_palette);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    updateFields.push(`updated_at = NOW()`);
+    updateFields.push(`updated_by = $${paramIndex++}`);
+    updateValues.push(userId);
+
+    const query = `
+      UPDATE course_offerings 
+      SET ${updateFields.join(', ')}
+      WHERE is_active = TRUE
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, updateValues);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No active course offering found' });
+    }
+
+    res.json({
+      success: true,
+      offering: result.rows[0],
+      message: 'Course settings updated successfully'
+    });
+  } catch (err) {
+    console.error('Error updating course offering:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * Get offering details
  * GET /api/offerings/:offeringId
  * Requires: roster.view or course.manage permission (course scope), OR enrollment in the offering
