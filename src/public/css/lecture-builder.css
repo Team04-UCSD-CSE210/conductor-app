@@ -11,21 +11,6 @@ body.lecture-builder-page .main-container {
   -webkit-overflow-scrolling: touch;
 }
 
-body.lecture-builder-page :where(
-  .builder-shell,
-  .builder-shell p,
-  .builder-shell label,
-  .builder-shell h1,
-  .builder-shell h2,
-  .builder-shell h3,
-  .builder-shell span,
-  .builder-shell input,
-  .builder-shell select,
-  .builder-shell textarea
-) {
-  color: inherit;
-}
-
 .builder-shell {
   display: flex;
   flex-direction: column;
@@ -33,41 +18,19 @@ body.lecture-builder-page :where(
   min-height: 100%;
 }
 
-/* Header Section */
-.builder-header {
+.header-container {
   display: flex;
-  gap: 1.5rem;
   align-items: center;
-  background: white;
-  border: 1px solid var(--gray-200, #e5e7eb);
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
-  position: relative;
-}
-
-.header-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.header-description {
-  margin: 0;
-  color: var(--gray-600, #4b5563);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  max-width: 700px;
+  gap: 1rem;
 }
 
 .auto-save-indicator {
-  position: absolute;
-  top: 2rem;
-  right: 2rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
   color: var(--gray-500, #6b7280);
+  margin-left: auto;
 }
 
 .save-status {
@@ -367,33 +330,6 @@ body.lecture-builder-page :where(
   transform: scale(0.95);
 }
 
-.question-card .remove-question {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: 2px solid var(--red-200, #fecaca);
-  background: var(--red-50, #fef2f2);
-  color: var(--red-600, #dc2626);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.15s;
-  padding: 0;
-}
-
-.question-card .remove-question:hover {
-  background: var(--red-100, #fee2e2);
-  border-color: var(--red-400, #f87171);
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgb(220 38 38 / 20%);
-}
-
-.question-card .remove-question:focus {
-  outline: 2px solid var(--red-500, #ef4444);
-  outline-offset: 2px;
-}
-
 .question-card input[type="text"] {
   width: 100%;
   margin-bottom: 1.5rem;
@@ -541,7 +477,7 @@ body.lecture-builder-page :where(
   align-items: center;
   gap: 0.75rem;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 9999px;
   padding: 1rem 2.5rem;
   background: var(--teal-600, #0d9488);
   color: white;
@@ -568,6 +504,7 @@ body.lecture-builder-page :where(
 
 .btn-primary:hover:not(:disabled) {
   background: var(--teal-700, #0f766e);
+  color: white;
   box-shadow: 0 4px 12px rgb(13 148 136 / 30%);
   transform: translateY(-1px);
 }
@@ -606,11 +543,6 @@ body.lecture-builder-page :where(
 
 .btn-loader svg {
   animation: spin 1s linear infinite;
-}
-
-.question-card .remove-question svg {
-  width: 20px;
-  height: 20px;
 }
 
 @keyframes spin {

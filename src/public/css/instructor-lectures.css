@@ -43,14 +43,14 @@ body.dashboard-page .main-container {
   justify-content: center;
 }
 
-.eyebrow-local {
+/* .eyebrow-local {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--gray-500, #6b7280);
   font-size: 0.7rem;
   margin: 0 0 0.75rem;
   font-weight: 600;
-}
+} */
 
 .stat-value {
   font-size: 5.5rem;
@@ -159,7 +159,7 @@ body.dashboard-page .main-container {
 
 .btn-primary {
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 9999px;
   padding: 0.75rem 1.5rem;
   background: var(--palette-primary, var(--teal-600, #0d9488));
   color: white;
@@ -284,6 +284,8 @@ body.dashboard-page .main-container {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .access-code-col .code-label {
@@ -338,39 +340,6 @@ body.dashboard-page .main-container {
   height: 14px;
 }
 
-.delete-button {
-  border-radius: 0.5rem;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--red-200, #fecaca);
-  background: var(--red-50, #fef2f2);
-  color: var(--red-600, #dc2626);
-  transition: all 0.15s;
-  padding: 0;
-  cursor: pointer;
-}
-
-.delete-button:hover {
-  background: var(--red-100, #fee2e2);
-  border-color: var(--red-300, #fca5a5);
-  color: var(--red-700, #b91c1c);
-  transform: scale(1.05);
-  box-shadow: 0 2px 4px rgb(220 38 38 / 20%);
-}
-
-.delete-button:active {
-  transform: scale(0.95);
-}
-
-.delete-button svg {
-  width: 18px;
-  height: 18px;
-  stroke: currentcolor;
-}
-
 .empty-state {
   border: 1px dashed var(--gray-300, #d1d5db);
   border-radius: 0.75rem;
@@ -380,19 +349,9 @@ body.dashboard-page .main-container {
   margin-top: 1.25rem;
 }
 
-@media (width <= 1400px) {
-  .lecture-card {
-    grid-template-columns: 160px 1fr 140px 90px 200px;
-    gap: 1.25rem;
-  }
-}
+
 
 @media (width <= 1200px) {
-  .lecture-card {
-    grid-template-columns: 140px 1fr 120px 80px 180px;
-    gap: 1rem;
-  }
-  
   .stat-card {
     width: 240px;
   }
@@ -403,12 +362,6 @@ body.dashboard-page .main-container {
 }
 
 @media (width <= 1024px) {
-  .lecture-card {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
   .lecture-actions {
     justify-content: flex-start;
     flex-wrap: wrap;

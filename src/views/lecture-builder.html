@@ -25,11 +25,10 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    
     <footer>
       <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
@@ -37,15 +36,15 @@
 
   <main class="main-container" id="main">
     <section class="builder-shell" data-offering-id="">
-      <header class="builder-header">
+      <header class="header-container">
         <button class="back-button" type="button" id="builder-back" aria-label="Go back to lectures">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
-        <div class="header-content">
+        <div class="header-info">
           <p class="eyebrow">New Lecture Attendance</p>
-          <h1>Create Lecture Attendance Session</h1>
+          <h1 class="header-title">Create Lecture Attendance Session</h1>
         </div>
         <div class="auto-save-indicator" id="auto-save-indicator" aria-live="polite">
           <span class="save-status" id="save-status">All changes saved</span>
@@ -80,7 +79,7 @@
               <label for="lecture-date">
                 Date
                 <span class="required-indicator" aria-label="required">*</span>
-          </label>
+                </label>
               <input 
                 type="date" 
                 id="lecture-date" 
@@ -157,14 +156,6 @@
           </div>
           <button type="submit" class="btn-primary" id="submit-btn">
             <span class="btn-text">Create attendance session</span>
-            <span class="btn-loader" hidden aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="37.7" stroke-dashoffset="9.4">
-                  <animate attributeName="stroke-dasharray" values="9.4 28.3;18.8 18.8;9.4 28.3" dur="1.5s" repeatCount="indefinite"/>
-                  <animate attributeName="stroke-dashoffset" values="0;-9.4;-18.8" dur="1.5s" repeatCount="indefinite"/>
-                </circle>
-              </svg>
-            </span>
           </button>
           <p class="helper-text">A 6-digit access code is generated automatically once you submit.</p>
         </footer>

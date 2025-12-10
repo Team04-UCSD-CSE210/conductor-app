@@ -11,6 +11,13 @@ async function getParams() {
   };
 }
 
+function initBackButton() {
+  const backBtn = document.querySelector('.header-back-button');
+  if (!backBtn) return;
+  backBtn.addEventListener('click', () => {
+    window.location.href = '/instructor-meetings';
+  });
+}
 
 function renderTeamMeta(team) {
   const meta = document.getElementById('team-meta');
@@ -35,8 +42,8 @@ function renderMeetings(meetings, teamSize) {
   }
   let statsPromises = [];
   for (const meeting of meetings) {
-    const row = document.createElement('div');
-    row.className = 'meeting-row';
+    const row = document.createElement('article');
+    row.className = 'attendance-card-list';
     
     // Format date and time using session_date and session_time (same as team leader view)
     let timeStr = 'TBD';
@@ -123,9 +130,11 @@ function renderMeetings(meetings, teamSize) {
     }
     
     row.innerHTML = `
-      <span class="meeting-title">${meeting.title || meeting.label || 'Meeting'}</span>
-      <span class="meeting-time">${timeStr}</span>
-      <span class="meeting-attendance" id="attendance-${meeting.id}" style="margin-top:0.5rem;color:#444;font-size:0.98rem;">Loading attendance...</span>
+      <span class="attendance-card-list-label">${meeting.title || meeting.label || 'Meeting'}</span>
+      <div class="attendance-card-list-meta">
+      <span class="attendance-percent" id="attendance-${meeting.id}" style="margin-top:0.5rem;color:#444;font-size:0.98rem;">Loading attendance...</span>
+      <span class="attendance-schedule">${timeStr}</span>
+      </div>
     `;
     list.appendChild(row);
     
@@ -182,12 +191,15 @@ async function renderPage() {
   let teamSize = 0;
   if (teamRes.ok) {
     team = await teamRes.json();
-    document.getElementById('team-title').textContent = team.name || `Team ${team.team_number}`;
+    document.getElementById('header-title').textContent = team.name || `Team ${team.team_number}`;
     renderTeamMeta(team);
     teamSize = Array.isArray(team.members) ? team.members.length : 0;
   }
   const meetings = await fetchMeetings(teamId, offeringId);
   renderMeetings(meetings, teamSize);
+  initBackButton();
 }
 
-document.addEventListener('DOMContentLoaded', renderPage);
+document.addEventListener('DOMContentLoaded', () => {
+  renderPage();
+});

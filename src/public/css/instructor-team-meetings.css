@@ -11,53 +11,6 @@ body {
   background: var(--bg, #f6f7fb);
 }
 
-.sidebar {
-  background: var(--panel, #fff);
-  border-right: 1px solid var(--border, #e6e8ef);
-  padding: 16px;
-  min-height: 100vh;
-}
-
-.sidebar-role {
-  font-size: 12px;
-  color: var(--muted, #6b7280);
-  margin-bottom: 16px;
-}
-
-.sidebar-role strong {
-  color: var(--text, #0f172a);
-}
-
-.sidebar-sep {
-  border: 0;
-  border-top: 1px solid var(--border, #e6e8ef);
-  margin: 12px 0 16px;
-}
-
-.sidebar-nav {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 8px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  text-decoration: none;
-  color: var(--text, #0f172a);
-  border: 1px solid transparent;
-}
-
-.nav-item:hover {
-  background: #fafafa;
-  border-color: var(--border, #e6e8ef);
-}
-
 .team-container {
   max-width: 800px;
   margin: 2rem auto;
@@ -78,7 +31,63 @@ body {
 }
 
 .meeting-list {
-  margin-top: 2rem;
+  padding-top: 2rem;
+  flex: 1;
+  overflow: hidden auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+  min-height: 0;
+  max-height: 100%;
+}
+
+/* Match instructor-meetings card style */
+.attendance-card-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.75rem 2rem;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
+  background: white;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  text-decoration: none;
+  color: inherit;
+}
+
+.attendance-card-list:hover {
+  border-color: var(--teal-400, #2dd4bf);
+  box-shadow: 0 4px 12px rgb(13 148 136 / 15%);
+  transform: translateY(-2px);
+}
+
+.attendance-card-list-label {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--teal-700, #0f766e);
+  white-space: nowrap;
+}
+
+.attendance-card-list-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  flex-wrap: wrap;
+}
+
+.attendance-card-list-meta > span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: var(--gray-100, #f3f4f6);
+  border-radius: 9999px;
+  color: var(--gray-700, #374151);
+  font-weight: 600;
 }
 
 .meeting-row {
@@ -102,23 +111,43 @@ body {
   margin-top: 0.25rem;
 }
 
-.overall-attendance {
-  position: absolute;
-  top: 1.5rem;
-  right: 2.5rem;
-  min-width: 180px;
-  text-align: right;
-  font-size: 1.15rem;
-  font-weight: 500;
-  color: #2a7a2a;
-  background: #f6fff6;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  box-shadow: 0 1px 4px rgba(0 0 0 / 4%);
+#overall-attendance-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--teal-600, #0d9488);
+  margin-bottom: 0.5rem;
+  line-height: 1;
+  display: block;
 }
 
 .attendance-label {
   color: var(--primary, #000);
   font-weight: 600;
   margin-left: 0.5em;
+}
+
+.team-meeting-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 100%;
+}
+
+/* Responsive layout for smaller screens */
+@media (width <= 1200px) {
+  .attendance-card-list {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    gap: 1rem;
+  }
+
+  .attendance-card-list-label {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .attendance-card-list-meta {
+    grid-column: 1;
+    grid-row: 2;
+  }
 }

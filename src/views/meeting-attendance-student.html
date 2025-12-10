@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="/css/inactivity-timeout.css">
   <link rel="stylesheet" href="/css/lectures-global.css">
   <link rel="stylesheet" href="/css/lecture-attendance-student.css">
-  <link rel="stylesheet" href="/css/meeting-attendance.css">
 </head>
 
 <body class="dashboard-page">
@@ -27,6 +26,7 @@
     
     <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    
     <footer>
       <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
@@ -37,42 +37,41 @@
       <section class="attendance-content" data-offering-id="">
         <div class="attendance-title">
           <div>
-            <p class="eyebrow">Meeting attendance</p>
-            <h2 id="team-name">Loading...</h2>
-            <p class="subtitle">Scan the list below review your status or log your attendance for a meeting.</p>
+            <p class="eyebrow">Meeting Attendance</p>
+            <h2 id="course-title">Loading...</h2>
+            <p class="header-subtitle"><span id="team-name">Loading team...</span> · Scan the list below to review your status or jump into an open meeting to check in.</p>
           </div>
           <div class="attendance-filter">
             <label for="meeting-filter">Filter</label>
             <select id="meeting-filter">
               <option value="all" selected>All</option>
               <option value="open">Open sessions</option>
-              <option value="present">Marked Present</option>
-              <option value="absent">Marked Absent</option>
+              <option value="present">Checked In</option>
+              <option value="absent">Missed</option>
             </select>
           </div>
         </div>
 
         <div class="lecture-list" id="meeting-list" aria-live="polite"></div>
         <div class="empty-state" id="meeting-empty" hidden>
-          <p>No meetings to show yet. Once a team lead creates the first meeting it will appear here.</p>
+          <p>No team meetings scheduled yet. Team meetings are separate from lectures and will appear here once your team lead schedules them.</p>
         </div>
       </section>
 
       <aside class="attendance-sidebar">
         <div class="stats-box">
-          <h3>Your meeting attendance</h3>
+          <h3>Your overall attendance</h3>
           <div class="attendance-percentage" id="attendance-percentage">0%</div>
         </div>
       </aside>
     </div>
   </main>
 
-  <script src="/js/inactivity-timeout.js?v=18" defer></script>
-  <script src="/js/lecture-data.service.js?v=18" defer></script>
   <script src="/js/palette-loader.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
   <script src="/js/colorblind-mode.js" defer></script>
-  <script src="/js/meeting-attendance-student.js?v=104" defer></script>
+  <script src="/js/inactivity-timeout.js" defer></script>
+  <script src="/js/lecture-data.service.js" defer></script>
+  <script src="/js/meeting-attendance-student.js" defer></script>
 </body>
 </html>
-

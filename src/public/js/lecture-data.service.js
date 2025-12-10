@@ -654,13 +654,26 @@
           .filter(session => !session.team_id) // Only lectures, not team meetings
           .map(session => {
           const transformed = transformSession(session);
-          const attendanceStatus = attendanceMap[session.id] || 'absent';
           const sessionState = transformed.status;
-
+          
+          // Get attendance status from map
+          const attendanceStatus = attendanceMap[session.id];
+          
           // Determine overall status
-          let status = attendanceStatus;
-          if (sessionState === 'open' && attendanceStatus === 'absent') {
-            status = 'open'; // Needs response
+          let status;
+          if (attendanceStatus) {
+            // Has an attendance record (present, absent, excused)
+            status = attendanceStatus;
+          } else {
+            // No attendance record yet
+            if (sessionState === 'open') {
+              status = 'open'; // Needs response
+            } else if (sessionState === 'pending') {
+              status = 'pending'; // Not yet available
+            } else {
+              // Session is closed and no record = absent
+              status = 'absent';
+            }
           }
 
         return {
