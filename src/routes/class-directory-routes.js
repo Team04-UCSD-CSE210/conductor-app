@@ -1,11 +1,10 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
-
-
+import validator from 'validator';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 
 const router = Router();
 
@@ -21,9 +20,14 @@ const storage = multer.diskStorage({
     cb(null, avatarDir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '');
-    const userId = req.params.userId || 'user';
-    cb(null, `${userId}-${Date.now()}${ext || '.png'}`);
+    const ext = path.extname(file.originalname || '') || '.png';
+    const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, '');
+    let userId = req.params.userId || 'user';
+    if (!validator.isUUID(userId)) {
+      userId = 'user';
+    }
+    const sanitizedUserId = userId.replace(/[^a-zA-Z0-9-]/g, '');
+    cb(null, `${sanitizedUserId}-${Date.now()}${safeExt}`);
   }
 });
 
@@ -272,6 +276,18 @@ router.post(
         return res.status(401).json({ error: 'Not authenticated' });
       }
 
+      // Fetch existing avatar to delete after successful update
+      let oldAvatarUrl = null;
+      try {
+        const existing = await pool.query(
+          `SELECT avatar_url FROM users WHERE id = $1::uuid`,
+          [userId]
+        );
+        oldAvatarUrl = existing.rows?.[0]?.avatar_url || null;
+      } catch (err) {
+        console.warn('Failed to fetch old avatar url for cleanup:', err.message);
+      }
+
       const relativePath = `/uploads/avatars/${req.file.filename}`;
       const absoluteUrl = `${req.protocol}://${req.get('host')}${relativePath}`;
 
@@ -284,6 +300,32 @@ router.post(
         `,
         [userId, absoluteUrl]
       );
+
+      // Delete old avatar file if it lived under uploads/avatars
+      const removeOldAvatar = (url) => {
+        if (!url) return;
+        try {
+          const marker = '/uploads/avatars/';
+          const idx = url.indexOf(marker);
+          if (idx === -1) return;
+          const filename = url.slice(idx + marker.length).split('?')[0];
+          if (!filename) return;
+          const targetPath = path.join(avatarDir, filename);
+          // Basic containment check
+          if (!targetPath.startsWith(avatarDir)) return;
+          if (fs.existsSync(targetPath)) {
+            fs.unlink(targetPath, (err) => {
+              if (err) {
+                console.warn('Failed to delete old avatar file:', err.message);
+              }
+            });
+          }
+        } catch (error_) {
+          console.warn('Error during old avatar cleanup:', error_.message);
+        }
+      };
+
+      removeOldAvatar(oldAvatarUrl);
 
       return res.json({ avatar_url: absoluteUrl });
     } catch (error) {

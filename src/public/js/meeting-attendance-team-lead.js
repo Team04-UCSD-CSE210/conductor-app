@@ -557,7 +557,7 @@ function determineMeetingStatus(meeting) {
           const response = await fetch(`/api/attendance/sessions/${meeting.id}/attendance/${state.currentUser.id}`);
           if (response.ok) {
             const attendance = await response.json();
-            if (attendance && attendance.status === 'present') {
+            if (attendance?.status === 'present') {
               presentCount++;
             }
           }

@@ -12,10 +12,11 @@ BEGIN
         WHERE enumlabel = 'instructor' 
         AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enrollment_role_enum')
     ) THEN
-        -- Add the enum value
-        -- Note: This must be in its own transaction to be visible to subsequent operations
-        ALTER TYPE enrollment_role_enum ADD VALUE IF NOT EXISTS 'instructor';
+        ALTER TYPE enrollment_role_enum ADD VALUE 'instructor';
     END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
 END $$;
 
 

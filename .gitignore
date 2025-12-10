@@ -21,3 +21,6 @@ certs
 test-results/
 playwright-report/
 .last-run.json
+
+# photos
+uploads/avatars/

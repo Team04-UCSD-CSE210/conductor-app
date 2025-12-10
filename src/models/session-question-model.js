@@ -154,17 +154,17 @@ export class SessionQuestionModel {
    * Update question
    */
   static async update(questionId, updates, updatedBy) {
-    const allowedFields = [
+    const allowedFields = new Set([
       'question_text', 'question_type', 'question_order',
       'options', 'is_required'
-    ];
+    ]);
 
     const setFields = [];
     const values = [];
     let paramIndex = 1;
 
     for (const [key, value] of Object.entries(updates)) {
-      if (allowedFields.includes(key)) {
+      if (allowedFields.has(key)) {
         setFields.push(`${key} = $${paramIndex}`);
         values.push(value);
         paramIndex++;

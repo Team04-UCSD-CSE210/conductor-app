@@ -65,17 +65,10 @@
   };
   
   function selectPalette(paletteId) {
-    // Update visual selection
-    const paletteOptions = document.querySelectorAll('.palette-option');
-    paletteOptions.forEach(option => {
-      option.classList.remove('selected');
-      const radio = option.querySelector('input[type="radio"]');
-      if (radio && radio.value === paletteId) {
-        option.classList.add('selected');
-        radio.checked = true;
-      } else if (radio) {
-        radio.checked = false;
-      }
+    const radios = document.querySelectorAll('.palette-radio');
+    
+    radios.forEach(radio => {
+      radio.checked = radio.value === paletteId;
     });
     
     // Apply palette immediately for preview
@@ -166,13 +159,13 @@
     if (code) data.code = code;
     if (name) data.name = name;
     if (department) data.department = department;
-    if (credits) data.credits = parseInt(credits, 10);
+    if (credits) data.credits = Number.parseInt(credits, 10);
     if (term) data.term = term;
-    if (year) data.year = parseInt(year, 10);
+    if (year) data.year = Number.parseInt(year, 10);
     if (startDate) data.start_date = startDate;
     if (endDate) data.end_date = endDate;
     if (location) data.location = location;
-    if (enrollmentCap) data.enrollment_cap = parseInt(enrollmentCap, 10);
+    if (enrollmentCap) data.enrollment_cap = Number.parseInt(enrollmentCap, 10);
     if (classTimings && classTimings.trim()) {
       try {
         data.class_timings = JSON.parse(classTimings);
@@ -199,12 +192,10 @@
     
     return response.json();
   }
-
+  
   function initCourseSettings() {
     const saveBtn = document.getElementById('savePaletteBtn');
     const resetBtn = document.getElementById('resetPaletteBtn');
-    const paletteOptions = document.querySelectorAll('.palette-option');
-    const paletteRadios = document.querySelectorAll('input[name="colorPalette"]');
     const courseInfoForm = document.getElementById('courseInfoForm');
     const saveCourseInfoBtn = document.getElementById('saveCourseInfoBtn');
     const resetCourseInfoBtn = document.getElementById('resetCourseInfoBtn');
@@ -217,27 +208,18 @@
       selectPalette(paletteId);
     });
     
-    // Make entire palette cards clickable
-    paletteOptions.forEach(option => {
-      option.addEventListener('click', (e) => {
-        // Don't trigger if clicking the label/checkbox directly
-        if (e.target.type === 'radio' || e.target.type === 'checkbox') return;
-        
-        const radio = option.querySelector('input[type="radio"]');
+    // Handle palette card selection - cards are labels, so clicking automatically selects radio
+    const paletteCards = document.querySelectorAll('.palette-card');
+    paletteCards.forEach(card => {
+      const radio = card.querySelector('.palette-radio');
         if (radio) {
-          radio.checked = true;
-          selectPalette(radio.value);
-        }
-      });
-    });
-    
-    // Handle radio button changes (for keyboard/accessibility)
-    paletteRadios.forEach(radio => {
+        // Handle change event for immediate preview
       radio.addEventListener('change', (e) => {
         if (e.target.checked) {
           selectPalette(e.target.value);
         }
       });
+      }
     });
     
     // Save palette
@@ -251,6 +233,16 @@
         
         const paletteId = selected.value;
         
+        // Disable button and show loading state
+        saveBtn.disabled = true;
+        const btnText = saveBtn.querySelector('.btn-text');
+        const originalText = btnText ? btnText.textContent : saveBtn.textContent;
+        if (btnText) {
+          btnText.textContent = 'Saving...';
+        } else {
+          saveBtn.textContent = 'Saving...';
+        }
+        
         // Save to server (global for all users)
         try {
           const result = await savePaletteToServer(paletteId);
@@ -258,11 +250,6 @@
           
           // Clear localStorage since we're using server-side storage now
           localStorage.removeItem(PALETTE_STORAGE_KEY);
-        } catch (error) {
-          console.error('Failed to save palette to server:', error);
-          showMessage('Failed to save palette. Please try again.', 'error');
-          return;
-        }
         
         // Ensure palette is applied
         applyPalette(paletteId);
@@ -270,6 +257,18 @@
         // Reload palette loader to ensure global application
         if (window.applyColorPalette) {
           window.applyColorPalette(paletteId);
+          }
+        } catch (error) {
+          console.error('Failed to save palette to server:', error);
+          showMessage('Failed to save palette. Please try again.', 'error');
+        } finally {
+          // Re-enable button
+          saveBtn.disabled = false;
+          if (btnText) {
+            btnText.textContent = originalText;
+          } else {
+            saveBtn.textContent = originalText;
+          }
         }
       });
     }
@@ -290,7 +289,12 @@
         
         if (saveCourseInfoBtn) {
           saveCourseInfoBtn.disabled = true;
-          saveCourseInfoBtn.textContent = 'Saving...';
+          const btnText = saveCourseInfoBtn.querySelector('.btn-text');
+          if (btnText) {
+            btnText.textContent = 'Saving...';
+          } else {
+            saveCourseInfoBtn.textContent = 'Saving...';
+          }
         }
         
         try {
@@ -302,7 +306,12 @@
         } finally {
           if (saveCourseInfoBtn) {
             saveCourseInfoBtn.disabled = false;
-            saveCourseInfoBtn.textContent = 'Save Course Information';
+            const btnText = saveCourseInfoBtn.querySelector('.btn-text');
+            if (btnText) {
+              btnText.textContent = 'Save Changes';
+            } else {
+              saveCourseInfoBtn.textContent = 'Save Changes';
+            }
           }
         }
       });
@@ -361,25 +370,35 @@
   
   function showMessage(text, type) {
     // Remove existing messages
-    const existing = document.querySelector('.settings-message');
-    if (existing) {
-      existing.remove();
-    }
+    const existing = document.querySelectorAll('.settings-message');
+    existing.forEach(msg => msg.remove());
     
     // Create new message
     const message = document.createElement('div');
     message.className = `settings-message ${type}`;
     message.textContent = text;
     
-    // Insert at top of settings section
-    const settingsSection = document.querySelector('.settings-section');
-    if (settingsSection) {
-      settingsSection.insertBefore(message, settingsSection.firstChild);
+    // Insert at top of the relevant settings section
+    // Try to find the section that was just interacted with
+    const activeSection = document.querySelector('.settings-section:has(.form-actions .btn-primary:disabled)') 
+      || document.querySelector('.settings-section');
+    
+    if (activeSection) {
+      const sectionHeader = activeSection.querySelector('.section-header');
+      if (sectionHeader) {
+        sectionHeader.insertAdjacentElement('afterend', message);
+      } else {
+        activeSection.insertBefore(message, activeSection.firstChild);
+      }
       
-      // Remove after 3 seconds
+      // Remove after 4 seconds with fade out
+      setTimeout(() => {
+        message.style.transition = 'opacity 0.2s ease';
+        message.style.opacity = '0';
       setTimeout(() => {
         message.remove();
-      }, 3000);
+        }, 200);
+      }, 4000);
     }
   }
   

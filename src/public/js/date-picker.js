@@ -27,7 +27,7 @@
       // Parse initial value
       if (this.input.value) {
         const date = new Date(this.input.value + 'T00:00:00');
-        if (!isNaN(date.getTime())) {
+        if (!Number.isNaN(date.getTime())) {
           this.selectedDate = date;
           this.currentDate = new Date(date);
         } else {
@@ -348,7 +348,7 @@
       this.input.addEventListener('change', () => {
         if (this.input.value) {
           const date = new Date(this.input.value + 'T00:00:00');
-          if (!isNaN(date.getTime())) {
+          if (!Number.isNaN(date.getTime())) {
             this.selectedDate = date;
             this.currentDate = new Date(date);
             this.updateDisplay();

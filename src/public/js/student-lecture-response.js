@@ -41,7 +41,7 @@
     const end = new Date(endIso);
       
       // Validate dates
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -201,7 +201,7 @@
   }
 
   function collectAnswers() {
-    if (!lecture || !lecture.questions) return [];
+    if (!lecture?.questions) return [];
     
     return lecture.questions.map((question) => {
       const fieldName = `question-${question.id}`;
@@ -384,7 +384,7 @@
       renderQuestions();
       
       // Check if questions were rendered
-      if (lecture.questions && lecture.questions.length === 0) {
+      if (lecture.questions?.length === 0) {
         console.warn('No questions found for this lecture');
         if (selectors.questionList) {
           selectors.questionList.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">No questions available for this lecture.</p>';

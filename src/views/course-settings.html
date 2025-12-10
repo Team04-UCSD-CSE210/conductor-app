@@ -44,43 +44,81 @@
 
   <!-- Main Content -->
   <main class="main-container" id="main">
-
-
     <div class="settings-page">
+      <div class="settings-header">
       <h1 class="page-title">Course Settings</h1>
+        <p class="page-subtitle">Manage your course configuration and appearance</p>
+      </div>
 
       <!-- Course Information -->
       <section class="settings-section">
-        <h2>Course Information</h2>
-        <p class="settings-description">Update basic course details and information.</p>
+        <div class="section-header">
+          <h2 class="section-title">Course Information</h2>
+          <p class="section-description">Update basic course details and scheduling information</p>
+        </div>
         
         <form id="courseInfoForm" class="course-form">
-          <div class="form-row">
+          <div class="form-grid">
             <div class="form-group">
-              <label for="courseCode">Course Code</label>
-              <input type="text" id="courseCode" name="code" placeholder="e.g., CSE 210" required>
+              <label for="courseCode" class="form-label">
+                Course Code
+                <span class="required-indicator">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="courseCode" 
+                name="code" 
+                class="form-input"
+                placeholder="CSE 210" 
+                required
+                autocomplete="off"
+              >
             </div>
-            <div class="form-group">
-              <label for="courseName">Course Name</label>
-              <input type="text" id="courseName" name="name" placeholder="e.g., Software Engineering" required>
-            </div>
-          </div>
 
-          <div class="form-row">
             <div class="form-group">
-              <label for="department">Department</label>
-              <input type="text" id="department" name="department" placeholder="e.g., Computer Science & Engineering">
+              <label for="courseName" class="form-label">
+                Course Name
+                <span class="required-indicator">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="courseName" 
+                name="name" 
+                class="form-input"
+                placeholder="Software Engineering" 
+                required
+                autocomplete="off"
+              >
             </div>
-            <div class="form-group">
-              <label for="credits">Credits</label>
-              <input type="number" id="credits" name="credits" min="0" placeholder="e.g., 4">
-            </div>
-          </div>
 
-          <div class="form-row">
             <div class="form-group">
-              <label for="term">Term</label>
-              <select id="term" name="term">
+              <label for="department" class="form-label">Department</label>
+              <input 
+                type="text" 
+                id="department" 
+                name="department" 
+                class="form-input"
+                placeholder="Computer Science & Engineering"
+                autocomplete="organization"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="credits" class="form-label">Credits</label>
+              <input 
+                type="number" 
+                id="credits" 
+                name="credits" 
+                class="form-input"
+                min="0" 
+                max="10"
+                placeholder="4"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="term" class="form-label">Term</label>
+              <select id="term" name="term" class="form-select">
                 <option value="">Select term</option>
                 <option value="Fall">Fall</option>
                 <option value="Winter">Winter</option>
@@ -88,162 +126,228 @@
                 <option value="Summer">Summer</option>
               </select>
             </div>
+
             <div class="form-group">
-              <label for="year">Year</label>
-              <input type="number" id="year" name="year" min="2000" max="2100" placeholder="e.g., 2025">
+              <label for="year" class="form-label">Year</label>
+              <input 
+                type="number" 
+                id="year" 
+                name="year" 
+                class="form-input"
+                min="2000" 
+                max="2100" 
+                placeholder="2025"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="startDate" class="form-label">
+                Start Date
+                <span class="required-indicator">*</span>
+              </label>
+              <input 
+                type="date" 
+                id="startDate" 
+                name="start_date" 
+                class="form-input"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="endDate" class="form-label">
+                End Date
+                <span class="required-indicator">*</span>
+              </label>
+              <input 
+                type="date" 
+                id="endDate" 
+                name="end_date" 
+                class="form-input"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="location" class="form-label">Location</label>
+              <input 
+                type="text" 
+                id="location" 
+                name="location" 
+                class="form-input"
+                placeholder="CSE Building, Room 120"
+                autocomplete="off"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="enrollmentCap" class="form-label">Enrollment Cap</label>
+              <input 
+                type="number" 
+                id="enrollmentCap" 
+                name="enrollment_cap" 
+                class="form-input"
+                min="0" 
+                placeholder="100"
+              >
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="classTimings" class="form-label">Class Schedule</label>
+              <textarea 
+                id="classTimings" 
+                name="class_timings" 
+                class="form-textarea"
+                rows="4" 
+                placeholder="{&quot;days&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;], &quot;time&quot;: &quot;10:30-11:20&quot;, &quot;timezone&quot;: &quot;PT&quot;}"
+              ></textarea>
+              <div class="form-hint">
+                Enter class schedule in JSON format. Example: <code>{"days": ["Monday", "Wednesday"], "time": "10:30-11:20", "timezone": "PT"}</code>
+              </div>
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="syllabusUrl" class="form-label">Syllabus URL</label>
+              <input 
+                type="url" 
+                id="syllabusUrl" 
+                name="syllabus_url" 
+                class="form-input"
+                placeholder="https://example.com/syllabus.pdf"
+                autocomplete="url"
+              >
+            </div>
+
+            <div class="form-group form-group-full">
+              <label for="status" class="form-label">Status</label>
+              <select id="status" name="status" class="form-select">
+                <option value="">Select status</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+                <option value="completed">Completed</option>
+              </select>
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="startDate">Start Date</label>
-              <input type="date" id="startDate" name="start_date" required>
-            </div>
-            <div class="form-group">
-              <label for="endDate">End Date</label>
-              <input type="date" id="endDate" name="end_date" required>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="location">Location</label>
-              <input type="text" id="location" name="location" placeholder="e.g., CSE Building, Room 120">
-            </div>
-            <div class="form-group">
-              <label for="enrollmentCap">Enrollment Cap</label>
-              <input type="number" id="enrollmentCap" name="enrollment_cap" min="0" placeholder="e.g., 100">
-            </div>
-          </div>
-
-          <div class="form-group full-width">
-            <label for="classTimings">Class Timings (JSON format)</label>
-            <textarea id="classTimings" name="class_timings" rows="4" placeholder="{&quot;days&quot;: [&quot;Monday&quot;, &quot;Wednesday&quot;], &quot;time&quot;: &quot;10:30-11:20&quot;, &quot;timezone&quot;: &quot;PT&quot;}"></textarea>
-            <small>Enter class schedule in JSON format. Example: {"days": ["Monday", "Wednesday"], "time": "10:30-11:20", "timezone": "PT"}</small>
-          </div>
-
-          <div class="form-group">
-            <label for="syllabusUrl">Syllabus URL</label>
-            <input type="url" id="syllabusUrl" name="syllabus_url" placeholder="https://example.com/syllabus.pdf">
-          </div>
-
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status">
-              <option value="">Select status</option>
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
-
-          <div class="settings-actions">
-            <button type="submit" class="btn btn-primary" id="saveCourseInfoBtn">Save Course Information</button>
-            <button type="button" class="btn btn-ghost" id="resetCourseInfoBtn">Reset</button>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="resetCourseInfoBtn">Reset</button>
+            <button type="submit" class="btn btn-primary" id="saveCourseInfoBtn">
+              <span class="btn-text">Save Changes</span>
+            </button>
           </div>
         </form>
       </section>
 
       <!-- Color Palette Configuration -->
       <section class="settings-section">
-        <h2>Color Palette Configuration</h2>
-        <p class="settings-description">Choose a color palette for the course website. This will affect the overall theme and appearance.</p>
+        <div class="section-header">
+          <h2 class="section-title">Appearance</h2>
+          <p class="section-description">Choose a color palette that reflects your course identity</p>
+        </div>
         
-        <div class="palette-options">
-          <div class="palette-option" data-palette="default">
+        <div class="palette-grid">
+          <label class="palette-card" data-palette="default">
+            <input type="radio" name="colorPalette" value="default" id="palette-default" class="palette-radio">
             <div class="palette-preview">
-              <div class="palette-color" style="background: #0F766E;"></div>
-              <div class="palette-color" style="background: #83D7CF;"></div>
-              <div class="palette-color" style="background: #99F6E4;"></div>
-              <div class="palette-color" style="background: #F0FDFA;"></div>
+              <div class="palette-swatch" style="background: linear-gradient(135deg, #0F766E 0%, #83D7CF 100%);"></div>
             </div>
-            <div class="palette-info">
-              <h3>Default Teal</h3>
-              <p>Original teal and emerald color scheme</p>
+            <div class="palette-content">
+              <h3 class="palette-name">Default Teal</h3>
+              <p class="palette-description">Classic teal and emerald</p>
             </div>
-            <input type="radio" name="colorPalette" value="default" id="palette-default" checked>
-            <label for="palette-default" class="palette-select-label"></label>
+            <div class="palette-checkmark">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="currentColor"/>
+              </svg>
           </div>
+          </label>
 
-          <div class="palette-option" data-palette="blue">
+          <label class="palette-card" data-palette="blue">
+            <input type="radio" name="colorPalette" value="blue" id="palette-blue" class="palette-radio">
             <div class="palette-preview">
-              <div class="palette-color" style="background: #1E40AF;"></div>
-              <div class="palette-color" style="background: #60A5FA;"></div>
-              <div class="palette-color" style="background: #93C5FD;"></div>
-              <div class="palette-color" style="background: #EFF6FF;"></div>
+              <div class="palette-swatch" style="background: linear-gradient(135deg, #1E40AF 0%, #60A5FA 100%);"></div>
             </div>
-            <div class="palette-info">
-              <h3>Ocean Blue</h3>
-              <p>Cool blue tones for a professional look</p>
+            <div class="palette-content">
+              <h3 class="palette-name">Ocean Blue</h3>
+              <p class="palette-description">Professional blue tones</p>
             </div>
-            <input type="radio" name="colorPalette" value="blue" id="palette-blue">
-            <label for="palette-blue" class="palette-select-label"></label>
+            <div class="palette-checkmark">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="currentColor"/>
+              </svg>
           </div>
+          </label>
 
-          <div class="palette-option" data-palette="purple">
+          <label class="palette-card" data-palette="purple">
+            <input type="radio" name="colorPalette" value="purple" id="palette-purple" class="palette-radio">
             <div class="palette-preview">
-              <div class="palette-color" style="background: #6B21A8;"></div>
-              <div class="palette-color" style="background: #A78BFA;"></div>
-              <div class="palette-color" style="background: #C4B5FD;"></div>
-              <div class="palette-color" style="background: #F3E8FF;"></div>
+              <div class="palette-swatch" style="background: linear-gradient(135deg, #6B21A8 0%, #A78BFA 100%);"></div>
             </div>
-            <div class="palette-info">
-              <h3>Royal Purple</h3>
-              <p>Rich purple shades for elegance</p>
+            <div class="palette-content">
+              <h3 class="palette-name">Royal Purple</h3>
+              <p class="palette-description">Elegant purple shades</p>
             </div>
-            <input type="radio" name="colorPalette" value="purple" id="palette-purple">
-            <label for="palette-purple" class="palette-select-label"></label>
+            <div class="palette-checkmark">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="currentColor"/>
+              </svg>
           </div>
+          </label>
 
-          <div class="palette-option" data-palette="green">
+          <label class="palette-card" data-palette="green">
+            <input type="radio" name="colorPalette" value="green" id="palette-green" class="palette-radio">
             <div class="palette-preview">
-              <div class="palette-color" style="background: #166534;"></div>
-              <div class="palette-color" style="background: #4ADE80;"></div>
-              <div class="palette-color" style="background: #86EFAC;"></div>
-              <div class="palette-color" style="background: #F0FDF4;"></div>
+              <div class="palette-swatch" style="background: linear-gradient(135deg, #166534 0%, #4ADE80 100%);"></div>
             </div>
-            <div class="palette-info">
-              <h3>Forest Green</h3>
-              <p>Natural green tones for a fresh feel</p>
+            <div class="palette-content">
+              <h3 class="palette-name">Forest Green</h3>
+              <p class="palette-description">Fresh natural tones</p>
             </div>
-            <input type="radio" name="colorPalette" value="green" id="palette-green">
-            <label for="palette-green" class="palette-select-label"></label>
+            <div class="palette-checkmark">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="currentColor"/>
+              </svg>
           </div>
+          </label>
 
-          <div class="palette-option" data-palette="orange">
+          <label class="palette-card" data-palette="orange">
+            <input type="radio" name="colorPalette" value="orange" id="palette-orange" class="palette-radio">
             <div class="palette-preview">
-              <div class="palette-color" style="background: #C2410C;"></div>
-              <div class="palette-color" style="background: #FB923C;"></div>
-              <div class="palette-color" style="background: #FDBA74;"></div>
-              <div class="palette-color" style="background: #FFF7ED;"></div>
+              <div class="palette-swatch" style="background: linear-gradient(135deg, #C2410C 0%, #FB923C 100%);"></div>
             </div>
-            <div class="palette-info">
-              <h3>Sunset Orange</h3>
-              <p>Warm orange hues for energy</p>
+            <div class="palette-content">
+              <h3 class="palette-name">Sunset Orange</h3>
+              <p class="palette-description">Warm energetic hues</p>
             </div>
-            <input type="radio" name="colorPalette" value="orange" id="palette-orange">
-            <label for="palette-orange" class="palette-select-label"></label>
+            <div class="palette-checkmark">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="currentColor"/>
+              </svg>
           </div>
+          </label>
 
-          <div class="palette-option" data-palette="red">
+          <label class="palette-card" data-palette="red">
+            <input type="radio" name="colorPalette" value="red" id="palette-red" class="palette-radio">
             <div class="palette-preview">
-              <div class="palette-color" style="background: #991B1B;"></div>
-              <div class="palette-color" style="background: #F87171;"></div>
-              <div class="palette-color" style="background: #FCA5A5;"></div>
-              <div class="palette-color" style="background: #FEF2F2;"></div>
+              <div class="palette-swatch" style="background: linear-gradient(135deg, #991B1B 0%, #F87171 100%);"></div>
             </div>
-            <div class="palette-info">
-              <h3>Classic Red</h3>
-              <p>Bold red for high visibility</p>
+            <div class="palette-content">
+              <h3 class="palette-name">Classic Red</h3>
+              <p class="palette-description">Bold and vibrant</p>
             </div>
-            <input type="radio" name="colorPalette" value="red" id="palette-red">
-            <label for="palette-red" class="palette-select-label"></label>
+            <div class="palette-checkmark">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill="currentColor"/>
+              </svg>
           </div>
+          </label>
         </div>
 
-        <div class="settings-actions">
-          <button type="button" class="btn btn-primary" id="savePaletteBtn">Save Color Palette</button>
-          <button type="button" class="btn btn-ghost" id="resetPaletteBtn">Reset to Default</button>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="resetPaletteBtn">Reset to Default</button>
+          <button type="button" class="btn btn-primary" id="savePaletteBtn">
+            <span class="btn-text">Save Palette</span>
+          </button>
         </div>
       </section>
     </div>
@@ -256,4 +360,3 @@
   <script src="/js/course-settings.js" defer></script>
 </body>
 </html>
-

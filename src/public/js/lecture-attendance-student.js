@@ -22,7 +22,7 @@
     const end = new Date(endIso);
       
       // Validate dates
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -48,7 +48,10 @@
   function buildStatusBadge(status) {
     const badge = document.createElement('span');
     badge.classList.add('lecture-badge');
-    const statusLabel = status === 'open' ? 'Needs response' : status;
+    let statusLabel = status;
+    if (status === 'open') {
+      statusLabel = 'Needs response';
+    }
     badge.textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
     badge.classList.add(status === 'present' ? 'present' : status === 'absent' ? 'absent' : 'present');
     if (status === 'absent') {
@@ -145,10 +148,10 @@
     
     try {
       const stats = await window.LectureService.getStudentStatistics?.(state.offeringId);
-      if (stats && stats.attendance_percentage !== undefined) {
+      if (stats?.attendance_percentage !== undefined) {
         // Use attendance_percentage from backend (matches SQL column name)
         selectors.attendancePercentage.textContent = `${Math.round(stats.attendance_percentage)}%`;
-      } else if (stats && stats.attendance_percent !== undefined) {
+      } else if (stats?.attendance_percent !== undefined) {
         // Fallback to attendance_percent if attendance_percentage not available
         selectors.attendancePercentage.textContent = `${Math.round(stats.attendance_percent)}%`;
       } else {
@@ -335,9 +338,10 @@
       
       try {
           // Verify code first
-          const verification = await window.LectureService.verifyAccessCode(code);
+          const verification = await window.LectureService?.verifyAccessCode(code);
+        console.log('Verification result:', verification);
           
-        if (!verification || !verification.valid) {
+        if (!verification?.valid) {
             // Code is incorrect or session is closed - reset and show error
           const errorMsg = verification?.message || 'Incorrect access code. Please try again.';
           errorDiv.textContent = errorMsg;

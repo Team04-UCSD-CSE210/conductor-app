@@ -53,8 +53,7 @@
   opacity: 0.8;
 }
 
-/* stylelint-disable selector-id-pattern */
-#editTeamBtn {
+#edit-team-btn {
   display: flex;
   align-items: center;
   padding: 0.75rem 1.25rem;
@@ -63,7 +62,7 @@
   transition: all 0.2s ease;
 }
 
-#editTeamBtn:hover {
+#edit-team-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
 }
@@ -87,8 +86,7 @@
     justify-content: center;
   }
   
-  /* stylelint-disable-next-line selector-id-pattern */
-  #editTeamBtn {
+  #edit-team-btn {
     width: 100%;
     justify-content: center;
   }

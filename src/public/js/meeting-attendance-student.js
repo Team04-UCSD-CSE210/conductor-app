@@ -155,7 +155,12 @@
   function buildStatusBadge(status) {
     const badge = document.createElement('span');
     badge.classList.add('lecture-badge');
-    const statusLabel = status === 'open' ? 'Needs response' : status === 'pending' ? 'Upcoming' : status;
+    let statusLabel = status;
+    if (status === 'open') {
+      statusLabel = 'Needs response';
+    } else if (status === 'pending') {
+      statusLabel = 'Upcoming';
+    }
     badge.textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
     
     // Apply appropriate CSS class for styling
@@ -420,10 +425,8 @@
         if (selectors.teamName) {
           selectors.teamName.textContent = `Team ${teamInfo.number || teamInfo.name}`;
         }
-      } else {
-        if (selectors.teamName) {
-          selectors.teamName.textContent = 'No team assigned';
-        }
+      } else if (selectors.teamName) {
+        selectors.teamName.textContent = 'No team assigned';
       }
 
       // Update course title

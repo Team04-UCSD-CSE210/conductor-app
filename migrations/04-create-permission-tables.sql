@@ -16,18 +16,19 @@
 -- Note: user_role_enum should already exist from 01-create-tables.sql
 -- This ensures 'unregistered' is included if enum was created without it
 -- ------------------------------------------------------------
-DO $$ BEGIN
-    -- Check if enum exists, if not create it
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_enum') THEN
-        CREATE TYPE user_role_enum AS ENUM ('admin', 'instructor', 'student', 'unregistered');
+DO $$
+DECLARE
+    user_role_enum_name CONSTANT TEXT := 'user_role_enum';
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = user_role_enum_name) THEN
+        EXECUTE format('CREATE TYPE %I AS ENUM (''admin'', ''instructor'', ''student'', ''unregistered'')', user_role_enum_name);
     ELSE
-        -- If enum exists, add 'unregistered' if it doesn't exist
         IF NOT EXISTS (
             SELECT 1 FROM pg_enum 
             WHERE enumlabel = 'unregistered' 
-            AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'user_role_enum')
+            AND enumtypid = (SELECT oid FROM pg_type WHERE typname = user_role_enum_name)
         ) THEN
-            ALTER TYPE user_role_enum ADD VALUE 'unregistered';
+            EXECUTE format('ALTER TYPE %I ADD VALUE ''unregistered''', user_role_enum_name);
         END IF;
     END IF;
 END $$;
@@ -59,9 +60,9 @@ END $$;
 CREATE TABLE IF NOT EXISTS permissions (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     scope       TEXT NOT NULL CHECK (scope IN ('global', 'course', 'team')),
-    resource    TEXT NOT NULL,   -- e.g. 'roster', 'user', 'assignment'
-    action      TEXT NOT NULL,   -- e.g. 'import', 'view', 'update'
-    code        TEXT UNIQUE NOT NULL,  -- e.g. 'roster.import'
+    resource    TEXT NOT NULL,
+    action      TEXT NOT NULL,
+    code        TEXT UNIQUE NOT NULL,
     description TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

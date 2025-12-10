@@ -59,8 +59,8 @@
       // Parse initial value
       if (this.input.value) {
         const [h, m] = this.input.value.split(':').map(Number);
-        const hour24 = h !== undefined && !isNaN(h) ? h : 12;
-        this.minutes = m !== undefined && !isNaN(m) ? m : 0;
+        const hour24 = h !== undefined && !Number.isNaN(h) ? h : 12;
+        this.minutes = m !== undefined && !Number.isNaN(m) ? m : 0;
         // Convert 24-hour to 12-hour format
         this.setHour24(hour24);
       } else {
@@ -180,7 +180,7 @@
       // Attach button events
       this.picker.querySelectorAll('[data-hour]').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          this.hours = parseInt(e.target.dataset.hour);
+          this.hours = Number.parseInt(e.target.dataset.hour, 10);
           this.updatePicker();
           this.updateValue();
         });
@@ -188,7 +188,7 @@
       
       this.picker.querySelectorAll('[data-minute]').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          this.minutes = parseInt(e.target.dataset.minute);
+          this.minutes = Number.parseInt(e.target.dataset.minute, 10);
           this.updatePicker();
           this.updateValue();
         });
@@ -252,12 +252,12 @@
     updatePicker() {
       // Update selected states
       this.picker.querySelectorAll('[data-hour]').forEach(btn => {
-        const hour = parseInt(btn.dataset.hour);
+          const hour = Number.parseInt(btn.dataset.hour, 10);
         btn.classList.toggle('selected', hour === this.hours);
       });
       
       this.picker.querySelectorAll('[data-minute]').forEach(btn => {
-        const minute = parseInt(btn.dataset.minute);
+          const minute = Number.parseInt(btn.dataset.minute, 10);
         btn.classList.toggle('selected', minute === this.minutes);
       });
       
@@ -412,8 +412,8 @@
       this.input.addEventListener('change', () => {
         if (this.input.value) {
           const [h, m] = this.input.value.split(':').map(Number);
-          const hour24 = h !== undefined && !isNaN(h) ? h : 12;
-          this.minutes = m !== undefined && !isNaN(m) ? m : 0;
+          const hour24 = h !== undefined && !Number.isNaN(h) ? h : 12;
+          this.minutes = m !== undefined && !Number.isNaN(m) ? m : 0;
           this.setHour24(hour24);
           this.updateDisplay();
           // Only update picker if it's built and open (don't trigger if picker is closed)
@@ -427,7 +427,7 @@
       this.input.addEventListener('input', () => {
         if (this.input.value) {
           const [h, m] = this.input.value.split(':').map(Number);
-          if (h !== undefined && !isNaN(h) && m !== undefined && !isNaN(m)) {
+          if (h !== undefined && !Number.isNaN(h) && m !== undefined && !Number.isNaN(m)) {
             this.setHour24(h);
             this.minutes = m;
             this.updateDisplay();

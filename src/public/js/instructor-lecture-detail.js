@@ -16,9 +16,12 @@
   let lecture = null;
   let isLoading = false;
   let currentQuestionId = null;
-  let currentResponses = [];
-  let checkInterval = null;
-  const CHECK_INTERVAL_MS = 3000; // Check for new responses every 3 seconds
+  const REFRESH_INTERVAL_MS = 5000;
+
+  function truncateText(text, maxLength = 20) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+  }
 
   // Get session ID from URL params or data attribute
   function getSessionId() {
@@ -41,7 +44,7 @@
     const end = new Date(endIso);
       
       // Validate dates
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -271,11 +274,6 @@
     
     const totalResponses = Object.values(counts).reduce((a, b) => a + b, 0);
 
-    // Helper function to truncate text
-    function truncateText(text, maxLength = 20) {
-      if (text.length <= maxLength) return text;
-      return text.substring(0, maxLength - 3) + '...';
-    }
 
     // Create horizontal segmented bar at top
     const topBar = document.createElement('div');
@@ -521,7 +519,7 @@
     });
     
     // Load first question by default
-    if (lecture && lecture.questions && lecture.questions.length > 0) {
+    if (lecture?.questions?.length > 0) {
       const firstQuestionId = lecture.questions[0].id;
       currentQuestionId = firstQuestionId;
       selectors.questionSelect.value = firstQuestionId;

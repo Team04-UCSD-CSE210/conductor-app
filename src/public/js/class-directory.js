@@ -11,6 +11,8 @@ const state = {
   teams: [],
   currentTab: 'professors',
   currentUser: null, 
+  pendingAvatars: {},
+  editingUserId: null,
   filters: {
     professors: { search: '' },
     tutors: { search: '' },
@@ -58,13 +60,13 @@ const makeLinkClickable = (text, type = 'auto') => {
   
   // GitHub username (starts with @ or just username)
   if (type === 'github' || str.startsWith('@') || /^[a-zA-Z0-9]([a-zA-Z0-9]|-(?![.-])){0,38}$/.test(str)) {
-    const username = str.replace(/^@/, '');
+    const username = str.replaceAll(/^@/g, '');
     return `<a href="https://github.com/${username}" target="_blank" rel="noopener noreferrer" class="clickable-link">@${username}</a>`;
   }
   
   // LinkedIn URL (without http)
   if (type === 'linkedin' && str.includes('linkedin.com')) {
-    return `<a href="https://${str.replace(/^https?:\/\//, '')}" target="_blank" rel="noopener noreferrer" class="clickable-link">${str}</a>`;
+    return `<a href="https://${str.replaceAll(/^https?:\/\//g, '')}" target="_blank" rel="noopener noreferrer" class="clickable-link">${str}</a>`;
   }
   
   // Slack handle (starts with @)
@@ -116,9 +118,11 @@ const formatAvailabilitySpecific = (data) => {
       const start = oh.start || '';
       const end = oh.end || '';
       const timeStr = start && end ? `${start}–${end}` : start || end || '';
-      return `<div class="office-hour-item"><span class="office-hour-day">${day}</span>${timeStr ? `<span class="office-hour-time">${timeStr}</span>` : ''}</div>`;
+      const timeHtml = timeStr ? `<span class="office-hour-time">${timeStr}</span>` : '';
+      return `<div class="office-hour-item"><span class="office-hour-day">${day}</span>${timeHtml}</div>`;
     }).join('');
-    parts.push(`<div class="availability-item"><span class="availability-field-label">Office Hours</span><div class="office-hours-list">${hoursHtml}</div></div>`);
+    const officeHoursHtml = `<div class="availability-item"><span class="availability-field-label">Office Hours</span><div class="office-hours-list">${hoursHtml}</div></div>`;
+    parts.push(officeHoursHtml);
   }
   
   // Appointment required
@@ -127,6 +131,30 @@ const formatAvailabilitySpecific = (data) => {
   }
   
   return parts.length > 0 ? parts.join('') : 'Not specified';
+};
+
+const escapeHtml = (value) => {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/'/g, '&#039;');
+};
+
+const isCurrentUser = (user) => {
+  if (!user || !user.id || !state.currentUser || !state.currentUser.id) return false;
+  return String(state.currentUser.id) === String(user.id);
+};
+
+const clearPendingAvatar = (userId) => {
+  if (!state.pendingAvatars || !userId) return;
+  const pending = state.pendingAvatars[userId];
+  if (pending?.previewUrl) {
+    URL.revokeObjectURL(pending.previewUrl);
+  }
+  delete state.pendingAvatars[userId];
 };
 
 const computeActivityStatus = (lastActivity) => {
@@ -249,7 +277,56 @@ const api = {
     }
 
     return res.json();
+  },
+
+  async updateUserCard(userId, payload) {
+    const res = await fetch(
+      `/api/class/user/${encodeURIComponent(userId)}`,
+      {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload || {})
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const message = err.error || `Update failed with status ${res.status}`;
+      const error = new Error(message);
+      error.status = res.status;
+      throw error;
+    }
+
+    return res.json();
   }
+};
+
+// ---------- State helpers ----------
+
+const updateUserInCollections = (userId, updates = {}) => {
+  const merge = (list) =>
+    Array.isArray(list)
+      ? list.map((u) => (u.id === userId ? { ...u, ...updates } : u))
+      : list;
+
+  state.professors = merge(state.professors);
+  state.tutors = merge(state.tutors);
+  state.tas = merge(state.tas);
+  state.students = merge(state.students);
+
+  if (state.currentUser && state.currentUser.id === userId) {
+    state.currentUser = { ...state.currentUser, ...updates };
+  }
+};
+
+const rerenderPeopleGrids = () => {
+  renderProfessorsGrid();
+  renderTutorsGrid();
+  renderTasGrid();
+  renderStudentsGrid();
 };
 
 // ---------- Rendering: common card ----------
@@ -259,8 +336,25 @@ const renderPersonCard = (user, options = {}) => {
     roleLabel,
     showTeam = false,
     highlightTag = null,
-    canUploadAvatar = false
+    canUploadAvatar = false,
+    showAvailability = true
   } = options;
+
+  const isSelf = isCurrentUser(user);
+  const isEditing = state.editingUserId === user.id;
+
+  const cardClasses = ['person-card'];
+  if (!showAvailability) {
+    cardClasses.push('no-availability');
+  }
+  if (isEditing) {
+    cardClasses.push('profile-open', 'editing');
+  }
+
+  const infoGridClasses = ['info-grid'];
+  if (!showAvailability) {
+    infoGridClasses.push('info-grid-compact');
+  }
 
   const social = safeJsonParse(user.social_links);
   const activity = computeActivityStatus(user.last_activity);
@@ -312,44 +406,27 @@ const renderPersonCard = (user, options = {}) => {
     tags.push(`<span class="tag">Team ${user.team_name || user.team}</span>`);
   }
 
-  const activityClass = activity
-    ? activity.kind === 'active'
-      ? 'status-pill-active'
-      : activity.kind === 'recent'
-      ? 'status-pill-recent'
-      : activity.kind === 'inactive'
-      ? 'status-pill-inactive'
-      : 'status-pill-unknown'
-    : null;
+  let activityClass = null;
+  if (activity?.kind === 'active') {
+    activityClass = 'status-pill-active';
+  } else if (activity?.kind === 'recent') {
+    activityClass = 'status-pill-recent';
+  } else if (activity?.kind === 'inactive') {
+    activityClass = 'status-pill-inactive';
+  } else if (activity) {
+    activityClass = 'status-pill-unknown';
+  }
 
   const fullName = user.name || 'Unnamed';
   const preferredName = user.preferred_name && user.preferred_name !== fullName ? user.preferred_name : null;
   const initials = getInitials(fullName || preferredName);
-  const hasAvatar = !!(user.avatar_url || user.image_url);
+  const pendingAvatar = state.pendingAvatars?.[user.id];
+  const avatarSrc = pendingAvatar?.previewUrl || user.avatar_url || user.image_url;
+  const hasAvatar = !!avatarSrc;
 
   const avatarHtml = hasAvatar
-    ? `<img class="person-avatar-img" src="${user.avatar_url || user.image_url}" alt="${fullName || 'Avatar'}" />`
+    ? `<img class="person-avatar-img" src="${avatarSrc}" alt="${fullName || 'Avatar'}" />`
     : `<span>${initials}</span>`;
-
-  const uploadControls =
-    canUploadAvatar && user.id
-      ? `
-      <button
-        type="button"
-        class="btn btn-ghost avatar-upload-btn"
-        data-user-id="${user.id}"
-      >
-        Upload photo
-      </button>
-      <input
-        type="file"
-        accept="image/*"
-        class="avatar-file-input"
-        data-user-id="${user.id}"
-        hidden
-      />
-    `
-      : '';
 
   const contactButtonHtml = user.email
     ? `<a
@@ -360,11 +437,163 @@ const renderPersonCard = (user, options = {}) => {
        </a>`
     : '';
 
+  // Non-edit view detail rows (avoid nested ternaries in templates)
+  const contactDetailRows = [];
+  if (user.phone_number) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value"><a href="tel:${user.phone_number.replaceAll(/\D/g, '')}" class="clickable-link">${user.phone_number}</a></span></div>`
+    );
+  }
+  if (user.github_username) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">GitHub</span><span class="detail-value">${makeLinkClickable(user.github_username, 'github')}</span></div>`
+    );
+  }
+  if (user.linkedin_url) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">LinkedIn</span><span class="detail-value">${makeLinkClickable(user.linkedin_url, 'linkedin')}</span></div>`
+    );
+  }
+  if (user.class_chat) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">Class Chat</span><span class="detail-value">${makeLinkClickable(user.class_chat, 'class_chat')}</span></div>`
+    );
+  }
+  if (user.slack_handle) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">Slack</span><span class="detail-value">${makeLinkClickable(user.slack_handle, 'slack')}</span></div>`
+    );
+  }
+  const contactDetailHtml = contactDetailRows.join('');
+
+  const backgroundDetailRows = [];
+  if (user.pronunciation) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Pronunciation</span><span class="detail-value">${user.pronunciation}</span></div>`);
+  }
+  if (user.department) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${user.department}</span></div>`);
+  }
+  if (user.major) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Major</span><span class="detail-value">${user.major}</span></div>`);
+  }
+  if (user.degree_program) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Degree</span><span class="detail-value">${user.degree_program}</span></div>`);
+  }
+  if (user.academic_year) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Year</span><span class="detail-value">${user.academic_year}</span></div>`);
+  }
+  const backgroundDetailHtml = backgroundDetailRows.join('');
+
+  const renderFooterControls = () => {
+    const activityHtml = activity
+      ? `<span class="status-pill ${activityClass}">${activity.label}</span>`
+      : '';
+
+    if (isEditing) {
+      return `
+        ${activityHtml}
+        ${contactButtonHtml}
+        <button
+          type="submit"
+          class="btn btn-primary person-edit-save"
+          data-user-id="${user.id || ''}"
+          form="${formId}"
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          class="btn btn-ghost person-edit-cancel"
+          data-user-id="${user.id || ''}"
+        >
+          Cancel
+        </button>
+      `;
+    }
+
+    const selfEditButton = isSelf
+      ? `<button
+            type="button"
+            class="btn btn-ghost person-edit-btn"
+            data-user-id="${user.id || ''}"
+          >
+            Edit
+          </button>`
+      : '';
+
+    return `
+      ${activityHtml}
+      ${contactButtonHtml}
+      <button
+        type="button"
+        class="btn btn-ghost profile-toggle"
+        data-profile-label="View details"
+      >
+        View details
+      </button>
+      ${selfEditButton}
+    `;
+  };
+
+  const renderInput = (name, label, value = '', type = 'text', placeholder = '') => `
+    <label class="edit-field">
+      <span class="edit-label">${label}</span>
+      <input type="${type}" name="${name}" value="${escapeHtml(value ?? '')}" placeholder="${escapeHtml(placeholder)}" />
+    </label>
+  `;
+
+  const renderTextarea = (name, label, value = '', placeholder = '') => `
+    <label class="edit-field">
+      <span class="edit-label">${label}</span>
+      <textarea name="${name}" rows="3" placeholder="${escapeHtml(placeholder)}">${escapeHtml(value ?? '')}</textarea>
+    </label>
+  `;
+
+  const availabilityGeneralVal = availabilityGeneral || user.availability_general || '';
+  const availabilitySpecificVal = availabilitySpecific || user.availability_specific || '';
+  const generateSafeId = () => {
+    if (typeof crypto !== 'undefined') {
+      if (typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+      if (typeof crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+      }
+    }
+    // As a last resort, fall back to a timestamp string (avoids Math.random)
+    return `ts-${Date.now().toString(36)}`;
+  };
+
+  const formId = user.id ? `edit-${user.id}` : `edit-${generateSafeId()}`;
+
   return `
-    <article class="person-card" data-user-id="${user.id || ''}">
+    <article class="${cardClasses.join(' ')}" data-user-id="${user.id || ''}">
       <section class="person-identity">
-        <div class="person-avatar">
+        <div class="person-avatar ${isEditing && canUploadAvatar ? 'avatar-editable' : ''}">
           ${avatarHtml}
+          ${
+            isEditing && canUploadAvatar
+              ? `
+            <button
+              type="button"
+              class="avatar-edit-trigger"
+              aria-label="Change photo"
+              data-user-id="${user.id || ''}"
+            >
+              <span class="avatar-edit-icon" aria-hidden="true">✎</span>
+            </button>
+            <input
+              type="file"
+              accept="image/*"
+              class="avatar-file-input"
+              data-user-id="${user.id || ''}"
+              hidden
+            />
+          `
+              : ''
+          }
         </div>
         <header class="person-heading">
           <h3 class="person-name">${fullName}</h3>
@@ -382,60 +611,96 @@ const renderPersonCard = (user, options = {}) => {
             }
           </p>
           ${user.email ? `<p class="person-email">${makeLinkClickable(user.email, 'email')}</p>` : ''}
+          ${isEditing ? `<p class="edit-hint">Editing your card</p>` : ''}
         </header>
       </section>
 
       <section class="person-info">
-        <div class="info-grid">
-          <div class="info-section">
-            <h4>Contact</h4>
-            <div class="info-body contact-body">
-              ${contactHtml}
-              ${user.phone_number ? `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value"><a href="tel:${user.phone_number.replace(/\D/g, '')}" class="clickable-link">${user.phone_number}</a></span></div>` : ''}
-              ${user.github_username ? `<div class="detail-row"><span class="detail-label">GitHub</span><span class="detail-value">${makeLinkClickable(user.github_username, 'github')}</span></div>` : ''}
-              ${user.linkedin_url ? `<div class="detail-row"><span class="detail-label">LinkedIn</span><span class="detail-value">${makeLinkClickable(user.linkedin_url, 'linkedin')}</span></div>` : ''}
-              ${user.class_chat ? `<div class="detail-row"><span class="detail-label">Class Chat</span><span class="detail-value">${makeLinkClickable(user.class_chat, 'class_chat')}</span></div>` : ''}
-              ${user.slack_handle ? `<div class="detail-row"><span class="detail-label">Slack</span><span class="detail-value">${makeLinkClickable(user.slack_handle, 'slack')}</span></div>` : ''}
+        ${
+          isEditing
+            ? `<form class="person-edit-form" data-user-id="${user.id || ''}" id="${formId}">
+          <div class="${infoGridClasses.join(' ')}">
+            <div class="info-section">
+              <h4>Contact</h4>
+              <div class="info-body edit-body">
+                ${renderInput('preferred_name', 'Preferred name', user.preferred_name || '')}
+                ${renderInput('phone_number', 'Phone', user.phone_number || '', 'text', '+1-555-555-5555')}
+                ${renderInput('github_username', 'GitHub', user.github_username || '', 'text', '@username')}
+                ${renderInput('linkedin_url', 'LinkedIn', user.linkedin_url || '', 'text', 'https://linkedin.com/in/...')}
+                ${renderInput('class_chat', 'Class Chat', user.class_chat || '', 'text', '@handle or #channel')}
+                ${renderInput('slack_handle', 'Slack', user.slack_handle || '', 'text', '@handle')}
+              </div>
+            </div>
+            ${
+              showAvailability
+                ? `<div class="info-section">
+              <h4>Availability</h4>
+              <div class="info-body edit-body">
+                ${renderTextarea('availability_general', 'General', availabilityGeneralVal, 'Office hours, time windows...')}
+                ${renderTextarea('availability_specific', 'Specific (JSON or text)', availabilitySpecificVal, 'Structured availability or details')}
+              </div>
+            </div>`
+                : ''
+            }
+            <div class="info-section">
+              <h4>Background</h4>
+              <div class="info-body edit-body">
+                ${renderInput('pronunciation', 'Pronunciation', user.pronunciation || '')}
+                ${renderInput('department', 'Department', user.department || '')}
+                ${renderInput('major', 'Major', user.major || '')}
+                ${renderInput('degree_program', 'Degree', user.degree_program || '')}
+                ${renderInput('academic_year', 'Year', user.academic_year || '', 'number')}
+              </div>
             </div>
           </div>
-          <div class="info-section">
-            <h4>Availability</h4>
-            <div class="info-body availability-body">
-              ${
-                availabilityGeneral || user.availability_general
-                  ? `
-              <div class="availability-section">
-                <div class="availability-label">General</div>
-                <div class="availability-value">${formatShortAvailability(
+        </form>`
+            : `<div class="${infoGridClasses.join(' ')}">
+            <div class="info-section">
+              <h4>Contact</h4>
+              <div class="info-body contact-body">
+                ${contactHtml}
+                ${contactDetailHtml}
+              </div>
+            </div>
+            ${
+              showAvailability
+                ? `<div class="info-section">
+              <h4>Availability</h4>
+              <div class="info-body availability-body">
+                ${
                   availabilityGeneral || user.availability_general
-                )}</div>
-              </div>`
-                  : ''
-              }
-              ${
-                availabilitySpecific || user.availability_specific
-                  ? `
-              <div class="availability-section">
-                <div class="availability-label">Specific</div>
-                <div class="availability-value availability-specific">${formatAvailabilitySpecific(
+                    ? `
+                <div class="availability-section">
+                  <div class="availability-label">General</div>
+                  <div class="availability-value">${formatShortAvailability(
+                    availabilityGeneral || user.availability_general
+                  )}</div>
+                </div>`
+                    : ''
+                }
+                ${
                   availabilitySpecific || user.availability_specific
-                )}</div>
-              </div>`
-                  : ''
-              }
+                    ? `
+                <div class="availability-section">
+                  <div class="availability-label">Specific</div>
+                  <div class="availability-value availability-specific">${formatAvailabilitySpecific(
+                    availabilitySpecific || user.availability_specific
+                  )}</div>
+                </div>`
+                    : ''
+                }
+              </div>
+            </div>`
+                : ''
+            }
+            <div class="info-section">
+              <h4>Background</h4>
+              <div class="info-body">
+                ${backgroundDetailHtml}
+              </div>
             </div>
-          </div>
-          <div class="info-section">
-            <h4>Background</h4>
-            <div class="info-body">
-              ${user.pronunciation ? `<div class="detail-row"><span class="detail-label">Pronunciation</span><span class="detail-value">${user.pronunciation}</span></div>` : ''}
-              ${user.department ? `<div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${user.department}</span></div>` : ''}
-              ${user.major ? `<div class="detail-row"><span class="detail-label">Major</span><span class="detail-value">${user.major}</span></div>` : ''}
-              ${user.degree_program ? `<div class="detail-row"><span class="detail-label">Degree</span><span class="detail-value">${user.degree_program}</span></div>` : ''}
-              ${user.academic_year ? `<div class="detail-row"><span class="detail-label">Year</span><span class="detail-value">${user.academic_year}</span></div>` : ''}
-            </div>
-          </div>
-        </div>
+          </div>`
+        }
       </section>
 
       <section class="person-actions">
@@ -446,24 +711,7 @@ const renderPersonCard = (user, options = {}) => {
               : '<span class="tag tag-faded">No extra tags</span>'
           }
         </div>
-        <div class="person-footer">
-          ${
-            activity
-              ? `<span class="status-pill ${activityClass}">
-                  ${activity.label}
-                </span>`
-              : ''
-          }
-          ${contactButtonHtml}
-          <button
-            type="button"
-            class="btn btn-ghost profile-toggle"
-            data-profile-label="View details"
-          >
-            View details
-          </button>
-          ${uploadControls}
-        </div>
+        <div class="person-footer">${renderFooterControls()}</div>
       </section>
     </article>
   `;
@@ -496,13 +744,11 @@ const initProfileTogglesForGrid = (gridEl) => {
 
 // ---------- Avatar upload init ----------
 
-const initAvatarUploadForGrid = (gridEl) => {
+const initAvatarSelectionForGrid = (gridEl) => {
   if (!gridEl) return;
 
-  const buttons = gridEl.querySelectorAll('.avatar-upload-btn');
-  if (!buttons.length) return;
-
-  buttons.forEach((btn) => {
+  const triggers = gridEl.querySelectorAll('.avatar-edit-trigger');
+  triggers.forEach((btn) => {
     const userId = btn.dataset.userId;
     if (!userId) return;
 
@@ -511,37 +757,127 @@ const initAvatarUploadForGrid = (gridEl) => {
     );
     if (!input) return;
 
-    btn.addEventListener('click', () => {
-      input.click();
-    });
+    btn.addEventListener('click', () => input.click());
 
-    input.addEventListener('change', async (event) => {
+    input.addEventListener('change', (event) => {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
 
-      btn.disabled = true;
-      const originalText = btn.textContent;
-      btn.textContent = 'Uploading...';
+      // Revoke previous preview for this user
+      clearPendingAvatar(userId);
+
+      const previewUrl = URL.createObjectURL(file);
+      state.pendingAvatars[userId] = { file, previewUrl };
+      rerenderPeopleGrids();
+    });
+  });
+};
+
+const initEditHandlersForGrid = (gridEl) => {
+  if (!gridEl) return;
+
+  gridEl.querySelectorAll('.person-edit-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const userId = btn.dataset.userId;
+      if (!userId) return;
+      state.editingUserId = userId;
+      rerenderPeopleGrids();
+    });
+  });
+
+  gridEl.querySelectorAll('.person-edit-cancel').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const userId = btn.dataset.userId;
+      if (userId) {
+        clearPendingAvatar(userId);
+      }
+      state.editingUserId = null;
+      rerenderPeopleGrids();
+    });
+  });
+
+  gridEl.querySelectorAll('.person-edit-form').forEach((form) => {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const userId = form.dataset.userId;
+      if (!userId) return;
+
+      const formData = new FormData(form);
+      const payload = {};
+      const setField = (name, transform) => {
+        if (!formData.has(name)) return;
+        const raw = formData.get(name);
+        if (raw === null) return;
+        const val = typeof raw === 'string' ? raw.trim() : raw;
+        if (val === '') {
+          payload[name] = null;
+          return;
+        }
+        payload[name] = transform ? transform(val) : val;
+      };
 
       try {
-        const result = await api.uploadAvatar(userId, file);
-
-        const card = gridEl.querySelector(
-          `.person-card[data-user-id="${userId}"]`
-        );
-        if (card) {
-          const avatarEl = card.querySelector('.person-avatar');
-          if (avatarEl && result.avatar_url) {
-            avatarEl.innerHTML = `<img src="${result.avatar_url}" alt="Profile photo" />`;
+        setField('preferred_name');
+        setField('phone_number');
+        setField('github_username');
+        setField('linkedin_url');
+        setField('class_chat');
+        setField('slack_handle');
+        setField('availability_general');
+        setField('availability_specific');
+        setField('pronunciation');
+        setField('department');
+        setField('major');
+        setField('degree_program');
+        setField('academic_year', (v) => {
+          const num = Number(v);
+          if (!Number.isInteger(num)) {
+            throw new TypeError('Academic year must be an integer');
           }
-        }
+          return num;
+        });
       } catch (err) {
-        console.error('Avatar upload failed:', err);
-        alert(err.message || 'Failed to upload avatar.');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
-        input.value = '';
+        alert(err.message || 'Invalid input');
+        return;
+      }
+
+      const pendingAvatar = state.pendingAvatars?.[userId];
+      const needsAvatarUpload = !!pendingAvatar?.file;
+
+      if (Object.keys(payload).length === 0 && !needsAvatarUpload) {
+        alert('No changes to save');
+        return;
+      }
+
+      try {
+        let avatarUrl = null;
+        if (needsAvatarUpload) {
+          const result = await api.uploadAvatar(userId, pendingAvatar.file);
+          avatarUrl = result.avatar_url;
+        }
+
+        let updated = null;
+        if (Object.keys(payload).length > 0) {
+          updated = await api.updateUserCard(userId, payload);
+        }
+
+        const updates = {};
+        if (avatarUrl) {
+          updates.avatar_url = avatarUrl;
+          updates.image_url = avatarUrl;
+        }
+        if (updated) {
+          Object.assign(updates, updated);
+        }
+        if (Object.keys(updates).length > 0) {
+          updateUserInCollections(userId, updates);
+        }
+        clearPendingAvatar(userId);
+        state.editingUserId = null;
+        rerenderPeopleGrids();
+      } catch (err) {
+        console.error('Failed to update user card:', err);
+        alert(err.message || 'Failed to update your card');
       }
     });
   });
@@ -554,7 +890,7 @@ const renderTeamCard = (team) => {
     ? team.members.filter((m) => m && m.name)
     : [];
 
-  const leaderId = team.leader_id || (team.leader && team.leader.id);
+  const leaderId = team.leader_id || team.leader?.id;
   const leader = team.leader;
 
   // Format dates
@@ -632,7 +968,7 @@ const renderTeamCard = (team) => {
       </section>
       ` : ''}
 
-      ${leader && leader.name ? `
+      ${leader?.name ? `
       <section class="team-info-section">
         <h5 class="team-section-label">Team Leader</h5>
         <div class="team-leader-info">
@@ -693,7 +1029,8 @@ const renderProfessorsGrid = () => {
     .join('');
 
   initProfileTogglesForGrid(grid);
-  initAvatarUploadForGrid(grid);
+  initAvatarSelectionForGrid(grid);
+  initEditHandlersForGrid(grid);
 };
 
 const renderTutorsGrid = () => {
@@ -716,7 +1053,8 @@ const renderTutorsGrid = () => {
     .join('');
 
   initProfileTogglesForGrid(grid);
-  initAvatarUploadForGrid(grid);
+  initAvatarSelectionForGrid(grid);
+  initEditHandlersForGrid(grid);
 };
 
 const renderTasGrid = () => {
@@ -739,7 +1077,8 @@ const renderTasGrid = () => {
     .join('');
 
   initProfileTogglesForGrid(grid);
-  initAvatarUploadForGrid(grid);
+  initAvatarSelectionForGrid(grid);
+  initEditHandlersForGrid(grid);
 };
 
 const renderStudentsGrid = () => {
@@ -756,13 +1095,15 @@ const renderStudentsGrid = () => {
       renderPersonCard(student, {
         roleLabel: student.role || 'Student',
         showTeam: true,
-        canUploadAvatar: canCurrentUserEditAvatar(student)
+        canUploadAvatar: canCurrentUserEditAvatar(student),
+        showAvailability: false
       })
     )
     .join('');
 
   initProfileTogglesForGrid(grid);
-  initAvatarUploadForGrid(grid);
+  initAvatarSelectionForGrid(grid);
+  initEditHandlersForGrid(grid);
 };
 
 const renderTeamsGrid = () => {
@@ -816,7 +1157,7 @@ const setActiveTab = (tab) => {
   });
 
   elements.sections.forEach((section) => {
-    const id = section.id.replace('-section', '');
+    const id = section.id.replaceAll('-section', '');
     const isActive = id === tab;
     section.hidden = !isActive;
     section.classList.toggle('active', isActive);

@@ -193,14 +193,14 @@ export class AttendanceModel {
    * Update attendance record
    */
   static async update(attendanceId, updates) {
-    const allowedFields = ['status', 'checked_in_at', 'access_code_used'];
+    const allowedFields = new Set(['status', 'checked_in_at', 'access_code_used']);
 
     const setFields = [];
     const values = [];
     let paramIndex = 1;
 
     for (const [key, value] of Object.entries(updates)) {
-      if (allowedFields.includes(key)) {
+      if (allowedFields.has(key)) {
         setFields.push(`${key} = $${paramIndex}`);
         values.push(value);
         paramIndex++;

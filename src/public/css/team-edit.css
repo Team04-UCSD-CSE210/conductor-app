@@ -51,6 +51,7 @@
   margin-bottom: 0.5rem;
   font-weight: 500;
   color: var(--text-primary);
+  font-size: 0.875rem;
 }
 
 .form-group input[type="text"],
@@ -67,7 +68,7 @@
 .form-group input[type="url"]:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+  box-shadow: 0 0 0 2px rgb(var(--primary-color-rgb) / 20%);
 }
 
 .logo-section {
@@ -85,9 +86,9 @@
   height: 120px;
   object-fit: cover;
   border-radius: 8px;
+  background: transparent;
   border: 2px solid var(--border-color);
   margin-bottom: 0.5rem;
-  background: transparent;
 }
 
 .current-logo p {
@@ -239,6 +240,14 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
 }
 
 /* Blue Outlined Buttons */

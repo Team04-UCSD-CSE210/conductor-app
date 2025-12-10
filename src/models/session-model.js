@@ -304,18 +304,18 @@ export class SessionModel {
    * Update session
    */
   static async update(sessionId, updates, updatedBy) {
-    const allowedFields = [
+    const allowedFields = new Set([
       'title', 'description', 'session_date', 'session_time', 'team_id',
       'access_code', 'code_expires_at', 'is_active',
       'attendance_opened_at', 'attendance_closed_at'
-    ];
+    ]);
 
     const setFields = [];
     const values = [];
     let paramIndex = 1;
 
     for (const [key, value] of Object.entries(updates)) {
-      if (allowedFields.includes(key)) {
+      if (allowedFields.has(key)) {
         setFields.push(`${key} = $${paramIndex}`);
         values.push(value);
         paramIndex++;

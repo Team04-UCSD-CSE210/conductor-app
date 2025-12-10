@@ -247,7 +247,7 @@
 .time-picker-btn.selected {
   background: var(--teal-600, #0d9488);
   border-color: var(--teal-600, #0d9488);
-  color: white;
+  color: #fff;
   font-weight: 600;
   box-shadow: 0 2px 8px rgb(13 148 136 / 25%);
 }
