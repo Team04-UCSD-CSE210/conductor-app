@@ -316,8 +316,8 @@ router.post(
               }
             });
           }
-        } catch (cleanupErr) {
-          console.warn('Error during old avatar cleanup:', cleanupErr.message);
+        } catch (error_) {
+          console.warn('Error during old avatar cleanup:', error_.message);
         }
       };
 

@@ -60,13 +60,13 @@ const makeLinkClickable = (text, type = 'auto') => {
   
   // GitHub username (starts with @ or just username)
   if (type === 'github' || str.startsWith('@') || /^[a-zA-Z0-9]([a-zA-Z0-9]|-(?![.-])){0,38}$/.test(str)) {
-    const username = str.replace(/^@/, '');
+    const username = str.replaceAll(/^@/g, '');
     return `<a href="https://github.com/${username}" target="_blank" rel="noopener noreferrer" class="clickable-link">@${username}</a>`;
   }
   
   // LinkedIn URL (without http)
   if (type === 'linkedin' && str.includes('linkedin.com')) {
-    return `<a href="https://${str.replace(/^https?:\/\//, '')}" target="_blank" rel="noopener noreferrer" class="clickable-link">${str}</a>`;
+    return `<a href="https://${str.replaceAll(/^https?:\/\//g, '')}" target="_blank" rel="noopener noreferrer" class="clickable-link">${str}</a>`;
   }
   
   // Slack handle (starts with @)
@@ -134,11 +134,11 @@ const formatAvailabilitySpecific = (data) => {
 const escapeHtml = (value) => {
   if (value === null || value === undefined) return '';
   return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/'/g, '&#039;');
 };
 
 const isCurrentUser = (user) => {
@@ -434,6 +434,104 @@ const renderPersonCard = (user, options = {}) => {
        </a>`
     : '';
 
+  // Non-edit view detail rows (avoid nested ternaries in templates)
+  const contactDetailRows = [];
+  if (user.phone_number) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value"><a href="tel:${user.phone_number.replaceAll(/\D/g, '')}" class="clickable-link">${user.phone_number}</a></span></div>`
+    );
+  }
+  if (user.github_username) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">GitHub</span><span class="detail-value">${makeLinkClickable(user.github_username, 'github')}</span></div>`
+    );
+  }
+  if (user.linkedin_url) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">LinkedIn</span><span class="detail-value">${makeLinkClickable(user.linkedin_url, 'linkedin')}</span></div>`
+    );
+  }
+  if (user.class_chat) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">Class Chat</span><span class="detail-value">${makeLinkClickable(user.class_chat, 'class_chat')}</span></div>`
+    );
+  }
+  if (user.slack_handle) {
+    contactDetailRows.push(
+      `<div class="detail-row"><span class="detail-label">Slack</span><span class="detail-value">${makeLinkClickable(user.slack_handle, 'slack')}</span></div>`
+    );
+  }
+  const contactDetailHtml = contactDetailRows.join('');
+
+  const backgroundDetailRows = [];
+  if (user.pronunciation) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Pronunciation</span><span class="detail-value">${user.pronunciation}</span></div>`);
+  }
+  if (user.department) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${user.department}</span></div>`);
+  }
+  if (user.major) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Major</span><span class="detail-value">${user.major}</span></div>`);
+  }
+  if (user.degree_program) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Degree</span><span class="detail-value">${user.degree_program}</span></div>`);
+  }
+  if (user.academic_year) {
+    backgroundDetailRows.push(`<div class="detail-row"><span class="detail-label">Year</span><span class="detail-value">${user.academic_year}</span></div>`);
+  }
+  const backgroundDetailHtml = backgroundDetailRows.join('');
+
+  const renderFooterControls = () => {
+    const activityHtml = activity
+      ? `<span class="status-pill ${activityClass}">${activity.label}</span>`
+      : '';
+
+    if (isEditing) {
+      return `
+        ${activityHtml}
+        ${contactButtonHtml}
+        <button
+          type="submit"
+          class="btn btn-primary person-edit-save"
+          data-user-id="${user.id || ''}"
+          form="${formId}"
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          class="btn btn-ghost person-edit-cancel"
+          data-user-id="${user.id || ''}"
+        >
+          Cancel
+        </button>
+      `;
+    }
+
+    const selfEditButton = isSelf
+      ? `<button
+            type="button"
+            class="btn btn-ghost person-edit-btn"
+            data-user-id="${user.id || ''}"
+          >
+            Edit
+          </button>`
+      : '';
+
+    return `
+      ${activityHtml}
+      ${contactButtonHtml}
+      <button
+        type="button"
+        class="btn btn-ghost profile-toggle"
+        data-profile-label="View details"
+      >
+        View details
+      </button>
+      ${selfEditButton}
+    `;
+  };
+
   const renderInput = (name, label, value = '', type = 'text', placeholder = '') => `
     <label class="edit-field">
       <span class="edit-label">${label}</span>
@@ -450,7 +548,11 @@ const renderPersonCard = (user, options = {}) => {
 
   const availabilityGeneralVal = availabilityGeneral || user.availability_general || '';
   const availabilitySpecificVal = availabilitySpecific || user.availability_specific || '';
-  const formId = user.id ? `edit-${user.id}` : `edit-${Math.random().toString(36).slice(2)}`;
+  const formId = user.id
+    ? `edit-${user.id}`
+    : `edit-${(typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2))}`;
 
   return `
     <article class="${cardClasses.join(' ')}" data-user-id="${user.id || ''}">
@@ -543,11 +645,7 @@ const renderPersonCard = (user, options = {}) => {
               <h4>Contact</h4>
               <div class="info-body contact-body">
                 ${contactHtml}
-                ${user.phone_number ? `<div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value"><a href="tel:${user.phone_number.replace(/\D/g, '')}" class="clickable-link">${user.phone_number}</a></span></div>` : ''}
-                ${user.github_username ? `<div class="detail-row"><span class="detail-label">GitHub</span><span class="detail-value">${makeLinkClickable(user.github_username, 'github')}</span></div>` : ''}
-                ${user.linkedin_url ? `<div class="detail-row"><span class="detail-label">LinkedIn</span><span class="detail-value">${makeLinkClickable(user.linkedin_url, 'linkedin')}</span></div>` : ''}
-                ${user.class_chat ? `<div class="detail-row"><span class="detail-label">Class Chat</span><span class="detail-value">${makeLinkClickable(user.class_chat, 'class_chat')}</span></div>` : ''}
-                ${user.slack_handle ? `<div class="detail-row"><span class="detail-label">Slack</span><span class="detail-value">${makeLinkClickable(user.slack_handle, 'slack')}</span></div>` : ''}
+                ${contactDetailHtml}
               </div>
             </div>
             ${
@@ -584,11 +682,7 @@ const renderPersonCard = (user, options = {}) => {
             <div class="info-section">
               <h4>Background</h4>
               <div class="info-body">
-                ${user.pronunciation ? `<div class="detail-row"><span class="detail-label">Pronunciation</span><span class="detail-value">${user.pronunciation}</span></div>` : ''}
-                ${user.department ? `<div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">${user.department}</span></div>` : ''}
-                ${user.major ? `<div class="detail-row"><span class="detail-label">Major</span><span class="detail-value">${user.major}</span></div>` : ''}
-                ${user.degree_program ? `<div class="detail-row"><span class="detail-label">Degree</span><span class="detail-value">${user.degree_program}</span></div>` : ''}
-                ${user.academic_year ? `<div class="detail-row"><span class="detail-label">Year</span><span class="detail-value">${user.academic_year}</span></div>` : ''}
+                ${backgroundDetailHtml}
               </div>
             </div>
           </div>`
@@ -603,56 +697,7 @@ const renderPersonCard = (user, options = {}) => {
               : '<span class="tag tag-faded">No extra tags</span>'
           }
         </div>
-        <div class="person-footer">
-          ${
-            activity
-              ? `<span class="status-pill ${activityClass}">
-                  ${activity.label}
-                </span>`
-              : ''
-          }
-          ${contactButtonHtml}
-          ${
-            isEditing
-              ? `
-                <button
-                  type="submit"
-                  class="btn btn-primary person-edit-save"
-                  data-user-id="${user.id || ''}"
-                  form="${formId}"
-                >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-ghost person-edit-cancel"
-                  data-user-id="${user.id || ''}"
-                >
-                  Cancel
-                </button>
-              `
-              : `
-          <button
-            type="button"
-            class="btn btn-ghost profile-toggle"
-            data-profile-label="View details"
-          >
-            View details
-          </button>
-          ${
-            isSelf
-              ? `<button
-                  type="button"
-                  class="btn btn-ghost person-edit-btn"
-                  data-user-id="${user.id || ''}"
-                >
-                  Edit
-                </button>`
-              : ''
-          }
-          `
-          }
-        </div>
+        <div class="person-footer">${renderFooterControls()}</div>
       </section>
     </article>
   `;
@@ -773,7 +818,7 @@ const initEditHandlersForGrid = (gridEl) => {
         setField('academic_year', (v) => {
           const num = Number(v);
           if (!Number.isInteger(num)) {
-            throw new Error('Academic year must be an integer');
+            throw new TypeError('Academic year must be an integer');
           }
           return num;
         });
@@ -1099,7 +1144,7 @@ const setActiveTab = (tab) => {
   });
 
   elements.sections.forEach((section) => {
-    const id = section.id.replace('-section', '');
+    const id = section.id.replaceAll('-section', '');
     const isActive = id === tab;
     section.hidden = !isActive;
     section.classList.toggle('active', isActive);
