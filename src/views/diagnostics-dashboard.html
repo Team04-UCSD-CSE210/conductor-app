@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnostics Pulse</title>
+  <style>
+    :root {
+      --bg: #f0fdf4;
+      --card: rgba(255, 255, 255, 0.92);
+      --glass: rgba(15, 118, 110, 0.08);
+      --text: #064e3b;
+      --muted: #0f766e;
+      --accent: #22c55e;
+      --accent-2: #34d399;
+      --accent-3: #65a30d;
+      --success: #16a34a;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 18px 45px rgba(12, 83, 71, 0.18);
+      --radius: 18px;
+      font-family: "Inter", "SF Pro Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(52, 211, 153, 0.35), transparent 25%),
+        radial-gradient(circle at 80% 0%, rgba(34, 197, 94, 0.25), transparent 25%),
+        radial-gradient(circle at 60% 80%, rgba(101, 163, 13, 0.25), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      padding: 32px clamp(16px, 4vw, 48px);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: -0.02em;
+    }
+    .title-block p {
+      margin: 8px 0 0;
+      color: var(--muted);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.32), rgba(101, 163, 13, 0.28));
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    .grid.cols-4 {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .grid.cols-2 {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .metric-large {
+      font-size: 30px;
+      font-weight: 700;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .metric-sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    .chart {
+      margin-top: 12px;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .bar-label {
+      width: 120px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .bar-track {
+      flex: 1;
+      background: var(--glass);
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 12px;
+    }
+    .sparkline {
+      height: 60px;
+      width: 100%;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      color: var(--text);
+    }
+    .table th, .table td {
+      padding: 10px;
+      text-align: left;
+    }
+    .table th {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .table tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .badge {
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge.ok { background: rgba(92, 240, 161, 0.18); color: var(--success); }
+    .badge.warn { background: rgba(252, 191, 73, 0.18); color: var(--warn); }
+    .badge.danger { background: rgba(255, 107, 107, 0.18); color: var(--danger); }
+    .pill-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    @media (max-width: 720px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .bar-label { width: 80px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-block">
+      <h1>Diagnostics Pulse</h1>
+      <p>Live insight into API categories · latency, volume, health</p>
+    </div>
+    <div class="pill" id="last-updated">Loading…</div>
+    <a href="/admin-dashboard" class="pill" style="text-decoration:none;background:rgba(52, 211, 153, 0.22);">
+      ← Back to Admin Dashboard
+    </a>
+    <a id="history-link" class="pill" style="border:none; cursor:pointer; background:linear-gradient(135deg, rgba(52,211,153,0.32), rgba(101,163,13,0.28)); text-decoration:none;" href="/diagnostics-history">
+      🕒 View History
+    </a>
+  </header>
+
+  <section class="grid cols-4" id="summary-cards">
+    <div class="card">
+      <h3>Total Requests</h3>
+      <div class="metric-large" id="total-requests">—</div>
+      <div class="metric-sub">Across all categories</div>
+    </div>
+    <div class="card">
+      <h3>Average Latency</h3>
+      <div class="metric-large"><span id="avg-latency">—</span><span class="metric-sub">ms</span></div>
+      <div class="metric-sub">Weighted by request count</div>
+    </div>
+    <div class="card">
+      <h3>Categories Tracked</h3>
+      <div class="metric-large" id="category-count">—</div>
+      <div class="metric-sub">API families under observation</div>
+    </div>
+    <div class="card">
+      <h3>Stability</h3>
+      <div class="metric-large" id="stability-badge">—</div>
+      <div class="metric-sub">Based on success ratio</div>
+    </div>
+  </section>
+
+  <section class="grid cols-2" style="margin-top: 18px;">
+    <div class="card">
+      <h3>Volume by Category</h3>
+      <div class="chart" id="volume-bars"></div>
+    </div>
+    <div class="card">
+      <h3>Latency by Category</h3>
+      <div class="chart" id="latency-bars"></div>
+    </div>
+  </section>
+
+  <section class="grid cols-2" style="margin-top: 18px;">
+    <div class="card">
+      <h3>Server Layer</h3>
+      <div class="grid cols-2">
+        <div>
+          <div class="metric-sub">Uptime</div>
+          <div class="metric-large"><span id="uptime-val">—</span></div>
+          <div class="metric-sub">Load avg (1/5/15): <span id="load-avg">—</span></div>
+        </div>
+        <div>
+          <div class="metric-sub">Memory</div>
+          <div class="metric-large"><span id="mem-usage">—</span></div>
+          <div class="metric-sub">RSS/Heap: <span id="mem-rss">—</span> · <span id="mem-heap-total">—</span></div>
+          <div class="metric-sub">Event loop util: <span id="elu">—</span> · Threads: <span id="threads">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Database Layer</h3>
+      <div class="grid cols-2">
+        <div>
+          <div class="metric-sub">Pool</div>
+          <div class="metric-large"><span id="pool-usage">—</span></div>
+          <div class="metric-sub">max / total / idle / waiting</div>
+        </div>
+        <div>
+          <div class="metric-sub">Query Health</div>
+          <div class="metric-large"><span id="db-latency">—</span><span class="metric-sub"> ms</span></div>
+          <div class="metric-sub">Slow: <span id="db-slow">—</span> · Errors: <span id="db-errors">—</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top: 18px;">
+    <h3>Status Mix</h3>
+    <table class="table" id="status-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Requests</th>
+          <th>Avg (ms)</th>
+          <th>Min / Max (ms)</th>
+          <th>Status Codes</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <script>
+    const nf = new Intl.NumberFormat();
+    const two = (v) => Math.round(v * 100) / 100;
+    const bytesToMb = (b) => Math.round((b / 1024 / 1024) * 10) / 10;
+    const secondsToHms = (sec) => {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = Math.floor(sec % 60);
+      return `${h}h ${m}m ${s}s`;
+    };
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    const badge = (ratio) => {
+      if (ratio >= 0.98) return '<span class="badge ok">Excellent</span>';
+      if (ratio >= 0.9) return '<span class="badge warn">Watch</span>';
+      return '<span class="badge danger">Degraded</span>';
+    };
+
+    const buildBars = (containerId, entries, valueGetter, suffix = '') => {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      if (!entries.length) {
+        container.innerHTML = '<div class="metric-sub">No data yet.</div>';
+        return;
+      }
+      const maxVal = Math.max(...entries.map(valueGetter), 1);
+      entries.forEach(([name, data]) => {
+        const val = valueGetter([name, data]);
+        const width = Math.max(6, (val / maxVal) * 100);
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        row.innerHTML = `
+          <div class="bar-label">${name}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${width}%;"></div></div>
+          <div class="tag">${val ? two(val) : 0}${suffix}</div>
+        `;
+        container.appendChild(row);
+      });
+    };
+
+    const renderTable = (entries) => {
+      const tbody = document.querySelector('#status-table tbody');
+      tbody.innerHTML = '';
+      if (!entries.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="metric-sub">No data yet.</td></tr>';
+        return;
+      }
+      entries.forEach(([name, data]) => {
+        const total = data.count || 0;
+        const avg = data.avgDurationMs || 0;
+        const statusCounts = Object.entries(data.statusCounts || {})
+          .map(([code, count]) => `<span class="pill-ghost">${code}: ${count}</span>`)
+          .join(' ');
+        const success = (data.statusCounts && (data.statusCounts['200'] || data.statusCounts['201'] || 0)) || 0;
+        const fail = total - success;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${name}</td>
+          <td>${nf.format(total)}</td>
+          <td>${two(avg)}</td>
+          <td>${two(data.minDurationMs)} / ${two(data.maxDurationMs)}</td>
+          <td>${statusCounts || '<span class="pill-ghost">None</span>'}</td>
+        `;
+        tbody.appendChild(row);
+        row.dataset.fail = fail;
+      });
+    };
+
+    const render = (payload) => {
+      const categories = Object.entries(payload.categories || {});
+      const total = categories.reduce((acc, [, d]) => acc + (d.count || 0), 0);
+      const totalDuration = categories.reduce((acc, [, d]) => acc + (d.totalDurationMs || 0), 0);
+      const avgLatency = total ? totalDuration / total : 0;
+
+      const successTotal = categories.reduce((acc, [, d]) => {
+        const sc = d.statusCounts || {};
+        return acc + Object.entries(sc).reduce((inner, [code, count]) => {
+          const n = Number(code);
+          return inner + (n >= 100 && n < 400 ? count : 0);
+        }, 0);
+      }, 0);
+      const stabilityRatio = total ? successTotal / total : 1;
+
+      setText('total-requests', nf.format(total));
+      setText('avg-latency', two(avgLatency));
+      setText('category-count', nf.format(categories.length));
+      document.getElementById('stability-badge').innerHTML = badge(stabilityRatio);
+      document.getElementById('last-updated').textContent = `Updated ${new Date(payload.generated_at).toLocaleTimeString()}`;
+
+      // Server layer
+      if (payload.server) {
+        setText('uptime-val', secondsToHms(payload.server.uptime_sec || 0));
+        setText('load-avg', (payload.server.loadavg || []).map(v => two(v)).join(' / ') || '—');
+        if (payload.server.memory) {
+          setText('mem-usage', `${bytesToMb(payload.server.memory.heapUsed || 0)} MB`);
+          setText('mem-rss', `${bytesToMb(payload.server.memory.rss || 0)} MB RSS`);
+          setText('mem-heap-total', `${bytesToMb(payload.server.memory.heapTotal || 0)} MB heap total`);
+        }
+        if (payload.server.event_loop_utilization && payload.server.event_loop_utilization.utilization !== undefined) {
+          setText('elu', `${two(payload.server.event_loop_utilization.utilization * 100)}%`);
+        } else {
+          setText('elu', 'N/A');
+        }
+        if (payload.server.active_handles !== undefined) {
+          setText('threads', `${payload.server.active_handles} handles / ${payload.server.active_requests || 0} reqs`);
+        }
+      }
+
+      // Database layer
+      if (payload.pool) {
+        const { max, total, idle, waiting } = payload.pool;
+        setText('pool-usage', `${max ?? '?'} / ${total} / ${idle} / ${waiting}`);
+      }
+      if (payload.db) {
+        setText('db-latency', two(payload.db.avgDurationMs || 0));
+        setText('db-slow', nf.format(payload.db.slowCount || 0));
+        setText('db-errors', nf.format(payload.db.errorCount || 0));
+      }
+
+      buildBars('volume-bars', categories, ([, d]) => d.count || 0, '');
+      buildBars('latency-bars', categories, ([, d]) => d.avgDurationMs || 0, ' ms');
+      renderTable(categories);
+    };
+
+    const loadData = async () => {
+      try {
+        const res = await fetch('/api/diagnostics');
+        if (!res.ok) throw new Error('Failed to load diagnostics');
+        const data = await res.json();
+        render(data);
+      } catch (err) {
+        document.getElementById('last-updated').textContent = 'Offline / Forbidden';
+        console.error(err);
+      }
+    };
+
+    const renderHistory = (payload) => {
+      const entries = payload.entries || [];
+      const meta = document.getElementById('history-meta');
+      const tbody = document.getElementById('history-table-body');
+      tbody.innerHTML = '';
+      meta.textContent = entries.length
+        ? `Showing ${entries.length} days from ${payload.start} to ${payload.end}`
+        : 'No history data';
+
+      if (!entries.length) {
+        document.getElementById('history-bars').innerHTML = '<div class="metric-sub">No data</div>';
+        return;
+      }
+
+      const byDate = entries.map(e => [e.snapshot_date, e.data]);
+      const maxReq = Math.max(...byDate.map(([, d]) => d.api_total || 0), 1);
+
+      const bars = document.getElementById('history-bars');
+      bars.innerHTML = '';
+      byDate.forEach(([date, data]) => {
+        const val = data.api_total || 0;
+        const width = Math.max(6, (val / maxReq) * 100);
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        row.innerHTML = `
+          <div class="bar-label" style="width:120px">${date}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${width}%;"></div></div>
+          <div class="tag">${nf.format(val)}</div>
+        `;
+        bars.appendChild(row);
+      });
+
+      byDate.forEach(([date, data]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${nf.format(data.api_total || 0)}</td>
+          <td>${two(data.api_avg_ms || 0)}</td>
+          <td>${two((data.api_success_ratio || 0) * 100)}%</td>
+          <td>${two(data.db_avg_ms || 0)}</td>
+          <td>${nf.format(data.db_slow || 0)}</td>
+          <td>${nf.format(data.db_errors || 0)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    };
+
+    const loadHistory = async (params = '') => {
+      try {
+        const query = params ? `?${params}` : '';
+        const res = await fetch(`/api/diagnostics/history${query}`);
+        if (!res.ok) throw new Error('Failed to load history');
+        const data = await res.json();
+        renderHistory(data);
+      } catch (err) {
+        document.getElementById('history-meta').textContent = 'Failed to load history';
+        console.error(err);
+      }
+    };
+
+    const initHistoryControls = () => {
+      const section = document.getElementById('history-section');
+      const toggle = document.getElementById('history-toggle');
+      toggle.addEventListener('click', () => {
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        if (section.style.display === 'block') {
+          loadHistory('period=1M');
+        }
+      });
+      document.querySelectorAll('#history-section button.pill[data-period]').forEach(btn => {
+        btn.addEventListener('click', () => loadHistory(`period=${btn.dataset.period}`));
+      });
+      document.getElementById('custom-apply').addEventListener('click', () => {
+        const start = document.getElementById('custom-start').value;
+        const end = document.getElementById('custom-end').value;
+        if (start && end) {
+          loadHistory(`start=${start}&end=${end}`);
+        }
+      });
+    };
+
+    loadData();
+    setInterval(loadData, 5000);
+    initHistoryControls();
+  </script>
+</body>
+</html>

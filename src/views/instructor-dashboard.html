@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/css/student-dashboard.css">
 </head>
 
-<body class="dashboard-page">
+<body class="dashboard-page instructor-dashboard">
   <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
     <span class="hamburger-line"></span>
     <span class="hamburger-line"></span>
@@ -24,11 +24,20 @@
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     
+    <!-- Colorblind Mode Toggle -->
+    <div class="colorblind-toggle-container">
+      <label class="colorblind-toggle-label">
+        <input type="checkbox" id="colorblindToggle" class="colorblind-toggle-input">
+        <span class="colorblind-toggle-slider"></span>
+        <span class="colorblind-toggle-text">Colorblind Mode</span>
+      </label>
+    </div>
+    
     <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
     
-    <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
-      <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
+    <footer>
+      <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
   </header>
 
@@ -42,8 +51,8 @@
     <!-- Welcome Banner with Polaroid -->
     <div class="welcome-section">
       <div class="welcome-content">
-        <h2>Welcome, Instructor!</h2>
-        <p>See what happened with your course and team!</p>
+        <h2>Welcome!</h2>
+        <p>Loading...</p>
       </div>
       <div class="polaroid-container">
         <div class="polaroid">
@@ -56,47 +65,41 @@
       </div>
     </div>
 
-    <!-- Dashboard Grid (three columns) -->
+    <!-- Dashboard Grid -->
     <div class="dashboard-grid">
-      <!-- Left Column -->
-      <div class="left-column">
+      <!-- Top row: Attendance, Announcements, Journal Entries -->
+      <div class="dashboard-row dashboard-row-top">
         <!-- Attendance Card -->
         <div class="dashboard-card attendance-card">
           <div class="card-header">
             <h4>Attendance</h4>
-            <button id="createAttendanceBtn" class="btn btn-primary btn-create-attendance" aria-label="Add attendance">+</button>
           </div>
           <div class="attendance-list">
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 1</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 98%"></div>
-                </div>
-                <span class="progress-percentage">98%</span>
-              </div>
-            </div>
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 2</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 100%"></div>
-                </div>
-                <span class="progress-percentage">100%</span>
-              </div>
-            </div>
-            <div class="attendance-item">
-              <span class="attendance-label">Lecture 3</span>
-              <div class="progress-container">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 100%"></div>
-                </div>
-                <span class="progress-percentage">60%</span>
-              </div>
-            </div>
+            <!-- Items populated dynamically via instructor-dashboard.js -->
           </div>
         </div>
 
+        <!-- Announcements Card -->
+        <div class="dashboard-card announcements-card">
+          <div class="card-header">
+            <h4>Announcements</h4>
+            <button id="createAnnouncementBtn" class="btn btn-primary btn-create-announcement" aria-label="Create new announcement">Create New</button>
+          </div>
+          <div class="announcements-list">
+            <p class="dashboard-loading-state">Loading announcements...</p>
+          </div>
+        </div>
+
+        <!-- Journal Entries Card -->
+        <div class="dashboard-card journal-card">
+          <h4>Journal Entries</h4>
+          <div class="journal-list">
+            <p style="padding: 1rem; color: var(--palette-primary, var(--gray-600));">Loading journal entries...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-row dashboard-row-bottom">
         <!-- Course Status Card -->
         <div class="dashboard-card course-status-card">
           <h4>Course Status</h4>
@@ -115,40 +118,6 @@
                 <span>Completed</span>
                 <span class="legend-dot in-progress"></span>
                 <span>In-Progress</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Middle Column -->
-      <div class="middle-column">
-        <!-- Announcements Card -->
-        <div class="dashboard-card announcements-card">
-          <div class="card-header">
-            <h4>Announcements</h4>
-            <button id="createAnnouncementBtn" class="btn btn-primary btn-create-announcement" aria-label="Create new announcement">Create New</button>
-          </div>
-          <div class="announcements-list">
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Upcoming Final Exam</h5>
-                <p>Prepare for final exam this week...</p>
-              </div>
-            </div>
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Team Meeting</h5>
-                <p>Weekly team standup scheduled...</p>
-              </div>
-            </div>
-            <div class="announcement-item">
-              <div class="announcement-date">10/10/25</div>
-              <div class="announcement-content">
-                <h5>Project Deadline</h5>
-                <p>Final project due next Friday...</p>
               </div>
             </div>
           </div>
@@ -183,72 +152,10 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Right Column: Teams & Pulses -->
-      <div class="right-column">
-        <div class="dashboard-card teams-card">
-          <h4>Teams</h4>
-          <div class="teams-list">
-            <a href="/teams/1" class="team-item">
-              <div class="team-info">
-                <span class="team-name">Team 1</span>
-                <span class="team-count">8 members</span>
-              </div>
-              <div class="team-pulse">
-                <span class="pulse-dot pulse-positive" aria-hidden="true"></span>
-              </div>
-            </a>
-            <a href="/teams/2" class="team-item">
-              <div class="team-info">
-                <span class="team-name">Team 2</span>
-                <span class="team-count">8 members</span>
-              </div>
-              <div class="team-pulse">
-                <span class="pulse-dot pulse-warning" aria-hidden="true"></span>
-              </div>
-            </a>
-            <a href="/teams/3" class="team-item">
-              <div class="team-info">
-                <span class="team-name">Team 3</span>
-                <span class="team-count">7 members</span>
-              </div>
-              <div class="team-pulse">
-                <span class="pulse-dot pulse-negative" aria-hidden="true"></span>
-              </div>
-            </a>
-            <a href="/teams/4" class="team-item">
-              <div class="team-info">
-                <span class="team-name">Team 4</span>
-                <span class="team-count">7 members</span>
-              </div>
-              <div class="team-pulse">
-                <span class="pulse-dot pulse-negative" aria-hidden="true"></span>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        <!-- TODO Card -->
         <div class="dashboard-card todo-card">
           <h4>TODO</h4>
           <div class="todo-list">
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item One</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item Two</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Item Three</span>
-            </div>
-            <div class="todo-item">
-              <div class="todo-checkbox"></div>
-              <span>Complete Assignment</span>
-            </div>
           </div>
         </div>
       </div>
@@ -256,10 +163,13 @@
   </main>
 
   <script src="/js/dashboard.service.js"></script>
+  <script src="/js/palette-loader.js"></script>
+  <script src="/js/todo-widget.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
   <script src="/js/instructor-dashboard.js" defer></script>
   
-  <!-- Announcement Modal -->
+  <!-- Announcement Create/Edit Modal -->
   <div id="announcementModal" class="modal-overlay" aria-hidden="true" inert>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="announcementModalTitle">
       <header class="modal-header">
@@ -268,7 +178,8 @@
       </header>
       <form id="announcement-form" class="modal-body">
         <label for="announcement-subject">Subject</label>
-        <input id="announcement-subject" name="subject" type="text" required maxlength="200" />
+        <input id="announcement-subject" name="subject" type="text" required maxlength="100" />
+        <div class="char-counter" id="announcement-subject-counter"><span id="announcement-subject-count">0</span>/100</div>
 
         <label for="announcement-body">Message</label>
         <textarea id="announcement-body" name="body" rows="6" required></textarea>
@@ -278,6 +189,24 @@
           <button type="submit" class="btn btn-primary" id="announcementSend">Send</button>
         </footer>
       </form>
+    </div>
+  </div>
+
+  <!-- View Announcement Modal (for expanding announcements) -->
+  <div id="viewAnnouncementModal" class="modal-overlay" aria-hidden="true" inert>
+    <div class="modal view-announcement-modal" role="dialog" aria-modal="true" aria-labelledby="viewAnnouncementModalTitle">
+      <header class="modal-header">
+        <h3 id="viewAnnouncementModalTitle">Announcement</h3>
+        <button class="modal-close" id="viewAnnouncementModalClose" aria-label="Close">×</button>
+      </header>
+      <div class="modal-body view-announcement-body">
+        <div class="view-announcement-date" id="viewAnnouncementDate"></div>
+        <div class="view-announcement-creator" id="viewAnnouncementCreator"></div>
+        <div class="view-announcement-content">
+          <h4 id="viewAnnouncementSubject"></h4>
+          <p id="viewAnnouncementMessage"></p>
+        </div>
+      </div>
     </div>
   </div>
 </body>

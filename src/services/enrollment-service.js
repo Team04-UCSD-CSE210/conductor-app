@@ -144,8 +144,21 @@ export class EnrollmentService {
     const current = await EnrollmentModel.findById(id);
     if (!current) throw new Error('Enrollment not found');
 
+    // Check if role is changing from student/team-lead to TA/tutor
+    const oldRole = current.course_role;
+    const newRole = updateData.course_role;
+    const isChangingToTATutor = (oldRole === 'student' || oldRole === 'team-lead') && 
+                                 (newRole === 'ta' || newRole === 'tutor');
+
+    // If changing to TA/tutor, clear all team information
+    if (isChangingToTATutor) {
+      await this.clearTeamInformation(current.user_id, current.offering_id, updatedBy);
+    }
+
     const updated = await EnrollmentModel.update(id, {
       ...updateData,
+      // Clear team_id if changing to TA/tutor
+      team_id: isChangingToTATutor ? null : updateData.team_id,
       updated_by: updatedBy,
     });
 
@@ -166,6 +179,72 @@ export class EnrollmentService {
     }
 
     return updated;
+  }
+
+  /**
+   * Clear all team information for a user when they become TA/tutor
+   * - Removes from all team_members (sets left_at)
+   * - Clears team_id in enrollments
+   * - Removes as team leader if applicable
+   */
+  static async clearTeamInformation(userId, offeringId, updatedBy = null) {
+    const { pool } = await import('../db.js');
+
+    // Remove from all team_members in this offering
+    await pool.query(
+      `UPDATE team_members 
+       SET left_at = NOW(), removed_by = $3::uuid
+       WHERE user_id = $1::uuid 
+         AND left_at IS NULL
+         AND team_id IN (SELECT id FROM team WHERE offering_id = $2::uuid)`,
+      [userId, offeringId, updatedBy]
+    );
+
+    // Clear team_id in enrollments
+    await pool.query(
+      `UPDATE enrollments 
+       SET team_id = NULL
+       WHERE user_id = $1::uuid AND offering_id = $2::uuid AND team_id IS NOT NULL`,
+      [userId, offeringId]
+    );
+
+    // Remove as team leader if they are a leader of any team in this offering
+    // First, find teams where they are the leader
+    const leaderTeams = await pool.query(
+      `SELECT id FROM team 
+       WHERE offering_id = $1::uuid AND leader_id = $2::uuid`,
+      [offeringId, userId]
+    );
+
+    // For each team where they're the leader, set leader_id to NULL
+    // and try to reassign to another team member with 'leader' role
+    for (const team of leaderTeams.rows) {
+      // Try to find another team member with 'leader' role
+      const newLeader = await pool.query(
+        `SELECT user_id FROM team_members 
+         WHERE team_id = $1::uuid 
+           AND role = 'leader'::team_member_role_enum 
+           AND user_id != $2::uuid 
+           AND left_at IS NULL
+         ORDER BY joined_at ASC
+         LIMIT 1`,
+        [team.id, userId]
+      );
+
+      if (newLeader.rows.length > 0) {
+        // Reassign leader to another team member
+        await pool.query(
+          `UPDATE team SET leader_id = $1::uuid WHERE id = $2::uuid`,
+          [newLeader.rows[0].user_id, team.id]
+        );
+      } else {
+        // No other leader found, set to NULL
+        await pool.query(
+          `UPDATE team SET leader_id = NULL WHERE id = $1::uuid`,
+          [team.id]
+        );
+      }
+    }
   }
 
   /**

@@ -68,6 +68,12 @@
     selectors.chart.innerHTML = '';
     if (chartDates) chartDates.innerHTML = '';
     
+    // Get palette colors for charts
+    const paletteColors = globalThis.getPaletteColors ? globalThis.getPaletteColors() : {
+      primary: '#0F766E',
+      secondary: '#83D7CF'
+    };
+    
     // Show last 15 lectures with dates
     const displayHistory = history.slice(0, 15);
     
@@ -79,6 +85,15 @@
       bar.className = `bar ${entry.attendancePercent < 80 ? 'low' : ''}`;
       bar.style.height = `${Math.max(entry.attendancePercent, 8)}%`;
       bar.dataset.value = entry.attendancePercent;
+      
+      // Apply palette colors to chart bars
+      if (entry.attendancePercent < 80) {
+        // Low attendance - use warning colors (orange/yellow)
+        bar.style.background = 'linear-gradient(180deg, #fcd34d 0%, #f97316 100%)';
+      } else {
+        // Normal attendance - use palette colors
+        bar.style.background = `linear-gradient(180deg, ${paletteColors.secondary} 0%, ${paletteColors.primary} 100%)`;
+      }
       
       // Add percentage label on top of bar
       const percentLabel = document.createElement('div');

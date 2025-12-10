@@ -22,9 +22,23 @@
     </div>
     <h1 class="sidebar-title">Conductor</h1>
     
-    <div class="main-menu-header">Main Menu</div>
-    <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    <!-- Colorblind Mode Toggle -->
+    <div class="colorblind-toggle-container">
+      <label class="colorblind-toggle-label">
+        <input type="checkbox" id="colorblindToggle" class="colorblind-toggle-input">
+        <span class="colorblind-toggle-slider"></span>
+        <span class="colorblind-toggle-text">Colorblind Mode</span>
+      </label>
+    </div>
     
+    <div class="main-menu-header">Main Menu</div>
+    <p class="sidebar-user" id="sidebarUser">
+      <span class="sidebar-user-name">Loading...</span><br>
+      <span class="sidebar-user-role">Loading...</span>
+    </p>
+    <nav aria-label="Dashboard navigation" id="sidebarNav">
+      <!-- Navigation will be dynamically populated based on user role -->
+    </nav>
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
@@ -53,7 +67,9 @@
         </div>
     </div>
   </main>
-  <script type="module" src="/js/instructor-team-meetings.js"></script>
-  <script src="/js/sidebar-nav.js"></script>
+  <script src="/js/palette-loader.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
+  <script type="module" src="/js/instructor-team-meetings.js?v=5"></script>
 </body>
 </html>

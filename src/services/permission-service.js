@@ -206,6 +206,7 @@ export class PermissionService {
               ON trp.team_role::text = tm.role::text
             WHERE tm.team_id = $4::uuid
               AND tm.user_id = $2::uuid
+              AND tm.left_at IS NULL
               AND trp.permission_id = (SELECT id FROM perm)
           )
         LIMIT 1

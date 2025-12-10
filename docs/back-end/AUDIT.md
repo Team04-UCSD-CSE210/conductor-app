@@ -198,6 +198,28 @@ schema and all core features are functional.
 - ✅ Name length validation (min 2 characters)
 - ✅ Required field validation
 - ✅ ENUM value validation
+
+---
+
+## 4. Observability & Diagnostics (New)
+
+- ✅ **Live Diagnostics Dashboard** (`/diagnostics-dashboard`, admin-only): realtime
+  server/API/DB metrics (uptime, loadavg, RSS/heap, event loop util, active
+  handles/requests, pg pool usage, API latency/throughput/error mix).
+- ✅ **Historical Diagnostics** (`/diagnostics-history`, admin-only): presets
+  1D/1W/1M/1Y/WTD/MTD/YTD + custom dates; ECharts for API
+  (requests/avg latency/success%) and DB (avg/slow/errors); CSV export.
+- ✅ **Data persistence**: table `diagnostics_history` (migration
+  `19-diagnostics-history.sql`) with daily snapshots; synthetic 30-day seed
+  (2025-11-07 → 2025-12-06).
+- ✅ **Auto snapshot**: daily scheduler (midnight) persists aggregated diagnostics
+  (server/API/DB/pool summary).
+- ✅ **Instrumentation**:
+  - API categories via `trackApiCategory` on routes (users/enrollments/teams/
+    offerings/interactions/sessions/attendance/journals/class/diagnostics/auth).
+  - DB layer wraps `pool.query` for duration/slow/error counts.
+  - Auth endpoints (`/auth/google`, `/auth/error`, `/auth/google/callback`,
+    `/auth/failure`) included under `auth`.
 - ✅ File size limit (10MB)
 - ✅ Duplicate email handling (upsert behavior)
 

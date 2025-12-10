@@ -55,7 +55,7 @@ body.dashboard-page .main-container {
 .stat-value {
   font-size: 5.5rem;
   font-weight: 700;
-  color: var(--teal-600, #0d9488);
+  color: var(--palette-primary, var(--teal-600, #0d9488));
   margin-bottom: 0.5rem;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -111,7 +111,7 @@ body.dashboard-page .main-container {
 
 .bar-chart .bar {
   border-radius: 0.5rem 0.5rem 0 0;
-  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  background: linear-gradient(180deg, var(--palette-secondary, #83D7CF) 0%, var(--palette-primary, #0F766E) 100%);
   position: relative;
   overflow: visible;
   min-height: 8px;
@@ -161,7 +161,7 @@ body.dashboard-page .main-container {
   border: none;
   border-radius: 9999px;
   padding: 0.75rem 1.5rem;
-  background: var(--teal-600, #0d9488);
+  background: var(--palette-primary, var(--teal-600, #0d9488));
   color: white;
   font-size: 0.95rem;
   font-weight: 600;
@@ -176,7 +176,7 @@ body.dashboard-page .main-container {
 }
 
 .btn-primary:hover {
-  background: var(--teal-700, #0f766e);
+  background: var(--palette-secondary, var(--teal-700, #0f766e));
   box-shadow: 0 4px 12px rgb(13 148 136 / 30%);
   transform: translateY(-1px);
 }
@@ -206,6 +206,78 @@ body.dashboard-page .main-container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.lecture-card {
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: 180px 1fr 160px 100px 220px;
+  gap: 1.5rem;
+  align-items: center;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.lecture-card:hover {
+  border-color: var(--palette-hover-border, var(--palette-accent, #99F6E4));
+  box-shadow: 0 4px 12px rgb(13 148 136 / 10%);
+  transform: translateY(-1px);
+}
+
+.lecture-card.active {
+  border-color: var(--teal-400, #2dd4bf);
+  background: var(--teal-50, #f0fdfa);
+  box-shadow: 0 4px 12px rgb(13 148 136 / 15%);
+}
+
+.lecture-label {
+  display: flex;
+  align-items: center;
+}
+
+.lecture-label button {
+  border-radius: 0.5rem;
+  border: 1px solid var(--gray-300, #d1d5db);
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: white;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s;
+  color: var(--gray-700, #374151);
+  text-align: left;
+}
+
+.lecture-label button:hover {
+  border-color: var(--palette-hover-border, var(--palette-secondary, #83D7CF));
+  color: var(--palette-primary, #0F766E);
+  background: var(--palette-background, #F0FDFA);
+}
+
+.lecture-label button.active {
+  border-color: var(--teal-500, #14b8a6);
+  color: var(--teal-600, #0d9488);
+  background: var(--teal-50, #f0fdfa);
+}
+
+.lecture-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.lecture-meta .attendance-percent {
+  font-weight: 600;
+  color: var(--gray-900, #111827);
+  font-size: 0.95rem;
+}
+
+.lecture-meta .lecture-schedule {
+  color: var(--gray-600, #4b5563);
+  font-size: 0.85rem;
 }
 
 .access-code-col {
