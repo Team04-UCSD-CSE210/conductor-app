@@ -745,15 +745,16 @@ body.dashboard-page.class-directory-page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
-  padding: 10px 14px;
+  margin-bottom: 1.5rem;
+  padding: 1.75rem 2rem;
   background: #FFF6B6 !important; /* Yellow banner - not configurable */
-  border-radius: 10px;
+  border-radius: 12px;
   min-height: auto;
   height: auto;
   position: relative;
   z-index: 5;
-  gap: 14px;
+  gap: 2rem;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
 }
 
 /* Welcome content - Left side with personalized message */
@@ -764,18 +765,20 @@ body.dashboard-page.class-directory-page {
 }
 
 .welcome-content h2 {
-  font-size: 22px;
+  font-size: 2rem;
   font-weight: 600;
   color: var(--palette-primary, #0F766E);
-  margin: 0 0 4px;
+  margin: 0 0 0.5rem;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .welcome-content p {
-  font-size: 13px;
+  font-size: 1rem;
   color: var(--palette-primary, #0F766E);
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.5;
+  opacity: 0.9;
 }
 
 /* Polaroid Container - Right side card */

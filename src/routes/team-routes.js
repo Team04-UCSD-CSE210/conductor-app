@@ -2,9 +2,10 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import { PermissionService } from '../services/permission-service.js';
+import validator from 'validator';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs/promises';
+import path from 'node:path';
+import fs from 'node:fs/promises';
 
 const router = Router();
 
@@ -20,9 +21,14 @@ const storage = multer.diskStorage({
     }
   },
   filename: function (req, file, cb) {
-    const teamId = req.params.teamId;
-    const ext = path.extname(file.originalname);
-    cb(null, `team-${teamId}-${Date.now()}${ext}`);
+    let teamId = req.params.teamId;
+    if (!validator.isUUID(teamId)) {
+      teamId = 'invalid';
+    }
+    const sanitizedTeamId = teamId.replace(/[^a-zA-Z0-9-]/g, '');
+    const ext = path.extname(file.originalname) || '';
+    const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, '');
+    cb(null, `team-${sanitizedTeamId}-${Date.now()}${safeExt}`);
   }
 });
 
@@ -310,7 +316,7 @@ router.put('/:teamId', ensureAuthenticated, upload.single('logo'), async (req, r
   try {
     const { teamId } = req.params;
     const userId = req.currentUser.id;
-    const { name, team_number, leader_id, status, mantra, links } = req.body;
+    const { name, mantra, links } = req.body;
 
     // Check if user is the leader of this team (simplified permission check)
     const { rows: teamRows } = await pool.query(

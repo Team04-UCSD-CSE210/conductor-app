@@ -178,8 +178,8 @@ export class EnrollmentModel {
    * Find all enrollments for a course offering
    */
   static async findByOffering(offeringId, options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
     
     let whereClause = 'WHERE offering_id = $1::uuid';
     const params = [offeringId];
@@ -227,8 +227,8 @@ export class EnrollmentModel {
    * Find all enrollments for a user
    */
   static async findByUser(userId, options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
     
     const { rows } = await pool.query(
       `
@@ -261,8 +261,8 @@ export class EnrollmentModel {
    * Find enrollments by course_role (e.g., all TAs, all tutors)
    */
   static async findByCourseRole(offeringId, courseRole, options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
     
     const { rows } = await pool.query(
       `
@@ -626,7 +626,7 @@ export class EnrollmentModel {
       `SELECT COUNT(*) as count FROM enrollments ${whereClause}`,
       params
     );
-    return parseInt(rows[0].count, 10);
+    return Number.parseInt(rows[0].count, 10);
   }
 }
 

@@ -9,24 +9,34 @@ DECLARE
     team5_id UUID;
     team6_id UUID;
     team7_id UUID;
+    team_name_prefix CONSTANT TEXT := 'Team ';
+    github_base CONSTANT TEXT := 'https://github.com/cse210/team-';
+    slack_prefix CONSTANT TEXT := '#team-';
+    mantra_team1 CONSTANT TEXT := 'Build together, ship often.';
+    mantra_team2 CONSTANT TEXT := 'Code with purpose, deliver with pride.';
+    mantra_team3 CONSTANT TEXT := 'Innovation through collaboration.';
+    mantra_team4 CONSTANT TEXT := 'Quality code, quality results.';
+    mantra_team5 CONSTANT TEXT := 'Excellence in every commit.';
+    mantra_team6 CONSTANT TEXT := 'Stronger together.';
+    mantra_team7 CONSTANT TEXT := 'Pushing boundaries, building futures.';
+    mantra_default CONSTANT TEXT := 'Building great software together.';
 BEGIN
-    -- Get team IDs by name
-    SELECT id INTO team1_id FROM team WHERE name = 'Team 1' LIMIT 1;
-    SELECT id INTO team2_id FROM team WHERE name = 'Team 2' LIMIT 1;
-    SELECT id INTO team3_id FROM team WHERE name = 'Team 3' LIMIT 1;
-    SELECT id INTO team4_id FROM team WHERE name = 'Team 4' LIMIT 1;
-    SELECT id INTO team5_id FROM team WHERE name = 'Team 5' LIMIT 1;
-    SELECT id INTO team6_id FROM team WHERE name = 'Team 6' LIMIT 1;
-    SELECT id INTO team7_id FROM team WHERE name = 'Team 7' LIMIT 1;
+    SELECT id INTO team1_id FROM team WHERE name = team_name_prefix || '1' LIMIT 1;
+    SELECT id INTO team2_id FROM team WHERE name = team_name_prefix || '2' LIMIT 1;
+    SELECT id INTO team3_id FROM team WHERE name = team_name_prefix || '3' LIMIT 1;
+    SELECT id INTO team4_id FROM team WHERE name = team_name_prefix || '4' LIMIT 1;
+    SELECT id INTO team5_id FROM team WHERE name = team_name_prefix || '5' LIMIT 1;
+    SELECT id INTO team6_id FROM team WHERE name = team_name_prefix || '6' LIMIT 1;
+    SELECT id INTO team7_id FROM team WHERE name = team_name_prefix || '7' LIMIT 1;
 
     -- Team 1
     IF team1_id IS NOT NULL THEN
         UPDATE team
         SET 
-            mantra = 'Build together, ship often.',
+            mantra = mantra_team1,
             links = jsonb_build_object(
-                'slack', '#team-1',
-                'repo', 'https://github.com/cse210/team-1'
+                'slack', slack_prefix || '1',
+                'repo', github_base || '1'
             )
         WHERE id = team1_id;
     END IF;
@@ -35,10 +45,10 @@ BEGIN
     IF team2_id IS NOT NULL THEN
         UPDATE team
         SET 
-            mantra = 'Code with purpose, deliver with pride.',
+            mantra = mantra_team2,
             links = jsonb_build_object(
-                'slack', '#team-2',
-                'repo', 'https://github.com/cse210/team-2'
+                'slack', slack_prefix || '2',
+                'repo', github_base || '2'
             )
         WHERE id = team2_id;
     END IF;
@@ -47,10 +57,10 @@ BEGIN
     IF team3_id IS NOT NULL THEN
         UPDATE team
         SET 
-            mantra = 'Innovation through collaboration.',
+            mantra = mantra_team3,
             links = jsonb_build_object(
-                'slack', '#team-3',
-                'repo', 'https://github.com/cse210/team-3'
+                'slack', slack_prefix || '3',
+                'repo', github_base || '3'
             )
         WHERE id = team3_id;
     END IF;
@@ -59,10 +69,10 @@ BEGIN
     IF team4_id IS NOT NULL THEN
         UPDATE team
         SET 
-            mantra = 'Quality code, quality results.',
+            mantra = mantra_team4,
             links = jsonb_build_object(
-                'slack', '#team-4',
-                'repo', 'https://github.com/cse210/team-4'
+                'slack', slack_prefix || '4',
+                'repo', github_base || '4'
             )
         WHERE id = team4_id;
     END IF;
@@ -71,10 +81,10 @@ BEGIN
     IF team5_id IS NOT NULL THEN
         UPDATE team
         SET 
-            mantra = 'Excellence in every commit.',
+            mantra = mantra_team5,
             links = jsonb_build_object(
-                'slack', '#team-5',
-                'repo', 'https://github.com/cse210/team-5'
+                'slack', slack_prefix || '5',
+                'repo', github_base || '5'
             )
         WHERE id = team5_id;
     END IF;
@@ -83,10 +93,10 @@ BEGIN
     IF team6_id IS NOT NULL THEN
         UPDATE team
         SET 
-            mantra = 'Stronger together.',
+            mantra = mantra_team6,
             links = jsonb_build_object(
-                'slack', '#team-6',
-                'repo', 'https://github.com/cse210/team-6'
+                'slack', slack_prefix || '6',
+                'repo', github_base || '6'
             )
         WHERE id = team6_id;
     END IF;
@@ -95,10 +105,10 @@ BEGIN
     IF team7_id IS NOT NULL THEN
         UPDATE team
         SET 
-            mantra = 'Pushing boundaries, building futures.',
+            mantra = mantra_team7,
             links = jsonb_build_object(
-                'slack', '#team-7',
-                'repo', 'https://github.com/cse210/team-7'
+                'slack', slack_prefix || '7',
+                'repo', github_base || '7'
             )
         WHERE id = team7_id;
     END IF;
@@ -106,10 +116,10 @@ BEGIN
     -- Update all teams with generic data if they don't have it
     UPDATE team
     SET 
-        mantra = COALESCE(mantra, 'Building great software together.'),
+        mantra = COALESCE(mantra, mantra_default),
         links = COALESCE(links, jsonb_build_object(
-            'slack', '#team-' || team_number,
-            'repo', 'https://github.com/cse210/team-' || team_number
+            'slack', slack_prefix || team_number,
+            'repo', github_base || team_number
         ))
     WHERE mantra IS NULL OR links IS NULL OR links = '{}'::jsonb;
 

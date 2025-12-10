@@ -118,9 +118,11 @@ const formatAvailabilitySpecific = (data) => {
       const start = oh.start || '';
       const end = oh.end || '';
       const timeStr = start && end ? `${start}–${end}` : start || end || '';
-      return `<div class="office-hour-item"><span class="office-hour-day">${day}</span>${timeStr ? `<span class="office-hour-time">${timeStr}</span>` : ''}</div>`;
+      const timeHtml = timeStr ? `<span class="office-hour-time">${timeStr}</span>` : '';
+      return `<div class="office-hour-item"><span class="office-hour-day">${day}</span>${timeHtml}</div>`;
     }).join('');
-    parts.push(`<div class="availability-item"><span class="availability-field-label">Office Hours</span><div class="office-hours-list">${hoursHtml}</div></div>`);
+    const officeHoursHtml = `<div class="availability-item"><span class="availability-field-label">Office Hours</span><div class="office-hours-list">${hoursHtml}</div></div>`;
+    parts.push(officeHoursHtml);
   }
   
   // Appointment required
@@ -404,15 +406,16 @@ const renderPersonCard = (user, options = {}) => {
     tags.push(`<span class="tag">Team ${user.team_name || user.team}</span>`);
   }
 
-  const activityClass = activity
-    ? activity.kind === 'active'
-      ? 'status-pill-active'
-      : activity.kind === 'recent'
-      ? 'status-pill-recent'
-      : activity.kind === 'inactive'
-      ? 'status-pill-inactive'
-      : 'status-pill-unknown'
-    : null;
+  let activityClass = null;
+  if (activity?.kind === 'active') {
+    activityClass = 'status-pill-active';
+  } else if (activity?.kind === 'recent') {
+    activityClass = 'status-pill-recent';
+  } else if (activity?.kind === 'inactive') {
+    activityClass = 'status-pill-inactive';
+  } else if (activity) {
+    activityClass = 'status-pill-unknown';
+  }
 
   const fullName = user.name || 'Unnamed';
   const preferredName = user.preferred_name && user.preferred_name !== fullName ? user.preferred_name : null;
@@ -876,8 +879,7 @@ const renderTeamCard = (team) => {
     ? team.members.filter((m) => m && m.name)
     : [];
 
-  const memberCount = team.member_count || members.length || 0;
-  const leaderId = team.leader_id || (team.leader && team.leader.id);
+  const leaderId = team.leader_id || team.leader?.id;
   const leader = team.leader;
 
   // Format dates
@@ -955,7 +957,7 @@ const renderTeamCard = (team) => {
       </section>
       ` : ''}
 
-      ${leader && leader.name ? `
+      ${leader?.name ? `
       <section class="team-info-section">
         <h5 class="team-section-label">Team Leader</h5>
         <div class="team-leader-info">

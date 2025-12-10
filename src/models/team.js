@@ -129,8 +129,8 @@ export class TeamModel {
    * Find all teams with pagination
    */
   static async findAll(options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
 
     let whereClause = 'WHERE 1=1';
     const params = [];
@@ -184,8 +184,8 @@ export class TeamModel {
    * Find teams by offering
    */
   static async findByOffering(offeringId, options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
 
     let whereClause = 'WHERE offering_id = $1::uuid';
     const params = [offeringId];
@@ -224,8 +224,8 @@ export class TeamModel {
    * Find team by leader
    */
   static async findByLeader(leaderId, options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
 
     const { rows } = await pool.query(
       `
@@ -370,7 +370,7 @@ export class TeamModel {
       `SELECT COUNT(*) as count FROM team ${whereClause}`,
       params
     );
-    return parseInt(rows[0].count, 10);
+    return Number.parseInt(rows[0].count, 10);
   }
 }
 

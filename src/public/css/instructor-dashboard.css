@@ -320,7 +320,7 @@
 .attendance-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--palette-primary, #0F766E);
+  color: var(--palette-primary, #0d9488);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

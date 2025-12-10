@@ -50,7 +50,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     }
 
     query += ` ORDER BY created_at DESC LIMIT $${paramIndex}`;
-    params.push(parseInt(limit, 10));
+    params.push(Number.parseInt(limit, 10));
 
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -413,7 +413,7 @@ router.get('/:offeringId/stats', ...protectAny(['roster.view', 'course.manage'],
     res.json({
       enrollments: enrollmentStats.rows,
       teams: teamStats.rows,
-      total_team_members: parseInt(teamMemberCount.rows[0]?.count || 0)
+      total_team_members: Number.parseInt(teamMemberCount.rows[0]?.count || 0)
     });
   } catch (err) {
     console.error('Error fetching offering stats:', err);

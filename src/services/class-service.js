@@ -92,8 +92,8 @@ export class ClassService {
       throw new Error("INVALID_UUID");
     }
 
-    const page = parseInt(options.page, 10) || 1;
-    const limit = parseInt(options.limit, 10) || 20;
+    const page = Number.parseInt(options.page, 10) || 1;
+    const limit = Number.parseInt(options.limit, 10) || 20;
     const offset = (page - 1) * limit;
 
     const users = await UserModel.getUsersByOfferingRole(offeringId, 'ta', {
@@ -116,8 +116,8 @@ export class ClassService {
       throw new Error("INVALID_UUID");
     }
 
-    const page = parseInt(options.page, 10) || 1;
-    const limit = parseInt(options.limit, 10) || 20;
+    const page = Number.parseInt(options.page, 10) || 1;
+    const limit = Number.parseInt(options.limit, 10) || 20;
     const offset = (page - 1) * limit;
 
     const users = await UserModel.getUsersByOfferingRole(offeringId, 'tutor', {
@@ -140,8 +140,8 @@ export class ClassService {
       throw new Error("INVALID_UUID");
     }
 
-    const page = parseInt(options.page, 10) || 1;
-    const limit = parseInt(options.limit, 10) || 20;
+    const page = Number.parseInt(options.page, 10) || 1;
+    const limit = Number.parseInt(options.limit, 10) || 20;
     const offset = (page - 1) * limit;
 
     const users = await UserModel.getUsersByOfferingRole(offeringId, 'student', {
@@ -164,8 +164,8 @@ export class ClassService {
       throw new Error("INVALID_UUID");
     }
 
-    const page = parseInt(options.page, 10) || 1;
-    const limit = parseInt(options.limit, 10) || 20;
+    const page = Number.parseInt(options.page, 10) || 1;
+    const limit = Number.parseInt(options.limit, 10) || 20;
     const offset = (page - 1) * limit;
     const sort = options.sort || 'name';
 
@@ -200,7 +200,7 @@ export class ClassService {
     // Build maps for quick lookup
     const memberCountMap = new Map();
     memberCounts.forEach(row => {
-      memberCountMap.set(row.team_id, parseInt(row.member_count, 10));
+      memberCountMap.set(row.team_id, Number.parseInt(row.member_count, 10));
     });
 
     const leadersByTeam = new Map();

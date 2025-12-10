@@ -314,8 +314,8 @@ export class UserModel {
    * @param {boolean} includeDeleted - Include soft-deleted users
    */
   static async findAll(limit = 50, offset = 0, includeDeleted = false) {
-    const lim = Math.max(1, Math.min(parseInt(limit, 10) || 50, 100));
-    const off = Math.max(0, parseInt(offset, 10) || 0);
+    const lim = Math.max(1, Math.min(Number.parseInt(limit, 10) || 50, 100));
+    const off = Math.max(0, Number.parseInt(offset, 10) || 0);
     const deletedClause = includeDeleted ? '' : 'WHERE deleted_at IS NULL';
 
     const { rows } = await pool.query(
@@ -603,8 +603,8 @@ export class UserModel {
    * Find users by primary_role
    */
   static async findByRole(role, limit = 50, offset = 0) {
-    const lim = Math.max(1, Math.min(parseInt(limit, 10) || 50, 100));
-    const off = Math.max(0, parseInt(offset, 10) || 0);
+    const lim = Math.max(1, Math.min(Number.parseInt(limit, 10) || 50, 100));
+    const off = Math.max(0, Number.parseInt(offset, 10) || 0);
 
     const { rows } = await pool.query(
       `
@@ -647,8 +647,8 @@ export class UserModel {
    * Find users by institution_type
    */
   static async findByInstitutionType(institutionType, limit = 50, offset = 0) {
-    const lim = Math.max(1, Math.min(parseInt(limit, 10) || 50, 100));
-    const off = Math.max(0, parseInt(offset, 10) || 0);
+    const lim = Math.max(1, Math.min(Number.parseInt(limit, 10) || 50, 100));
+    const off = Math.max(0, Number.parseInt(offset, 10) || 0);
 
     const { rows } = await pool.query(
       `
@@ -727,8 +727,8 @@ export class UserModel {
    * @param {Object} options - Query options (limit, offset, search)
    */
   static async getUsersByOfferingRole(offeringId, courseRole, options = {}) {
-    const limit = Math.max(1, Math.min(parseInt(options.limit, 10) || 50, 100));
-    const offset = Math.max(0, parseInt(options.offset, 10) || 0);
+    const limit = Math.max(1, Math.min(Number.parseInt(options.limit, 10) || 50, 100));
+    const offset = Math.max(0, Number.parseInt(options.offset, 10) || 0);
 
     let whereClause = `
       WHERE e.offering_id = $1::uuid 

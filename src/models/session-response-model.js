@@ -300,14 +300,14 @@ export class SessionResponseModel {
    * Update response
    */
   static async update(responseId, updates) {
-    const allowedFields = ['response_text', 'response_option'];
+    const allowedFields = new Set(['response_text', 'response_option']);
 
     const setFields = [];
     const values = [];
     let paramIndex = 1;
 
     for (const [key, value] of Object.entries(updates)) {
-      if (allowedFields.includes(key)) {
+      if (allowedFields.has(key)) {
         setFields.push(`${key} = $${paramIndex}`);
         values.push(value);
         paramIndex++;
