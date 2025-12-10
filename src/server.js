@@ -1926,12 +1926,11 @@ app.get("/switch-account", (req, res) => {
 app.use((req, res, next) => {
   if (HTTPS_AVAILABLE) {
     if (!req.secure) {
-      const host = req.headers.host;
-      if (isValidRedirectHost(host)) {
-        const safeUrl = req.url.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, '');
-        return res.redirect(`https://${host}${safeUrl}`);
-      }
-      return res.redirect('https://localhost:8443' + req.path);
+      // Use a fixed, configured redirect target instead of user-controlled host header
+      // This prevents open redirect vulnerabilities
+      const redirectUrl = process.env.HTTPS_REDIRECT_URL || 'https://localhost:8443';
+      const safePath = req.path.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, '');
+      return res.redirect(`${redirectUrl}${safePath}`);
     }
   }
   next();
@@ -1948,7 +1947,7 @@ app.post("/request-access", async (req, res) => {
   // Check if already approved (whitelisted)
   const whitelisted = await findWhitelistEntry(email);
   if (whitelisted) {
-    return res.status(200).send(`<h3>✅ ${escapeHtml(email)} is already approved for access.</h3>`);
+    return res.status(200).send('<h3>✅ Your email is already approved for access.</h3>');
   }
 
   // Check if an access request already exists
@@ -1964,7 +1963,7 @@ app.post("/request-access", async (req, res) => {
       metadata: { reason }
     });
 
-    return res.status(200).send(`<h3>🔄 Your previous request for ${escapeHtml(email)} has been updated successfully.</h3>`);
+    return res.status(200).send('<h3>🔄 Your previous access request has been updated successfully.</h3>');
   }
 
   // ✅ Create a new request if it doesn't exist
@@ -1976,7 +1975,7 @@ app.post("/request-access", async (req, res) => {
     metadata: { reason }
   });
 
-  res.status(200).send(`<h3>✅ Your access request for ${escapeHtml(email)} has been submitted.</h3>`);
+  res.status(200).send('<h3>✅ Your access request has been submitted.</h3>');
 });
 
 // --- Simple Admin Approval Page and Approve Route ---
