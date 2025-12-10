@@ -151,7 +151,7 @@ NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
 
  ('jic201@ucsd.edu', 'A00001013', 'Jialang Cheng', 'Jialang',
     'Computer Science', 'BS', 2026, 'Computer Science & Engineering', 'Undergraduate',
-    'admin'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
+    'student'::user_role_enum, 'active'::user_status_enum, 'ucsd'::institution_type_enum,
     NULL, NULL, '+1-858-555-0310', 'jialangcheng', 'https://linkedin.com/in/jialang-cheng'
  ),
 
