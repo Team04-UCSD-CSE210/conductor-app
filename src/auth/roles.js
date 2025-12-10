@@ -22,5 +22,6 @@ const rolePermissions = {
 };
 
 const perms = rolePermissions[user.role] || [];
-roleSection.innerHTML = `<h3>Permissions:</h3><ul>${perms.map(p => `<li>${p}</li>`).join("")}</ul>`;
+const permList = perms.map(p => `<li>${p}</li>`).join("");
+roleSection.innerHTML = `<h3>Permissions:</h3><ul>${permList}</ul>`;
 

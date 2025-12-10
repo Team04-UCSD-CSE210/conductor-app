@@ -15,32 +15,26 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-async function resetDatabase() {
-  try {
-    // Test connection
-    await pool.query('SELECT 1');
-    console.log('✅ Connected to database');
+try {
+  await pool.query('SELECT 1');
+  console.log('✅ Connected to database');
 
-    // Tables to clear (in order to respect foreign key constraints)
-    const tables = [
-      'access_requests',
-      'whitelist',
-      'auth_logs',
-      'enrollments',
-      'users'
-    ];
+  const tables = [
+    'access_requests',
+    'whitelist',
+    'auth_logs',
+    'enrollments',
+    'users'
+  ];
 
-    for (const table of tables) {
-      await pool.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
-      console.log(`🧹 Cleared table: ${table}`);
-    }
-
-    console.log('✅ Database reset completed successfully.');
-    await pool.end();
-  } catch (error) {
-    console.error('❌ Error resetting database:', error);
-    process.exit(1);
+  for (const table of tables) {
+    await pool.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
+    console.log(`🧹 Cleared table: ${table}`);
   }
-}
 
-resetDatabase();
+  console.log('✅ Database reset completed successfully.');
+  await pool.end();
+} catch (error) {
+  console.error('❌ Error resetting database:', error);
+  process.exit(1);
+}

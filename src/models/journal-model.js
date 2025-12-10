@@ -145,20 +145,20 @@ export class JournalModel {
    * Update journal entry
    */
   static async update(id, updates) {
-    const allowedFields = [
+    const allowedFields = new Set([
       'done_since_yesterday',
       'working_on_today',
       'blockers',
       'feelings',
       'date'
-    ];
+    ]);
 
     const setFields = [];
     const values = [];
     let paramIndex = 1;
 
     for (const [key, value] of Object.entries(updates)) {
-      if (allowedFields.includes(key)) {
+      if (allowedFields.has(key)) {
         setFields.push(`${key} = $${paramIndex}`);
         values.push(value);
         paramIndex++;

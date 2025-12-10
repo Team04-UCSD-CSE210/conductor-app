@@ -23,16 +23,14 @@ function run(label, opts) {
   });
 }
 
-(async () => {
-  // Sanity: fetch one GET to confirm 2xx & path
-  try {
-    const r = await fetch(`${base}${usersPath}?limit=1&offset=0`);
-    console.log(`Probe GET ${usersPath} -> ${r.status}`);
-  } catch (e) {
-    console.error(`Probe failed: ${e.message}`);
-  }
+try {
+  const r = await fetch(`${base}${usersPath}?limit=1&offset=0`);
+  console.log(`Probe GET ${usersPath} -> ${r.status}`);
+} catch (e) {
+  console.error(`Probe failed: ${e.message}`);
+}
 
-  // Warm-up GET
+try {
   await run(`GET ${usersPath} (warm-up)`, {
     url: `${base}${usersPath}?limit=50&offset=0`,
     connections: 20,
@@ -40,7 +38,6 @@ function run(label, opts) {
     method: 'GET',
   });
 
-  // Sustained GET
   await run(`GET ${usersPath} (sustained)`, {
     url: `${base}${usersPath}?limit=50&offset=0`,
     connections: 50,
@@ -48,16 +45,15 @@ function run(label, opts) {
     method: 'GET',
   });
 
-  // POST create users (use "requests" + setupRequest; generate unique bodies)
   await run(`POST ${usersPath} (create)`, {
-    url: `${base}`, // base only; path comes from requests[]
+    url: `${base}`,
     connections: 10,
     duration: 10,
     requests: [
       {
         method: 'POST',
         path: usersPath,
-        setupRequest: (req /*, context */) => {
+        setupRequest: (req) => {
           const n = Math.floor(Math.random() * 1e12).toString(36);
           req.headers = {
             ...(req.headers || {}),
@@ -74,4 +70,7 @@ function run(label, opts) {
       },
     ],
   });
-})();
+} catch (error) {
+  console.error('Performance test failed:', error);
+  process.exit(1);
+}

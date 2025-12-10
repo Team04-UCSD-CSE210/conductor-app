@@ -5,17 +5,16 @@ import express from "express";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import path from "path";
-import https from "https";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import path from "node:path";
+import https from "node:https";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
-// import { createClient } from "redis";
-// import { RedisStore } from "connect-redis";
+import validator from "validator";
 import { pool } from "./db.js";
 import { DatabaseInitializer } from "./database/init.js";
 import bodyParser from "body-parser";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { ensureAuthenticated } from "./middleware/auth.js";
 import { protect, protectAny } from "./middleware/permission-middleware.js";
 import userRoutes from "./routes/user-routes.js";
@@ -100,11 +99,26 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 const CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || "https://localhost:8443/auth/google/callback";
 const DATABASE_URL = process.env.DATABASE_URL;
 const ALLOWED_DOMAIN = process.env.ALLOWED_GOOGLE_DOMAIN || "ucsd.edu";
-// const REDIS_URL = process.env.REDIS_URL;
 
 const parsePositiveInt = (value, fallback) => {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const escapeHtml = (str) => {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+};
+
+const isValidRedirectHost = (host) => {
+  if (!host || typeof host !== 'string') return false;
+  const hostname = host.split(':')[0];
+  return validator.isFQDN(hostname) || hostname === 'localhost' || hostname === '127.0.0.1';
 };
 
 const LOGIN_FAILURE_THRESHOLD = parsePositiveInt(process.env.LOGIN_FAILURE_THRESHOLD, 3);
@@ -1912,7 +1926,12 @@ app.get("/switch-account", (req, res) => {
 app.use((req, res, next) => {
   if (HTTPS_AVAILABLE) {
     if (!req.secure) {
-      return res.redirect(`https://${req.headers.host}${req.url}`);
+      const host = req.headers.host;
+      if (isValidRedirectHost(host)) {
+        const safeUrl = req.url.replace(/[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]/g, '');
+        return res.redirect(`https://${host}${safeUrl}`);
+      }
+      return res.redirect('https://localhost:8443' + req.path);
     }
   }
   next();
@@ -1929,7 +1948,7 @@ app.post("/request-access", async (req, res) => {
   // Check if already approved (whitelisted)
   const whitelisted = await findWhitelistEntry(email);
   if (whitelisted) {
-    return res.status(200).send(`<h3>✅ ${email} is already approved for access.</h3>`);
+    return res.status(200).send(`<h3>✅ ${escapeHtml(email)} is already approved for access.</h3>`);
   }
 
   // Check if an access request already exists
@@ -1945,7 +1964,7 @@ app.post("/request-access", async (req, res) => {
       metadata: { reason }
     });
 
-    return res.status(200).send(`<h3>🔄 Your previous request for ${email} has been updated successfully.</h3>`);
+    return res.status(200).send(`<h3>🔄 Your previous request for ${escapeHtml(email)} has been updated successfully.</h3>`);
   }
 
   // ✅ Create a new request if it doesn't exist
@@ -1957,7 +1976,7 @@ app.post("/request-access", async (req, res) => {
     metadata: { reason }
   });
 
-  res.status(200).send(`<h3>✅ Your access request for ${email} has been submitted.</h3>`);
+  res.status(200).send(`<h3>✅ Your access request for ${escapeHtml(email)} has been submitted.</h3>`);
 });
 
 // --- Simple Admin Approval Page and Approve Route ---
@@ -1986,7 +2005,7 @@ app.get("/admin/whitelist", ...protect('user.manage', 'global'), async (req, res
         ${requests.length > 0 ? `
     <ul>
       ${requests.map(r => `
-              <li>${r.email} — ${r.reason || "No reason provided"} 
+              <li>${escapeHtml(r.email)} — ${escapeHtml(r.reason || "No reason provided")} 
           <a href="/admin/approve?email=${encodeURIComponent(r.email)}">Approve</a>
         </li>
       `).join("")}
@@ -1995,7 +2014,7 @@ app.get("/admin/whitelist", ...protect('user.manage', 'global'), async (req, res
         <h2>Approved Users (Whitelist)</h2>
         ${whitelist.length > 0 ? `
     <ul>
-            ${whitelist.map(w => `<li class="approved">${w.email} (approved by: ${w.approved_by || 'system'})</li>`).join("")}
+            ${whitelist.map(w => `<li class="approved">${escapeHtml(w.email)} (approved by: ${escapeHtml(w.approved_by || 'system')})</li>`).join("")}
     </ul>
         ` : '<p>No approved users yet.</p>'}
         <p><a href="/admin-dashboard">← Back to Admin Dashboard</a></p>
@@ -2314,9 +2333,8 @@ app.post('/api/select-course', ensureAuthenticated, express.json(), async (req, 
 
 // -------------------- START SERVER --------------------
 // All routes must be defined BEFORE starting the server
-const startServer = async () => {
+if (import.meta.url === `file://${process.argv[1]}`) {
   try {
-    // Check if database is empty and initialize with seed data if needed
     const schemaExists = await DatabaseInitializer.verifySchema();
     
     if (!schemaExists) {
@@ -2327,26 +2345,21 @@ const startServer = async () => {
       console.log("[database] Database schema already exists. Skipping initialization.\n");
       console.log("✅ Database connection established");
     }
+
+    if (HTTPS_AVAILABLE && sslOptions) {
+      https.createServer(sslOptions, app).listen(8443, () => {
+        console.log("✅ HTTPS server running at https://localhost:8443");
+      });
+    } else {
+      const PORT = process.env.PORT || 3001;
+      app.listen(PORT, () => {
+        console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
+      });
+    }
   } catch (error) {
     console.error("Failed to connect to the database", error);
     process.exit(1);
   }
-
-  if (HTTPS_AVAILABLE && sslOptions) {
-    https.createServer(sslOptions, app).listen(8443, () => {
-      console.log("✅ HTTPS server running at https://localhost:8443");
-    });
-  } else {
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
-      console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
-    });
-  }
-};
-
-// Only start server if this file is run directly, not when imported
-if (import.meta.url === `file://${process.argv[1]}`) {
-  startServer();
 } else if (process.env.VERCEL) {
   // For Vercel, initialize database on cold start
   (async () => {
@@ -2359,9 +2372,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }
   })();
 } else {
-  // Fallback: if the check fails on some systems, start anyway if not in Vercel
-  console.log('[server] Starting server (fallback path)');
-  startServer();
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`⚠️ Starting server (fallback path) at http://localhost:${PORT}`);
+  });
 }
 
 // Export app for Vercel
