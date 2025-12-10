@@ -1,9 +1,19 @@
 document.addEventListener('DOMContentLoaded', async function() {
+  console.log('DOM loaded, initializing team edit...');
+  
   const teamEditForm = document.getElementById('teamEditForm');
   const logoUpload = document.getElementById('logoUpload');
   const saveImageBtn = document.getElementById('saveImageBtn');
   const currentLogo = document.getElementById('currentLogo');
   const loadingOverlay = document.getElementById('loadingOverlay');
+  
+  console.log('Elements found:', {
+    teamEditForm: !!teamEditForm,
+    logoUpload: !!logoUpload,
+    saveImageBtn: !!saveImageBtn,
+    currentLogo: !!currentLogo,
+    loadingOverlay: !!loadingOverlay
+  });
   
   let currentTeam = null;
   let selectedFile = null;
