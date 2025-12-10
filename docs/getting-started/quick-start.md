@@ -6,9 +6,9 @@ Get Conductor up and running in under 5 minutes!
 
 Before you begin, ensure you have:
 
-- [OK] **Node.js** 18+ ([Download](https://nodejs.org/))
-- [OK] **PostgreSQL** 18+ ([Download](https://www.postgresql.org/download/))
-- [OK] **Git** ([Download](https://git-scm.com/))
+- **Node.js** 18+ ([Download](https://nodejs.org/))
+- **PostgreSQL** 18+ ([Download](https://www.postgresql.org/download/))
+- **Git** ([Download](https://git-scm.com/))
 
 ## Installation Steps
 
@@ -58,11 +58,11 @@ npm run db:seed
 ```
 
 This will:
-- [OK] Create all database tables
-- [OK] Set up RBAC permissions
-- [OK] Load 168 demo users
-- [OK] Create sample course offering (CSE 210)
-- [OK] Create teams and assignments
+- Create all database tables
+- Set up RBAC permissions
+- Load 168 demo users
+- Create sample course offering (CSE 210)
+- Create teams and assignments
 
 ### 5. Start the Server
 
@@ -125,7 +125,7 @@ src/
 ### Learn More
 
 -  [Full Installation Guide](installation.md) - Detailed setup
-- 🏗️ [Architecture Overview](../architecture/overview.md) - System design
+-  [Architecture Overview](../architecture/overview.md) - System design
 -  [Database Schema](../database/schema.md) - Database structure
 -  [API Reference](../backend/api-reference.md) - API endpoints
 

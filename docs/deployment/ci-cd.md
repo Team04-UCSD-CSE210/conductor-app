@@ -6,11 +6,11 @@ Continuous Integration and Continuous Deployment for Conductor.
 
 Conductor uses **GitHub Actions** for automated CI/CD:
 
-- [OK] Automated testing on every commit
-- [OK] Linting and code quality checks
-- [OK] Automated deployment to production
-- [OK] Slack notifications for build status
-- [OK] Docker image building and publishing
+- Automated testing on every commit
+- Linting and code quality checks
+- Automated deployment to production
+- Slack notifications for build status
+- Docker image building and publishing
 
 ## Pipeline Architecture
 

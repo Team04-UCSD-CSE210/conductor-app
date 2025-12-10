@@ -24,7 +24,7 @@ The Conductor application uses **OpenTelemetry SDK** to collect metrics and trac
 
 -  **Real-time Metrics** - Track application performance and business KPIs
 -  **Distributed Tracing** - Debug requests across the entire stack
-- 📈 **Custom Dashboards** - Visualize application-specific metrics
+-  **Custom Dashboards** - Visualize application-specific metrics
 -  **Alerting** - Get notified of performance issues and errors
 -  **Business Insights** - Track user behavior and feature usage
 
@@ -98,10 +98,10 @@ The application tracks comprehensive custom metrics:
 
 OpenTelemetry automatically instruments:
 
-- [OK] **HTTP/HTTPS** - All incoming and outgoing HTTP requests
-- [OK] **Express.js** - Middleware, route handlers, error handlers
-- [OK] **PostgreSQL** - All database queries via `pg` library
-- [OK] **File System** - File I/O operations
+- **HTTP/HTTPS** - All incoming and outgoing HTTP requests
+- **Express.js** - Middleware, route handlers, error handlers
+- **PostgreSQL** - All database queries via `pg` library
+- **File System** - File I/O operations
 
 ---
 
@@ -109,10 +109,10 @@ OpenTelemetry automatically instruments:
 
 ### Prerequisites
 
-- [OK] Node.js 18+ (already installed)
-- [OK] PostgreSQL (already installed)
-- 🔲 Docker Desktop (for local SigNoz)
-- 🔲 SigNoz instance (local or cloud)
+- Node.js 18+ (already installed)
+- PostgreSQL (already installed)
+- Docker Desktop (for local SigNoz)
+- SigNoz instance (local or cloud)
 
 ### Option 1: Local SigNoz Setup (Docker)
 
@@ -246,17 +246,17 @@ node src/server.js
 **What happens on startup**:
 
 ```text
-[OK] OpenTelemetry SDK initialized successfully
+OpenTelemetry SDK initialized successfully
  Service: conductor-app
  Exporting to: http://localhost:4318
-🌍 Environment: development
+ Environment: development
 ```
 
 The instrumentation will:
-- [OK] Initialize on app startup
-- [OK] Automatically track all HTTP requests
-- [OK] Export metrics to SigNoz every 10 seconds
-- [OK] Log initialization success/failure
+- Initialize on app startup
+- Automatically track all HTTP requests
+- Export metrics to SigNoz every 10 seconds
+- Log initialization success/failure
 
 ---
 
@@ -542,7 +542,7 @@ SIGNOZ_ENDPOINT=http://localhost:4318
 
 Look for initialization message:
 ```text
-[OK] OpenTelemetry SDK initialized successfully
+OpenTelemetry SDK initialized successfully
 ```
 
 **4. Test Connectivity**
@@ -574,12 +574,12 @@ Test-NetConnection -ComputerName localhost -Port 4318
 **Critical**: Instrumentation MUST be imported first!
 
 ```javascript
-// [OK] CORRECT - instrumentation is FIRST
+// CORRECT - instrumentation is FIRST
 import "./instrumentation.js";
 import express from 'express';
 // ... other imports
 
-// [X] WRONG - other imports before instrumentation
+// WRONG - other imports before instrumentation
 import express from 'express';
 import "./instrumentation.js"; // Too late!
 ```
@@ -709,21 +709,21 @@ SERVICE_NAME=conductor-app
 
 #### 1. Network Security
 
-- [OK] **Never expose SigNoz endpoint publicly** - Use firewall rules
-- [OK] **Use HTTPS** for cloud endpoints
-- [OK] **Restrict collector access** to application servers only
+- **Never expose SigNoz endpoint publicly** - Use firewall rules
+- **Use HTTPS** for cloud endpoints
+- **Restrict collector access** to application servers only
 
 #### 2. Access Control
 
-- [OK] **Rotate access tokens** regularly (if using SigNoz Cloud)
-- [OK] **Use separate tokens** for dev/staging/production
-- [OK] **Limit token permissions** to minimum required
+- **Rotate access tokens** regularly (if using SigNoz Cloud)
+- **Use separate tokens** for dev/staging/production
+- **Limit token permissions** to minimum required
 
 #### 3. Data Privacy
 
-- [OK] **Sanitize PII** from traces and metrics (emails, passwords, etc.)
-- [OK] **Redact sensitive data** in logs
-- [OK] **Configure data retention** per compliance requirements
+- **Sanitize PII** from traces and metrics (emails, passwords, etc.)
+- **Redact sensitive data** in logs
+- **Configure data retention** per compliance requirements
 
 **Example: Sanitize PII**
 

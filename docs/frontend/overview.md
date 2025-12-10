@@ -6,11 +6,11 @@ Comprehensive guide to Conductor's frontend architecture and implementation.
 
 Conductor uses a **vanilla JavaScript** approach with **no build tools or frameworks**:
 
-- [OK] **Zero dependencies**: No React, Vue, or Angular
-- [OK] **No build step**: Direct browser execution
-- [OK] **Fast load times**: Minimal JavaScript payload
-- [OK] **Simple debugging**: No source maps needed
-- [OK] **Progressive enhancement**: Works without JavaScript for basic features
+- **Zero dependencies**: No React, Vue, or Angular
+- **No build step**: Direct browser execution
+- **Fast load times**: Minimal JavaScript payload
+- **Simple debugging**: No source maps needed
+- **Progressive enhancement**: Works without JavaScript for basic features
 
 ## Technology Stack
 

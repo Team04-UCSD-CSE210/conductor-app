@@ -523,7 +523,7 @@ npm uninstall -g nodemon
 ## Next Steps
 
 -  [Quick Start Guide](quick-start.md) - Get running in 5 minutes
-- 🏗️ [Architecture Overview](../architecture/overview.md) - Understand the system
+-  [Architecture Overview](../architecture/overview.md) - Understand the system
 -  [API Reference](../backend/api-reference.md) - Explore the APIs
 -  [Testing Guide](../testing/overview.md) - Write and run tests
 -  [Contributing Guide](../contributing/workflow.md) - Start contributing
