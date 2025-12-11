@@ -92,7 +92,6 @@ const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || "https://localhost:8443/auth/google/callback";
-const DATABASE_URL = process.env.DATABASE_URL;
 const ALLOWED_DOMAIN = process.env.ALLOWED_GOOGLE_DOMAIN || "ucsd.edu";
 
 const parsePositiveInt = (value, fallback) => {
@@ -1562,7 +1561,8 @@ app.get(
       let enrollmentRole = null;
       try {
         enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
-      } catch (error) {
+      } catch {
+        // Failed to get enrollment role, will remain null
       }
       
       const offering = await getActiveCourseOffering();

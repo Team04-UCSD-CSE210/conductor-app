@@ -136,14 +136,13 @@ const loadOfferings = async () => {
     
     try {
       active = await fetchJSON('/api/offerings/active');
-    } catch (_err) {
+    } catch {
       // Continue - we'll try to find active from the list
     }
     
     try {
       offerings = await fetchJSON('/api/offerings?limit=25') || [];
-    } catch (_err) {
-      console.error('Offerings fetch failed:', _err);
+    } catch {
       offerings = [];
     }
     

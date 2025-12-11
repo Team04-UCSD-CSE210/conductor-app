@@ -20,7 +20,6 @@ import { metrics } from '@opentelemetry/api';
 const SIGNOZ_ENDPOINT = process.env.SIGNOZ_ENDPOINT || 'http://localhost:4318';
 const SIGNOZ_ACCESS_TOKEN = process.env.SIGNOZ_ACCESS_TOKEN;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'conductor-app';
-const ENVIRONMENT = process.env.ENVIRONMENT || 'development';
 
 // Configure headers for SigNoz Cloud authentication
 const headers = SIGNOZ_ACCESS_TOKEN 

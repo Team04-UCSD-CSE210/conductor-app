@@ -321,26 +321,6 @@ export class SessionService {
         } else {
           const now = new Date();
           
-          // Verify the date components are correct - they should match what was stored
-          const sessionStartYear = sessionStart.getFullYear();
-          const sessionStartMonth = sessionStart.getMonth() + 1;
-          const sessionStartDay = sessionStart.getDate();
-          const sessionStartHours = sessionStart.getHours();
-          const sessionStartMinutes = sessionStart.getMinutes();
-          
-          const nowYear = now.getFullYear();
-          const nowMonth = now.getMonth() + 1;
-          const nowDay = now.getDate();
-          const nowHours = now.getHours();
-          const nowMinutes = now.getMinutes();
-          
-          // Check if parsed date matches stored date
-          const dateMatches = sessionStartYear === year && 
-                             sessionStartMonth === month && 
-                             sessionStartDay === day;
-          const timeMatches = sessionStartHours === hours && 
-                             sessionStartMinutes === minutes;
-          
           // If session start time has passed, automatically open attendance
           if (sessionStart <= now && !session.attendance_opened_at) {
             await SessionModel.openAttendance(session.id, createdBy);
