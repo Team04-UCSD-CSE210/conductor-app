@@ -316,12 +316,11 @@ The migration will automatically handle conflicts if the users already exist, up
 This project is part of UCSD CSE 210 coursework.  
 © 2025 Team04-UCSD-CSE210
 
-## Support & Resources
+## Resources
 
 - [Documentation](docs/) - Comprehensive guides and references
 - [Issue Tracker](https://github.com/Team04-UCSD-CSE210/conductor-app/issues) - Report bugs
 - [Project Wiki](https://github.com/Team04-UCSD-CSE210/conductor-app/wiki) - Team resources
-- [Course Page](https://ucsd.edu) - UC San Diego CSE 210
 
 ---
 
