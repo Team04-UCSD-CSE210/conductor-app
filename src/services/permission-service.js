@@ -108,7 +108,6 @@ export class PermissionService {
       const keys = await redisClient.keys(pattern);
       if (keys && keys.length > 0) {
         await redisClient.del(keys);
-        console.log(`[PermissionService] Invalidated ${keys.length} cached permissions for user ${userId}`);
       }
     } catch (error) {
       console.error('[PermissionService] Cache invalidation error:', error.message);

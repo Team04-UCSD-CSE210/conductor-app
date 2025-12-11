@@ -51,8 +51,7 @@ router.put("/:id", ensureAuthenticated, async (req, res) => {
 
     const updated = await JournalModel.update(req.params.id, req.body);
     res.json({ success: true, entry: updated });
-  } catch (err) {
-    console.log(err)
+  } catch {
     res.status(500).json({ error: "Something went wrong!" });
   }
 });
@@ -67,8 +66,7 @@ router.delete("/:id", ensureAuthenticated, async (req, res) => {
 
     await JournalModel.delete(req.params.id);
     res.json({ success: true });
-  } catch (err) {
-    console.log(err)
+  } catch {
     res.status(500).json({ error: "Something went wrong!" });
   }
 });

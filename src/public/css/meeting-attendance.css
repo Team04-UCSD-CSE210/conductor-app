@@ -17,45 +17,6 @@
   min-height: 0;
 }
 
-.meeting-attendance-title {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, var(--blue-50, #eff6ff) 0%, white 100%);
-  border-radius: 1rem;
-  border: 1px solid var(--blue-200, #bfdbfe);
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgb(37 99 235 / 8%);
-}
-
-.meeting-attendance-title h2 {
-  margin: 0.25rem 0 0.5rem;
-  font-size: 1.5rem;
-  color: var(--blue-700, #1d4ed8);
-  font-weight: 700;
-}
-
-.meeting-attendance-title .subtitle {
-  margin: 0;
-  color: var(--gray-600, #4b5563);
-  font-size: 0.95rem;
-}
-
-.meeting-attendance-title .subtitle-note {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--gray-600, #4b5563);
-}
-
-.meeting-attendance-title .eyebrow {
-  margin: 0;
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--gray-500, #6b7280);
-}
-
 .meeting-filter {
   display: flex;
   flex-direction: column;
