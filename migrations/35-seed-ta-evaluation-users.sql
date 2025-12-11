@@ -298,13 +298,10 @@ SELECT
     u.institution_type,
     e.course_role AS enrollment_role,
     e.status AS enrollment_status,
-    co.code AS course_code,
-    co.name AS course_name,
     t.team_number,
     tm.role AS team_role
 FROM users u
 LEFT JOIN enrollments e ON u.id = e.user_id
-LEFT JOIN course_offerings co ON e.offering_id = co.id AND co.is_active = TRUE
 LEFT JOIN team_members tm ON u.id = tm.user_id
 LEFT JOIN team t ON tm.team_id = t.id
 WHERE u.email IN ('skamate@ucsd.edu', 'sammedkamate2@gmail.com', 'sammedkamate3@gmail.com')
