@@ -1,4 +1,4 @@
--- 35-make-hhundhausen-team-lead.sql
+-- 34-make-hhundhausen-team-lead.sql
 -- Make hhundhausen@ucsd.edu a team leader
 
 DO $$
