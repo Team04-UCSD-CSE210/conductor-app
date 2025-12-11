@@ -380,11 +380,11 @@ body > :not(.footer) {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  background: white;
-  border: 1px solid var(--gray-200, #e5e7eb);
+  background: linear-gradient(135deg, var(--teal-50, #f0fdfa) 0%, white 100%);
+  border: 1px solid var(--teal-200, #99f6e4);
   border-radius: 1rem;
   padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
 }
 
 .header-back-button {
@@ -434,10 +434,15 @@ body > :not(.footer) {
 
 .header-subtitle {
     font-size: 1rem;
+    font-weight: 400;
+    color: var(--gray-600, #4b5563);
 }
 
 .header-title {
   font-size: 2rem;
+  font-weight: 700;
+  color: var(--gray-900, #111827);
+  margin: 0.5rem 0;
 }
 
 /* Modal Overlay */
@@ -612,6 +617,17 @@ body > :not(.footer) {
   border-color: var(--teal-500, #14b8a6);
   color: var(--teal-600, #0d9488);
   background: var(--teal-50, #f0fdfa);
+}
+
+/* Main Container */
+.main-container {
+  margin-left: 220px;
+  padding: 1.25rem;
+  width: calc(100% - 220px);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden auto;
 }
 
 @media (width <= 1400px) {
