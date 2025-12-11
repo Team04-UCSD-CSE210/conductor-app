@@ -271,26 +271,28 @@ For TA evaluation purposes, the following test accounts have been seeded:
 | Email | Name | Institution Type | Role | Enrollment |
 |-------|------|------------------|------|------------|
 | `skamate@ucsd.edu` | Sammed Kamate | UCSD | Instructor | Instructor in active course |
-| `sammed.kamate2@gmail.com` | Sammed Kamate 2 | Extension | Student | Student in active course |
+| `sammedkamate2@gmail.com` | Sammed Kamate 2 | Extension | Student | Student in active course |
+| `sammedkamate3@gmail.com` | Sammed Kamate 3 | Extension | Student | TA in active course |
 
 The TA can change the seed data accordingly.
 These accounts are created via migration `35-seed-ta-evaluation-users.sql` and can be used to test various features of the application including:
 
 - User authentication and role-based access
-- Instructor and student dashboard functionality
+- Instructor, student, and TA dashboard functionality
 - Attendance tracking
 - Roster System
 - Journal system
 - Class directory features
 - Course management (instructor role)
+- TA-specific features (grading, student support)
 
 **Note**: These accounts use Google OAuth for authentication. Ensure the test emails are authorized in your Google OAuth configuration if testing authentication flows.
 
 ### Customizing Seed Data
 
-You can modify the seed data to match your evaluation needs by editing the migration file:
+You can modify the seed data as a ta for evaluation to match your needs by editing the migration file:
 
-**File**: `migrations/seed-ta-evaluation-users.sql`
+**File**: `migrations/35-seed-ta-evaluation-users.sql`
 
 You can change:
 - User emails, names, and personal information
