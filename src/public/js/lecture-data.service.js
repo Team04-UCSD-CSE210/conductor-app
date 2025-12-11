@@ -123,7 +123,7 @@
           const dateObj = new Date(year, month - 1, day, hours, minutes, seconds);
           
           // Validate the date
-          if (!isNaN(dateObj.getTime())) {
+          if (!Number.isNaN(dateObj.getTime())) {
             // Store as ISO string - this will be in UTC, but we'll extract local time when displaying
             startsAt = dateObj.toISOString();
           } else {
@@ -154,9 +154,9 @@
         // - Must be after start time (if start time exists)
         // - Must be on the same day as start time (not midnight of next day)
         // - Must be within 24 hours of start time
-        let isValidEndTime = !isNaN(codeExpiresDate.getTime());
+        let isValidEndTime = !Number.isNaN(codeExpiresDate.getTime());
         
-        if (isValidEndTime && startDate && !isNaN(startDate.getTime())) {
+        if (isValidEndTime && startDate && !Number.isNaN(startDate.getTime())) {
           const timeDiff = codeExpiresDate.getTime() - startDate.getTime();
           const isSameDay = codeExpiresDate.getDate() === startDate.getDate() &&
                            codeExpiresDate.getMonth() === startDate.getMonth() &&
@@ -176,7 +176,7 @@
           endsAt = codeExpiresDate.toISOString();
         } else {
           // Invalid end time, calculate from start time + 30 minutes (default)
-          if (startDate && !isNaN(startDate.getTime())) {
+          if (startDate && !Number.isNaN(startDate.getTime())) {
             const defaultEndDate = new Date(startDate);
             defaultEndDate.setMinutes(defaultEndDate.getMinutes() + 30);
             endsAt = defaultEndDate.toISOString();
@@ -337,7 +337,7 @@
     let session_date = null;
     let session_time = null;
     
-    if (startDate && !isNaN(startDate.getTime())) {
+    if (startDate && !Number.isNaN(startDate.getTime())) {
       // Extract date components in LOCAL timezone (not UTC)
       const year = startDate.getFullYear();
       const month = String(startDate.getMonth() + 1).padStart(2, '0');
@@ -654,13 +654,26 @@
           .filter(session => !session.team_id) // Only lectures, not team meetings
           .map(session => {
           const transformed = transformSession(session);
-          const attendanceStatus = attendanceMap[session.id] || 'absent';
           const sessionState = transformed.status;
-
+          
+          // Get attendance status from map
+          const attendanceStatus = attendanceMap[session.id];
+          
           // Determine overall status
-          let status = attendanceStatus;
-          if (sessionState === 'open' && attendanceStatus === 'absent') {
-            status = 'open'; // Needs response
+          let status;
+          if (attendanceStatus) {
+            // Has an attendance record (present, absent, excused)
+            status = attendanceStatus;
+          } else {
+            // No attendance record yet
+            if (sessionState === 'open') {
+              status = 'open'; // Needs response
+            } else if (sessionState === 'pending') {
+              status = 'pending'; // Not yet available
+            } else {
+              // Session is closed and no record = absent
+              status = 'absent';
+            }
           }
 
         return {

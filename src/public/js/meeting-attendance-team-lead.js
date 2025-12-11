@@ -18,6 +18,8 @@
   };
 
   let isLoading = false;
+  let liveUpdateInterval = null;
+  const LIVE_UPDATE_INTERVAL_MS = 3000; // Check for updates every 3 seconds
 
   function formatDate(dateString) {
     if (!dateString) return '—';
@@ -35,6 +37,8 @@
   function buildStatusBadge(sessionState, attendanceCount, totalMembers) {
     const badge = document.createElement('span');
     badge.classList.add('lecture-badge');
+    badge.classList.add('meeting-status-badge'); // Add class for easier selection
+    badge.style.transition = 'transform 0.2s ease';
     
     if (sessionState === 'open') {
       badge.textContent = `Open - ${attendanceCount}/${totalMembers}`;
@@ -48,6 +52,79 @@
     }
     
     return badge;
+  }
+
+  async function updateMeetingStats() {
+    if (isLoading) return;
+    
+    // Find all open meetings
+    const openMeetings = state.meetings.filter(m => {
+      const sessionState = determineMeetingStatus(m);
+      return sessionState === 'open';
+    });
+    
+    if (openMeetings.length === 0) {
+      return; // Nothing to update
+    }
+    
+    try {
+      // Re-fetch meetings to get updated attendance counts
+      const updatedMeetings = await fetchMeetings();
+      
+      // Update only the open meetings in state
+      for (const openMeeting of openMeetings) {
+        const updated = updatedMeetings.find(m => m.id === openMeeting.id);
+        if (!updated) continue;
+        
+        // Check if attendance count changed
+        const oldCount = openMeeting.attendance_count || 0;
+        const newCount = updated.attendance_count || 0;
+        
+        if (oldCount !== newCount) {
+          // Update state
+          const index = state.meetings.findIndex(m => m.id === openMeeting.id);
+          if (index !== -1) {
+            state.meetings[index] = updated;
+          }
+          
+          // Update the badge in the DOM
+          const meetingRow = document.querySelector(`[data-meeting-id="${updated.id}"]`);
+          if (meetingRow) {
+            const badge = meetingRow.querySelector('.meeting-status-badge');
+            if (badge) {
+              const totalMembers = updated.team_member_count || 0;
+              badge.textContent = `Open - ${newCount}/${totalMembers}`;
+              
+              // Add a subtle animation to indicate update
+              badge.style.transform = 'scale(1.05)';
+              setTimeout(() => {
+                badge.style.transform = 'scale(1)';
+              }, 200);
+              
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing meeting data:', error);
+    }
+  }
+
+  function startLiveUpdates() {
+    stopLiveUpdates();
+    const openMeetings = state.meetings.filter(m => determineMeetingStatus(m) === 'open');
+    if (openMeetings.length > 0) {
+      liveUpdateInterval = setInterval(updateMeetingStats, LIVE_UPDATE_INTERVAL_MS);
+      // Do an immediate update
+      updateMeetingStats();
+    }
+  }
+
+  function stopLiveUpdates() {
+    if (liveUpdateInterval) {
+      clearInterval(liveUpdateInterval);
+      liveUpdateInterval = null;
+    }
   }
 
   async function buildLeaderAttendanceBadge(meeting, sessionState) {
@@ -81,8 +158,8 @@
       
       // If open and no attendance, hide the badge (will show "I'm here" button instead)
       badge.style.display = 'none';
-    } catch (err) {
-      console.error('Error fetching leader attendance:', err);
+    } catch {
+      // Silently handle errors - 404 is expected when no attendance record exists
       badge.style.display = 'none';
     }
     
@@ -97,12 +174,22 @@ function determineMeetingStatus(meeting) {
   // FIRST: Check if scheduled time is in the future - always return pending for future meetings
   let scheduledStartTime = null;
   if (meeting.session_date && meeting.session_time) {
-    const sessionDate = new Date(meeting.session_date);
-    const year = sessionDate.getFullYear();
-    const month = sessionDate.getMonth();
-    const day = sessionDate.getDate();
+    // Parse date directly from YYYY-MM-DD string to avoid timezone issues
+    let dateStr = meeting.session_date;
+    if (typeof dateStr === 'object') {
+      // If it's a Date object, extract local date components
+      const year = dateStr.getFullYear();
+      const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+      const day = String(dateStr.getDate()).padStart(2, '0');
+      dateStr = `${year}-${month}-${day}`;
+    } else {
+      // Extract just YYYY-MM-DD from string
+      dateStr = String(dateStr).split('T')[0];
+    }
+    
+    const [year, month, day] = dateStr.split('-').map(Number);
     const [hours, minutes] = meeting.session_time.split(':').map(Number);
-    scheduledStartTime = new Date(year, month, day, hours, minutes);
+    scheduledStartTime = new Date(year, month - 1, day, hours, minutes);
     
     // If scheduled start time is in the future, it's always pending
     if (scheduledStartTime > now) {
@@ -148,12 +235,12 @@ function determineMeetingStatus(meeting) {
 }  async function buildMeetingRow(meeting) {
     const row = document.createElement('article');
     row.className = 'lecture-item';
+    row.dataset.meetingId = meeting.id; // Add meeting ID for live updates
     
     const sessionState = determineMeetingStatus(meeting);
     row.dataset.status = sessionState;
     
     const isOpen = sessionState === 'open';
-    const isPast = sessionState === 'closed';
 
     const attendanceCount = meeting.attendance_count || 0;
     const totalMembers = meeting.team_member_count || 0;
@@ -295,20 +382,6 @@ function determineMeetingStatus(meeting) {
     
     details.append(label, time);
 
-    const meta = document.createElement('div');
-    meta.className = 'lecture-meta';
-
-    // Only show session status for open/closed meetings (not pending)
-    // The badge already shows "Upcoming" for pending meetings
-    const sessionStatus = document.createElement('span');
-    if (isOpen) {
-      sessionStatus.className = 'lecture-status open';
-      sessionStatus.textContent = 'Open';
-    } else if (isPast) {
-      sessionStatus.className = 'lecture-status closed';
-      sessionStatus.textContent = 'Closed';
-    }
-
     const actions = document.createElement('div');
     actions.className = 'lecture-actions';
     
@@ -410,20 +483,13 @@ function determineMeetingStatus(meeting) {
     });
     
     actions.appendChild(deleteButton);
-
-    // Only append sessionStatus if it has content (open or closed)
-    if (isOpen || isPast) {
-      meta.append(sessionStatus, actions);
-    } else {
-      meta.appendChild(actions);
-    }
     
     // Create badge container
     const badgeContainer = document.createElement('div');
     badgeContainer.className = 'badge-container';
     badgeContainer.append(badge, leaderStatusBadge);
     
-    info.append(badgeContainer, details, meta);
+    info.append(badgeContainer, details, actions);
     row.appendChild(info);
 
     return row;
@@ -491,13 +557,13 @@ function determineMeetingStatus(meeting) {
           const response = await fetch(`/api/attendance/sessions/${meeting.id}/attendance/${state.currentUser.id}`);
           if (response.ok) {
             const attendance = await response.json();
-            if (attendance && attendance.status === 'present') {
+            if (attendance?.status === 'present') {
               presentCount++;
             }
           }
-          // 404 means no attendance record (absent)
-        } catch (err) {
-          console.error('Error fetching attendance:', err);
+          // 404 means no attendance record (absent) - this is normal, not an error
+        } catch {
+          // Silently handle errors - 404 is expected when no attendance record exists
         }
       }
 
@@ -580,12 +646,19 @@ function determineMeetingStatus(meeting) {
       
       // Always prefer session_date + session_time for sorting
       if (a.session_date && a.session_time) {
-        const sessionDate = new Date(a.session_date);
-        const year = sessionDate.getUTCFullYear();
-        const month = sessionDate.getUTCMonth();
-        const day = sessionDate.getUTCDate();
+        // Parse date directly to avoid timezone issues
+        let dateStr = a.session_date;
+        if (typeof dateStr === 'object') {
+          const year = dateStr.getFullYear();
+          const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+          const day = String(dateStr.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${day}`;
+        } else {
+          dateStr = String(dateStr).split('T')[0];
+        }
+        const [year, month, day] = dateStr.split('-').map(Number);
         const [hours, minutes] = a.session_time.split(':').map(Number);
-        dateA = new Date(year, month, day, hours, minutes);
+        dateA = new Date(year, month - 1, day, hours, minutes);
       } else if (a.attendance_opened_at) {
         dateA = new Date(a.attendance_opened_at);
       } else {
@@ -593,12 +666,19 @@ function determineMeetingStatus(meeting) {
       }
       
       if (b.session_date && b.session_time) {
-        const sessionDate = new Date(b.session_date);
-        const year = sessionDate.getUTCFullYear();
-        const month = sessionDate.getUTCMonth();
-        const day = sessionDate.getUTCDate();
+        // Parse date directly to avoid timezone issues
+        let dateStr = b.session_date;
+        if (typeof dateStr === 'object') {
+          const year = dateStr.getFullYear();
+          const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+          const day = String(dateStr.getDate()).padStart(2, '0');
+          dateStr = `${year}-${month}-${day}`;
+        } else {
+          dateStr = String(dateStr).split('T')[0];
+        }
+        const [year, month, day] = dateStr.split('-').map(Number);
         const [hours, minutes] = b.session_time.split(':').map(Number);
-        dateB = new Date(year, month, day, hours, minutes);
+        dateB = new Date(year, month - 1, day, hours, minutes);
       } else if (b.attendance_opened_at) {
         dateB = new Date(b.attendance_opened_at);
       } else {
@@ -795,6 +875,9 @@ function determineMeetingStatus(meeting) {
       await updateTeamAttendance();
       isLoading = false;
       renderMeetings();
+      
+      // Start live updates for open meetings
+      startLiveUpdates();
     } catch (error) {
       console.error('Error hydrating meeting view:', error);
       isLoading = false;
@@ -809,31 +892,6 @@ function determineMeetingStatus(meeting) {
     selectors.filter.addEventListener('change', (event) => {
       state.filter = event.target.value;
       renderMeetings();
-    });
-  }
-
-  function initHamburger() {
-    const hamburger = document.querySelector('.hamburger-menu');
-    const sidebar = document.querySelector('.sidebar');
-    const body = document.body;
-    if (!hamburger || !sidebar) return;
-
-    hamburger.addEventListener('click', () => {
-      const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', String(!isOpen));
-      sidebar.classList.toggle('open');
-      body.classList.toggle('menu-open');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 768 &&
-          sidebar.classList.contains('open') &&
-          !sidebar.contains(e.target) &&
-          !hamburger.contains(e.target)) {
-        hamburger.setAttribute('aria-expanded', 'false');
-        sidebar.classList.remove('open');
-        body.classList.remove('menu-open');
-      }
     });
   }
 
@@ -939,11 +997,13 @@ function determineMeetingStatus(meeting) {
   }
 
   function init() {
-    initHamburger();
     initFilter();
     initButtons();
     initFlipCard();
     hydrateMeetingView();
+    
+    // Stop live updates when user leaves the page
+    window.addEventListener('beforeunload', stopLiveUpdates);
   }
 
   if (document.readyState === 'loading') {

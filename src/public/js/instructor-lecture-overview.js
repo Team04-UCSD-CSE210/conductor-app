@@ -21,7 +21,7 @@
     const end = new Date(endIso);
       
       // Validate dates
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -48,7 +48,7 @@
     if (!dateIso) return '';
     try {
     const date = new Date(dateIso);
-      if (isNaN(date.getTime())) return '';
+      if (Number.isNaN(date.getTime())) return '';
       // Always format in local timezone
       return new Intl.DateTimeFormat('en-US', { 
         month: 'short', 
@@ -68,6 +68,12 @@
     selectors.chart.innerHTML = '';
     if (chartDates) chartDates.innerHTML = '';
     
+    // Get palette colors for charts
+    const paletteColors = globalThis.getPaletteColors ? globalThis.getPaletteColors() : {
+      primary: '#0F766E',
+      secondary: '#83D7CF'
+    };
+    
     // Show last 15 lectures with dates
     const displayHistory = history.slice(0, 15);
     
@@ -79,6 +85,15 @@
       bar.className = `bar ${entry.attendancePercent < 80 ? 'low' : ''}`;
       bar.style.height = `${Math.max(entry.attendancePercent, 8)}%`;
       bar.dataset.value = entry.attendancePercent;
+      
+      // Apply palette colors to chart bars
+      if (entry.attendancePercent < 80) {
+        // Low attendance - use warning colors (orange/yellow)
+        bar.style.background = 'linear-gradient(180deg, #fcd34d 0%, #f97316 100%)';
+      } else {
+        // Normal attendance - use palette colors
+        bar.style.background = `linear-gradient(180deg, ${paletteColors.secondary} 0%, ${paletteColors.primary} 100%)`;
+      }
       
       // Add percentage label on top of bar
       const percentLabel = document.createElement('div');
@@ -101,15 +116,11 @@
 
   function createDeleteButton(lectureId, lectureLabel) {
     const button = document.createElement('button');
-    button.className = 'delete-button';
+    button.className = 'btn-link btn-delete';
     button.type = 'button';
     button.title = `Delete ${lectureLabel}`;
     button.setAttribute('aria-label', `Delete ${lectureLabel}`);
-    button.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 4H14M12.6667 4V13.3333C12.6667 14 12 14.6667 11.3333 14.6667H4.66667C4 14.6667 3.33333 14 3.33333 13.3333V4M5.33333 4V2.66667C5.33333 2 6 1.33333 6.66667 1.33333H9.33333C10 1.33333 10.6667 2 10.6667 2.66667V4M6.66667 7.33333V11.3333M9.33333 7.33333V11.3333" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `;
+    button.textContent = 'Delete';
     button.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (window.confirm(`Are you sure you want to delete "${lectureLabel}"? This action cannot be undone.`)) {
@@ -167,14 +178,14 @@
 
   function buildLectureCard(lecture, currentLectureId) {
     const card = document.createElement('article');
-    card.className = 'lecture-card';
+    card.className = 'attendance-card-list';
     if (lecture.id === currentLectureId && lecture.status === 'open') {
       card.classList.add('active');
     }
 
     // Lecture label
     const labelWrapper = document.createElement('div');
-    labelWrapper.className = 'lecture-label';
+    labelWrapper.className = 'attendance-card-list-label';
     const label = document.createElement('button');
     label.type = 'button';
     label.textContent = lecture.label;
@@ -196,12 +207,12 @@
 
     // Attendance and date
     const meta = document.createElement('div');
-    meta.className = 'lecture-meta';
+    meta.className = 'attendance-card-list-meta';
     const attendance = document.createElement('span');
     attendance.className = 'attendance-percent';
     attendance.textContent = `${lecture.attendancePercent}% attendance`;
     const schedule = document.createElement('span');
-    schedule.className = 'lecture-schedule';
+    schedule.className = 'attendance-schedule';
     schedule.textContent = formatTimeRange(lecture.startsAt, lecture.endsAt);
     meta.append(attendance, schedule);
 
@@ -268,8 +279,7 @@
     
     navLinks.forEach(link => {
       const href = link.getAttribute('href');
-      if (href && href.includes('/courses/cse210/')) {
-        // Update hardcoded cse210 references with actual course code
+      if (href?.includes('/courses/cse210/')) {
         const newHref = href.replace('/courses/cse210/', `/courses/${courseCode.toLowerCase()}/`);
         link.setAttribute('href', newHref);
       }
@@ -296,7 +306,6 @@
       offeringId = selectors.container.getAttribute('data-offering-id');
       
       if (!offeringId) {
-        // Fetch active offering
         offeringId = await window.LectureService.getActiveOfferingId();
         if (!offeringId) {
           throw new Error('No active course offering found');
@@ -317,21 +326,19 @@
       ]);
 
       // Process offering info if available
-      if (offeringResponse && offeringResponse.ok) {
+      if (offeringResponse?.ok) {
         offeringInfo = await offeringResponse.json();
         updateNavigationLinks();
       }
 
       const { summaryPercent, history, lectures, currentLectureId } = overviewResult;
     
-    // Last session should be the most recent lecture (first in array)
-    const lastLecture = lectures && lectures.length > 0 ? lectures[0] : null;
+    const lastLecture = lectures?.length > 0 ? lectures[0] : null;
     const lastSessionPercent = lastLecture ? lastLecture.attendancePercent : summaryPercent;
     
     if (selectors.percent) selectors.percent.textContent = `${lastSessionPercent}%`;
     
-    // Add dates to history for chart
-      const historyWithDates = history.map((entry) => ({
+    const historyWithDates = history.map((entry) => ({
         ...entry,
         date: entry.startsAt || null
       }));
@@ -356,22 +363,7 @@
     });
   }
 
-  function initHamburger() {
-    const hamburger = document.querySelector('.hamburger-menu');
-    const sidebar = document.querySelector('.sidebar');
-    const body = document.body;
-    if (!hamburger || !sidebar) return;
-
-    hamburger.addEventListener('click', () => {
-      const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', String(!isOpen));
-      sidebar.classList.toggle('open');
-      body.classList.toggle('menu-open');
-    });
-  }
-
   function init() {
-    initHamburger();
     initNewLectureButton();
     hydrate();
   }

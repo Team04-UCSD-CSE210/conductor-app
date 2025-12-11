@@ -4,6 +4,8 @@
   min-height: 100%;
   overflow: visible;
   align-items: flex-start;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .attendance-content {
@@ -13,6 +15,8 @@
   overflow: visible;
   min-width: 0;
   min-height: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .attendance-title {
@@ -25,6 +29,8 @@
   border: 1px solid var(--teal-200, #99f6e4);
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .attendance-title h2 {
@@ -116,6 +122,8 @@
   margin-bottom: 0.5rem;
   align-items: center;
   box-shadow: 0 1px 2px rgb(0 0 0 / 3%);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .lecture-item:hover {
@@ -167,19 +175,19 @@
 
 .lecture-info {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.25rem;
   flex: 1 1 auto;
-  min-width: 0;
-  justify-content: space-between;
-  overflow: hidden;
+  min-width: 100px;
 }
 
 .lecture-number {
   font-weight: 600;
   color: var(--gray-900, #111827);
   font-size: 0.95rem;
-  white-space: nowrap;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .lecture-time {
@@ -195,6 +203,7 @@
   justify-content: flex-end;
   flex-shrink: 0;
   min-width: 200px;
+  margin-left: auto;
 }
 
 .empty-state {
@@ -583,22 +592,104 @@
   75% { transform: translateX(5px); }
 }
 
-@media (width <= 768px) {
+@media (width <= 1200px) {
+  .lecture-item {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .lecture-info {
+    text-align: center;
+    align-items: center;
+  }
+
+  .lecture-meta {
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: center;
+    max-width: 100%;
+  }
+}
+
+@media (width <= 1100px) {
   .attendance-layout {
+    max-width: 100%;
+    overflow: hidden auto;
     flex-direction: column;
+    height: 100vh;
+  }
+
+  .attendance-content {
+    max-width: 100%;
+    overflow-x: hidden;
+    order: 1;
+    flex: none;
   }
 
   .attendance-sidebar {
     width: 100%;
+    max-width: 100%;
     order: 2;
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
-  .attendance-content {
-    order: 1;
+  .attendance-sidebar > * {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (width <= 768px) {
+  .attendance-sidebar {
+    margin-top: auto;
+  }
+
+  .lecture-item {
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .lecture-info {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1;
+  }
+
+  .lecture-number {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .lecture-meta {
+    max-width: 100%;
+    flex-shrink: 0;
+  }
+
+  .lecture-badge {
+    min-width: 80px;
+  }
+
+  .lecture-list {
+    flex: none;
+    overflow: visible;
+    max-height: none;
   }
 
   .attendance-title {
     flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .access-code-modal {

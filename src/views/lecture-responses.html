@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/css/inactivity-timeout.css">
   <link rel="stylesheet" href="/css/lectures-global.css">
   <link rel="stylesheet" href="/css/lecture-responses.css">
+  <link rel="stylesheet" href="/css/stats.css">
 </head>
 
 <body class="dashboard-page">
@@ -23,11 +24,10 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    
     <footer>
       <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
@@ -35,21 +35,21 @@
 
   <main class="main-container" id="main">
     <section class="responses-shell" data-session-id="">
-      <header class="responses-header">
-        <button class="back-button" id="back-button" aria-label="Back to lecture list">
+      <header class="header-container">
+        <button class="header-back-button" id="back-button" aria-label="Back to lecture list">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
-        <div class="lecture-info">
+        <header class="header-info">
           <p class="eyebrow">Lecture Attendance</p>
-          <h2 id="lecture-title">Lecture X</h2>
-          <p id="lecture-time">MM/DD/YY · HH:MM–HH:MM</p>
-        </div>
-        <div class="attendance-stat">
+          <h2 class="header-title" id="lecture-title">Lecture X</h2>
+          <p class="header-subtitle" id="lecture-time">MM/DD/YY · HH:MM–HH:MM</p>
+        </header>
+        <header class="attendance-stats">
           <p class="label">Attendance</p>
           <p class="value" id="lecture-attendance">0%</p>
-        </div>
+        </header>
       </header>
 
       <section class="responses-panel">
@@ -60,6 +60,7 @@
           </div>
           <div class="response-count">
             <span id="response-count">0 responses</span>
+            <span class="live-indicator" title="Auto-updating every 3 seconds">●</span>
           </div>
         </div>
         <div class="response-list" id="responses-list" aria-live="polite"></div>
@@ -67,7 +68,9 @@
     </section>
   </main>
 
+  <script src="/js/palette-loader.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
   <script src="/js/inactivity-timeout.js" defer></script>
   <script src="/js/lecture-data.service.js" defer></script>
   <script src="/js/instructor-lecture-detail.js" defer></script>

@@ -41,7 +41,7 @@
     const end = new Date(endIso);
       
       // Validate dates
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -98,8 +98,6 @@
       }
     }
     
-    console.log('Render header - status:', lecture.status);
-    console.log('Render header - has questions:', lecture.questions?.length || 0);
     
     // Determine if session is open - check both status and attendance_opened_at
     const isOpen = lecture.status === 'open' || 
@@ -107,7 +105,6 @@
     
     if (!isOpen) {
       // Session is closed - show success message and hide form
-      console.log('Session is closed - hiding form');
       if (selectors.form) selectors.form.hidden = true;
       if (selectors.successPanel) {
       selectors.successPanel.hidden = false;
@@ -118,7 +115,6 @@
       }
     } else {
       // Session is open - show the form initially (students can submit/update responses)
-      console.log('Session is open - showing form');
       if (selectors.form) {
         selectors.form.hidden = false;
         selectors.form.style.display = 'flex';
@@ -166,10 +162,6 @@
   }
 
   function renderQuestions() {
-    console.log('renderQuestions called');
-    console.log('selectors.questionList:', selectors.questionList);
-    console.log('lecture:', lecture);
-    console.log('lecture.questions:', lecture?.questions);
     
     if (!selectors.questionList) {
       console.error('questionList selector not found');
@@ -190,10 +182,7 @@
     
     selectors.questionList.innerHTML = '';
     
-    console.log(`Rendering ${lecture.questions.length} questions`);
-    
     lecture.questions.forEach((question, index) => {
-      console.log(`Rendering question ${index + 1}:`, question);
       const card = document.createElement('article');
       card.className = 'student-question-card';
       const heading = document.createElement('h3');
@@ -209,12 +198,10 @@
       card.appendChild(field);
       selectors.questionList.appendChild(card);
     });
-    
-    console.log('Questions rendered successfully');
   }
 
   function collectAnswers() {
-    if (!lecture || !lecture.questions) return [];
+    if (!lecture?.questions) return [];
     
     return lecture.questions.map((question) => {
       const fieldName = `question-${question.id}`;
@@ -393,15 +380,11 @@
         throw new Error('Lecture not found');
       }
 
-      console.log('Loaded lecture:', lecture);
-      console.log('Questions count:', lecture.questions?.length || 0);
-      console.log('Questions:', lecture.questions);
-
       await renderHeader();
       renderQuestions();
       
       // Check if questions were rendered
-      if (lecture.questions && lecture.questions.length === 0) {
+      if (lecture.questions?.length === 0) {
         console.warn('No questions found for this lecture');
         if (selectors.questionList) {
           selectors.questionList.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">No questions available for this lecture.</p>';

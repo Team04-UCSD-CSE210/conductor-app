@@ -5,6 +5,9 @@
 (function() {
   'use strict';
 
+  // Track all active picker instances
+  const allPickers = [];
+
   class TimePicker {
     constructor(inputElement) {
       this.input = inputElement;
@@ -15,6 +18,9 @@
       this.minutes = 0;
       this.is24Hour = false;
       this.ampm = 'AM'; // 'AM' or 'PM'
+      
+      // Register this instance
+      allPickers.push(this);
       
       this.init();
     }
@@ -53,8 +59,8 @@
       // Parse initial value
       if (this.input.value) {
         const [h, m] = this.input.value.split(':').map(Number);
-        const hour24 = h !== undefined && !isNaN(h) ? h : 12;
-        this.minutes = m !== undefined && !isNaN(m) ? m : 0;
+        const hour24 = h !== undefined && !Number.isNaN(h) ? h : 12;
+        this.minutes = m !== undefined && !Number.isNaN(m) ? m : 0;
         // Convert 24-hour to 12-hour format
         this.setHour24(hour24);
       } else {
@@ -174,7 +180,7 @@
       // Attach button events
       this.picker.querySelectorAll('[data-hour]').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          this.hours = parseInt(e.target.dataset.hour);
+          this.hours = Number.parseInt(e.target.dataset.hour, 10);
           this.updatePicker();
           this.updateValue();
         });
@@ -182,7 +188,7 @@
       
       this.picker.querySelectorAll('[data-minute]').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          this.minutes = parseInt(e.target.dataset.minute);
+          this.minutes = Number.parseInt(e.target.dataset.minute, 10);
           this.updatePicker();
           this.updateValue();
         });
@@ -246,12 +252,12 @@
     updatePicker() {
       // Update selected states
       this.picker.querySelectorAll('[data-hour]').forEach(btn => {
-        const hour = parseInt(btn.dataset.hour);
+          const hour = Number.parseInt(btn.dataset.hour, 10);
         btn.classList.toggle('selected', hour === this.hours);
       });
       
       this.picker.querySelectorAll('[data-minute]').forEach(btn => {
-        const minute = parseInt(btn.dataset.minute);
+          const minute = Number.parseInt(btn.dataset.minute, 10);
         btn.classList.toggle('selected', minute === this.minutes);
       });
       
@@ -296,18 +302,53 @@
 
     open() {
       if (this.isOpen) return;
+      
+      // Close all other pickers (both time and date pickers)
+      allPickers.forEach(picker => {
+        if (picker !== this && picker.isOpen) {
+          picker.close();
+        }
+      });
+      
+      // Also close any date pickers if they exist
+      if (window.closeDatePickers) {
+        window.closeDatePickers(this);
+      }
+      
       this.isOpen = true;
       this.picker.removeAttribute('hidden');
       this.displayButton.setAttribute('aria-expanded', 'true');
       this.displayButton.classList.add('active');
+      this.container.classList.add('active');
       
       // Ensure picker is built before scrolling
       if (this.picker.children.length === 0) {
         this.buildPicker();
       }
       
-      // Scroll selected buttons into view after opening
+      // Check if dropdown would overflow viewport and align accordingly
       setTimeout(() => {
+        const rect = this.picker.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        
+        // Reset positioning classes
+        this.picker.classList.remove('align-right', 'align-top-left');
+        
+        // Check if it's in the sidebar (meeting form)
+        const isInSidebar = this.container.closest('.attendance-sidebar');
+        
+        if (isInSidebar) {
+          // Always position above and to the left for sidebar
+          this.picker.classList.add('align-top-left');
+        } else {
+          // Standard positioning logic for other instances
+          // If dropdown extends beyond right edge, align it to the right
+          if (rect.right > viewportWidth) {
+            this.picker.classList.add('align-right');
+          }
+        }
+        
+        // Scroll selected buttons into view after opening
         const selectedHour = this.picker.querySelector('[data-hour].selected');
         const selectedMinute = this.picker.querySelector('[data-minute].selected');
         if (selectedHour) {
@@ -324,7 +365,7 @@
           const offset = buttonRect.top - containerRect.top - (containerRect.height / 2) + (buttonRect.height / 2);
           container.scrollTop += offset;
         }
-      }, 100);
+      }, 10);
     }
 
     close() {
@@ -333,6 +374,7 @@
       this.picker.setAttribute('hidden', 'true');
       this.displayButton.setAttribute('aria-expanded', 'false');
       this.displayButton.classList.remove('active');
+      this.container.classList.remove('active');
     }
 
     toggle() {
@@ -370,8 +412,8 @@
       this.input.addEventListener('change', () => {
         if (this.input.value) {
           const [h, m] = this.input.value.split(':').map(Number);
-          const hour24 = h !== undefined && !isNaN(h) ? h : 12;
-          this.minutes = m !== undefined && !isNaN(m) ? m : 0;
+          const hour24 = h !== undefined && !Number.isNaN(h) ? h : 12;
+          this.minutes = m !== undefined && !Number.isNaN(m) ? m : 0;
           this.setHour24(hour24);
           this.updateDisplay();
           // Only update picker if it's built and open (don't trigger if picker is closed)
@@ -385,7 +427,7 @@
       this.input.addEventListener('input', () => {
         if (this.input.value) {
           const [h, m] = this.input.value.split(':').map(Number);
-          if (h !== undefined && !isNaN(h) && m !== undefined && !isNaN(m)) {
+          if (h !== undefined && !Number.isNaN(h) && m !== undefined && !Number.isNaN(m)) {
             this.setHour24(h);
             this.minutes = m;
             this.updateDisplay();
@@ -411,6 +453,15 @@
   } else {
     initTimePickers();
   }
+
+  // Expose a function to close all time pickers (for date picker to call)
+  window.closeTimePickers = function(exceptPicker) {
+    allPickers.forEach(picker => {
+      if (picker !== exceptPicker && picker.isOpen) {
+        picker.close();
+      }
+    });
+  };
 
   // Export for manual initialization
   window.TimePicker = TimePicker;

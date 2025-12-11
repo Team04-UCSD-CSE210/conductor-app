@@ -8,26 +8,26 @@
     admin: [
       { href: "/admin-dashboard", text: "Admin Dashboard" },
       { href: "/instructor-dashboard", text: "Instructor View" },
-      { href: "/course-settings", text: "Course Settings" },
+      { href: "/course-settings", text: "Course Settings", icon: "/assets/settings.png" },
       {
         href: "/instructor-lectures",
         text: "Attendance",
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
-      { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" }
+      { href: "/roster", text: "Roster", icon: "/assets/roster.png" },
+      { href: "/class-directory", text: "Directory" }
     ],
     instructor: [
       { href: "/instructor-dashboard", text: "Dashboard" },
-      { href: "/course-settings", text: "Course Settings" },
+      { href: "/course-settings", text: "Course Settings", icon: "/assets/settings.png" },
       {
         href: "/instructor-lectures",
         text: "Attendance",
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
-      { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" },
-      { href: "/instructor-meetings", text: "Team Meetings" }
+      { href: "/roster", text: "Roster", icon: "/assets/roster.png" },
+      { href: "/class-directory", text: "Directory" },
+      { href: "/instructor-meetings", text: "Team Meetings", icon: "/assets/conversation.png" }
     ],
     ta: [
       { href: "/ta-dashboard", text: "Dashboard" },
@@ -36,40 +36,47 @@
         text: "Attendance",
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
-      { href: "/roster", text: "Roster" },
-      { href: "/class-directory", text: "Class Directory" }
+      { href: "/roster", text: "Roster", icon: "/assets/roster.png" },
+      { href: "/class-directory", text: "Directory" }
     ],
     teamLead: [
-      { href: "/team-lead-dashboard", text: "Dashboard" },
+      { 
+        href: "/student-dashboard", 
+        text: "Courses",
+        match: ["/student-dashboard", "/team-lead-dashboard"]
+      },
       {
         href: "/lecture-attendance-student",
         text: "Lectures",
         match: ["/lecture-attendance-student", "/student-lecture-response"]
       },
-      { href: "/meetings/team-lead", text: "Team Meetings" },
-      { href: "/class-directory", text: "Class Directory" },
-      {
-        href: "/work-journal",
-        text: "Work Journal",
-        match: ["/work-journal", "/lead-journal"]
-      },
-      { href: "/my-team", text: "My Team" }
-    ],
-    student: [
-      { href: "/student-dashboard", text: "Dashboard" },
-      {
-        href: "/lecture-attendance-student",
-        text: "Lectures",
-        match: ["/lecture-attendance-student", "/student-lecture-response"]
-      },
-      { href: "/meetings", text: "Meetings" },
-      { href: "/class-directory", text: "Class Directory" },
+      { href: "/meetings", text: "Meetings", icon: "/assets/conversation.png" },
+      { href: "/team-edit", text: "Edit Team", icon: "/assets/settings.png" },
       {
         href: "/work-journal",
         text: "Work Journal",
         match: ["/work-journal", "/student-work-journal", "/lead-journal"]
       },
-      { href: "/my-team", text: "My Team" }
+      { href: "/class-directory", text: "Directory" }
+    ],
+    student: [
+      { 
+        href: "/student-dashboard", 
+        text: "Courses",
+        match: ["/student-dashboard", "/team-lead-dashboard"]
+      },
+      {
+        href: "/lecture-attendance-student",
+        text: "Lectures",
+        match: ["/lecture-attendance-student", "/student-lecture-response"]
+      },
+      { href: "/meetings", text: "Meetings", icon: "/assets/conversation.png" },
+      {
+        href: "/work-journal",
+        text: "Work Journal",
+        match: ["/work-journal", "/student-work-journal", "/lead-journal"]
+      },
+      { href: "/class-directory", text: "Directory" }
     ]
   };
 
@@ -148,8 +155,11 @@
   const renderNav = (navEl, links) => {
     navEl.innerHTML = links
       .map(
-        (link) =>
-          `<a href="${link.href}" data-match='${JSON.stringify(link.match || [link.href])}'>${link.text}</a>`
+        (link) => {
+          const iconHtml = link.icon ? `<img src="${link.icon}" alt="${link.text}" class="nav-icon">` : '';
+          const hasIconClass = link.icon ? ' has-icon' : '';
+          return `<a href="${link.href}" data-match='${JSON.stringify(link.match || [link.href])}' class="${hasIconClass}">${iconHtml}${link.text}</a>`;
+        }
       )
       .join("");
 
@@ -163,7 +173,60 @@
     });
   };
 
+  // Ensure global sidebar elements exist (Main Menu header and colorblind toggle)
+  function ensureGlobalSidebarElements() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    const sidebarTitle = sidebar.querySelector('.sidebar-title');
+    if (!sidebarTitle) return;
+
+    // Ensure colorblind toggle exists
+    let colorblindToggle = document.getElementById('colorblindToggle');
+    if (!colorblindToggle) {
+      const toggleContainer = document.createElement('div');
+      toggleContainer.className = 'colorblind-toggle-container';
+      
+      const label = document.createElement('label');
+      label.className = 'colorblind-toggle-label';
+      
+      colorblindToggle = document.createElement('input');
+      colorblindToggle.type = 'checkbox';
+      colorblindToggle.id = 'colorblindToggle';
+      colorblindToggle.className = 'colorblind-toggle-input';
+      
+      const slider = document.createElement('span');
+      slider.className = 'colorblind-toggle-slider';
+      
+      const text = document.createElement('span');
+      text.className = 'colorblind-toggle-text';
+      text.textContent = 'Colorblind Mode';
+      
+      label.appendChild(colorblindToggle);
+      label.appendChild(slider);
+      label.appendChild(text);
+      toggleContainer.appendChild(label);
+      
+      // Insert right after the title
+      sidebarTitle.parentElement.insertBefore(toggleContainer, sidebarTitle.nextSibling);
+    }
+
+    // Ensure Main Menu header exists (before nav)
+    const navEl = sidebar.querySelector('nav');
+    if (navEl && !sidebar.querySelector('.main-menu-header')) {
+      const mainMenuHeader = document.createElement('div');
+      mainMenuHeader.className = 'main-menu-header';
+      mainMenuHeader.textContent = 'Main Menu';
+      
+      // Insert before the nav element
+      navEl.parentElement.insertBefore(mainMenuHeader, navEl);
+    }
+  }
+
   const init = async () => {
+    // Ensure global sidebar elements first
+    ensureGlobalSidebarElements();
+    
     const navEl = document.querySelector(".sidebar nav");
     if (!navEl) return;
 
@@ -191,18 +254,58 @@
       }
     }
 
-    // Debug: Log context to help troubleshoot
-    if (context) {
-      console.log('[sidebar-nav] Context received:', context);
-    }
-
     renderNav(navEl, links);
   };
 
+  // Hamburger menu toggle for mobile
+  function initHamburger() {
+    console.log("init hamburger called");
+    const hamburger = document.querySelector('.hamburger-menu');
+    const sidebar = document.querySelector('.sidebar');
+    
+    console.log('Hamburger found:', hamburger);
+    console.log('Sidebar found:', sidebar);
+    
+    if (!hamburger || !sidebar) {
+      console.log('Hamburger or sidebar not found, exiting');
+      return;
+    }
+
+    console.log('Setting up hamburger event listeners');
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('Hamburger clicked!');
+      const isExpanded = hamburger.getAttribute('aria-expanded') === 'true';
+      hamburger.setAttribute('aria-expanded', !isExpanded);
+      sidebar.classList.toggle('open');
+      console.log('Sidebar open class toggled, sidebar classes:', sidebar.classList);
+    });
+
+    // Close sidebar when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+        hamburger.setAttribute('aria-expanded', 'false');
+        sidebar.classList.remove('open');
+      }
+    });
+  }
+
+  // Run global sidebar elements setup immediately (doesn't depend on nav)
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", ensureGlobalSidebarElements);
+  } else {
+    ensureGlobalSidebarElements();
+  }
+
+  // Initialize navigation
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      init();
+      initHamburger();
+    });
   } else {
     init();
+    initHamburger();
   }
 })();
 

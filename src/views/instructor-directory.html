@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Conductor – Class Directory (Professors view)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../public/css/class-dir.css" />
+</head>
+<body class="app directory-profiles">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <header class="sidebar-header">
+      <img
+        class="sidebar-logo"
+        src="../assets/temp-logo.png"
+        alt="Conductor logo"
+      />
+      <span class="sidebar-app-name">Conductor</span>
+    </header>
+
+    <section aria-label="Main menu">
+      <p class="sidebar-section-label">Main menu</p>
+      <nav aria-label="Main menu navigation">
+        <ul class="sidebar-nav">
+          <li>
+            <a href="#" class="sidebar-link">
+              <img class="sidebar-icon" src="../assets/home.png" alt="" aria-hidden="true" />
+              <span>Courses</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-link">
+              <img class="sidebar-icon" src="../assets/online-education.png" alt="" aria-hidden="true" />
+              <span>Lectures</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-link">
+              <img class="sidebar-icon" src="../assets/talk.png" alt="" aria-hidden="true" />
+              <span>Meetings</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-link">
+              <img class="sidebar-icon" src="../assets/journal.png" alt="" aria-hidden="true" />
+              <span>Work Journal</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-link sidebar-link-active">
+              <img class="sidebar-icon" src="../assets/directory.png" alt="" aria-hidden="true" />
+              <span>Directory</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </section>
+
+    <footer class="sidebar-footer">
+      <span class="sidebar-footer-label">Signed in as</span>
+      <button type="button" class="sidebar-signout">Sign out</button>
+    </footer>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" aria-label="Instructor class directory">
+    <header class="page-header">
+      <section class="page-header-text">
+        <h1 class="page-header-eyebrow">CLASS DIRECTORY</h1>
+        <p class="page-header-subtitle">
+          Detailed contact and availability information for your instructors and teaching team.
+        </p>
+      </section>
+
+      <aside class="page-header-controls">
+        <section class="course-card" aria-label="Course info">
+          <p class="course-card-label">CSE 210</p>
+          <p class="course-card-name">Software Engineering</p>
+          <p class="course-card-desc">
+            Teaching team &amp; class roster for this course.
+          </p>
+        </section>
+
+        <section aria-label="Filter directory" class="filter">
+          <label class="filter-label" for="filter-select">Filter</label>
+          <select id="filter-select" class="filter-select">
+            <option selected>All sections</option>
+            <option>My section</option>
+            <option>Project team</option>
+          </select>
+        </section>
+      </aside>
+    </header>
+
+    <!-- DIRECTORY -->
+    <section class="directory" aria-label="Class directory">
+      <!-- ROLE TABS -->
+      <nav class="role-tabs" aria-label="Directory roles">
+        <button class="role-tab role-tab-active" type="button" data-role="professors">
+          Professors
+        </button>
+        <button class="role-tab" type="button" data-role="tas">
+          TAs
+        </button>
+        <button class="role-tab" type="button" data-role="tutors">
+          Tutors
+        </button>
+        <button class="role-tab" type="button" data-role="students">
+          Students
+        </button>
+        <button class="role-tab" type="button" data-role="teams">
+          Teams
+        </button>
+      </nav>
+
+      <!-- FULL-WIDTH LAYOUT -->
+      <section class="directory-layout">
+        <section class="directory-list">
+          <!-- PROFESSORS -->
+          <section class="role-panel" data-panel="professors">
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Professors</h2>
+                <p class="role-panel-subtitle">
+                  Your primary instructors for this course.
+                </p>
+              </section>
+              <label class="search" aria-label="Search professors">
+                <span class="visually-hidden">Search professors</span>
+                <input type="search" placeholder="Search professors…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <!-- Professor 1 -->
+              <article class="person-card">
+                <section class="person-identity">
+                  <!-- Clickable avatar with upload -->
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/prof-john-smith.jpg"
+                      alt="Dr. John Smith"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Dr. John Smith"
+                      hidden
+                    />
+                  </label>
+
+                  <header>
+                    <h3 class="person-name">Dr. John Smith</h3>
+                    <p class="person-role">Professor – Lecture lead</p>
+                  </header>
+                </section>
+
+                <!-- Hidden until “View profile” is clicked -->
+                <section class="person-info">
+                  <p><strong>Pronouns:</strong> he/him</p>
+                  <p><strong>Pronunciation:</strong> “JOHN SMITH”</p>
+
+                  <p><strong>Class / group chat:</strong> @cse210-instructors</p>
+                  <p>
+                    <strong>Contact:</strong>
+                    Email – jsmith@university.edu · Slack – <strong>@john-smith</strong>
+                    · Discord – <strong>jsmith#2100</strong>
+                  </p>
+                  <p><strong>Phone:</strong> (555) 123-4567</p>
+
+                  <p><strong>Availability (general):</strong> Weekdays 9:00–17:00 PT</p>
+                  <p>
+                    <strong>Availability (specific):</strong><br />
+                    Lectures – Mon/Wed 10:30–11:20 (CSE2 G01)<br />
+                    Office hours – Tue 15:00–17:00 (CSE 210 Lab / Zoom)<br />
+                    Group meetings – By appointment
+                  </p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Lecture lead</span>
+                    <span class="tag">Section A</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-secondary">Contact</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View profile"
+                  >
+                    View profile
+                  </button>
+                </section>
+              </article>
+
+              <!-- Professor 2 -->
+              <article class="person-card">
+                <section class="person-identity">
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/prof-jordan-lee.jpg"
+                      alt="Dr. Jordan Lee"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Dr. Jordan Lee"
+                      hidden
+                    />
+                  </label>
+
+                  <header>
+                    <h3 class="person-name">Dr. Jordan Lee</h3>
+                    <p class="person-role">Co-Instructor – Project mentor</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p><strong>Pronouns:</strong> she/they</p>
+                  <p><strong>Pronunciation:</strong> “JOR-dun LEE”</p>
+
+                  <p><strong>Class / group chat:</strong> @cse210-section-b</p>
+                  <p>
+                    <strong>Contact:</strong>
+                    Email – jlee@university.edu · Slack – <strong>@jordan</strong>
+                    · GitHub – <strong>@jordan-lee</strong>
+                  </p>
+                  <p><strong>Phone:</strong> (555) 987-6543</p>
+
+                  <p><strong>Availability (general):</strong> Mon–Thu 10:00–18:00 PT</p>
+                  <p>
+                    <strong>Availability (specific):</strong><br />
+                    Lectures – Tue/Thu 09:00–10:20 (CSE1 120)<br />
+                    Office hours – Wed 14:00–16:00 (CSE 210 Lab)<br />
+                    1:1s / project check-ins – By appointment
+                  </p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Project mentor</span>
+                    <span class="tag">Section B</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-secondary">Contact</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View profile"
+                  >
+                    View profile
+                  </button>
+                </section>
+              </article>
+            </section>
+          </section>
+
+          <!-- TAs -->
+          <section class="role-panel" data-panel="tas" hidden>
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Teaching Assistants</h2>
+                <p class="role-panel-subtitle">
+                  TAs supporting lectures, discussions, and grading.
+                </p>
+              </section>
+              <label class="search" aria-label="Search TAs">
+                <span class="visually-hidden">Search TAs</span>
+                <input type="search" placeholder="Search TAs…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/ta-casey-smith.jpg"
+                      alt="Casey Smith"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Casey Smith"
+                      hidden
+                    />
+                  </label>
+
+                  <header>
+                    <h3 class="person-name">Casey Smith</h3>
+                    <p class="person-role">Teaching Assistant</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p><strong>Pronouns:</strong> they/them</p>
+                  <p><strong>Pronunciation:</strong> “KAY-see SMITH”</p>
+
+                  <p><strong>Class / group chat:</strong> @cse210-ta-support</p>
+                  <p>
+                    <strong>Contact:</strong>
+                    Email – csmith@university.edu · Slack – <strong>@casey</strong>
+                  </p>
+                  <p><strong>Phone:</strong> (555) 222-3344</p>
+
+                  <p><strong>Availability (general):</strong> Mon–Thu 10:00–18:00 PT</p>
+                  <p>
+                    <strong>Availability (specific):</strong><br />
+                    Office hours – Thu 10:00–12:00 (CSE 210 Lab)<br />
+                    Lab support – Mon 14:00–16:00
+                  </p>
+
+                  <p><strong>Teams:</strong> Team Harmony, Team Delta</p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Grading</span>
+                    <span class="tag">Section A</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-secondary">Contact TA</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View profile"
+                  >
+                    View profile
+                  </button>
+                </section>
+              </article>
+            </section>
+          </section>
+
+          <!-- Tutors -->
+          <section class="role-panel" data-panel="tutors" hidden>
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Tutors</h2>
+                <p class="role-panel-subtitle">
+                  Peer tutors available for additional support.
+                </p>
+              </section>
+              <label class="search" aria-label="Search tutors">
+                <span class="visually-hidden">Search tutors</span>
+                <input type="search" placeholder="Search tutors…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/tutor-riley-martinez.jpg"
+                      alt="Riley Martinez"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Riley Martinez"
+                      hidden
+                    />
+                  </label>
+
+                  <header>
+                    <h3 class="person-name">Riley Martinez</h3>
+                    <p class="person-role">Tutor – Evening sessions</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p><strong>Pronouns:</strong> he/they</p>
+                  <p><strong>Pronunciation:</strong> “RYE-lee MAR-tee-nez”</p>
+
+                  <p><strong>Contact:</strong> Email – rmartinez@university.edu</p>
+                  <p><strong>Times:</strong> Tue &amp; Thu 7:00–9:00 PM</p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Data structures</span>
+                    <span class="tag">Project help</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-secondary">Message tutor</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View profile"
+                  >
+                    View profile
+                  </button>
+                </section>
+              </article>
+            </section>
+          </section>
+
+          <!-- STUDENTS -->
+          <section class="role-panel" data-panel="students" hidden>
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Students</h2>
+                <p class="role-panel-subtitle">
+                  Students enrolled in this course.
+                </p>
+              </section>
+              <label class="search" aria-label="Search students">
+                <span class="visually-hidden">Search students</span>
+                <input type="search" placeholder="Search students…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/student-alex-kim.jpg"
+                      alt="Alex Kim"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload profile photo for Alex Kim"
+                      hidden
+                    />
+                  </label>
+
+                  <header>
+                    <h3 class="person-name">Alex Kim</h3>
+                    <p class="person-role">Student – Team 3 (Team leader)</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p><strong>Pronouns:</strong> they/them</p>
+                  <p><strong>Pronunciation:</strong> “AL-ex KIM”</p>
+
+                  <p><strong>Leader or not:</strong> Team leader</p>
+                  <p><strong>Class / group chat:</strong> #team-3</p>
+                  <p><strong>Outside socials:</strong> Discord – <strong>alexk#0312</strong></p>
+                  <p><strong>Phone:</strong> (555) 555-0101</p>
+                  <p><strong>Email:</strong> akim@university.edu</p>
+
+                  <p><strong>Availability (general):</strong> Evenings and weekends (PST)</p>
+                  <p>
+                    <strong>Availability (specific):</strong><br />
+                    Lectures – Mon/Wed 10:30–11:20 (CSE2 G01)<br />
+                    Team sync – Tue 18:00–19:00 PT<br />
+                    Office hours – Thu 13:00–15:00 PT
+                  </p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Team 3</span>
+                    <span class="tag">Backend</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-secondary">Message</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View profile"
+                  >
+                    View profile
+                  </button>
+                </section>
+              </article>
+            </section>
+          </section>
+
+          <!-- TEAMS (formerly Groups) -->
+          <section class="role-panel" data-panel="teams" hidden>
+            <header class="role-panel-header">
+              <section class="role-panel-heading">
+                <h2 class="role-panel-title">Project teams</h2>
+                <p class="role-panel-subtitle">
+                  Teams for the course project.
+                </p>
+              </section>
+              <label class="search" aria-label="Search teams">
+                <span class="visually-hidden">Search teams</span>
+                <input type="search" placeholder="Search teams…" />
+              </label>
+            </header>
+
+            <section class="card-list">
+              <article class="person-card">
+                <section class="person-identity">
+                  <label class="avatar-upload-label">
+                    <img
+                      class="person-avatar avatar-preview"
+                      src="../assets/team-harmony-logo.png"
+                      alt="Team Harmony logo"
+                    />
+                    <input
+                      type="file"
+                      class="avatar-input"
+                      accept="image/*"
+                      aria-label="Upload logo for Team Harmony"
+                      hidden
+                    />
+                  </label>
+
+                  <header>
+                    <h3 class="person-name">Team Harmony</h3>
+                    <p class="person-role">Project team</p>
+                  </header>
+                </section>
+
+                <section class="person-info">
+                  <p><strong>Mantra:</strong> “Build together, ship often.”</p>
+
+                  <p>
+                    <strong>Links:</strong><br />
+                    Slack – <strong>#team-harmony</strong><br />
+                    Repo – <strong>github.com/cse210/team-harmony</strong><br />
+                    Workspace – MM / project dashboard
+                  </p>
+
+                  <p>
+                    <strong>Member list:</strong><br />
+                    Alex Kim (leader), Jordan Chen, Priya Patel, Sam Rivera,
+                    Taylor Nguyen
+                  </p>
+
+                  <p class="person-tags">
+                    <span class="tag tag-accent">Backend focus</span>
+                    <span class="tag">Section A</span>
+                  </p>
+                </section>
+
+                <section class="person-actions">
+                  <button type="button" class="btn btn-secondary">Open workspace</button>
+                  <button
+                    type="button"
+                    class="btn btn-primary profile-toggle"
+                    data-profile-label="View team"
+                  >
+                    View team
+                  </button>
+                </section>
+              </article>
+            </section>
+          </section>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <!-- JS: tabs + profile toggles + avatar upload preview -->
+  <script>
+    // Role tabs
+    const tabs = document.querySelectorAll(".role-tab");
+    const panels = document.querySelectorAll(".role-panel");
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const role = tab.dataset.role;
+
+        tabs.forEach((t) =>
+          t.classList.toggle("role-tab-active", t === tab)
+        );
+        panels.forEach((panel) => {
+          panel.hidden = panel.dataset.panel !== role;
+        });
+      });
+    });
+
+    // Show/hide profile details inside each card
+    const profileButtons = document.querySelectorAll(".profile-toggle");
+
+    profileButtons.forEach((button) => {
+      const baseLabel = button.dataset.profileLabel || "View profile";
+      const card = button.closest(".person-card");
+
+      // Start collapsed by default
+      card.classList.remove("profile-open");
+
+      // Ensure initial label
+      button.textContent = baseLabel;
+
+      button.addEventListener("click", () => {
+        const isOpen = card.classList.toggle("profile-open");
+        button.textContent = isOpen ? "Hide profile" : baseLabel;
+      });
+    });
+
+    // Avatar upload preview for each card
+    const avatarInputs = document.querySelectorAll(".avatar-input");
+
+    avatarInputs.forEach((input) => {
+      const label = input.closest(".avatar-upload-label");
+      const img = label.querySelector(".avatar-preview");
+
+      input.addEventListener("change", () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  </script>
+</body>
+</html>

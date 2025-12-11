@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { pool } from '../db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -92,7 +92,7 @@ export class DatabaseInitializer {
         const match = file.match(/^(\d+)-(.+)\.sql$/);
         return {
           file,
-          number: parseInt(match[1], 10),
+          number: Number.parseInt(match[1], 10),
           description: match[2].replace(/-/g, ' '),
         };
       })
@@ -167,9 +167,9 @@ export class DatabaseInitializer {
       `);
 
       const requiredColumns = ['id', 'email', 'name', 'primary_role', 'status', 'created_at', 'updated_at'];
-      const existingColumns = columnsResult.rows.map((row) => row.column_name);
+      const existingColumns = new Set(columnsResult.rows.map((row) => row.column_name));
 
-      const missingColumns = requiredColumns.filter((col) => !existingColumns.includes(col));
+      const missingColumns = requiredColumns.filter((col) => !existingColumns.has(col));
       if (missingColumns.length > 0) {
         console.log(`[database] Missing columns: ${missingColumns.join(', ')}`);
         return false;
@@ -278,6 +278,7 @@ export class DatabaseInitializer {
         DROP TABLE IF EXISTS auth_logs CASCADE;
         DROP TABLE IF EXISTS access_requests CASCADE;
         DROP TABLE IF EXISTS whitelist CASCADE;
+        DROP TABLE IF EXISTS dashboard_todos CASCADE;
         DROP TABLE IF EXISTS users CASCADE;
         
         -- Drop permission tables (from migration 04)

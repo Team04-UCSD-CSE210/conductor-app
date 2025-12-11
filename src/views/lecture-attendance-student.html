@@ -23,11 +23,10 @@
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
-    <p class="sidebar-user" id="sidebarUser">
-      <span class="sidebar-user-name">Loading...</span><br>
-      <span class="sidebar-user-role">Loading...</span>
-    </p>
+    
+    <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
+    
     <footer>
       <a href="/" class="btn btn-ghost">Sign out</a>
     </footer>
@@ -39,8 +38,8 @@
         <div class="attendance-title">
           <div>
             <p class="eyebrow">Lecture Attendance</p>
-            <h2 id="course-title">Loading...</h2>
-            <p class="subtitle">Scan the list below to review your status or jump into an open lecture to submit responses.</p>
+            <h2 id="header-title">Loading...</h2>
+            <p class="header-subtitle">Scan the list below to review your status or jump into an open lecture to submit responses.</p>
           </div>
           <div class="attendance-filter">
             <label for="lecture-filter">Filter</label>
@@ -77,7 +76,9 @@
 
   <script src="/js/inactivity-timeout.js" defer></script>
   <script src="/js/lecture-data.service.js" defer></script>
+  <script src="/js/palette-loader.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/colorblind-mode.js" defer></script>
   <script src="/js/lecture-attendance-student.js" defer></script>
 </body>
 </html>

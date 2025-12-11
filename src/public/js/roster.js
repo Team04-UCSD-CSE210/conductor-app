@@ -111,7 +111,7 @@ const debounce = (fn, wait = 250) => {
   let timeout;
   return (...args) => {
     clearTimeout(timeout);
-    timeout = setTimeout(() => fn.apply(null, args), wait);
+    timeout = setTimeout(() => fn(...args), wait);
   };
 };
 
@@ -363,7 +363,7 @@ const renderInstructor = () => {
   const instructorDisplay = document.getElementById('instructorDisplay');
   if (!instructorDisplay) return;
   
-  if (state.instructor && state.instructor.name) {
+  if (state.instructor?.name) {
     instructorDisplay.textContent = `Instructor: ${state.instructor.name}`;
     instructorDisplay.style.display = 'inline';
   } else {
@@ -398,8 +398,8 @@ const updateFilterCount = () => {
   
   if (hasFilters && elements.clearFilters) {
     elements.clearFilters.style.display = 'inline-block';
-  } else {
-    if (elements.clearFilters) elements.clearFilters.style.display = 'none';
+  } else if (elements.clearFilters) {
+    elements.clearFilters.style.display = 'none';
   }
 };
 
@@ -586,15 +586,20 @@ const renderRoster = () => {
     
     return `
       <tr data-enrollment-id="${entry.enrollment_id}" ${isSelected ? 'class="row-selected"' : ''}>
-        ${canSelect ? `<td class="checkbox-cell">
-          <input type="checkbox" class="row-checkbox" data-enrollment-id="${entry.enrollment_id}" data-user-id="${entry.user_id}" data-email="${entry.user?.email || ''}" data-name="${entry.user?.name || 'Unknown'}" ${isSelected ? 'checked' : ''} aria-label="Select ${entry.user?.name || 'Unknown'}">
-        </td>` : ''}
+        ${canSelect ? (() => {
+          const checkedAttr = isSelected ? 'checked' : '';
+          const userName = entry.user?.name || 'Unknown';
+          const userEmail = entry.user?.email || '';
+          return `<td class="checkbox-cell">
+          <input type="checkbox" class="row-checkbox" data-enrollment-id="${entry.enrollment_id}" data-user-id="${entry.user_id}" data-email="${userEmail}" data-name="${userName}" ${checkedAttr} aria-label="Select ${userName}">
+        </td>`;
+        })() : ''}
         <td>
           <div class="name-cell">
             <div class="avatar" aria-hidden="true">${initials}</div>
             <div class="name-info">
               <div class="person-name">${entry.user?.name || 'Unknown'}</div>
-              <div class="person-email">${entry.user?.email || ''}</div>
+              ${entry.user?.email ? `<div class="person-email"><a href="mailto:${entry.user.email}" class="clickable-link">${entry.user.email}</a></div>` : '<div class="person-email"></div>'}
             </div>
           </div>
         </td>
@@ -618,10 +623,13 @@ const renderRoster = () => {
         </td>
         <td>
           <div class="team-cell">
-            ${entry.user?.team_name ? `
+            ${entry.user?.team_name ? (() => {
+              const leadMeta = entry.user?.team_lead_name && !isTeamLead ? `<div class="team-lead-meta">Lead: ${teamLead}</div>` : '';
+              return `
               <div class="team-name">${teamDisplay}</div>
-              ${entry.user?.team_lead_name && !isTeamLead ? `<div class="team-lead-meta">Lead: ${teamLead}</div>` : ''}
-            ` : teamDisplay}
+              ${leadMeta}
+            `;
+            })() : teamDisplay}
           </div>
         </td>
         <td class="actions-cell">
@@ -1025,7 +1033,7 @@ const exportRoster = async () => {
       link.download = `roster-${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      link.remove();
     } else {
       const json = await response.json();
       const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
@@ -1034,7 +1042,7 @@ const exportRoster = async () => {
       link.download = `roster-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      link.remove();
     }
     showToast(`Roster exported as ${format.toUpperCase()}`);
   } catch (error) {
@@ -1337,32 +1345,6 @@ const init = async () => {
       console.error('Could not find activeOfferingName element. Check HTML.');
       return;
     }
-  }
-  
-  // Hamburger menu toggle
-  const hamburger = document.querySelector('.hamburger-menu');
-  const sidebar = document.querySelector('.sidebar');
-  const body = document.body;
-  
-  if (hamburger && sidebar) {
-    hamburger.addEventListener('click', () => {
-      const isExpanded = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', String(!isExpanded));
-      sidebar.classList.toggle('open');
-      body.classList.toggle('menu-open');
-    });
-    
-    // Close menu when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 768 &&
-          sidebar.classList.contains('open') &&
-          !sidebar.contains(e.target) &&
-          !hamburger.contains(e.target)) {
-        hamburger.setAttribute('aria-expanded', 'false');
-        sidebar.classList.remove('open');
-        body.classList.remove('menu-open');
-      }
-    });
   }
   
   bindEvents();

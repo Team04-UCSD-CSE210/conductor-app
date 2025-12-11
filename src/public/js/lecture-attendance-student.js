@@ -22,7 +22,7 @@
     const end = new Date(endIso);
       
       // Validate dates
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -48,7 +48,10 @@
   function buildStatusBadge(status) {
     const badge = document.createElement('span');
     badge.classList.add('lecture-badge');
-    const statusLabel = status === 'open' ? 'Needs response' : status;
+    let statusLabel = status;
+    if (status === 'open') {
+      statusLabel = 'Needs response';
+    }
     badge.textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
     badge.classList.add(status === 'present' ? 'present' : status === 'absent' ? 'absent' : 'present');
     if (status === 'absent') {
@@ -133,8 +136,9 @@
     actions.appendChild(actionButton);
 
     meta.append(sessionStatus, actions);
-    info.append(details, meta);
+    info.appendChild(details);
     row.appendChild(info);
+    row.appendChild(meta);
 
     return row;
   }
@@ -144,10 +148,10 @@
     
     try {
       const stats = await window.LectureService.getStudentStatistics?.(state.offeringId);
-      if (stats && stats.attendance_percentage !== undefined) {
+      if (stats?.attendance_percentage !== undefined) {
         // Use attendance_percentage from backend (matches SQL column name)
         selectors.attendancePercentage.textContent = `${Math.round(stats.attendance_percentage)}%`;
-      } else if (stats && stats.attendance_percent !== undefined) {
+      } else if (stats?.attendance_percent !== undefined) {
         // Fallback to attendance_percent if attendance_percentage not available
         selectors.attendancePercentage.textContent = `${Math.round(stats.attendance_percent)}%`;
       } else {
@@ -205,7 +209,7 @@
   }
 
   async function updateCourseTitle() {
-    const courseTitleEl = document.getElementById('course-title');
+    const courseTitleEl = document.getElementById('header-title');
     if (!courseTitleEl || !state.offeringId) return;
     
     try {
@@ -277,31 +281,6 @@
     });
   }
 
-  function initHamburger() {
-    const hamburger = document.querySelector('.hamburger-menu');
-    const sidebar = document.querySelector('.sidebar');
-    const body = document.body;
-    if (!hamburger || !sidebar) return;
-
-    hamburger.addEventListener('click', () => {
-      const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', String(!isOpen));
-      sidebar.classList.toggle('open');
-      body.classList.toggle('menu-open');
-    });
-
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 768 &&
-          sidebar.classList.contains('open') &&
-          !sidebar.contains(e.target) &&
-          !hamburger.contains(e.target)) {
-        hamburger.setAttribute('aria-expanded', 'false');
-        sidebar.classList.remove('open');
-        body.classList.remove('menu-open');
-      }
-    });
-  }
-
   async function showAccessCodeModal(lecture) {
     const isOpenSession = lecture.sessionState === 'open';
     const modalTitle = isOpenSession ? 'Record Attendance' : 'View Responses';
@@ -344,11 +323,9 @@
     // Function to check code and check in
     const checkCodeAndCheckIn = async () => {
       const code = inputs.map(input => input.value.trim().toUpperCase()).join('');
-      console.log('Checking code:', code, 'Length:', code.length);
       
       // Validate: 6 alphanumeric characters (A-Z, 0-9)
       if (code.length !== 6 || !/^[A-Z0-9]{6}$/.test(code)) {
-        console.log('Code validation failed:', code);
         return;
       }
       
@@ -360,15 +337,13 @@
       });
       
       try {
-        console.log('Verifying access code...');
           // Verify code first
-          const verification = await window.LectureService.verifyAccessCode(code);
+          const verification = await window.LectureService?.verifyAccessCode(code);
         console.log('Verification result:', verification);
           
-        if (!verification || !verification.valid) {
+        if (!verification?.valid) {
             // Code is incorrect or session is closed - reset and show error
           const errorMsg = verification?.message || 'Incorrect access code. Please try again.';
-          console.log('Code invalid:', errorMsg);
           errorDiv.textContent = errorMsg;
             errorDiv.style.display = 'block';
           errorDiv.classList.add('show');
@@ -384,10 +359,8 @@
           }
 
           // Code is correct and session is open - check in with access code
-        console.log('Code valid, checking in...');
           try {
             await window.LectureService.checkIn(code, []);
-          console.log('Check-in successful, redirecting...');
             
             // Successfully checked in - redirect to response page
             window.location.href = `/student-lecture-response?sessionId=${lecture.id}`;
@@ -659,7 +632,6 @@
   }
 
   function init() {
-    initHamburger();
     initFilter();
     initContactButtons();
     hydrateStudentView();

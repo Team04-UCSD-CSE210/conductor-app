@@ -5,6 +5,9 @@
 (function() {
   'use strict';
 
+  // Track all active picker instances
+  const allDatePickers = [];
+
   class DatePicker {
     constructor(inputElement) {
       this.input = inputElement;
@@ -14,6 +17,9 @@
       this.currentDate = new Date();
       this.selectedDate = null;
       
+      // Register this instance
+      allDatePickers.push(this);
+      
       this.init();
     }
 
@@ -21,7 +27,7 @@
       // Parse initial value
       if (this.input.value) {
         const date = new Date(this.input.value + 'T00:00:00');
-        if (!isNaN(date.getTime())) {
+        if (!Number.isNaN(date.getTime())) {
           this.selectedDate = date;
           this.currentDate = new Date(date);
         } else {
@@ -251,18 +257,52 @@
 
     open() {
       if (this.isOpen) return;
+      
+      // Close all other date pickers
+      allDatePickers.forEach(picker => {
+        if (picker !== this && picker.isOpen) {
+          picker.close();
+        }
+      });
+      
+      // Also close any time pickers if they exist
+      if (window.closeTimePickers) {
+        window.closeTimePickers(this);
+      }
+      
       this.isOpen = true;
       this.picker.removeAttribute('hidden');
       this.displayButton.setAttribute('aria-expanded', 'true');
       this.displayButton.classList.add('active');
       
-      // Scroll selected day into view
+      // Check if dropdown would overflow viewport and align accordingly
       setTimeout(() => {
+        const rect = this.picker.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        
+        // Reset positioning classes
+        this.picker.classList.remove('align-right', 'align-top-left');
+        
+        // Check if it's in the sidebar (meeting form)
+        const isInSidebar = this.container.closest('.attendance-sidebar');
+        
+        if (isInSidebar) {
+          // Always position above and to the left for sidebar
+          this.picker.classList.add('align-top-left');
+        } else {
+          // Standard positioning logic for other instances
+          // If dropdown extends beyond right edge, align it to the right
+          if (rect.right > viewportWidth) {
+            this.picker.classList.add('align-right');
+          }
+        }
+        
+        // Scroll selected day into view
         const selectedDay = this.picker.querySelector('.date-picker-day.selected');
         if (selectedDay) {
           selectedDay.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
-      }, 100);
+      }, 10);
     }
 
     close() {
@@ -308,7 +348,7 @@
       this.input.addEventListener('change', () => {
         if (this.input.value) {
           const date = new Date(this.input.value + 'T00:00:00');
-          if (!isNaN(date.getTime())) {
+          if (!Number.isNaN(date.getTime())) {
             this.selectedDate = date;
             this.currentDate = new Date(date);
             this.updateDisplay();
@@ -335,6 +375,15 @@
   } else {
     initDatePickers();
   }
+
+  // Expose a function to close all date pickers (for time picker to call)
+  window.closeDatePickers = function(exceptPicker) {
+    allDatePickers.forEach(picker => {
+      if (picker !== exceptPicker && picker.isOpen) {
+        picker.close();
+      }
+    });
+  };
 
   // Export for manual initialization
   window.DatePicker = DatePicker;

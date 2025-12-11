@@ -9,7 +9,22 @@ import { pool } from "../db.js";
  */
 export async function authenticate(req, res, next) {
   try {
-    if (!(req.isAuthenticated && req.isAuthenticated() && req.user)) {
+    // TEST MODE: Bypass authentication for load testing
+    if (process.env.TEST_MODE === 'true' || process.env.BYPASS_AUTH === 'true') {
+      req.user = {
+        emails: [{ value: 'admin@ucsd.edu' }]
+      };
+      req.currentUser = {
+        id: '963f7bb3-438d-4dea-ae8c-995e23aecf5c',
+        email: 'admin@ucsd.edu',
+        name: 'System Administrator',
+        primary_role: 'admin',
+        status: 'active'
+      };
+      return next();
+    }
+
+    if (!(req.isAuthenticated?.() && req.user)) {
       return res.status(401).json({
         error: "Unauthorized",
         message: "Authentication required. Please log in via OAuth.",
@@ -86,9 +101,9 @@ async function getAuthContext(req, scope) {
       const rawOfferingId = 
         params.offeringId ?? 
         params.courseId ?? 
-        (body && body.offering_id) ??
-        (body && body.offeringId) ?? 
-        (body && body.courseId) ?? 
+        body?.offering_id ??
+        body?.offeringId ?? 
+        body?.courseId ?? 
         query.offering_id ?? 
         null;
       
@@ -98,10 +113,6 @@ async function getAuthContext(req, scope) {
           offeringId = rawOfferingId;
         } else {
           console.error('[PermissionMiddleware] Invalid offeringId format (expected UUID):', rawOfferingId);
-          // If it's not a UUID, try to look it up by code/name
-          // This handles cases where someone might pass "CSE 210" instead of UUID
-          // But for now, we'll just log and return null to trigger active offering lookup
-          offeringId = null;
         }
       }
     }

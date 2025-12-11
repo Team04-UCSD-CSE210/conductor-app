@@ -1,0 +1,311 @@
+/* Styles moved from meeting-attendance-team-lead.html */
+.flip-card {
+  perspective: 1000px;
+  min-height: 200px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+flip-card-front,
+flip-card-back {
+  position: absolute;
+  width: 100%;
+  backface-visibility: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
+.flip-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.flip-button:hover {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    backface-visibility: hidden;
+}
+
+.member-attendance-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--gray-50);
+    border-radius: 6px;
+    border-left: 3px solid var(--teal-500);
+}
+
+.member-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.member-percentage {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--teal-600);
+}
+
+.badge-container {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.lecture-item {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.lecture-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.lecture-info > div:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 150px;
+    overflow: hidden;
+}
+
+.lecture-number {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+.lecture-actions {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.team-lead-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  color: var(--gray-900, #111827);
+}
+
+.team-lead-header h3 {
+  margin: 0;
+  text-align: center;
+}
+
+.quick-setup {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+
+.create-meeting-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.help-box.team-lead-card {
+  max-width: 420px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--emerald-200, #a7f3d0);
+  overflow: visible;
+}
+
+.meeting-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.form-field input[type="time"] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.form-field {
+  overflow: visible;
+  position: relative;
+  z-index: 10003;
+}
+
+.attendance-sidebar {
+  max-width: 300px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10002;
+  overflow: visible !important;
+}
+
+/* Create Meeting Button - Teal background */
+#create-meeting-btn.btn-primary {
+  background: var(--teal-600, #0d9488);
+  color: white;
+  border: none;
+}
+
+#create-meeting-btn.btn-primary:hover:not(:disabled) {
+  background: var(--teal-700, #0f766e);
+  color: white;
+}
+
+.btn-delete {
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+@media (width <= 1100px) {
+  .attendance-layout {
+    max-width: 100%;
+    overflow: hidden auto;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .attendance-content {
+    max-width: 100%;
+    overflow-x: hidden;
+    order: 1;
+    flex: none;
+  }
+
+  .attendance-sidebar {
+    width: 100%;
+    max-width: 100%;
+    order: 2;
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .attendance-sidebar > * {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .help-box.team-lead-card {
+    max-width: 100%;
+  }
+
+  .stats-box {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (width > 600px) {
+  .lecture-info {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+  }
+
+  .lecture-info > div:nth-child(2) {
+    min-width: 200px;
+  }
+
+  .lecture-actions {
+    margin-left: auto;
+    width: auto;
+  }
+
+  .badge-container {
+    flex-direction: row;
+    width: auto;
+  }
+}
+
+@media (width <= 600px) {
+  .help-box.team-lead-card {
+    max-width: 100%;
+    padding: 0.5rem;
+  }
+
+  .meeting-time-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .lecture-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .lecture-info > div {
+    align-items: center;
+  }
+
+  .lecture-actions {
+    justify-content: center;
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .badge-container {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+/* 
+@media (width <= 900px) {
+  .attendance-sidebar {
+    max-width: 100%;
+    padding: 0.5rem;
+  }
+} */

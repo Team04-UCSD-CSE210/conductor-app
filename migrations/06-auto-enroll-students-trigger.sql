@@ -10,9 +10,11 @@ CREATE OR REPLACE FUNCTION auto_enroll_student()
 RETURNS TRIGGER AS $$
 DECLARE
     active_offering_id UUID;
+    role_student_user CONSTANT user_role_enum := 'student'::user_role_enum;
+    role_student_enroll CONSTANT enrollment_role_enum := 'student'::enrollment_role_enum;
+    status_enrolled CONSTANT enrollment_status_enum := 'enrolled'::enrollment_status_enum;
 BEGIN
-    -- Only auto-enroll if user is a student
-    IF NEW.primary_role = 'student'::user_role_enum AND NEW.deleted_at IS NULL THEN
+    IF NEW.primary_role = role_student_user AND NEW.deleted_at IS NULL THEN
         -- Get the active course offering
         SELECT id INTO active_offering_id
         FROM course_offerings
@@ -26,8 +28,8 @@ BEGIN
             VALUES (
                 active_offering_id,
                 NEW.id,
-                'student'::enrollment_role_enum,
-                'enrolled'::enrollment_status_enum,
+                role_student_enroll,
+                status_enrolled,
                 CURRENT_DATE
             )
             ON CONFLICT (offering_id, user_id) DO NOTHING;
@@ -53,10 +55,12 @@ CREATE TRIGGER trigger_auto_enroll_student
 -- ============================================
 CREATE OR REPLACE FUNCTION auto_whitelist_extension_student()
 RETURNS TRIGGER AS $$
+DECLARE
+    inst_extension CONSTANT institution_type_enum := 'extension'::institution_type_enum;
+    role_student_user CONSTANT user_role_enum := 'student'::user_role_enum;
 BEGIN
-    -- Auto-whitelist extension students (non-UCSD emails)
-    IF NEW.institution_type = 'extension'::institution_type_enum 
-       AND NEW.primary_role = 'student'::user_role_enum 
+    IF NEW.institution_type = inst_extension 
+       AND NEW.primary_role = role_student_user 
        AND NEW.deleted_at IS NULL THEN
         INSERT INTO whitelist (email, approved_by, approved_at)
         VALUES (NEW.email, 'system', NOW())

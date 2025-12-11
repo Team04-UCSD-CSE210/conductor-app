@@ -2,8 +2,49 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import { PermissionService } from '../services/permission-service.js';
+import validator from 'validator';
+import multer from 'multer';
+import path from 'node:path';
+import fs from 'node:fs/promises';
 
 const router = Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: async function (req, file, cb) {
+    const uploadDir = path.join(process.cwd(), 'src/assets/team-logos');
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error);
+    }
+  },
+  filename: function (req, file, cb) {
+    let teamId = req.params.teamId;
+    if (!validator.isUUID(teamId)) {
+      teamId = 'invalid';
+    }
+    const sanitizedTeamId = teamId.replace(/[^a-zA-Z0-9-]/g, '');
+    const ext = path.extname(file.originalname) || '';
+    const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, '');
+    cb(null, `team-${sanitizedTeamId}-${Date.now()}${safeExt}`);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 /**
  * Helper: load team with offering_id
@@ -25,46 +66,28 @@ async function getTeamWithOffering(teamId) {
  */
 router.get('/my-team', ensureAuthenticated, async (req, res) => {
   try {
-    const { offering_id } = req.query;
-    if (!offering_id) {
-      return res
-        .status(400)
-        .json({ error: 'offering_id query parameter is required' });
-    }
-
     const userId = req.currentUser.id;
 
-    // Find team where user is either leader or member
-    // Use LEFT JOIN to include teams where user is leader but not in team_members
-    // Prioritize teams where user is the leader
     const result = await pool.query(
       `SELECT 
-        t.id,
-        t.name,
-        t.team_number,
-        t.leader_id,
-        t.status,
-        t.formed_at,
-        t.created_at,
-        u.name as leader_name,
-        u.email as leader_email,
-        tm.role as user_role,
-        CASE WHEN t.leader_id = $1 THEN 1 ELSE 2 END as priority
-      FROM team t
-      LEFT JOIN users u ON t.leader_id = u.id
-      LEFT JOIN team_members tm 
-        ON t.id = tm.team_id 
-        AND tm.user_id = $1 
-        AND tm.left_at IS NULL
-      WHERE t.offering_id = $2
-        AND (tm.user_id = $1 OR t.leader_id = $1)
-      ORDER BY priority, t.team_number
+        id,
+        name,
+        team_number,
+        leader_id,
+        status,
+        mantra,
+        links,
+        logo_url,
+        created_at
+      FROM team
+      WHERE leader_id = $1
+      ORDER BY team_number
       LIMIT 1`,
-      [userId, offering_id]
+      [userId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User is not assigned to a team in this offering' });
+      return res.status(404).json({ error: 'User is not assigned to a team' });
     }
 
     res.json({ team: result.rows[0] });
@@ -284,30 +307,31 @@ router.post('/', ensureAuthenticated, async (req, res) => {
 /**
  * Update team
  * PUT /api/teams/:teamId
- * Body: { name, team_number, leader_id, status }
+ * Body: { name, team_number, leader_id, status, mantra, links } + optional logo file
  * Access:
  *   - team.manage for the offering (Instructor/TA/Admin), OR
  *   - team.manage at team scope (team lead)
  */
-router.put('/:teamId', ensureAuthenticated, async (req, res) => {
+router.put('/:teamId', ensureAuthenticated, upload.single('logo'), async (req, res) => {
   try {
     const { teamId } = req.params;
     const userId = req.currentUser.id;
-    const { name, team_number, leader_id, status } = req.body;
+    const { name, mantra, links } = req.body;
 
-    const team = await getTeamWithOffering(teamId);
-    if (!team) {
+    // Check if user is the leader of this team (simplified permission check)
+    const { rows: teamRows } = await pool.query(
+      'SELECT * FROM team WHERE id = $1',
+      [teamId]
+    );
+
+    if (teamRows.length === 0) {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    const offeringId = team.offering_id;
+    const team = teamRows[0];
 
-    const [canManageCourseTeam, canManageTeamRole] = await Promise.all([
-      PermissionService.hasPermission(userId, 'team.manage', offeringId, null),
-      PermissionService.hasPermission(userId, 'team.manage', null, teamId),
-    ]);
-
-    if (!canManageCourseTeam && !canManageTeamRole) {
+    // Only allow team leader or admin to edit
+    if (team.leader_id !== userId && req.currentUser.user_type !== 'admin') {
       return res.status(403).json({ error: 'forbidden' });
     }
 
@@ -319,25 +343,25 @@ router.put('/:teamId', ensureAuthenticated, async (req, res) => {
       updates.push(`name = $${paramCount++}`);
       values.push(name);
     }
-    if (team_number !== undefined) {
-      updates.push(`team_number = $${paramCount++}`);
-      values.push(team_number);
+    if (mantra !== undefined) {
+      updates.push(`mantra = $${paramCount++}`);
+      values.push(mantra);
     }
-    if (leader_id !== undefined) {
-      updates.push(`leader_id = $${paramCount++}`);
-      values.push(leader_id);
+    if (links !== undefined) {
+      updates.push(`links = $${paramCount++}::jsonb`);
+      values.push(typeof links === 'string' ? links : JSON.stringify(links));
     }
-    if (status !== undefined) {
-      updates.push(`status = $${paramCount++}::team_status_enum`);
-      values.push(status);
+    if (req.file) {
+      const logoUrl = `/assets/team-logos/${req.file.filename}`;
+      updates.push(`logo_url = $${paramCount++}`);
+      values.push(logoUrl);
     }
 
     if (updates.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    updates.push(`updated_by = $${paramCount++}`);
-    values.push(userId);
+    updates.push(`updated_at = NOW()`);
     values.push(teamId);
 
     const result = await pool.query(
@@ -352,7 +376,17 @@ router.put('/:teamId', ensureAuthenticated, async (req, res) => {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    res.json(result.rows[0]);
+    // Return the updated team with parsed links
+    const updatedTeam = result.rows[0];
+    if (updatedTeam.links && typeof updatedTeam.links === 'string') {
+      try {
+        updatedTeam.links = JSON.parse(updatedTeam.links);
+      } catch (e) {
+        // Keep as string if parsing fails
+      }
+    }
+
+    res.json(updatedTeam);
   } catch (err) {
     console.error('Error updating team:', err);
     res.status(400).json({ error: err.message });

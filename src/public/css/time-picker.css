@@ -3,6 +3,11 @@
 .time-picker-wrapper {
   position: relative;
   width: 100%;
+  z-index: 10000;
+}
+
+.time-picker-wrapper.active {
+  z-index: 10002;
 }
 
 .time-picker-display {
@@ -59,17 +64,30 @@
   position: absolute;
   top: calc(100% + 0.5rem);
   left: 0;
-  right: 0;
+  right: auto;
   background: white;
   border: 1.5px solid var(--gray-200, #e5e7eb);
   border-radius: 0.75rem;
   box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
-  z-index: 1000;
+  z-index: 10001;
+  min-width: 280px;
   max-height: 400px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   animation: slide-down 0.2s ease-out;
+}
+
+/* Align to right edge when it would overflow */
+.time-picker-dropdown.align-right {
+  left: auto;
+  right: 0;
+}
+
+/* Position above and to the left */
+.time-picker-dropdown.align-top-left {
+  inset: auto 0 calc(100% + 0.5rem) auto;
+  animation: slide-up 0.2s ease-out;
 }
 
 .time-picker-dropdown[hidden] {
@@ -80,6 +98,18 @@
   from {
     opacity: 0;
     transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
 
   to {
@@ -217,7 +247,7 @@
 .time-picker-btn.selected {
   background: var(--teal-600, #0d9488);
   border-color: var(--teal-600, #0d9488);
-  color: white;
+  color: #fff;
   font-weight: 600;
   box-shadow: 0 2px 8px rgb(13 148 136 / 25%);
 }

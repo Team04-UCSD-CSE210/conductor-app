@@ -15,9 +15,15 @@
   let sessionId = null;
   let lecture = null;
   let isLoading = false;
-  let autoRefreshInterval = null;
   let currentQuestionId = null;
-  const REFRESH_INTERVAL_MS = 5000; // Refresh every 5 seconds
+  let currentResponses = [];
+  let checkInterval = null;
+  const CHECK_INTERVAL_MS = 5000;
+
+  function truncateText(text, maxLength = 20) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+  }
 
   // Get session ID from URL params or data attribute
   function getSessionId() {
@@ -40,7 +46,7 @@
     const end = new Date(endIso);
       
       // Validate dates
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return '—';
       }
       
@@ -148,14 +154,12 @@
   }
 
   function createPulseBarGraph(responses, question) {
-    console.log('createPulseBarGraph called with:', { responses, question });
     
     const container = document.createElement('div');
     container.className = 'pulse-results-container';
 
     // Get question options (the pulse labels) - Use only 3 options
     const options = question.options || ['Confident', 'Neutral', 'Not Confident'];
-    console.log('Pulse options:', options);
     
     // Only use 1st, 3rd, and 5th emoji (very_happy, neutral, angry)
     const emojis = ['very_happy.svg', 'neutral.svg', 'angry.svg'];
@@ -167,13 +171,10 @@
     
     responses.forEach(response => {
       const answer = response.response || response.response_text || response.response_option;
-      console.log('Response answer:', answer);
       if (answer && counts[answer] !== undefined) {
         counts[answer]++;
       }
     });
-
-    console.log('Counts:', counts);
     
     const totalResponses = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -253,14 +254,12 @@
   }
 
   function createMultipleChoiceBarGraph(responses, question) {
-    console.log('createMultipleChoiceBarGraph called with:', { responses, question });
     
     const container = document.createElement('div');
     container.className = 'multiple-choice-results-container';
 
     // Get question options
     const options = question.options || [];
-    console.log('Multiple choice options:', options);
     
     const colors = ['#60a5fa', '#a78bfa', '#f472b6', '#fb923c', '#34d399', '#fbbf24'];
     
@@ -270,21 +269,13 @@
     
     responses.forEach(response => {
       const answer = response.response || response.response_text || response.response_option;
-      console.log('Response answer:', answer);
       if (answer && counts[answer] !== undefined) {
         counts[answer]++;
       }
     });
-
-    console.log('Counts:', counts);
     
     const totalResponses = Object.values(counts).reduce((a, b) => a + b, 0);
 
-    // Helper function to truncate text
-    function truncateText(text, maxLength = 20) {
-      if (text.length <= maxLength) return text;
-      return text.substring(0, maxLength - 3) + '...';
-    }
 
     // Create horizontal segmented bar at top
     const topBar = document.createElement('div');
@@ -369,20 +360,26 @@
     return container;
   }
 
-  async function renderResponses(questionId) {
+  async function renderResponses(questionId, isManualRefresh = false) {
     if (!selectors.responseList || !questionId) return;
     
     isLoading = true;
-    showLoading();
+    if (!isManualRefresh) {
+      showLoading();
+    }
 
     try {
       const responses = await window.LectureService.getQuestionResponses(sessionId, questionId);
       
     selectors.responseList.innerHTML = '';
       
+      // Update response count
       if (selectors.responseCount) {
         selectors.responseCount.textContent = `${responses.length} response${responses.length !== 1 ? 's' : ''}`;
       }
+      
+      // Store current responses for comparison
+      currentResponses = responses;
 
     if (!responses.length) {
       const empty = document.createElement('p');
@@ -396,24 +393,17 @@
 
       // Find the current question to check its type
       const currentQuestion = lecture.questions.find(q => q.id == questionId);
-      console.log('Current question:', currentQuestion);
-      console.log('Question ID:', questionId);
-      console.log('All questions:', lecture.questions);
       
       const questionType = currentQuestion?.type || currentQuestion?.question_type;
-      console.log('Question type:', questionType);
 
       // If it's a pulse question, show bar graph (check for both 'pulse' and 'pulse_check')
       if (questionType === 'pulse' || questionType === 'pulse_check') {
-        console.log("Creating pulse graph!", responses);
         const pulseGraph = createPulseBarGraph(responses, currentQuestion);
         selectors.responseList.appendChild(pulseGraph);
       } else if (questionType === 'multiple_choice') {
-        console.log("Creating multiple choice graph!", responses);
         const mcqGraph = createMultipleChoiceBarGraph(responses, currentQuestion);
         selectors.responseList.appendChild(mcqGraph);
       } else {
-        console.log('Text question, showing response cards');
         // For text questions, show response cards
     responses.forEach((response) => {
       selectors.responseList.appendChild(createResponseCard(response));
@@ -430,28 +420,93 @@
     }
   }
 
-  function startAutoRefresh(questionId) {
-    // Clear any existing interval
-    stopAutoRefresh();
+  async function checkAndAddNewResponses() {
+    if (!currentQuestionId || isLoading || !selectors.responseList) return;
     
-    currentQuestionId = questionId;
-    
-    // Set up new interval for auto-refresh
-    autoRefreshInterval = setInterval(() => {
-      if (!isLoading && currentQuestionId) {
-        console.log('Auto-refreshing responses...');
-        renderResponses(currentQuestionId);
+    try {
+      const responses = await window.LectureService.getQuestionResponses(sessionId, currentQuestionId);
+      
+      // If we had no responses before and now we do, do a full re-render
+      if (currentResponses.length === 0 && responses.length > 0) {
+        await renderResponses(currentQuestionId, true);
+        return;
       }
-    }, REFRESH_INTERVAL_MS);
-    
-    console.log('Auto-refresh started (every 5 seconds)');
+      
+      // Create a map of current responses for quick lookup
+      const currentMap = new Map();
+      currentResponses.forEach(r => {
+        const id = r.id || `${r.userId}-${r.timestamp}`;
+        const content = JSON.stringify(r);
+        currentMap.set(id, content);
+      });
+      
+      // Check for new or edited responses
+      const newResponses = [];
+      const editedResponses = [];
+      
+      responses.forEach(r => {
+        const id = r.id || `${r.userId}-${r.timestamp}`;
+        const content = JSON.stringify(r);
+        
+        if (!currentMap.has(id)) {
+          // This is a new response
+          newResponses.push(r);
+        } else if (currentMap.get(id) !== content) {
+          // This response was edited
+          editedResponses.push(r);
+        }
+      });
+      
+      const hasChanges = newResponses.length > 0 || editedResponses.length > 0;
+      
+      if (hasChanges) {
+        
+        // Get current question to check type
+        const currentQuestion = lecture.questions.find(q => q.id == currentQuestionId);
+        const questionType = currentQuestion?.type || currentQuestion?.question_type;
+        
+        // For pulse/multiple choice, or if there are edited responses, re-render completely
+        if (questionType === 'pulse' || questionType === 'pulse_check' || questionType === 'multiple_choice' || editedResponses.length > 0) {
+          await renderResponses(currentQuestionId, true);
+        } else {
+          // For text responses with only new additions, smoothly add new cards at the top
+          newResponses.reverse().forEach(response => {
+            const card = createResponseCard(response);
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(-10px)';
+            selectors.responseList.insertBefore(card, selectors.responseList.firstChild);
+            
+            // Animate in
+            setTimeout(() => {
+              card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, 10);
+          });
+          
+          // Update stored responses
+          currentResponses = responses;
+          
+          // Update count
+          if (selectors.responseCount) {
+            selectors.responseCount.textContent = `${responses.length} response${responses.length !== 1 ? 's' : ''}`;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for new responses:', error);
+    }
   }
 
-  function stopAutoRefresh() {
-    if (autoRefreshInterval) {
-      clearInterval(autoRefreshInterval);
-      autoRefreshInterval = null;
-      console.log('Auto-refresh stopped');
+  function startLiveUpdates() {
+    stopLiveUpdates();
+    checkInterval = setInterval(checkAndAddNewResponses, CHECK_INTERVAL_MS);
+  }
+
+  function stopLiveUpdates() {
+    if (checkInterval) {
+      clearInterval(checkInterval);
+      checkInterval = null;
     }
   }
 
@@ -459,19 +514,19 @@
     if (!selectors.questionSelect || selectors.questionSelect.disabled) return;
     
     selectors.questionSelect.addEventListener('change', (event) => {
-      if (!isLoading) {
-        const questionId = event.target.value;
-        renderResponses(questionId);
-        startAutoRefresh(questionId);
-      }
+      const questionId = event.target.value;
+      currentQuestionId = questionId;
+      renderResponses(questionId);
+      startLiveUpdates();
     });
     
     // Load first question by default
-    if (lecture && lecture.questions && lecture.questions.length > 0) {
+    if (lecture?.questions?.length > 0) {
       const firstQuestionId = lecture.questions[0].id;
+      currentQuestionId = firstQuestionId;
       selectors.questionSelect.value = firstQuestionId;
       renderResponses(firstQuestionId);
-      startAutoRefresh(firstQuestionId);
+      startLiveUpdates();
     }
   }
 
@@ -521,8 +576,8 @@
     initBackButton();
     hydrate();
     
-    // Stop auto-refresh when user leaves the page
-    window.addEventListener('beforeunload', stopAutoRefresh);
+    // Stop live updates when user leaves the page
+    window.addEventListener('beforeunload', stopLiveUpdates);
   }
 
   if (document.readyState === 'loading') {

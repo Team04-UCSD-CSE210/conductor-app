@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Settings - Conductor</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/dashboard-global.css">
+  <link rel="stylesheet" href="/css/lectures-global.css">
+  <link rel="stylesheet" href="/css/team-edit.css">
+</head>
+
+<body class="dashboard-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <header class="sidebar" role="navigation" aria-label="Primary navigation">
+    <div class="sidebar-logo">
+      <img src="/assets/temp-logo.png" alt="Conductor logo">
+    </div>
+    <h1 class="sidebar-title">Conductor</h1>
+    <p class="sidebar-user" id="sidebarUser">
+      <span class="sidebar-user-name">Loading...</span><br>
+      <span class="sidebar-user-role">Loading...</span>
+    </p>
+    <nav aria-label="Dashboard navigation" id="sidebarNav">
+      <!-- Navigation will be dynamically populated based on user role -->
+    </nav>
+    <footer>
+      <a href="/" class="btn btn-ghost">Sign out</a>
+    </footer>
+  </header>
+
+  <main class="main-container" id="main">
+    <div class="attendance-layout">
+      <section class="attendance-content" style="width: 100%; max-width: none;">
+        <div class="attendance-title">
+          <div class="team-header-box">
+            <p class="eyebrow">Team Settings</p>
+            <h2 id="team-name-title">Loading...</h2>
+            <p class="subtitle">Manage your team information, logo, and collaboration links.</p>
+          </div>
+        </div>
+
+        <div class="settings-content">
+          <!-- Team Information -->
+          <div class="settings-card">
+            <h3>Team Information</h3>
+            <form id="teamEditForm" class="team-form">
+              <div class="form-group">
+                <label for="teamName">Team Name</label>
+                <input type="text" id="teamName" name="name" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="teamMantra">Team Mantra</label>
+                <input type="text" id="teamMantra" name="mantra" placeholder="Optional team motto">
+              </div>
+              
+              <button type="submit" class="btn btn-outline-blue">Save Team Info</button>
+            </form>
+          </div>
+
+          <!-- Team Logo -->
+          <div class="settings-card">
+            <h3>Team Logo</h3>
+            <div class="logo-section">
+              <div class="current-logo">
+                <img id="currentLogo" src="/assets/leadership.png" alt="Current team logo">
+                <p>Current Logo</p>
+              </div>
+              
+              <div class="logo-upload">
+                <input type="file" id="logoUpload" name="logo" accept="image/*" style="display: none;">
+                <button type="button" onclick="document.getElementById('logoUpload').click()" class="btn btn-outline-blue">
+                  Choose New Logo
+                </button>
+                <button type="button" id="saveImageBtn" class="btn btn-outline-blue" style="display: none;">
+                  Save Image
+                </button>
+                <p class="upload-hint">PNG or JPG, max 5MB</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Team Links -->
+          <div class="settings-card">
+            <h3>Team Links</h3>
+            <form id="teamLinksForm" class="team-form">
+              <div class="form-group">
+                <label for="slackLink">Slack Channel</label>
+                <input type="url" id="slackLink" name="slack" placeholder="https://your-team.slack.com/channels/...">
+              </div>
+              
+              <div class="form-group">
+                <label for="repoLink">Repository</label>
+                <input type="url" id="repoLink" name="repo" placeholder="https://github.com/your-team/project">
+              </div>
+              
+              <button type="submit" class="btn btn-outline-blue">Save Links</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <script src="/js/palette-loader.js"></script>
+  <script src="/js/sidebar-nav.js" defer></script>
+  <script src="/js/team-edit.js" defer></script>
+</body>
+</html>

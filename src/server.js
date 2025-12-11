@@ -1,18 +1,19 @@
+// IMPORTANT: Instrumentation MUST be imported first before any other modules
+import "./instrumentation.js";
+
 import express from "express";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import path from "path";
-import https from "https";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import path from "node:path";
+import https from "node:https";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
-// import { createClient } from "redis";
-// import { RedisStore } from "connect-redis";
 import { pool } from "./db.js";
 import { DatabaseInitializer } from "./database/init.js";
 import bodyParser from "body-parser";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { ensureAuthenticated } from "./middleware/auth.js";
 import { protect, protectAny } from "./middleware/permission-middleware.js";
 import userRoutes from "./routes/user-routes.js";
@@ -20,6 +21,7 @@ import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
 import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
+import dashboardTodoRoutes from "./routes/dashboard-todo-routes.js";
 import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
@@ -27,7 +29,15 @@ import journalRoutes from "./routes/journal-routes.js";
 import instructorJournalRoutes from "./routes/instructor-journal-routes.js";
 import taJournalRoutes from "./routes/ta-journal-routes.js";
 import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
+import instructorJournalRoutes from "./routes/instructor-journal-routes.js";
+import taJournalRoutes from "./routes/ta-journal-routes.js";
+import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
+import { trackApiCategory } from "./observability/diagnostics.js";
+import diagnosticsRoutes from "./routes/diagnostics-routes.js";
+import { buildDiagnosticsSnapshot, persistDiagnosticsSnapshot } from "./observability/collector.js";
+import announcementRoutes from "./routes/announcement-routes.js";
+import { metricsMiddleware } from "./middleware/metrics-middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,6 +74,16 @@ try {
 }
 
 const app = express();
+const trackAuth = trackApiCategory("auth");
+
+// Diagnostics view auth guard
+const ensureDiagnosticsAccess = (req, res, next) => {
+  const role = req.currentUser?.primary_role || req.user?.primary_role;
+  if (!role || role !== 'admin') {
+    return res.status(403).send('Forbidden');
+  }
+  return next();
+};
 
 // Disable ETag generation to prevent 304 caching issues
 app.set('etag', false);
@@ -73,7 +93,7 @@ app.set('etag', false);
 app.use(express.static(path.join(__dirname, "views")));
 app.use(express.static(path.join(__dirname, "public")));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
-
+app.use('/uploads', express.static('uploads'));
 // -------------------- CONFIG --------------------
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -81,11 +101,20 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 const CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || "https://localhost:8443/auth/google/callback";
 const DATABASE_URL = process.env.DATABASE_URL;
 const ALLOWED_DOMAIN = process.env.ALLOWED_GOOGLE_DOMAIN || "ucsd.edu";
-// const REDIS_URL = process.env.REDIS_URL;
 
 const parsePositiveInt = (value, fallback) => {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const escapeHtml = (str) => {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
 };
 
 const LOGIN_FAILURE_THRESHOLD = parsePositiveInt(process.env.LOGIN_FAILURE_THRESHOLD, 3);
@@ -128,6 +157,9 @@ app.use((req, res, next) => {
   // If no session, just continue (for static files, etc.)
   next();
 });
+
+// Metrics middleware for OpenTelemetry/SigNoz integration
+app.use(metricsMiddleware);
 
 if (!DATABASE_URL || DATABASE_URL.includes("localhost")) {
   console.log("⚠️ Database not configured or using localhost, running without database features");
@@ -737,6 +769,15 @@ app.get("/", (req, res) => {
   res.send('<h1>Conductor App</h1><a href="/login">Login</a>');
 });
 
+// Fancy diagnostics dashboard (auth: admin/instructor)
+app.get("/diagnostics-dashboard", ensureAuthenticated, ensureDiagnosticsAccess, (req, res) => {
+  res.sendFile(buildFullViewPath("diagnostics-dashboard.html"));
+});
+// Diagnostics history page (admin only)
+app.get("/diagnostics-history", ensureAuthenticated, ensureDiagnosticsAccess, (req, res) => {
+  res.sendFile(buildFullViewPath("diagnostics-history.html"));
+});
+
 // Parse JSON and URL-encoded request bodies (must be before API routes)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -813,8 +854,12 @@ app.get("/instructor-dashboard", ...protect('course.manage', 'course'), (req, re
   res.sendFile(buildFullViewPath("instructor-dashboard.html"));
 });
 
+app.get("/course-settings", ...protect('course.manage', 'course'), (req, res) => {
+  res.sendFile(buildFullViewPath("course-settings.html"));
+});
+
 app.get("/meeting-attendance", ensureAuthenticated, (req, res) => {
-  res.sendFile(buildFullViewPath("meeting-attendance.html"));
+  res.sendFile(buildFullViewPath("meeting-attendance-student.html"));
 });
 
 app.get("/meeting-attendance-team-lead", ensureAuthenticated, (req, res) => {
@@ -939,6 +984,41 @@ app.get("/team-lead-dashboard", ensureAuthenticated, async (req, res) => {
     return res.sendFile(buildFullViewPath("student-leader-dashboard.html"));
   } catch (error) {
     console.error("Error accessing team lead dashboard:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
+// Team edit page - accessible only to team leads for their own team
+app.get("/team-edit", ensureAuthenticated, async (req, res) => {
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Admin and instructor can access team edit (for any team)
+    if (user.user_type === 'admin' || user.user_type === 'instructor') {
+      return res.sendFile(buildFullViewPath("team-edit.html"));
+    }
+
+    // For team leads, check if they have a team
+    const { rows } = await pool.query(
+      'SELECT id FROM team WHERE leader_id = $1',
+      [user.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(403).send("Forbidden: You are not a team leader");
+    }
+
+    return res.sendFile(buildFullViewPath("team-edit.html"));
+  } catch (error) {
+    console.error("Error accessing team edit page:", error);
     return res.status(500).send("Internal server error");
   }
 });
@@ -1074,14 +1154,12 @@ app.get("/courses/:courseId/roster", ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Class Directory route - similar permissions to roster
-const classDirectoryMiddleware = protectAny(['roster.view', 'course.manage'], 'course');
-
-app.get("/class-directory", ...classDirectoryMiddleware, (req, res) => {
+// Class Directory route - accessible to all authenticated users
+app.get("/class-directory", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("class-directory.html"));
 });
 
-app.get("/courses/:courseId/class-directory", ...classDirectoryMiddleware, (req, res) => {
+app.get("/courses/:courseId/class-directory", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("class-directory.html"));
 });
 
@@ -1205,9 +1283,8 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     if (enrollmentRoleForAccess === 'student' || enrollmentRoleForAccess === 'team-lead' || 
         user.primary_role === 'student' || user.primary_role === 'admin' || 
         user.primary_role === 'instructor') {
-      // Serve team lead view if user is a team lead, otherwise student view
+      // Team leads get the enhanced team lead dashboard with create meeting functionality
       if (isTeamLead) {
-        // Team leads get the enhanced team lead dashboard
         return res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
       } else {
         // Regular students get the student view
@@ -1445,7 +1522,7 @@ app.get('/', (req, res) => {
 });
 
 // Handle Google OAuth errors (e.g., org_internal)
-app.get("/auth/error", (req, res) => {
+app.get("/auth/error", trackAuth, (req, res) => {
   console.warn("⚠️ OAuth error detected:", req.query);
 
   const attemptedEmail =
@@ -1468,7 +1545,7 @@ app.get("/auth/error", (req, res) => {
 });
 
 // Always force account chooser on each login attempt
-app.get("/auth/google", (req, res, next) => {
+app.get("/auth/google", trackAuth, (req, res, next) => {
   safeLogout(req);
 
   const loginHint = req.query.email || req.query.login_hint || ""; // capture hint if provided
@@ -1488,6 +1565,7 @@ app.get("/auth/google", (req, res, next) => {
 
 app.get(
   "/auth/google/callback",
+  trackAuth,
   passport.authenticate("google", { failureRedirect: "/auth/failure" }),
   async (req, res) => {
     const email = req.user?.emails?.[0]?.value || "unknown";
@@ -1512,7 +1590,6 @@ app.get(
 
       // Log successful callback with user role info
       console.log("✅ Login success for:", email);
-      console.log(`[DEBUG] User primary_role: ${user.primary_role}, id: ${user.id}`);
       await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
         req,
         message: "OAuth callback completed successfully",
@@ -1606,7 +1683,7 @@ app.get(
   });
 
 // Failed login route
-app.get("/auth/failure", async (req, res) => {
+app.get("/auth/failure", trackAuth, async (req, res) => {
   console.warn("⚠️ Google OAuth failed or unauthorized user.");
   await logAuthEvent("LOGIN_FAILURE", {
     req,
@@ -1728,6 +1805,7 @@ app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) =
     }
 
     res.json({
+      id: user.id,
       primary_role: user.primary_role,
       enrollment_role: enrollmentRole,
       is_team_lead: isTeamLead,
@@ -1827,7 +1905,10 @@ app.get("/switch-account", (req, res) => {
 app.use((req, res, next) => {
   if (HTTPS_AVAILABLE) {
     if (!req.secure) {
-      return res.redirect(`https://${req.headers.host}${req.url}`);
+      // Redirect to HTTPS using only the configured base URL
+      // Do not include any user-controlled path data to prevent open redirect vulnerabilities
+      const redirectUrl = process.env.HTTPS_REDIRECT_URL || 'https://localhost:8443';
+      return res.redirect(redirectUrl);
     }
   }
   next();
@@ -1844,7 +1925,7 @@ app.post("/request-access", async (req, res) => {
   // Check if already approved (whitelisted)
   const whitelisted = await findWhitelistEntry(email);
   if (whitelisted) {
-    return res.status(200).send(`<h3>✅ ${email} is already approved for access.</h3>`);
+    return res.status(200).send('<h3>✅ Your email is already approved for access.</h3>');
   }
 
   // Check if an access request already exists
@@ -1860,7 +1941,7 @@ app.post("/request-access", async (req, res) => {
       metadata: { reason }
     });
 
-    return res.status(200).send(`<h3>🔄 Your previous request for ${email} has been updated successfully.</h3>`);
+    return res.status(200).send('<h3>🔄 Your previous access request has been updated successfully.</h3>');
   }
 
   // ✅ Create a new request if it doesn't exist
@@ -1872,7 +1953,7 @@ app.post("/request-access", async (req, res) => {
     metadata: { reason }
   });
 
-  res.status(200).send(`<h3>✅ Your access request for ${email} has been submitted.</h3>`);
+  res.status(200).send('<h3>✅ Your access request has been submitted.</h3>');
 });
 
 // --- Simple Admin Approval Page and Approve Route ---
@@ -1901,7 +1982,7 @@ app.get("/admin/whitelist", ...protect('user.manage', 'global'), async (req, res
         ${requests.length > 0 ? `
     <ul>
       ${requests.map(r => `
-              <li>${r.email} — ${r.reason || "No reason provided"} 
+              <li>${escapeHtml(r.email)} — ${escapeHtml(r.reason || "No reason provided")} 
           <a href="/admin/approve?email=${encodeURIComponent(r.email)}">Approve</a>
         </li>
       `).join("")}
@@ -1910,7 +1991,7 @@ app.get("/admin/whitelist", ...protect('user.manage', 'global'), async (req, res
         <h2>Approved Users (Whitelist)</h2>
         ${whitelist.length > 0 ? `
     <ul>
-            ${whitelist.map(w => `<li class="approved">${w.email} (approved by: ${w.approved_by || 'system'})</li>`).join("")}
+            ${whitelist.map(w => `<li class="approved">${escapeHtml(w.email)} (approved by: ${escapeHtml(w.approved_by || 'system')})</li>`).join("")}
     </ul>
         ` : '<p>No approved users yet.</p>'}
         <p><a href="/admin-dashboard">← Back to Admin Dashboard</a></p>
@@ -2229,9 +2310,8 @@ app.post('/api/select-course', ensureAuthenticated, express.json(), async (req, 
 
 // -------------------- START SERVER --------------------
 // All routes must be defined BEFORE starting the server
-const startServer = async () => {
+if (import.meta.url === `file://${process.argv[1]}`) {
   try {
-    // Check if database is empty and initialize with seed data if needed
     const schemaExists = await DatabaseInitializer.verifySchema();
     
     if (!schemaExists) {
@@ -2242,26 +2322,21 @@ const startServer = async () => {
       console.log("[database] Database schema already exists. Skipping initialization.\n");
       console.log("✅ Database connection established");
     }
+
+    if (HTTPS_AVAILABLE && sslOptions) {
+      https.createServer(sslOptions, app).listen(8443, () => {
+        console.log("✅ HTTPS server running at https://localhost:8443");
+      });
+    } else {
+      const PORT = process.env.PORT || 3001;
+      app.listen(PORT, () => {
+        console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
+      });
+    }
   } catch (error) {
     console.error("Failed to connect to the database", error);
     process.exit(1);
   }
-
-  if (HTTPS_AVAILABLE && sslOptions) {
-    https.createServer(sslOptions, app).listen(8443, () => {
-      console.log("✅ HTTPS server running at https://localhost:8443");
-    });
-  } else {
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
-      console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
-    });
-  }
-};
-
-// Only start server if this file is run directly, not when imported
-if (import.meta.url === `file://${process.argv[1]}`) {
-  startServer();
 } else if (process.env.VERCEL) {
   // For Vercel, initialize database on cold start
   (async () => {
@@ -2274,9 +2349,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }
   })();
 } else {
-  // Fallback: if the check fails on some systems, start anyway if not in Vercel
-  console.log('[server] Starting server (fallback path)');
-  startServer();
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`⚠️ Starting server (fallback path) at http://localhost:${PORT}`);
+  });
 }
 
 // Export app for Vercel
