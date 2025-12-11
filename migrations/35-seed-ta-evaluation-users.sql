@@ -182,6 +182,34 @@ BEGIN
         RAISE NOTICE '✅ Enrolled sammedkamate2@gmail.com as student in active course';
     END IF;
     
+    -- Assign student to Team 7
+    DECLARE
+        team7_id UUID;
+        team_role_member CONSTANT team_member_role_enum := 'member'::team_member_role_enum;
+    BEGIN
+        -- Get Team 7 ID
+        SELECT id INTO team7_id 
+        FROM team 
+        WHERE offering_id = offering_id_var AND team_number = 7;
+        
+        IF team7_id IS NOT NULL AND student_user_id IS NOT NULL THEN
+            -- Add sammedkamate2@gmail.com as member of Team 7
+            INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
+            VALUES (
+                team7_id,
+                student_user_id,
+                team_role_member,
+                CURRENT_DATE,
+                instructor_user_id
+            )
+            ON CONFLICT (team_id, user_id) DO NOTHING;
+            
+            RAISE NOTICE '✅ Added sammedkamate2@gmail.com to Team 7 as member';
+        ELSE
+            RAISE NOTICE '⚠️ Could not add sammedkamate2@gmail.com to Team 7: team or user not found';
+        END IF;
+    END;
+    
     -- Insert or update Sammed Kamate 3 (TA)
     INSERT INTO users (
         email,
@@ -262,6 +290,7 @@ BEGIN
     RAISE NOTICE '✅ TA evaluation users seeded successfully';
 END $$;
 
+-- Verify the seeded users with enrollment and team information
 SELECT 
     u.email,
     u.name,
@@ -270,9 +299,13 @@ SELECT
     e.course_role AS enrollment_role,
     e.status AS enrollment_status,
     co.code AS course_code,
-    co.name AS course_name
+    co.name AS course_name,
+    t.team_number,
+    tm.role AS team_role
 FROM users u
 LEFT JOIN enrollments e ON u.id = e.user_id
 LEFT JOIN course_offerings co ON e.offering_id = co.id AND co.is_active = TRUE
+LEFT JOIN team_members tm ON u.id = tm.user_id
+LEFT JOIN team t ON tm.team_id = t.id
 WHERE u.email IN ('skamate@ucsd.edu', 'sammedkamate2@gmail.com', 'sammedkamate3@gmail.com')
 ORDER BY u.email;
