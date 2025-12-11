@@ -21,7 +21,6 @@ import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
 import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
-import dashboardTodoRoutes from "./routes/dashboard-todo-routes.js";
 import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
@@ -31,9 +30,6 @@ import taJournalRoutes from "./routes/ta-journal-routes.js";
 import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
 import { trackApiCategory } from "./observability/diagnostics.js";
-import diagnosticsRoutes from "./routes/diagnostics-routes.js";
-import { buildDiagnosticsSnapshot, persistDiagnosticsSnapshot } from "./observability/collector.js";
-import announcementRoutes from "./routes/announcement-routes.js";
 import { metricsMiddleware } from "./middleware/metrics-middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1354,12 +1350,19 @@ app.get("/work-journal", ensureAuthenticated, async (req, res) => {
       return res.redirect("/login");
     }
 
+    // Check if user is a team lead
+    const isTeamLead = await isUserTeamLead(user.id);
+    
     // Allow students, admins, and instructors
     const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
     if (enrollmentRole === 'student' || user.primary_role === 'student' || 
         user.primary_role === 'admin' || user.primary_role === 'instructor') {
-      // Both team leads and regular students get the same student journal page
-      return res.sendFile(buildFullViewPath("student-journal.html"));
+      // Team leads get lead journal, regular students get student journal
+      if (isTeamLead) {
+        return res.sendFile(buildFullViewPath("lead-journal.html"));
+      } else {
+        return res.sendFile(buildFullViewPath("student-journal.html"));
+      }
     }
 
     // Not authorized
@@ -1809,43 +1812,19 @@ app.get("/api/users/navigation-context", ensureAuthenticated, async (req, res) =
 });
 
 // API routes for user and enrollment management
-app.use("/api/users", trackApiCategory("users"), userRoutes);
-app.use("/api/enrollments", trackApiCategory("enrollments"), enrollmentRoutes);
-app.use("/api/teams", trackApiCategory("teams"), teamRoutes);
-app.use("/api/offerings", trackApiCategory("offerings"), offeringRoutes);
-app.use("/api/interactions", trackApiCategory("interactions"), interactionRoutes);
-app.use("/api/dashboard-todos", trackApiCategory("dashboard-todos"), dashboardTodoRoutes);
-app.use("/api/sessions", trackApiCategory("sessions"), sessionRoutes);
-app.use("/api/attendance", trackApiCategory("attendance"), attendanceRoutes);
-app.use("/api/announcements", trackApiCategory("announcements"), announcementRoutes);
-app.use("/api/journals", ensureAuthenticated, trackApiCategory("journals"), journalRoutes);
-app.use("/api/instructor-journals", ensureAuthenticated, trackApiCategory("instructor_journals"), instructorJournalRoutes);
-app.use("/api/ta-journals", ensureAuthenticated, trackApiCategory("ta_journals"), taJournalRoutes);
-app.use("/api/tutor-journals", ensureAuthenticated, trackApiCategory("tutor_journals"), tutorJournalRoutes);
-app.use("/api/class", trackApiCategory("class"), courseOfferingRoutes);
-app.use("/api/class-directory", trackApiCategory("class_directory"), classDirectoryRoutes);
-app.use("/api/diagnostics", trackApiCategory("diagnostics"), diagnosticsRoutes);
-
-// Persist diagnostics daily (aligned to midnight server time)
-const scheduleDiagnosticsPersistence = () => {
-  const now = new Date();
-  const nextMidnight = new Date(now);
-  nextMidnight.setHours(24, 0, 0, 0);
-  const delay = nextMidnight.getTime() - now.getTime();
-  setTimeout(async () => {
-    try {
-      const snapshot = buildDiagnosticsSnapshot();
-      await persistDiagnosticsSnapshot(snapshot);
-      console.log("[diagnostics] Daily snapshot persisted");
-    } catch (err) {
-      console.error("[diagnostics] Failed to persist daily snapshot:", err.message);
-    } finally {
-      scheduleDiagnosticsPersistence();
-    }
-  }, delay);
-};
-
-scheduleDiagnosticsPersistence();
+app.use("/api/users", userRoutes);
+app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/teams", teamRoutes);
+app.use("/api/offerings", offeringRoutes);
+app.use("/api/interactions", interactionRoutes);
+app.use("/api/sessions", sessionRoutes);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/journals", ensureAuthenticated, journalRoutes);
+app.use("/api/instructor-journals", ensureAuthenticated, instructorJournalRoutes);
+app.use("/api/ta-journals", ensureAuthenticated, taJournalRoutes);
+app.use("/api/tutor-journals", ensureAuthenticated, tutorJournalRoutes);
+app.use("/api/class", courseOfferingRoutes);
+app.use("/api/class-directory", classDirectoryRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {

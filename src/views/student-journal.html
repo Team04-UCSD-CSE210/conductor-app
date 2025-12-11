@@ -13,6 +13,11 @@
 </head>
 
 <body class="dashboard-page">
+  <button class="hamburger-menu" aria-label="Toggle navigation menu" aria-expanded="false">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
 
   <!-- Sidebar Navigation (uses existing dashboard-global.css) -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
@@ -23,7 +28,7 @@
     
     <div class="main-menu-header">Main Menu</div>
     <nav aria-label="Dashboard navigation" id="sidebarNav"></nav>
-    
+
     <footer style="margin-top: auto; border-top: 1px solid var(--gray-200); padding-top: 1rem;">
       <a href="/logout" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">Sign out</a>
     </footer>
@@ -31,8 +36,12 @@
 
   <!-- Scrollable center column -->
   <main class="wj-main" aria-labelledby="page-title">
-    <header class="wj-page-header">
-      <h1 id="page-title">Work Journal/Stand-up</h1>
+    <header class="header-container">
+        <header class="header-info">
+        <p class="eyebrow">Stand up meetings</p>
+        <h2 id="header-title">Work Journal</h2>
+        <p class="header-subtitle">Log what you have done and any blockers you are facing</p>
+        </header>
     </header>
 
     <!-- Logging Activity -->
@@ -109,17 +118,6 @@
       </div>
     </section>
   </main>
-
-  <!-- Fixed right sidebar -->
-  <aside class="wj-right" aria-label="Support options">
-    <div class="help-box">
-      <p>If you believe there's been an error, feel free to reach out:</p>
-      <div class="contact-buttons">
-        <button class="btn-contact" id="contact-ta">Contact TA</button>
-        <button class="btn-contact" id="contact-instructor">Contact Instructor</button>
-      </div>
-    </div>
-  </aside>
 
   <!-- SVG definitions for reusable icons -->
   <svg style="display: none;" aria-hidden="true">
