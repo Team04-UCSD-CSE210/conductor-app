@@ -638,32 +638,8 @@ export class SessionService {
       throw new Error('Session not found');
     }
 
-    // Check if user is the creator
-    const isCreator = session.created_by === userId;
-    
-    // Check if user is the instructor of the active course offering
-    let isInstructor = false;
-    if (session.offering_id) {
-      const offeringResult = await pool.query(
-        `SELECT instructor_id, is_active 
-         FROM course_offerings 
-         WHERE id = $1`,
-        [session.offering_id]
-      );
-      
-      if (offeringResult.rows.length > 0) {
-        const offering = offeringResult.rows[0];
-        // Only allow if the offering is active and user is the instructor
-        if (offering.is_active && offering.instructor_id === userId) {
-          isInstructor = true;
-        }
-      }
-    }
-
-    if (!isCreator && !isInstructor) {
-      throw new Error('Not authorized to manage this session');
-    }
-
+    // Authorization is handled by permission middleware (session.manage)
+    // This allows anyone with session.manage permission to delete sessions
     return await SessionModel.delete(sessionId);
   }
 
