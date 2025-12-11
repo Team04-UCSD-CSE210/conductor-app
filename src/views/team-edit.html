@@ -37,13 +37,13 @@
   <main class="main-container" id="main">
     <div class="attendance-layout">
       <section class="attendance-content" style="width: 100%; max-width: none;">
-        <div class="attendance-title">
-          <div class="team-header-box">
+        <header class="header-container">
+          <header class="header-info">
             <p class="eyebrow">Team Settings</p>
-            <h2 id="team-name-title">Loading...</h2>
-            <p class="subtitle">Manage your team information, logo, and collaboration links.</p>
-          </div>
-        </div>
+            <h2 class="header-title" id="team-name-title">Loading...</h2>
+            <p class="header-subtitle">Manage your team information, logo, and collaboration links.</p>
+          </header>
+        </header>
 
         <div class="settings-content">
           <!-- Team Information -->
@@ -60,7 +60,7 @@
                 <input type="text" id="teamMantra" name="mantra" placeholder="Optional team motto">
               </div>
               
-              <button type="submit" class="btn btn-outline-blue">Save Team Info</button>
+              <button type="submit" class="btn btn-primary">Save Team Info</button>
             </form>
           </div>
 
@@ -75,10 +75,10 @@
               
               <div class="logo-upload">
                 <input type="file" id="logoUpload" name="logo" accept="image/*" style="display: none;">
-                <button type="button" onclick="document.getElementById('logoUpload').click()" class="btn btn-outline-blue">
+                <button type="button" onclick="document.getElementById('logoUpload').click()" class="btn btn-primary">
                   Choose New Logo
                 </button>
-                <button type="button" id="saveImageBtn" class="btn btn-outline-blue" style="display: none;">
+                <button type="button" id="saveImageBtn" class="btn btn-primary" style="display: none;">
                   Save Image
                 </button>
                 <p class="upload-hint">PNG or JPG, max 5MB</p>
@@ -100,7 +100,7 @@
                 <input type="url" id="repoLink" name="repo" placeholder="https://github.com/your-team/project">
               </div>
               
-              <button type="submit" class="btn btn-outline-blue">Save Links</button>
+              <button type="submit" class="btn btn-primary">Save Links</button>
             </form>
           </div>
         </div>

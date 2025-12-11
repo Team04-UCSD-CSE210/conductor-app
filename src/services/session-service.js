@@ -80,10 +80,6 @@ async function checkAndAutoOpenSession(session) {
     
     // If session start time has passed, automatically open attendance
     if (sessionStart <= now) {
-      console.log('[SessionService] Auto-opening attendance for session:', session.id, {
-        sessionStart: sessionStart.toISOString(),
-        now: now.toISOString()
-      });
       
       // Use the session creator as the updater, or system if not available
       const updatedBy = session.created_by || '00000000-0000-0000-0000-000000000000';
@@ -93,7 +89,6 @@ async function checkAndAutoOpenSession(session) {
       const updatedSession = await SessionModel.findById(session.id);
       if (updatedSession) {
         Object.assign(session, updatedSession);
-        console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at);
       }
     }
   } catch (error) {
@@ -325,7 +320,6 @@ export class SessionService {
           
           // If session start time has passed, automatically open attendance
           if (sessionStart <= now && !session.attendance_opened_at) {
-            console.log('[SessionService] Auto-opening attendance for session:', session.id);
             await SessionModel.openAttendance(session.id, createdBy);
             // Refresh session to get updated attendance_opened_at
             const updatedSession = await SessionModel.findById(session.id);
@@ -338,7 +332,6 @@ export class SessionService {
           // For team meetings, ensure attendance_closed_at is NULL even if auto-open didn't run
           // Team meetings should only be closed manually by the team leader
           if (session.team_id && session.attendance_closed_at) {
-            console.log('[SessionService] Removing auto-close for team meeting:', session.id);
             await pool.query(
               'UPDATE sessions SET attendance_closed_at = NULL WHERE id = $1',
               [session.id]

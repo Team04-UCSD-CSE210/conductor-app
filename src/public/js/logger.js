@@ -46,10 +46,6 @@ export function logEvent(type, userEmail = 'anonymous', details = '') {
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedLogs));
     
-    // Optional: Log to console in development
-    if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
-      console.log('[Logger]', entry);
-    }
   } catch (error) {
     // Handle localStorage errors (e.g., quota exceeded, private browsing)
     console.error('Failed to log event to localStorage:', error);

@@ -136,17 +136,13 @@ const loadOfferings = async () => {
     
     try {
       active = await fetchJSON('/api/offerings/active');
-      console.log('Active offering API response:', active);
-    } catch (_err) {
-      console.log('Active offering fetch failed (non-404):', _err);
+    } catch {
       // Continue - we'll try to find active from the list
     }
     
     try {
       offerings = await fetchJSON('/api/offerings?limit=25') || [];
-      console.log('Offerings list API response:', offerings);
-    } catch (_err) {
-      console.error('Offerings fetch failed:', _err);
+    } catch {
       offerings = [];
     }
     
@@ -161,7 +157,6 @@ const loadOfferings = async () => {
       // If still not found, use the first offering as fallback
       if (!activeOffering) {
         activeOffering = offerings[0];
-        console.log('No active offering found, using first offering as fallback');
       }
     }
     
@@ -207,8 +202,6 @@ const loadOfferings = async () => {
     
     // Update the display
     elements.activeOfferingName.textContent = displayText;
-    console.log('✅ Set active offering display to:', displayText);
-    console.log('✅ Active offering ID:', state.offeringId);
     
   } catch (error) {
     console.error('Failed to load offerings:', error);
@@ -876,7 +869,6 @@ const handleAddPerson = async (event) => {
     // eslint-disable-next-line no-unused-vars
     } catch (_err) {
       // Enrollment might already exist
-      console.log('Enrollment may already exist for user:', newUser.id);
     }
 
     showToast('Student added to roster');
@@ -938,7 +930,6 @@ const handleImport = async () => {
           // eslint-disable-next-line no-unused-vars
           } catch (_err) {
             // Enrollment might already exist, which is fine
-            console.log('Enrollment for user may already exist:', user.id);
           }
         }
       }
@@ -970,7 +961,6 @@ const handleImport = async () => {
           // eslint-disable-next-line no-unused-vars
           } catch (_err) {
             // Enrollment might already exist, which is fine
-            console.log('Enrollment for user may already exist:', user.id);
           }
         }
       }
