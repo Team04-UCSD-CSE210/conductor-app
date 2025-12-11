@@ -1,4 +1,3 @@
--- 03-seed-course-offerings-teams.sql
 -- Comprehensive seed data for CSE 210 course offering, enrollments, and teams
 -- Run AFTER users table is populated
 -- Uses fixed UUID for CSE 210 offering to maintain consistency
@@ -6,6 +5,10 @@
 -- NOTE: Teams support multiple leaders via team.leader_ids array.
 -- The leader_ids array is automatically synced from team_members.role = 'leader'.
 -- Teams must have at least one leader in the leader_ids array.
+
+-- Ensure leader_ids column exists before seeding teams (needed for legacy runs)
+ALTER TABLE team
+  ADD COLUMN IF NOT EXISTS leader_ids UUID[] DEFAULT ARRAY[]::UUID[];
 
 -- Get the offering ID for enrollments and teams
 DO $$
