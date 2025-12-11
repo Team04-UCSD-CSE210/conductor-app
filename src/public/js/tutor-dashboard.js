@@ -23,6 +23,7 @@
     getAnnouncements = async () => [],
     getAttendanceSessions = async () => [],
     getSessionStatistics = async () => null,
+    formatCreatorWithRole = (announcement) => announcement.creator_name || 'Unknown',
   } = DS;
   
   let offeringId = null;
@@ -267,7 +268,7 @@
         const content = announcement.content || announcement.body || announcement.message || '';
         const isLongContent = content.length > 100;
         const preview = isLongContent ? content.substring(0, 100) : content;
-        const creatorName = announcement.creator_name || 'Unknown';
+        const creatorDisplay = formatCreatorWithRole(announcement);
         const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
         const viewMoreLink = isLongContent ? ` <button class="announcement-view-more" data-announcement-id="${announcement.id}" aria-label="View full announcement">View More</button>` : '';
         
@@ -277,7 +278,7 @@
             <div class="announcement-content">
               <h5><span class="announcement-title-text">${escapeHtml(title)}</span>${teamBadge}</h5>
               <p class="announcement-preview">${escapeHtml(preview)}${viewMoreLink}</p>
-              <div class="announcement-creator">by ${escapeHtml(creatorName)}</div>
+              <div class="announcement-creator">by ${escapeHtml(creatorDisplay)}</div>
             </div>
           </div>
         `;
@@ -415,7 +416,7 @@
       
       const title = announcement.title || announcement.subject || 'Announcement';
       const content = announcement.content || announcement.body || announcement.message || '';
-      const creatorName = announcement.creator_name || 'Unknown';
+      const creatorDisplay = formatCreatorWithRole(announcement);
       
       const dateEl = document.getElementById('viewAnnouncementDate');
       const creatorEl = document.getElementById('viewAnnouncementCreator');
@@ -423,7 +424,7 @@
       const messageEl = document.getElementById('viewAnnouncementMessage');
       
       if (dateEl) dateEl.textContent = dateStr;
-      if (creatorEl) creatorEl.textContent = `by ${escapeHtml(creatorName)}`;
+      if (creatorEl) creatorEl.textContent = `by ${escapeHtml(creatorDisplay)}`;
       if (subjectEl) subjectEl.textContent = title;
       if (messageEl) {
         messageEl.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');

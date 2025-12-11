@@ -834,24 +834,66 @@ app.get("/meeting-attendance-team-lead", ensureAuthenticated, (req, res) => {
   res.sendFile(buildFullViewPath("meeting-attendance-team-lead.html"));
 });
 
-app.get("/instructor-meetings", ensureAuthenticated, (req, res) => {
-  // Only allow instructors to access this route
-  const email = req.user?.emails?.[0]?.value;
-  if (!email) {
-    return res.redirect("/login");
-  }
-  findUserByEmail(email).then(user => {
+app.get("/instructor-meetings", ensureAuthenticated, async (req, res) => {
+  // Allow instructors, admins, and TAs to access this route
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
     if (!user) {
       return res.redirect("/login");
     }
-    if (user.primary_role === 'instructor' || user.primary_role === 'admin') {
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
       return res.sendFile(buildFullViewPath("instructor-meetings.html"));
     }
-    return res.status(403).send("Forbidden: Only instructors can access this page");
-  }).catch(error => {
-    console.error("Error checking instructor role:", error);
+
+    // Check if user is enrolled as TA
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'ta') {
+      return res.sendFile(buildFullViewPath("instructor-meetings.html"));
+    }
+
+    return res.status(403).send("Forbidden: Only instructors and TAs can access this page");
+  } catch (error) {
+    console.error("Error checking instructor/TA role:", error);
     return res.status(500).send("Internal server error");
-  });
+  }
+});
+
+app.get("/ta-meetings", ensureAuthenticated, async (req, res) => {
+  // Allow TAs and instructors to access this route
+  try {
+    const email = req.user?.emails?.[0]?.value;
+    if (!email) {
+      return res.redirect("/login");
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    // Allow admins and instructors
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
+      return res.sendFile(buildFullViewPath("instructor-meetings.html"));
+    }
+
+    // Check if user is enrolled as TA
+    const enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
+    if (enrollmentRole === 'ta') {
+      return res.sendFile(buildFullViewPath("instructor-meetings.html"));
+    }
+
+    return res.status(403).send("Forbidden: Only TAs and instructors can access this page");
+  } catch (error) {
+    console.error("Error checking TA role:", error);
+    return res.status(500).send("Internal server error");
+  }
 });
 
 

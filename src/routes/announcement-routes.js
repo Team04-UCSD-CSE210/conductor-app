@@ -34,9 +34,31 @@ router.post('/', ensureAuthenticated, async (req, res) => {
                              enrollmentRole === 'tutor' ||
                              (primaryRole === 'student' && (enrollmentRole === 'ta' || enrollmentRole === 'tutor'));
 
-    // Check if user is team lead (supports multiple leaders via leader_ids and team_members.role)
-    // For team announcements, we'll check team leadership when team_id is provided
-    let isTeamLead = enrollmentRole === 'team-lead';
+    // Check if user is team lead - check both enrollment role and actual team leadership
+    // Team leads can have enrollmentRole 'student' or 'team-lead'
+    let isTeamLeadByEnrollment = enrollmentRole === 'team-lead';
+    let isTeamLeadByTeam = false;
+    
+    // If team_id is provided, check if user is actually a team lead of that team
+    if (team_id) {
+      const { syncTeamLeaderIds } = await import('../utils/team-leader-sync.js');
+      await syncTeamLeaderIds(team_id);
+      
+      const teamCheck = await pool.query(
+        `SELECT 1 
+         FROM team t
+         LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $2 AND tm.left_at IS NULL
+         WHERE t.id = $1 
+           AND t.offering_id = $3
+           AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
+         LIMIT 1`,
+        [team_id, userId, offering_id]
+      );
+      
+      isTeamLeadByTeam = teamCheck.rows.length > 0;
+    }
+    
+    const isTeamLead = isTeamLeadByEnrollment || isTeamLeadByTeam;
 
     // Enforce announcement type based on user role
     if (isInstructorOrTA) {
@@ -72,23 +94,8 @@ router.post('/', ensureAuthenticated, async (req, res) => {
         });
       }
       
-      // Sync leader_ids
-      const { syncTeamLeaderIds } = await import('../utils/team-leader-sync.js');
-      await syncTeamLeaderIds(team_id);
-      
-      // Verify user is a team lead (supports multiple leaders via leader_ids array and team_members.role)
-      const teamCheck = await pool.query(
-        `SELECT 1 
-         FROM team t
-         LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $2 AND tm.left_at IS NULL
-         WHERE t.id = $1 
-           AND t.offering_id = $3
-           AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
-         LIMIT 1`,
-        [team_id, userId, offering_id]
-      );
-      
-      if (teamCheck.rows.length === 0) {
+      // Verify user is a team lead (already checked above, but double-check)
+      if (!isTeamLeadByTeam) {
         return res.status(403).json({ 
           error: 'Forbidden',
           message: 'You must be a team lead of the specified team to create team announcements'
@@ -199,18 +206,18 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     isTeamLead = teamLeadCheck.rows.length > 0;
     
     if (userRole === 'student' || userRole === 'unregistered' || isTeamLead) {
+      // Students and team leads see course-wide + their team's announcements
       announcements = await AnnouncementService.getAnnouncementsForUser(
         offering_id,
         req.currentUser.id,
         options
       );
     } else {
-      // Get all announcements and filter to course-wide only
-      const allAnnouncements = await AnnouncementService.getAnnouncementsByOffering(
+      // Instructors/TAs/Tutors see ALL announcements (course-wide + all team announcements)
+      announcements = await AnnouncementService.getAnnouncementsByOffering(
         offering_id,
         options
       );
-      announcements = allAnnouncements.filter(a => a.team_id === null);
     }
 
     // Disable caching to ensure fresh data

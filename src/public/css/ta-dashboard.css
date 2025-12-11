@@ -222,3 +222,163 @@
   color: var(--error-color, #EF4444);
 }
 
+/* ============================================================================
+   MOBILE RESPONSIVE STYLES
+   ============================================================================ */
+
+/* Tablet and smaller: Stack rows vertically */
+@media (width < 1200px) {
+  .dashboard-row-top,
+  .dashboard-row-bottom {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dashboard-row-top .dashboard-card,
+  .dashboard-row-bottom .dashboard-card {
+    min-height: 0;
+    height: auto !important;
+    max-height: none !important;
+  }
+}
+
+/* Mobile: Full single column layout */
+@media (width <= 768px) {
+  .hamburger-menu {
+    display: flex;
+  }
+
+  .dashboard-grid {
+    gap: 12px;
+  }
+
+  .dashboard-row-top,
+  .dashboard-row-bottom {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dashboard-row-top .dashboard-card,
+  .dashboard-row-bottom .dashboard-card {
+    min-height: 0;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Make attendance items stack vertically on mobile */
+  .attendance-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .attendance-item .progress-container {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  /* Compact header buttons */
+  .btn-create-announcement {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  /* Adjust announcement header layout for mobile */
+  .announcements-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .announcements-card .card-header .btn-create-announcement {
+    width: 100%;
+  }
+
+  /* Adjust attendance header layout for mobile */
+  .attendance-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Make card course info stats wrap on mobile */
+  .card-course-info .course-stats {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .card-course-info .course-stats .stat-item {
+    flex: 1 1 auto;
+    min-width: calc(50% - 0.5rem);
+  }
+
+  /* Adjust attendance title for mobile readability */
+  .attendance-title {
+    font-size: 0.85rem;
+    white-space: normal;
+  }
+
+  /* Make journal entries and todo items more compact */
+  .journal-entry,
+  .todo-item {
+    height: auto !important;
+    min-height: 50px !important;
+    max-height: none !important;
+    padding: 8px;
+  }
+
+  /* Adjust announcement items for mobile */
+  .announcement-item {
+    height: auto !important;
+    min-height: 80px !important;
+    max-height: none !important;
+  }
+
+  /* Make lists scrollable on mobile */
+  .announcements-list,
+  .attendance-list,
+  .journal-list,
+  .todo-list {
+    max-height: 250px !important;
+  }
+}
+
+/* Very small mobile devices */
+@media (width < 480px) {
+  .dashboard-grid {
+    gap: 10px;
+  }
+
+  .dashboard-row-top,
+  .dashboard-row-bottom {
+    gap: 10px;
+  }
+
+  .card-course-info .course-stats {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .card-course-info .course-stats .stat-item {
+    min-width: 100%;
+  }
+
+  /* Further reduce font sizes for very small screens */
+  .attendance-title {
+    font-size: 0.8rem;
+  }
+
+  .attendance-meta {
+    font-size: 0.7rem;
+  }
+
+  /* Make cards even more compact */
+  .dashboard-card {
+    padding: 1rem;
+  }
+
+  .dashboard-card h4 {
+    font-size: 0.95rem;
+  }
+}
+

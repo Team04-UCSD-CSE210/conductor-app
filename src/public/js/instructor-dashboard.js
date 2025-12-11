@@ -28,6 +28,9 @@
     formatCreatorWithRole = (announcement) => announcement.creator_name || 'Unknown',
   } = DS;
   
+  // Use the proper formatCreatorWithRole from DashboardService if available
+  const formatCreator = window.DashboardService?.formatCreatorWithRole || formatCreatorWithRole;
+  
   let offeringId = null;
   let refreshInterval = null;
 
@@ -129,7 +132,7 @@
         const content = announcement.content || announcement.body || announcement.message || '';
         const isLongContent = content.length > 100;
         const preview = isLongContent ? content.substring(0, 100) : content;
-        const creatorDisplay = formatCreatorWithRole(announcement);
+        const creatorDisplay = formatCreator(announcement);
         
         // Only show edit/delete buttons if current user created this announcement
         const canEditThisAnnouncement = currentUserId && announcement.created_by === currentUserId;
@@ -775,7 +778,7 @@
       
       const title = announcement.title || announcement.subject || 'Announcement';
       const content = announcement.content || announcement.body || announcement.message || '';
-      const creatorName = announcement.creator_name || 'Unknown';
+      const creatorDisplay = formatCreator(announcement);
       
       const dateEl = document.getElementById('viewAnnouncementDate');
       const creatorEl = document.getElementById('viewAnnouncementCreator');
@@ -783,7 +786,7 @@
       const messageEl = document.getElementById('viewAnnouncementMessage');
       
       if (dateEl) dateEl.textContent = dateStr;
-      if (creatorEl) creatorEl.textContent = `by ${escapeHtml(creatorName)}`;
+      if (creatorEl) creatorEl.textContent = `by ${escapeHtml(creatorDisplay)}`;
       if (subjectEl) subjectEl.textContent = title;
       if (messageEl) {
         messageEl.innerHTML = escapeHtml(content).replace(/\n/g, '<br>');
