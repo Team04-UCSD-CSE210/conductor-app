@@ -1116,6 +1116,8 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
         [user.id]
       );
       
+      // We intentionally ignore debugRows; memberTeams is used below.
+
       if (memberTeams.length > 0) {
         // If user is a member of exactly one team, automatically convert them to leader
         // This handles cases where the conversion was attempted but didn't complete
@@ -2434,16 +2436,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     
     if (!schemaExists) {
       await DatabaseInitializer.initialize({ seed: true, force: false });
-    } else {
     }
 
     if (HTTPS_AVAILABLE && sslOptions) {
-      https.createServer(sslOptions, app).listen(8443, () => {
-      });
+      https.createServer(sslOptions, app).listen(8443, () => {});
     } else {
       const PORT = process.env.PORT || 3001;
-      app.listen(PORT, () => {
-      });
+      app.listen(PORT, () => {});
     }
   } catch (error) {
     console.error("Failed to connect to the database", error);

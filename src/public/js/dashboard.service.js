@@ -358,7 +358,7 @@
     if (typeof classTimings === 'string') {
       try {
         classTimings = JSON.parse(classTimings);
-      } catch (e) {
+      } catch {
         return null;
       }
     }
@@ -790,7 +790,7 @@
       // Note: Not needed for sticky header, but kept for potential future use
       try {
         await getMyTeam(offeringId);
-      } catch (error) {
+    } catch {
         // Not all users have teams (TAs, instructors, etc.) - this is fine
       }
 
