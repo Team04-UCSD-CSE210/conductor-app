@@ -1,3 +1,8 @@
+/* Team Overview card styling */
+.wj-team-overview {
+  margin-top: 1.5rem;
+}
+
 /* Team Overview list – team lead journal */
 .wj-team-list {
   list-style: none;

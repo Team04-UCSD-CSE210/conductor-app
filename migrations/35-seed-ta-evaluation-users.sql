@@ -1,5 +1,9 @@
--- seed-ta-evaluation-users.sql
--- Seed users for TA evaluation
+-- 35-seed-ta-evaluation-users.sql
+-- Seed users for TA evaluation: Sammed Kamate
+-- - skamate@ucsd.edu: Instructor in active course
+-- - sammedkamate2@gmail.com: Student in active course
+-- - sammedkamate3@gmail.com: TA in active course
+-- Run AFTER the users table, course_offerings, and enrollments are created.
 
 DO $$
 DECLARE
@@ -10,11 +14,13 @@ DECLARE
     inst_extension CONSTANT institution_type_enum := 'extension'::institution_type_enum;
     role_instructor_enroll CONSTANT enrollment_role_enum := 'instructor'::enrollment_role_enum;
     role_student_enroll CONSTANT enrollment_role_enum := 'student'::enrollment_role_enum;
+    role_ta_enroll CONSTANT enrollment_role_enum := 'ta'::enrollment_role_enum;
     status_enrolled CONSTANT enrollment_status_enum := 'enrolled'::enrollment_status_enum;
     
     offering_id_var UUID;
     instructor_user_id UUID;
     student_user_id UUID;
+    ta_user_id UUID;
 BEGIN
     -- Get active offering
     SELECT id INTO offering_id_var 
@@ -96,7 +102,7 @@ BEGIN
         github_username,
         linkedin_url
     ) VALUES (
-        'sammedkamate@gmail.com', 
+        'sammedkamate2@gmail.com', 
         NULL, 
         'Sammed Kamate 2', 
         'Sammed',
@@ -173,7 +179,84 @@ BEGIN
             course_role = role_student_enroll,
             status = status_enrolled;
         
-        RAISE NOTICE '✅ Enrolled sammedkamate@gmail.com as student in active course';
+        RAISE NOTICE '✅ Enrolled sammedkamate2@gmail.com as student in active course';
+    END IF;
+    
+    -- Insert or update Sammed Kamate 3 (TA)
+    INSERT INTO users (
+        email,
+        ucsd_pid,
+        name,
+        preferred_name,
+        major,
+        degree_program,
+        academic_year,
+        department,
+        class_level,
+        primary_role,
+        status,
+        institution_type,
+        profile_url,
+        image_url,
+        phone_number,
+        github_username,
+        linkedin_url
+    ) VALUES (
+        'sammedkamate3@gmail.com', 
+        NULL, 
+        'Sammed Kamate 3', 
+        'Sammed',
+        'Computer Science', 
+        'MS', 
+        2025, 
+        'Computer Science & Engineering', 
+        'Graduate',
+        role_student, 
+        status_active, 
+        inst_extension,
+        NULL, 
+        NULL, 
+        NULL, 
+        'sammedkamate3', 
+        NULL
+    )
+    ON CONFLICT (email) DO UPDATE
+    SET
+        name            = EXCLUDED.name,
+        preferred_name  = EXCLUDED.preferred_name,
+        major           = EXCLUDED.major,
+        degree_program  = EXCLUDED.degree_program,
+        academic_year   = EXCLUDED.academic_year,
+        department      = EXCLUDED.department,
+        class_level     = EXCLUDED.class_level,
+        primary_role    = EXCLUDED.primary_role,
+        status          = EXCLUDED.status,
+        institution_type = EXCLUDED.institution_type,
+        github_username = EXCLUDED.github_username,
+        updated_at      = NOW()
+    RETURNING id INTO ta_user_id;
+    
+    -- Enroll TA in active course
+    IF ta_user_id IS NOT NULL THEN
+        INSERT INTO enrollments (
+            offering_id,
+            user_id,
+            course_role,
+            status,
+            enrolled_at
+        ) VALUES (
+            offering_id_var,
+            ta_user_id,
+            role_ta_enroll,
+            status_enrolled,
+            CURRENT_DATE
+        )
+        ON CONFLICT (offering_id, user_id) DO UPDATE
+        SET
+            course_role = role_ta_enroll,
+            status = status_enrolled;
+        
+        RAISE NOTICE '✅ Enrolled sammedkamate3@gmail.com as TA in active course';
     END IF;
     
     RAISE NOTICE '✅ TA evaluation users seeded successfully';
@@ -191,5 +274,5 @@ SELECT
 FROM users u
 LEFT JOIN enrollments e ON u.id = e.user_id
 LEFT JOIN course_offerings co ON e.offering_id = co.id AND co.is_active = TRUE
-WHERE u.email IN ('skamate@ucsd.edu', 'sammedkamate@gmail.com')
+WHERE u.email IN ('skamate@ucsd.edu', 'sammedkamate2@gmail.com', 'sammedkamate3@gmail.com')
 ORDER BY u.email;
