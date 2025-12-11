@@ -21,7 +21,6 @@ import enrollmentRoutes from "./routes/enrollment-routes.js";
 import teamRoutes from "./routes/team-routes.js";
 import offeringRoutes from "./routes/offering-routes.js";
 import interactionRoutes from "./routes/interaction-routes.js";
-import dashboardTodoRoutes from "./routes/dashboard-todo-routes.js";
 import courseOfferingRoutes from "./routes/class-routes.js";
 import sessionRoutes from "./routes/session-routes.js";
 import attendanceRoutes from "./routes/attendance-routes.js";
@@ -31,9 +30,6 @@ import taJournalRoutes from "./routes/ta-journal-routes.js";
 import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
 import { trackApiCategory } from "./observability/diagnostics.js";
-import diagnosticsRoutes from "./routes/diagnostics-routes.js";
-import { buildDiagnosticsSnapshot, persistDiagnosticsSnapshot } from "./observability/collector.js";
-import announcementRoutes from "./routes/announcement-routes.js";
 import { metricsMiddleware } from "./middleware/metrics-middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
