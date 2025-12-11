@@ -57,18 +57,25 @@
 .form-group input[type="text"],
 .form-group input[type="url"] {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  background: var(--gray-50, #f9fafb);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.form-group input[type="text"]::placeholder,
+.form-group input[type="url"]::placeholder {
+  color: var(--gray-400, #9ca3af);
 }
 
 .form-group input[type="text"]:focus,
 .form-group input[type="url"]:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgb(var(--primary-color-rgb) / 20%);
+  border-color: var(--green-500, #059669);
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(5 150 105 / 12%);
 }
 
 .logo-section {
@@ -229,9 +236,11 @@
 
 /* Settings Cards */
 .settings-card {
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.75rem;
+  box-shadow: 0 12px 30px rgb(15 23 42 / 6%);
+  border: 1px solid var(--gray-100, #e5e7eb);
   width: 100%;
 }
 
@@ -244,10 +253,23 @@
 
 .form-group input {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.75rem;
   font-size: 1rem;
+  background: var(--gray-50, #f9fafb);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.form-group input::placeholder {
+  color: var(--gray-400, #9ca3af);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--green-500, #059669);
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(5 150 105 / 12%);
 }
 
 /* Blue Outlined Buttons */

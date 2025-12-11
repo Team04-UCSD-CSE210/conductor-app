@@ -81,10 +81,6 @@ async function checkAndAutoOpenSession(session) {
     
     // If session start time has passed, automatically open attendance
     if (sessionStart <= now) {
-      console.log('[SessionService] Auto-opening attendance for session:', session.id, {
-        sessionStart: sessionStart.toISOString(),
-        now: now.toISOString()
-      });
       
       // Use the session creator as the updater, or system if not available
       const updatedBy = session.created_by || '00000000-0000-0000-0000-000000000000';
@@ -94,7 +90,6 @@ async function checkAndAutoOpenSession(session) {
       const updatedSession = await SessionModel.findById(session.id);
       if (updatedSession) {
         Object.assign(session, updatedSession);
-        console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at);
       }
     }
   } catch (error) {
@@ -357,75 +352,32 @@ export class SessionService {
         const seconds = timeParts[2] || 0;
         
         // Create date in local timezone (month is 0-indexed in JavaScript)
-        let sessionStart = new Date(year, month - 1, day, hours, minutes, seconds);
+        const sessionStart = new Date(year, month - 1, day, hours, minutes, seconds);
         
         // Validate the date was parsed correctly
         if (Number.isNaN(sessionStart.getTime())) {
-          console.error('[SessionService] Invalid date/time for auto-open:', { 
-            dateStr, 
-            timeStr, 
+          console.warn('[SessionService] Invalid date/time for auto-open:', { 
+            session_id: session.id,
             session_date: session.session_date,
-            session_time: session.session_time,
-            session_date_type: typeof session.session_date,
-            session_time_type: typeof session.session_time
+            session_time: session.session_time
           });
         } else {
           const now = new Date();
           
-          // Verify the date components are correct - they should match what was stored
-          const sessionStartYear = sessionStart.getFullYear();
-          const sessionStartMonth = sessionStart.getMonth() + 1;
-          const sessionStartDay = sessionStart.getDate();
-          const sessionStartHours = sessionStart.getHours();
-          const sessionStartMinutes = sessionStart.getMinutes();
-          
-          const nowYear = now.getFullYear();
-          const nowMonth = now.getMonth() + 1;
-          const nowDay = now.getDate();
-          const nowHours = now.getHours();
-          const nowMinutes = now.getMinutes();
-          
-          // Check if parsed date matches stored date
-          const dateMatches = sessionStartYear === year && 
-                             sessionStartMonth === month && 
-                             sessionStartDay === day;
-          const timeMatches = sessionStartHours === hours && 
-                             sessionStartMinutes === minutes;
-          
-          console.log('[SessionService] Auto-open check:', {
-            session_date_raw: session.session_date,
-            session_time_raw: session.session_time,
-            session_date_type: typeof session.session_date,
-            session_time_type: typeof session.session_time,
-            stored_date: dateStr,
-            stored_time: timeStr,
-            parsedComponents: { year, month, day, hours, minutes, seconds },
-            dateMatches,
-            timeMatches,
-            sessionStart_UTC: sessionStart.toISOString(),
-            sessionStart_Local: `${sessionStartYear}-${String(sessionStartMonth).padStart(2, '0')}-${String(sessionStartDay).padStart(2, '0')} ${String(sessionStartHours).padStart(2, '0')}:${String(sessionStartMinutes).padStart(2, '0')}`,
-            now_UTC: now.toISOString(),
-            now_Local: `${nowYear}-${String(nowMonth).padStart(2, '0')}-${String(nowDay).padStart(2, '0')} ${String(nowHours).padStart(2, '0')}:${String(nowMinutes).padStart(2, '0')}`,
-            shouldOpen: sessionStart <= now,
-            alreadyOpened: !!session.attendance_opened_at
-          });
-          
           // If session start time has passed, automatically open attendance
           if (sessionStart <= now && !session.attendance_opened_at) {
-            console.log('[SessionService] Auto-opening attendance for session:', session.id);
             await SessionModel.openAttendance(session.id, createdBy);
-            // Refresh session to get updated attendance_opened_at (and ensure attendance_closed_at is NULL)
+            // Refresh session to get updated attendance_opened_at
             const updatedSession = await SessionModel.findById(session.id);
             if (updatedSession) {
               Object.assign(session, updatedSession);
-              console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at, 'attendance_closed_at:', updatedSession.attendance_closed_at);
+              console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at);
             }
           }
           
           // For team meetings, ensure attendance_closed_at is NULL even if auto-open didn't run
           // Team meetings should only be closed manually by the team leader
           if (session.team_id && session.attendance_closed_at) {
-            console.log('[SessionService] Removing auto-close for team meeting:', session.id);
             await pool.query(
               'UPDATE sessions SET attendance_closed_at = NULL WHERE id = $1',
               [session.id]
@@ -698,32 +650,8 @@ export class SessionService {
       throw new Error('Session not found');
     }
 
-    // Check if user is the creator
-    const isCreator = session.created_by === userId;
-    
-    // Check if user is the instructor of the active course offering
-    let isInstructor = false;
-    if (session.offering_id) {
-      const offeringResult = await pool.query(
-        `SELECT instructor_id, is_active 
-         FROM course_offerings 
-         WHERE id = $1`,
-        [session.offering_id]
-      );
-      
-      if (offeringResult.rows.length > 0) {
-        const offering = offeringResult.rows[0];
-        // Only allow if the offering is active and user is the instructor
-        if (offering.is_active && offering.instructor_id === userId) {
-          isInstructor = true;
-        }
-      }
-    }
-
-    if (!isCreator && !isInstructor) {
-      throw new Error('Not authorized to manage this session');
-    }
-
+    // Authorization is handled by permission middleware (session.manage)
+    // This allows anyone with session.manage permission to delete sessions
     return await SessionModel.delete(sessionId);
   }
 

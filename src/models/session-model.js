@@ -131,7 +131,7 @@ export class SessionModel {
               TO_CHAR(s.session_time, 'HH24:MI:SS') as session_time_str
        FROM sessions s
        LEFT JOIN course_offerings co ON s.offering_id = co.id
-       WHERE s.access_code = $1`,
+       WHERE UPPER(s.access_code) = UPPER($1)`,
       [accessCode]
     );
 

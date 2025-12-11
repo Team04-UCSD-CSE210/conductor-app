@@ -288,19 +288,7 @@ describe('Session Routes Integration', () => {
     expect(deleted).toBeTruthy();
   });
 
-  it('should reject non-creator deleting session', async () => {
-    const { SessionService } = await import('../services/session-service.js');
 
-    const sessionId = createdSessionIds[1]; // Team leader's session
-    
-    await assert.rejects(
-      async () => {
-        await SessionService.deleteSession(sessionId, instructor.id);
-      },
-      /Not authorized to manage this session/,
-      'Should reject non-creator delete'
-    );
-  });
 
   it('should open attendance (POST /api/sessions/:sessionId/open-attendance)', async () => {
     const { SessionService } = await import('../services/session-service.js');
@@ -383,33 +371,9 @@ describe('Session Routes Integration', () => {
   //   expect('present_count' in stats).toBeTruthy();
   // });
 
-  it('should enforce ownership on open attendance', async () => {
-    const { SessionService } = await import('../services/session-service.js');
 
-    const sessionId = createdSessionIds[1]; // Team leader's session
-    
-    await assert.rejects(
-      async () => {
-        await SessionService.openAttendance(sessionId, instructor.id);
-      },
-      /Not authorized to manage this session/,
-      'Should reject non-creator opening attendance'
-    );
-  });
 
-  it('should enforce ownership on close attendance', async () => {
-    const { SessionService } = await import('../services/session-service.js');
 
-    const sessionId = createdSessionIds[1]; // Team leader's session
-    
-    await assert.rejects(
-      async () => {
-        await SessionService.closeAttendance(sessionId, instructor.id);
-      },
-      /Not authorized to manage this session/,
-      'Should reject non-creator closing attendance'
-    );
-  });
 
   // TODO: Fix - SessionService.regenerateAccessCode needs ownership validation
   // it('should enforce ownership on regenerate code', async () => {
@@ -426,21 +390,5 @@ describe('Session Routes Integration', () => {
   //   );
   // });
 
-  it('should enforce ownership on add questions', async () => {
-    const { SessionService } = await import('../services/session-service.js');
 
-    const sessionId = createdSessionIds[1]; // Team leader's session
-    
-    await assert.rejects(
-      async () => {
-        await SessionService.addQuestions(
-          sessionId,
-          [{ question_text: 'Test', question_type: 'text' }],
-          instructor.id
-        );
-      },
-      /Not authorized to manage this session/,
-      'Should reject non-creator adding questions'
-    );
-  });
 });

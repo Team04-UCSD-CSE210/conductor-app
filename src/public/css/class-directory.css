@@ -2,7 +2,7 @@
 
 
 :root {
-  --class-dir-sidebar-width: 260px;
+  --class-dir-sidebar-width: 220px;
 }
 
 
@@ -17,60 +17,6 @@
   background: linear-gradient(to bottom, var(--palette-background, var(--emerald-50, #ecfdf5)) 0, var(--palette-background, #fff) 240px);
 }
 
-
-.dashboard-page.class-directory-page .dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 20px 24px;
-  border-radius: 18px;
-  background: var(--palette-primary, var(--teal-800, #022c22));
-  color: var(--palette-background, var(--emerald-50, #ecfdf5));
-  box-shadow: 0 18px 38px color-mix(in srgb, var(--palette-primary, var(--teal-700, #0f766e)) 25%, transparent);
-}
-
-.dashboard-page.class-directory-page .dashboard-header-left {
-  max-width: 640px;
-}
-
-.dashboard-page.class-directory-page .dashboard-eyebrow {
-  font-size: 1.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--palette-background, white) !important;
-  margin: 0 0 4px;
-}
-
-.dashboard-page.class-directory-page .dashboard-title {
-  display: none;
-}
-
-.dashboard-page.class-directory-page .dashboard-subtitle {
-  margin: 0;
-  font-size: 0.95rem;
-  opacity: 0.9;
-}
-
-.dashboard-page.class-directory-page .dashboard-header-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  font-size: 0.85rem;
-}
-
-.dashboard-page.class-directory-page .offering-label {
-  opacity: 0.8;
-}
-
-.dashboard-page.class-directory-page .offering-name {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--palette-primary, var(--teal-700, #0f766e)) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--palette-secondary, var(--emerald-400, #2dd4bf)) 40%, transparent);
-  font-weight: 500;
-}
 
 /* ===== Tabs ===== */
 

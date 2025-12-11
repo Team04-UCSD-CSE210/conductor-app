@@ -48,7 +48,6 @@ export class SessionQuestionModel {
           if (typeof options === 'string') {
             try {
               options = JSON.parse(options);
-              console.log('[SessionQuestionModel] Parsed string options to:', options);
             } catch (parseErr) {
               console.error('[SessionQuestionModel] Failed to parse options string:', options, parseErr);
               options = []; // Fallback to empty array if parsing fails

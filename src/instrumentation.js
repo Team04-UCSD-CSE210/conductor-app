@@ -20,7 +20,6 @@ import { metrics } from '@opentelemetry/api';
 const SIGNOZ_ENDPOINT = process.env.SIGNOZ_ENDPOINT || 'http://localhost:4318';
 const SIGNOZ_ACCESS_TOKEN = process.env.SIGNOZ_ACCESS_TOKEN;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'conductor-app';
-const ENVIRONMENT = process.env.ENVIRONMENT || 'development';
 
 // Configure headers for SigNoz Cloud authentication
 const headers = SIGNOZ_ACCESS_TOKEN 
@@ -63,10 +62,6 @@ const sdk = new NodeSDK({
 // Start the SDK
 try {
   sdk.start();
-  console.log('[OpenTelemetry] Instrumentation started successfully');
-  console.log(`[OpenTelemetry] Service: ${SERVICE_NAME}`);
-  console.log(`[OpenTelemetry] Environment: ${ENVIRONMENT}`);
-  console.log(`[OpenTelemetry] Endpoint: ${SIGNOZ_ENDPOINT}`);
 } catch (error) {
   console.error('[OpenTelemetry] Failed to start instrumentation:', error);
 }
