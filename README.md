@@ -2,7 +2,7 @@
 
 **A comprehensive course management platform for CSE 210 Software Engineering**
 
-🌐 **Live Deployment**: [https://conductor-app.onrender.com/](https://conductor-app.onrender.com/)
+**Live Deployment**: [https://conductor-app.onrender.com/](https://conductor-app.onrender.com/)
 
 ## Overview
 
