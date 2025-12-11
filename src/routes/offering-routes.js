@@ -325,7 +325,7 @@ router.get('/:offeringId', ensureAuthenticated, async (req, res) => {
       query = `
         SELECT 
         co.*,
-        COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role::text = 'student' AND e.status = 'enrolled') as student_count,
+        COUNT(DISTINCT e.user_id) FILTER (WHERE (e.course_role::text = 'student' OR e.course_role::text = 'team-lead') AND e.status = 'enrolled') as student_count,
         COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role::text = 'ta' AND e.status = 'enrolled') as ta_count,
         COUNT(DISTINCT e.user_id) FILTER (WHERE e.course_role::text = 'tutor' AND e.status = 'enrolled') as tutor_count,
         COUNT(DISTINCT t.id) as team_count

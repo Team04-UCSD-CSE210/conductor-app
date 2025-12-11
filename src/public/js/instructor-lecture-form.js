@@ -593,6 +593,32 @@
     });
   }
 
+  // Show success toast for general messages
+  function showSuccessToast(message, timeout = 4000) {
+    // Find or create toast container
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container';
+      toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;';
+      document.body.appendChild(toastContainer);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    toast.style.cssText = 'padding: 12px 20px; background: var(--teal-600, #0d9488); color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
+    toastContainer.appendChild(toast);
+    
+    // Remove toast after timeout
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, timeout);
+  }
+
   // Show toast - only called after successful lecture creation
   function showToast(lecture) {
     if (!toast || !lecture?.id) {
@@ -1289,7 +1315,7 @@
       showSaving();
       setTimeout(() => {
         showSaved();
-        alert('Draft saved successfully!');
+        showSuccessToast('Draft saved successfully!');
       }, 1000);
     });
 

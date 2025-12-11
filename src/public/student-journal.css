@@ -258,8 +258,11 @@ body.dashboard-page {
 
   .wj-main {
     margin-left: 0 !important;
+    margin-right: 0;
     width: 100% !important;
     padding: 1rem 0.75rem;
+    height: auto;
+    overflow-y: visible;
   }
 
   .hamburger-menu {
@@ -279,14 +282,6 @@ body.dashboard-page {
 
   .sidebar.open {
     transform: translateX(0);
-  }
-
-  .wj-main {
-    margin-left: 0 !important;
-    margin-right: 0;
-    padding: 1rem 0.75rem;
-    height: auto;
-    overflow-y: visible;
   }
 
   .header-container {

@@ -21,6 +21,35 @@
   let liveUpdateInterval = null;
   const LIVE_UPDATE_INTERVAL_MS = 3000; // Check for updates every 3 seconds
 
+  // Toast notification function
+  function showToast(message, type = 'success', timeout = 4000) {
+    // Find or create toast container
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container';
+      toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;';
+      document.body.appendChild(toastContainer);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+    toast.textContent = message;
+    toast.style.cssText = 'padding: 12px 20px; background: var(--teal-600, #0d9488); color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
+    if (type === 'error') {
+      toast.style.background = 'var(--red-600, #dc2626)';
+    }
+    toastContainer.appendChild(toast);
+    
+    // Remove toast after timeout
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, timeout);
+  }
+
   function formatDate(dateString) {
     if (!dateString) return '—';
     try {
@@ -984,7 +1013,7 @@ function determineMeetingStatus(meeting) {
       await hydrateMeetingView();
 
       // Show success message
-      alert('Meeting created successfully!');
+      showToast('Meeting created successfully!', 'success');
 
     } catch (error) {
       console.error('Error creating meeting:', error);
