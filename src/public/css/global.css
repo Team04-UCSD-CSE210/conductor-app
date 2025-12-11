@@ -380,11 +380,11 @@ body > :not(.footer) {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  background: white;
-  border: 1px solid var(--gray-200, #e5e7eb);
+  background: linear-gradient(135deg, var(--teal-50, #f0fdfa) 0%, white 100%);
+  border: 1px solid var(--teal-200, #99f6e4);
   border-radius: 1rem;
   padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
+  box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
 }
 
 .header-back-button {
