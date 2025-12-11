@@ -69,6 +69,22 @@
 }
 /* stylelint-enable selector-id-pattern */
 
+/* Announcements header: align title and action button - matching instructor dashboard */
+.announcements-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--palette-primary, #0F766E);
+  padding-bottom: 8px;
+}
+
+.btn-create-announcement {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
 /* Responsive design */
 @media (width <= 768px) {
   .team-info-card {
@@ -90,5 +106,16 @@
   #edit-team-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  /* Adjust announcement header layout for mobile */
+  .announcements-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .announcements-card .card-header .btn-create-announcement {
+    width: 100%;
   }
 }

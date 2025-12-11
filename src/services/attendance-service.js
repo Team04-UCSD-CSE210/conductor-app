@@ -146,11 +146,11 @@ export class AttendanceService {
       throw new Error('Session not found');
     }
 
-    // Check if student is enrolled
+    // Check if student is enrolled (including team leaders)
     const enrollmentCheck = await pool.query(
       `SELECT * FROM enrollments 
        WHERE user_id = $1 AND offering_id = $2 
-       AND status = 'enrolled' AND course_role = 'student'`,
+       AND status = 'enrolled' AND (course_role = 'student' OR course_role = 'team-lead')`,
       [userId, session.offering_id]
     );
 
@@ -230,14 +230,14 @@ export class AttendanceService {
       throw new Error('Session not found');
     }
 
-    // Get all enrolled students
+    // Get all enrolled students (including team leaders)
     const studentsResult = await pool.query(
       `SELECT u.id, u.name, u.email, u.ucsd_pid
        FROM enrollments e
        JOIN users u ON e.user_id = u.id
        WHERE e.offering_id = $1 
          AND e.status = 'enrolled'
-         AND e.course_role = 'student'
+         AND (e.course_role = 'student' OR e.course_role = 'team-lead')
        ORDER BY u.name ASC`,
       [session.offering_id]
     );

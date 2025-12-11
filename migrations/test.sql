@@ -366,11 +366,11 @@ COMMIT;
 BEGIN;
 
 \echo '7.1) Create team with leader'
-INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at)
+INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at)
 VALUES (
     (SELECT id FROM course_offerings WHERE code = 'CSE210TEST'),
     'Test Team 2', 2, 
-    (SELECT id FROM users WHERE email = 'student1@test.ucsd.edu'),
+    ARRAY[(SELECT id FROM users WHERE email = 'student1@test.ucsd.edu')]::UUID[],
     'active', CURRENT_DATE
 );
 \echo '✓ Team created'

@@ -7,7 +7,7 @@ DO $$
 DECLARE
     offering_id_var UUID;
     team_cursor CURSOR FOR 
-        SELECT id, team_number, leader_id 
+        SELECT id, team_number, COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids 
         FROM team 
         WHERE offering_id = offering_id_var
         ORDER BY team_number;
@@ -102,8 +102,14 @@ BEGIN
                             (meeting_dates[meeting_idx] || ' 17:00:00')::TIMESTAMPTZ
                         ELSE NULL 
                     END, -- Close only if in the past
-                    team_record.leader_id,
-                    team_record.leader_id
+                    CASE 
+                        WHEN array_length(team_record.leader_ids, 1) > 0 THEN team_record.leader_ids[1]
+                        ELSE NULL
+                    END, -- Use first leader from leader_ids array
+                    CASE 
+                        WHEN array_length(team_record.leader_ids, 1) > 0 THEN team_record.leader_ids[1]
+                        ELSE NULL
+                    END -- Use first leader from leader_ids array
                 )
                 ON CONFLICT DO NOTHING;
                 

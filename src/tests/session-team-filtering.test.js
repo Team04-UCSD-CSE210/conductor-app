@@ -106,8 +106,8 @@ describe('Session Team-Based Filtering', () => {
 
     // Create Team A
     const teamAResult = await pool.query(
-      `INSERT INTO team (offering_id, name, leader_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $4) RETURNING *`,
+      `INSERT INTO team (offering_id, name, leader_ids, created_by, updated_by)
+       VALUES ($1, $2, ARRAY[$3]::UUID[], $4, $4) RETURNING *`,
       [testOffering.id, 'Team A', teamLeaderA.id, adminId]
     );
     teamA = teamAResult.rows[0];
@@ -121,8 +121,8 @@ describe('Session Team-Based Filtering', () => {
 
     // Create Team B
     const teamBResult = await pool.query(
-      `INSERT INTO team (offering_id, name, leader_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $4) RETURNING *`,
+      `INSERT INTO team (offering_id, name, leader_ids, created_by, updated_by)
+       VALUES ($1, $2, ARRAY[$3]::UUID[], $4, $4) RETURNING *`,
       [testOffering.id, 'Team B', teamLeaderB.id, adminId]
     );
     teamB = teamBResult.rows[0];
@@ -537,8 +537,8 @@ describe('Session Team-Based Filtering', () => {
     it('should maintain referential integrity when team is deleted', async () => {
       // Create a temporary team
       const tempTeam = await pool.query(
-        `INSERT INTO team (offering_id, name, leader_id, created_by, updated_by)
-         VALUES ($1, $2, $3, $4, $4) RETURNING *`,
+        `INSERT INTO team (offering_id, name, leader_ids, created_by, updated_by)
+         VALUES ($1, $2, ARRAY[$3]::UUID[], $4, $4) RETURNING *`,
         [testOffering.id, 'Temp Team', teamLeaderA.id, adminId]
       );
       const tempTeamId = tempTeam.rows[0].id;

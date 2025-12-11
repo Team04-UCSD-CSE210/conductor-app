@@ -622,7 +622,7 @@ Create new team.
   "offering_id": "uuid",
   "name": "Team 11",
   "team_number": 11,
-  "leader_id": "uuid",
+  "leader_ids": ["uuid1", "uuid2"],
   "status": "forming"
 }
 ```

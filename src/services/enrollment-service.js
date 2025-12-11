@@ -190,6 +190,17 @@ export class EnrollmentService {
   static async clearTeamInformation(userId, offeringId, updatedBy = null) {
     const { pool } = await import('../db.js');
 
+    // Get all teams where user is a leader before removing
+    const { rows: leaderTeams } = await pool.query(
+      `SELECT DISTINCT team_id 
+       FROM team_members 
+       WHERE user_id = $1::uuid 
+         AND role = 'leader'::team_member_role_enum
+         AND left_at IS NULL
+         AND team_id IN (SELECT id FROM team WHERE offering_id = $2::uuid)`,
+      [userId, offeringId]
+    );
+    
     // Remove from all team_members in this offering
     await pool.query(
       `UPDATE team_members 
@@ -199,6 +210,12 @@ export class EnrollmentService {
          AND team_id IN (SELECT id FROM team WHERE offering_id = $2::uuid)`,
       [userId, offeringId, updatedBy]
     );
+    
+    // Sync leader_ids for all teams where user was a leader
+    const { syncTeamLeaderIds } = await import('../utils/team-leader-sync.js');
+    for (const teamRow of leaderTeams) {
+      await syncTeamLeaderIds(teamRow.team_id);
+    }
 
     // Clear team_id in enrollments
     await pool.query(
@@ -208,43 +225,8 @@ export class EnrollmentService {
       [userId, offeringId]
     );
 
-    // Remove as team leader if they are a leader of any team in this offering
-    // First, find teams where they are the leader
-    const leaderTeams = await pool.query(
-      `SELECT id FROM team 
-       WHERE offering_id = $1::uuid AND leader_id = $2::uuid`,
-      [offeringId, userId]
-    );
-
-    // For each team where they're the leader, set leader_id to NULL
-    // and try to reassign to another team member with 'leader' role
-    for (const team of leaderTeams.rows) {
-      // Try to find another team member with 'leader' role
-      const newLeader = await pool.query(
-        `SELECT user_id FROM team_members 
-         WHERE team_id = $1::uuid 
-           AND role = 'leader'::team_member_role_enum 
-           AND user_id != $2::uuid 
-           AND left_at IS NULL
-         ORDER BY joined_at ASC
-         LIMIT 1`,
-        [team.id, userId]
-      );
-
-      if (newLeader.rows.length > 0) {
-        // Reassign leader to another team member
-        await pool.query(
-          `UPDATE team SET leader_id = $1::uuid WHERE id = $2::uuid`,
-          [newLeader.rows[0].user_id, team.id]
-        );
-      } else {
-        // No other leader found, set to NULL
-        await pool.query(
-          `UPDATE team SET leader_id = NULL WHERE id = $1::uuid`,
-          [team.id]
-        );
-      }
-    }
+    // Note: leader_ids sync was already done above when removing from team_members
+    // The syncTeamLeaderIds function will automatically update leader_ids array
   }
 
   /**

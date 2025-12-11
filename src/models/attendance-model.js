@@ -253,13 +253,13 @@ export class AttendanceModel {
          (SELECT COUNT(*)::INTEGER FROM enrollments 
           WHERE offering_id = s.offering_id 
           AND status = 'enrolled' 
-          AND course_role = 'student') as total_enrolled,
+          AND (course_role = 'student' OR course_role = 'team-lead')) as total_enrolled,
          ROUND(
            COUNT(DISTINCT a.user_id) FILTER (WHERE a.status = 'present')::NUMERIC / 
            NULLIF((SELECT COUNT(*) FROM enrollments 
                    WHERE offering_id = s.offering_id 
                    AND status = 'enrolled' 
-                   AND course_role = 'student'), 0) * 100,
+                   AND (course_role = 'student' OR course_role = 'team-lead')), 0) * 100,
            2
          )::FLOAT as attendance_percentage
        FROM sessions s
@@ -394,7 +394,7 @@ export class AttendanceModel {
        LEFT JOIN attendance a ON s.id = a.session_id AND a.user_id = u.id
        WHERE e.offering_id = $1 
          AND e.status = 'enrolled'
-         AND e.course_role = 'student'
+         AND (e.course_role = 'student' OR e.course_role = 'team-lead')
          AND s.offering_id = $1
        GROUP BY u.id
        ORDER BY u.name ASC`,
@@ -415,7 +415,7 @@ export class AttendanceModel {
        JOIN sessions s ON e.offering_id = s.offering_id
        WHERE s.id = $1
          AND e.status = 'enrolled'
-         AND e.course_role = 'student'
+         AND (e.course_role = 'student' OR e.course_role = 'team-lead')
          AND NOT EXISTS (
            SELECT 1 FROM attendance a 
            WHERE a.session_id = $1 AND a.user_id = e.user_id

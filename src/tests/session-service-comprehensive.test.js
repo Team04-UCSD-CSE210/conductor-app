@@ -75,8 +75,8 @@ describe('SessionService Comprehensive Tests', () => {
 
     // Create team
     const teamResult = await pool.query(
-      `INSERT INTO team (offering_id, name, leader_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $4) RETURNING *`,
+      `INSERT INTO team (offering_id, name, leader_ids, created_by, updated_by)
+       VALUES ($1, $2, ARRAY[$3]::UUID[], $4, $4) RETURNING *`,
       [testOffering.id, 'SVC Test Team', teamLeader.id, adminId]
     );
     team = teamResult.rows[0];

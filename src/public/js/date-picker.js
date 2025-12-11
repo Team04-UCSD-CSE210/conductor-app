@@ -9,13 +9,15 @@
   const allDatePickers = [];
 
   class DatePicker {
-    constructor(inputElement) {
+    constructor(inputElement, options = {}) {
       this.input = inputElement;
       this.container = null;
       this.picker = null;
       this.isOpen = false;
       this.currentDate = new Date();
       this.selectedDate = null;
+      this.minDate = options.minDate || null;
+      this.maxDate = options.maxDate || null;
       
       // Register this instance
       allDatePickers.push(this);
@@ -214,11 +216,22 @@
           dayEl.classList.add('selected');
         }
         
-        // Create a fresh date object for the click handler to avoid mutation issues
-        dayEl.addEventListener('click', () => {
-          const selectedDate = new Date(dateYear, dateMonth, dateDay);
-          this.selectDate(selectedDate);
-        });
+        // Check if date is within min/max range
+        if (this.minDate && currentDate < this.minDate) {
+          dayEl.classList.add('disabled');
+          dayEl.style.opacity = '0.4';
+          dayEl.style.cursor = 'not-allowed';
+        } else if (this.maxDate && currentDate > this.maxDate) {
+          dayEl.classList.add('disabled');
+          dayEl.style.opacity = '0.4';
+          dayEl.style.cursor = 'not-allowed';
+        } else {
+          // Create a fresh date object for the click handler to avoid mutation issues
+          dayEl.addEventListener('click', () => {
+            const selectedDate = new Date(dateYear, dateMonth, dateDay);
+            this.selectDate(selectedDate);
+          });
+        }
         
         this.calendarGrid.appendChild(dayEl);
         
@@ -388,5 +401,6 @@
   // Export for manual initialization
   window.DatePicker = DatePicker;
   window.initDatePickers = initDatePickers;
+  window.allDatePickers = allDatePickers;
 })();
 

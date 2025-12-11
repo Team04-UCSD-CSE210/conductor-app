@@ -13,7 +13,8 @@
     filter: document.getElementById('meeting-filter'),
     attendancePercentage: document.getElementById('attendance-percentage'),
     container: document.querySelector('.attendance-content'),
-    teamName: document.getElementById('team-name')
+    teamName: document.getElementById('team-name'),
+    courseTitle: document.getElementById('course-title')
   };
 
   let isLoading = false;
@@ -240,22 +241,31 @@
         selectors.container.setAttribute('data-offering-id', state.offeringId);
       }
 
-      // Get team info
-      const teamInfo = await getTeamInfo();
-      if (teamInfo) {
-        state.teamId = teamInfo.id;
-        state.teamName = teamInfo.name;
-        if (selectors.teamName) {
-          selectors.teamName.textContent = teamInfo.name;
+      // Get and set course title
+      if (selectors.courseTitle && state.offeringId) {
+        try {
+          const offeringResponse = await fetch(`/api/offerings/${state.offeringId}`, {
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          if (offeringResponse.ok) {
+            const offering = await offeringResponse.json();
+            // Use name first, then code as fallback
+            selectors.courseTitle.textContent = offering.name || offering.code || 'Course';
+          } else {
+            // If API call failed, set a default
+            selectors.courseTitle.textContent = 'Course';
         }
-      } else {
-        if (selectors.teamName) {
-          selectors.teamName.textContent = 'No team';
+        } catch (e) {
+          console.warn('Could not fetch course title:', e);
+          if (selectors.courseTitle) {
+            selectors.courseTitle.textContent = 'Course';
+          }
         }
       }
 
       // Get meeting list (team-specific sessions)
-      // Fetch sessions directly from API to get team_id
+      // Fetch sessions directly from API - backend already filters by team membership
       try {
         const sessionsResponse = await fetch(`/api/sessions?offering_id=${state.offeringId}&limit=1000`, {
           credentials: 'include',
@@ -264,6 +274,78 @@
         
         if (sessionsResponse.ok) {
           const sessionsArray = await sessionsResponse.json();
+          
+          // Extract team_id from team meetings (sessions with team_id)
+          // Backend already filters to show only user's team meetings, so all team_id values should be the same
+          const teamMeetings = sessionsArray.filter(s => s.team_id);
+          if (teamMeetings.length > 0) {
+            // Get team_id from first team meeting
+            const firstTeamId = teamMeetings[0].team_id;
+            state.teamId = firstTeamId;
+            
+            // Try to get team name - try multiple methods
+            let teamNameSet = false;
+            
+            // Method 1: Try getTeamInfo()
+            try {
+              const teamInfo = await getTeamInfo();
+              if (teamInfo && teamInfo.id === state.teamId) {
+                state.teamName = teamInfo.name;
+                teamNameSet = true;
+              }
+            } catch (e) {
+              console.warn('getTeamInfo failed:', e);
+            }
+            
+            // Method 2: If not set, try direct API call
+            if (!teamNameSet) {
+              try {
+                const teamResponse = await fetch(`/api/teams/${state.teamId}`, {
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' }
+                });
+                if (teamResponse.ok) {
+                  const teamData = await teamResponse.json();
+                  state.teamName = teamData.name || teamData.team_name || `Team ${teamData.team_number || ''}`;
+                  teamNameSet = true;
+                }
+              } catch (e) {
+                console.warn('Could not fetch team name from API:', e);
+              }
+            }
+            
+            // Method 3: Fallback to generic name
+            if (!teamNameSet) {
+              state.teamName = `Team ${state.teamId.substring(0, 8)}...`;
+            }
+            
+            // Always update the team name display
+            if (selectors.teamName) {
+              selectors.teamName.textContent = state.teamName;
+            }
+          } else {
+            // No team meetings found, check if user has a team
+            try {
+              const teamInfo = await getTeamInfo();
+              if (teamInfo) {
+                state.teamId = teamInfo.id;
+                state.teamName = teamInfo.name;
+                if (selectors.teamName) {
+                  selectors.teamName.textContent = teamInfo.name;
+                }
+              } else {
+                if (selectors.teamName) {
+                  selectors.teamName.textContent = 'No team';
+                }
+              }
+            } catch (e) {
+              console.warn('Error getting team info:', e);
+              if (selectors.teamName) {
+                selectors.teamName.textContent = 'No team';
+              }
+            }
+          }
+          
           const attendanceResponse = await fetch(`/api/attendance/my-attendance?offering_id=${state.offeringId}`, {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' }
@@ -275,9 +357,9 @@
             attendanceMap[record.session_id] = record.status;
           });
           
-          // Transform sessions and filter to team meetings
+          // Transform sessions and filter to team meetings only (exclude course-wide sessions where team_id is null)
           const transformedSessions = sessionsArray
-            .filter(s => s.team_id === state.teamId)
+            .filter(s => s.team_id !== null && s.team_id !== undefined)
             .map(session => {
               const transformed = window.LectureService ? 
                 window.LectureService.transformSession?.(session) : 

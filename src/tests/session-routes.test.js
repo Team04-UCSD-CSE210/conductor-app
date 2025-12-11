@@ -93,8 +93,8 @@ describe('Session Routes Integration', () => {
 
     // Create team
     const teamResult = await pool.query(
-      `INSERT INTO team (offering_id, name, leader_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $4)
+      `INSERT INTO team (offering_id, name, leader_ids, created_by, updated_by)
+       VALUES ($1, $2, ARRAY[$3]::UUID[], $4, $4)
        RETURNING *`,
       [
         testOffering.id,

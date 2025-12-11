@@ -72,7 +72,7 @@ body,
 .group-card,
 .person-card,
 .team-card {
-  border-color: var(--palette-accent, #99F6E4) !important;
+  border-color: var(--palette-primary, #0F766E) !important;
 }
 
 .week-item {
@@ -107,7 +107,7 @@ h5,
 }
 
 .dashboard-card h4 {
-  border-bottom-color: var(--palette-accent, #99F6E4) !important;
+  border-bottom-color: var(--palette-primary, #0F766E) !important;
   color: var(--palette-primary, #0F766E) !important;
 }
 
@@ -212,7 +212,7 @@ a:hover {
 }
 
 .todo-add {
-  border-color: var(--palette-accent, #99F6E4) !important;
+  border-color: var(--palette-primary, #0F766E) !important;
   background: var(--emerald-50, #ECFEFF) !important;
   color: var(--palette-primary, #0F766E) !important;
 }
@@ -278,7 +278,7 @@ button.btn-primary {
    ============================================================================ */
 .attendance-item {
   background: var(--palette-background, #F0FDFA) !important;
-  border-color: var(--palette-accent, #99F6E4) !important;
+  border-color: var(--palette-primary, #0F766E) !important;
 }
 
 .attendance-label,
@@ -295,6 +295,7 @@ button.btn-primary {
    ============================================================================ */
 .instructor-dashboard .attendance-item {
   background: var(--palette-background, #F0FDFA) !important;
+  border-color: var(--palette-primary, #0F766E) !important;
 }
 
 .instructor-dashboard .progress-fill {
@@ -303,21 +304,6 @@ button.btn-primary {
 
 .instructor-dashboard .attendance-label {
   color: var(--palette-primary, #0F766E) !important;
-}
-
-/* ============================================================================
-.attendance-item {
-  background: var(--palette-background, #F0FDFA) !important;
-  border-color: var(--palette-accent, #99F6E4) !important;
-}
-
-.attendance-label,
-.attendance-title {
-  color: var(--palette-primary, #0F766E) !important;
-}
-
-.attendance-meta {
-  color: var(--gray-600, #4b5563) !important;
 }
 
 /* ============================================================================

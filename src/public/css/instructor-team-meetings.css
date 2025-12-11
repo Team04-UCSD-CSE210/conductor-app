@@ -60,15 +60,16 @@ body {
 }
 
 .attendance-card-list:hover {
-  border-color: var(--teal-400, #2dd4bf);
-  box-shadow: 0 4px 12px rgb(13 148 136 / 15%);
+  border-color: var(--palette-primary, #0F766E) !important;
+  box-shadow: 0 4px 12px rgb(15 118 110 / 15%);
   transform: translateY(-2px);
+  background: var(--palette-background, #F0FDFA);
 }
 
 .attendance-card-list-label {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--teal-700, #0f766e);
+  color: var(--palette-primary, #0F766E);
   white-space: nowrap;
 }
 

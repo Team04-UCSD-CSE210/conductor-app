@@ -44,7 +44,7 @@
 }
 
 .live-indicator {
-  color: var(--green-500, #22c55e);
+  color: var(--palette-primary, #0F766E);
   font-size: 0.6rem;
   animation: pulse-indicator 2s ease-in-out infinite;
 }

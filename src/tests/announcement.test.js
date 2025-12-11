@@ -58,8 +58,8 @@ describe('Announcement Feature', () => {
 
     // Create test team
     const teamResult = await pool.query(
-      `INSERT INTO team (offering_id, name, team_number, leader_id, status)
-       VALUES ($1, 'Test Team Alpha', 1, $2, 'active')
+      `INSERT INTO team (offering_id, name, team_number, leader_ids, status)
+       VALUES ($1, 'Test Team Alpha', 1, ARRAY[$2]::UUID[], 'active')
        RETURNING *`,
       [testOffering.id, testStudent1.id]
     );

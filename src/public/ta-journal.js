@@ -10,8 +10,9 @@ async function submitTAJournal(event) {
     const payload = {
       date: new Date().toISOString().split("T")[0],
       interactions: document.getElementById("interactions").value,
-      groups_with_concerns: document.getElementById("groups-with-concerns").value,
-      students_to_reach: document.getElementById("students-to-reach").value
+      team_concerns: document.getElementById("team-concerns").value,
+      class_wide_issues: document.getElementById("class-wide-issues").value,
+      overall_course: document.getElementById("overall-course").value
     };
 
     let url = "/api/ta-journals";
@@ -48,8 +49,9 @@ async function submitTAJournal(event) {
 
 function clearForm() {
   document.getElementById("interactions").value = "";
-  document.getElementById("groups-with-concerns").value = "";
-  document.getElementById("students-to-reach").value = "";
+  document.getElementById("team-concerns").value = "";
+  document.getElementById("class-wide-issues").value = "";
+  document.getElementById("overall-course").value = "";
 }
 
 async function loadTAEntries() {
@@ -120,11 +122,14 @@ async function loadTAEntries() {
           <dt>Interactions:</dt>
           <dd>${log.interactions || 'N/A'}</dd>
 
-          <dt>Groups with Concerns:</dt>
-          <dd>${log.groups_with_concerns || 'N/A'}</dd>
+          <dt>Team Concerns:</dt>
+          <dd>${log.team_concerns || 'N/A'}</dd>
 
-          <dt>Students to Reach:</dt>
-          <dd>${log.students_to_reach || 'N/A'}</dd>
+          <dt>Class-wide Issues:</dt>
+          <dd>${log.class_wide_issues || 'N/A'}</dd>
+
+          <dt>Overall Course:</dt>
+          <dd>${log.overall_course || 'N/A'}</dd>
         </dl>
       `;
       container.appendChild(article);

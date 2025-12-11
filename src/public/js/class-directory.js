@@ -891,8 +891,17 @@ const renderTeamCard = (team) => {
     ? team.members.filter((m) => m && m.name)
     : [];
 
-  const leaderId = team.leader_id || team.leader?.id;
-  const leader = team.leader;
+  // Get all leaders - prefer leaders array from API, fallback to leader_ids
+  let leaders = [];
+  if (team.leaders && Array.isArray(team.leaders) && team.leaders.length > 0) {
+    leaders = team.leaders;
+  } else if (team.leader_ids && Array.isArray(team.leader_ids) && team.leader_ids.length > 0) {
+    // If we only have IDs, try to find them in members array
+    leaders = team.leader_ids.map(id => {
+      const member = members.find(m => m.id === id);
+      return member || { id };
+    });
+  }
 
   // Format dates
   const formatDate = (dateStr) => {
@@ -905,9 +914,10 @@ const renderTeamCard = (team) => {
     }
   };
 
-  // Member list without emails (exclude leader since they're shown separately)
+  // Member list without emails (exclude all leaders since they're shown separately)
+  const leaderIds = leaders.map(l => l.id).filter(Boolean);
   const membersExcludingLeader = members.filter(m => {
-    const isLeader = m.id === leaderId || m.role === 'leader';
+    const isLeader = leaderIds.includes(m.id) || m.role === 'leader';
     return !isLeader;
   });
 
@@ -971,11 +981,11 @@ const renderTeamCard = (team) => {
       </section>
       ` : ''}
 
-      ${leader?.name ? `
+      ${leaders.length > 0 ? `
       <section class="team-info-section">
-        <h5 class="team-section-label">Team Leader</h5>
+        <h5 class="team-section-label">Team Leader${leaders.length > 1 ? 's' : ''}</h5>
         <div class="team-leader-info">
-          <div class="team-leader-name">${leader.name}</div>
+          ${leaders.map(l => `<div class="team-leader-name">${l.name || l.email || 'Unknown'}</div>`).join('')}
         </div>
       </section>
       ` : ''}

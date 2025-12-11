@@ -69,7 +69,7 @@
       await loadJournalEntries();
       
       // Load recent progress
-      await loadRecentProgress(offeringId, { showCount: 3 });
+      await loadRecentProgress(offeringId, { showCount: 8 });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
       console.error('Error details:', {
@@ -351,7 +351,7 @@
     
     // Load recent progress (weeks timeline)
     if (offeringId) {
-      await loadRecentProgress(offeringId, { showCount: 3 });
+      await loadRecentProgress(offeringId, { showCount: 8 });
     }
     
     // Refresh stats every 30 seconds for live updates

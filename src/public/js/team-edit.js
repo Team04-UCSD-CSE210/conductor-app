@@ -4,9 +4,28 @@ document.addEventListener('DOMContentLoaded', async function() {
   const saveImageBtn = document.getElementById('saveImageBtn');
   const currentLogo = document.getElementById('currentLogo');
   const loadingOverlay = document.getElementById('loadingOverlay');
+  const toastContainer = document.getElementById('toastContainer');
   
   let currentTeam = null;
   let selectedFile = null;
+
+  // Toast notification function
+  function showToast(message, type = 'success', timeout = 4000) {
+    if (!toastContainer) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    
+    // Remove toast after timeout
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, timeout);
+  }
 
   // Handle logo file selection
   if (logoUpload) {
@@ -152,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
       
       const updatedTeam = await response.json();
-      alert('Team logo updated successfully!');
+      showToast('Team logo updated successfully!', 'success');
       
       // Update current team data and hide save button
       currentTeam = updatedTeam;
@@ -215,7 +234,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
       
       const updatedTeam = await response.json();
-      alert('Team updated successfully!');
+      showToast('Team updated successfully!', 'success');
       
       // Refresh the form with updated data
       currentTeam = updatedTeam;

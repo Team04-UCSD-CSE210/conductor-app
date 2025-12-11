@@ -34,8 +34,31 @@ router.post('/', ensureAuthenticated, async (req, res) => {
                              enrollmentRole === 'tutor' ||
                              (primaryRole === 'student' && (enrollmentRole === 'ta' || enrollmentRole === 'tutor'));
 
-    // Check if user is team lead
-    const isTeamLead = enrollmentRole === 'team-lead';
+    // Check if user is team lead - check both enrollment role and actual team leadership
+    // Team leads can have enrollmentRole 'student' or 'team-lead'
+    let isTeamLeadByEnrollment = enrollmentRole === 'team-lead';
+    let isTeamLeadByTeam = false;
+    
+    // If team_id is provided, check if user is actually a team lead of that team
+    if (team_id) {
+      const { syncTeamLeaderIds } = await import('../utils/team-leader-sync.js');
+      await syncTeamLeaderIds(team_id);
+      
+      const teamCheck = await pool.query(
+        `SELECT 1 
+         FROM team t
+         LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $2 AND tm.left_at IS NULL
+         WHERE t.id = $1 
+           AND t.offering_id = $3
+           AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
+         LIMIT 1`,
+        [team_id, userId, offering_id]
+      );
+      
+      isTeamLeadByTeam = teamCheck.rows.length > 0;
+    }
+    
+    const isTeamLead = isTeamLeadByEnrollment || isTeamLeadByTeam;
 
     // Enforce announcement type based on user role
     if (isInstructorOrTA) {
@@ -71,20 +94,8 @@ router.post('/', ensureAuthenticated, async (req, res) => {
         });
       }
       
-      // Verify user is a team lead and member of the specified team
-      const teamCheck = await pool.query(
-        `SELECT 1 
-         FROM enrollments e
-         INNER JOIN team_members tm ON tm.team_id = $1 AND tm.user_id = e.user_id AND tm.left_at IS NULL
-         WHERE e.user_id = $2 
-           AND e.offering_id = $3 
-           AND e.course_role = 'team-lead'::enrollment_role_enum
-           AND e.status = 'enrolled'::enrollment_status_enum
-         LIMIT 1`,
-        [team_id, userId, offering_id]
-      );
-      
-      if (teamCheck.rows.length === 0) {
+      // Verify user is a team lead (already checked above, but double-check)
+      if (!isTeamLeadByTeam) {
         return res.status(403).json({ 
           error: 'Forbidden',
           message: 'You must be a team lead of the specified team to create team announcements'
@@ -152,10 +163,11 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       if (teamMemberCheck.rows.length > 0) {
         isEnrolled = true;
       } else {
-        // Also check if user is a team leader (via team.leader_id)
+        // Also check if user is a team leader (supports multiple leaders)
         const teamLeaderCheck = await pool.query(
-          `SELECT 1 FROM team
-           WHERE offering_id = $1 AND leader_id = $2
+          `SELECT 1 FROM team t
+           LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $2 AND tm.left_at IS NULL
+           WHERE t.offering_id = $1 AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
            LIMIT 1`,
           [offering_id, userId]
         );
@@ -194,18 +206,18 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     isTeamLead = teamLeadCheck.rows.length > 0;
     
     if (userRole === 'student' || userRole === 'unregistered' || isTeamLead) {
+      // Students and team leads see course-wide + their team's announcements
       announcements = await AnnouncementService.getAnnouncementsForUser(
         offering_id,
         req.currentUser.id,
         options
       );
     } else {
-      // Get all announcements and filter to course-wide only
-      const allAnnouncements = await AnnouncementService.getAnnouncementsByOffering(
+      // Instructors/TAs/Tutors see ALL announcements (course-wide + all team announcements)
+      announcements = await AnnouncementService.getAnnouncementsByOffering(
         offering_id,
         options
       );
-      announcements = allAnnouncements.filter(a => a.team_id === null);
     }
 
     // Disable caching to ensure fresh data
@@ -302,15 +314,18 @@ router.put('/:id', ensureAuthenticated, async (req, res) => {
     // Additional validation: For team announcements, ensure user is still a team member/lead
     if (announcement.team_id) {
       const { pool } = await import('../db.js');
-      // Check if user is team lead and member of the team
+      // Sync leader_ids
+      const { syncTeamLeaderIds } = await import('../utils/team-leader-sync.js');
+      await syncTeamLeaderIds(announcement.team_id);
+      
+      // Check if user is team lead (supports multiple leaders)
       const teamCheck = await pool.query(
         `SELECT 1 
-         FROM enrollments e
-         INNER JOIN team_members tm ON tm.team_id = $1 AND tm.user_id = e.user_id AND tm.left_at IS NULL
-         WHERE e.user_id = $2 
-           AND e.offering_id = $3 
-           AND e.course_role = 'team-lead'::enrollment_role_enum
-           AND e.status = 'enrolled'::enrollment_status_enum
+         FROM team t
+         LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $2 AND tm.left_at IS NULL
+         WHERE t.id = $1 
+           AND t.offering_id = $3
+           AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
          LIMIT 1`,
         [announcement.team_id, userId, announcement.offering_id]
       );
@@ -364,15 +379,18 @@ router.delete('/:id', ensureAuthenticated, async (req, res) => {
     // Additional validation: For team announcements, ensure user is still a team member/lead
     if (announcement.team_id) {
       const { pool } = await import('../db.js');
-      // Check if user is team lead and member of the team
+      // Sync leader_ids
+      const { syncTeamLeaderIds } = await import('../utils/team-leader-sync.js');
+      await syncTeamLeaderIds(announcement.team_id);
+      
+      // Check if user is team lead (supports multiple leaders)
       const teamCheck = await pool.query(
         `SELECT 1 
-         FROM enrollments e
-         INNER JOIN team_members tm ON tm.team_id = $1 AND tm.user_id = e.user_id AND tm.left_at IS NULL
-         WHERE e.user_id = $2 
-           AND e.offering_id = $3 
-           AND e.course_role = 'team-lead'::enrollment_role_enum
-           AND e.status = 'enrolled'::enrollment_status_enum
+         FROM team t
+         LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $2 AND tm.left_at IS NULL
+         WHERE t.id = $1 
+           AND t.offering_id = $3
+           AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
          LIMIT 1`,
         [announcement.team_id, userId, announcement.offering_id]
       );

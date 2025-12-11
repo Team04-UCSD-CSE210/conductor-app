@@ -164,7 +164,7 @@ export class SessionModel {
              (SELECT COUNT(*) FROM enrollments 
               WHERE offering_id = s.offering_id 
               AND status = 'enrolled' 
-              AND course_role = 'student') as total_students
+              AND (course_role = 'student' OR course_role = 'team-lead')) as total_students
       FROM sessions s
       LEFT JOIN attendance a ON s.id = a.session_id
       LEFT JOIN session_responses sr ON s.id IN (
@@ -236,7 +236,7 @@ export class SessionModel {
                ELSE (SELECT COUNT(*) FROM enrollments 
                      WHERE offering_id = s.offering_id 
                      AND status = 'enrolled' 
-                     AND course_role = 'student')
+                     AND (course_role = 'student' OR course_role = 'team-lead'))
              END as total_students
       FROM sessions s
       LEFT JOIN attendance a ON s.id = a.session_id
@@ -423,7 +423,7 @@ export class SessionModel {
          (SELECT COUNT(*) FROM enrollments 
           WHERE offering_id = s.offering_id 
           AND status = 'enrolled' 
-          AND course_role = 'student') as enrolled_students
+          AND (course_role = 'student' OR course_role = 'team-lead')) as enrolled_students
        FROM sessions s
        LEFT JOIN attendance a ON s.id = a.session_id
        LEFT JOIN session_questions sq ON s.id = sq.session_id

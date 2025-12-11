@@ -593,6 +593,32 @@
     });
   }
 
+  // Show success toast for general messages
+  function showSuccessToast(message, timeout = 4000) {
+    // Find or create toast container
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container';
+      toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;';
+      document.body.appendChild(toastContainer);
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    toast.style.cssText = 'padding: 12px 20px; background: var(--teal-600, #0d9488); color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease;';
+    toastContainer.appendChild(toast);
+    
+    // Remove toast after timeout
+    setTimeout(() => {
+      toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, timeout);
+  }
+
   // Show toast - only called after successful lecture creation
   function showToast(lecture) {
     if (!toast || !lecture?.id) {
@@ -1289,13 +1315,50 @@
       showSaving();
       setTimeout(() => {
         showSaved();
-        alert('Draft saved successfully!');
+        showSuccessToast('Draft saved successfully!');
       }, 1000);
     });
 
     // Auto-save on form changes
     form.addEventListener('input', triggerAutoSave);
     form.addEventListener('change', triggerAutoSave);
+    
+    // Configure date picker with course date restrictions
+    if (dateInput && window.DatePicker) {
+      const configureDatePicker = async () => {
+        try {
+          const offeringRes = await fetch('/api/offerings/active', { credentials: 'include' });
+          if (offeringRes.ok) {
+            const offering = await offeringRes.json();
+            if (offering.start_date && offering.end_date) {
+              const minDate = new Date(offering.start_date);
+              const maxDate = new Date(offering.end_date);
+              minDate.setHours(0, 0, 0, 0);
+              maxDate.setHours(23, 59, 59, 999);
+              
+              // Find the date picker instance and update it
+              if (dateInput.dataset.datePickerInitialized && window.allDatePickers) {
+                const picker = window.allDatePickers.find(p => p.input === dateInput);
+                if (picker) {
+                  picker.minDate = minDate;
+                  picker.maxDate = maxDate;
+                  picker.renderCalendar(); // Re-render with restrictions
+                }
+              }
+              
+              // Also set native input min/max for fallback
+              dateInput.min = offering.start_date;
+              dateInput.max = offering.end_date;
+            }
+          }
+        } catch (error) {
+          console.warn('Could not load course dates for date picker restrictions:', error);
+        }
+      };
+      
+      // Wait a bit for date picker to initialize, then configure
+      setTimeout(configureDatePicker, 500);
+    }
   }
 
   if (document.readyState === 'loading') {

@@ -1,7 +1,14 @@
--- 03-seed-course-offerings-teams.sql
 -- Comprehensive seed data for CSE 210 course offering, enrollments, and teams
 -- Run AFTER users table is populated
 -- Uses fixed UUID for CSE 210 offering to maintain consistency
+-- 
+-- NOTE: Teams support multiple leaders via team.leader_ids array.
+-- The leader_ids array is automatically synced from team_members.role = 'leader'.
+-- Teams must have at least one leader in the leader_ids array.
+
+-- Ensure leader_ids column exists before seeding teams (needed for legacy runs)
+ALTER TABLE team
+  ADD COLUMN IF NOT EXISTS leader_ids UUID[] DEFAULT ARRAY[]::UUID[];
 
 -- Get the offering ID for enrollments and teams
 DO $$
@@ -195,8 +202,8 @@ BEGIN
         
         -- Team 1: student1 (leader), student3, ext2
         IF student1_id IS NOT NULL THEN
-            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
-            VALUES (offering_id_var, 'Team 1', 1, student1_id, active_status, current_date_val, instructor_id)
+            INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
+            VALUES (offering_id_var, 'Team 1', 1, ARRAY[student1_id]::UUID[], active_status, current_date_val, instructor_id)
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
@@ -220,8 +227,8 @@ BEGIN
         
         -- Team 2: student4 (leader), student5
         IF student4_id IS NOT NULL THEN
-            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
-            VALUES (offering_id_var, 'Team 2', 2, student4_id, active_status, current_date_val, instructor_id)
+            INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
+            VALUES (offering_id_var, 'Team 2', 2, ARRAY[student4_id]::UUID[], active_status, current_date_val, instructor_id)
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
@@ -239,8 +246,8 @@ BEGIN
         
         -- Team 3: student6 (leader), student7, ext3
         IF student6_id IS NOT NULL THEN
-            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
-            VALUES (offering_id_var, 'Team 3', 3, student6_id, active_status, current_date_val, instructor_id)
+            INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
+            VALUES (offering_id_var, 'Team 3', 3, ARRAY[student6_id]::UUID[], active_status, current_date_val, instructor_id)
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
@@ -264,8 +271,8 @@ BEGIN
         
         -- Team 4: student8 (leader), ext4
         IF student8_id IS NOT NULL THEN
-            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
-            VALUES (offering_id_var, 'Team 4', 4, student8_id, active_status, current_date_val, instructor_id)
+            INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
+            VALUES (offering_id_var, 'Team 4', 4, ARRAY[student8_id]::UUID[], active_status, current_date_val, instructor_id)
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
@@ -281,29 +288,41 @@ BEGIN
             RAISE NOTICE '✅ Created Team 4 with 2 members';
         END IF;
         
-        -- Team 5: ext5 (leader), bhavikgmail
-        IF ext5_id IS NOT NULL THEN
-            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
-            VALUES (offering_id_var, 'Team 5', 5, ext5_id, active_status, current_date_val, instructor_id)
+        -- Team 5: ext5, bhavikchandna@gmail.com
+        SELECT id INTO team_id_var FROM team WHERE offering_id = offering_id_var AND team_number = 5;
+        
+        IF team_id_var IS NULL AND ext5_id IS NOT NULL THEN
+            INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
+            VALUES (offering_id_var, 'Team 5', 5, ARRAY[ext5_id]::UUID[], active_status, current_date_val, instructor_id)
             RETURNING id INTO team_id_var;
-            
-            INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
-            VALUES (team_id_var, ext5_id, team_role_leader, current_date_val, instructor_id)
-            ON CONFLICT (team_id, user_id) DO NOTHING;
+        ELSIF team_id_var IS NOT NULL AND ext5_id IS NOT NULL THEN
+            UPDATE team SET leader_ids = ARRAY[ext5_id]::UUID[], status = active_status WHERE id = team_id_var;
+        END IF;
+        
+        IF team_id_var IS NOT NULL THEN
+            IF ext5_id IS NOT NULL THEN
+                INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
+                VALUES (team_id_var, ext5_id, team_role_leader, current_date_val, instructor_id)
+                ON CONFLICT (team_id, user_id) DO UPDATE
+                SET role = team_role_leader,
+                    joined_at = COALESCE(team_members.joined_at, EXCLUDED.joined_at);
+            END IF;
             
             IF bhavikgmail_id IS NOT NULL THEN
                 INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
                 VALUES (team_id_var, bhavikgmail_id, team_role_member, current_date_val, instructor_id)
-                ON CONFLICT (team_id, user_id) DO NOTHING;
+                ON CONFLICT (team_id, user_id) DO UPDATE
+                SET role = team_role_member,
+                    joined_at = COALESCE(team_members.joined_at, EXCLUDED.joined_at);
             END IF;
             
-            RAISE NOTICE '✅ Created Team 5 with 2 members';
+            RAISE NOTICE '✅ Ensured Team 5 exists with bhavikchandna@gmail.com as member';
         END IF;
         
         -- Team 6: bgyawali (leader) - single member team
         IF bgyawali_id IS NOT NULL THEN
-            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
-            VALUES (offering_id_var, 'Team 6', 6, bgyawali_id, active_status, current_date_val, instructor_id)
+            INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
+            VALUES (offering_id_var, 'Team 6', 6, ARRAY[bgyawali_id]::UUID[], active_status, current_date_val, instructor_id)
             RETURNING id INTO team_id_var;
             
             INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
@@ -332,35 +351,43 @@ BEGIN
              AND course_role IN (role_ta, role_tutor)
          );
     
-    -- Also remove TAs/tutors from team leader_id and reassign if needed
+    -- Also remove TAs/tutors from team leader_ids and reassign if needed
     UPDATE team 
-    SET leader_id = NULL 
+    SET leader_ids = ARRAY[]::UUID[]
     WHERE offering_id = offering_id_var 
-      AND (leader_id IN (ta1_id, ta2_id, ta3_id, tutor1_id, tutor2_id)
-           OR leader_id IN (
-               SELECT user_id FROM enrollments 
-               WHERE offering_id = offering_id_var 
-                 AND course_role IN (role_ta, role_tutor)
-             ));
+      AND (
+        EXISTS (
+          SELECT 1 FROM unnest(leader_ids) AS leader_id 
+          WHERE leader_id IN (ta1_id, ta2_id, ta3_id, tutor1_id, tutor2_id)
+        )
+        OR EXISTS (
+          SELECT 1 FROM unnest(leader_ids) AS leader_id
+          WHERE leader_id IN (
+            SELECT user_id FROM enrollments 
+            WHERE offering_id = offering_id_var 
+              AND course_role IN (role_ta, role_tutor)
+          )
+        )
+      );
     
     -- For teams that lost their leader, assign a new leader from team members
     UPDATE team t
-    SET leader_id = (
-        SELECT tm.user_id 
+    SET leader_ids = (
+        SELECT ARRAY_AGG(tm.user_id)::UUID[]
         FROM team_members tm 
         WHERE tm.team_id = t.id 
+          AND tm.role = team_role_leader
           AND tm.left_at IS NULL 
           AND tm.user_id NOT IN (
               SELECT user_id FROM enrollments 
               WHERE offering_id = t.offering_id 
                 AND course_role IN (role_ta, role_tutor)
           )
-        ORDER BY tm.role DESC, tm.joined_at ASC
         LIMIT 1
     )
     WHERE t.offering_id = offering_id_var 
-      AND t.leader_id IS NULL
-      AND EXISTS (SELECT 1 FROM team_members WHERE team_id = t.id AND left_at IS NULL);
+      AND (leader_ids IS NULL OR array_length(leader_ids, 1) IS NULL)
+      AND EXISTS (SELECT 1 FROM team_members WHERE team_id = t.id AND left_at IS NULL AND role = team_role_leader);
     
     RAISE NOTICE '✅ Seed data complete: CSE 210 offering with enrollments and teams 1-10 (some students unassigned)';
     
@@ -378,12 +405,12 @@ BEGIN
         
         IF zhekan_id IS NOT NULL AND jack_id IS NOT NULL THEN
             -- Create Team 11
-            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
+            INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
             VALUES (
                 offering_id_var,
                 'Team 11',
                 11,
-                zhekan_id,
+                ARRAY[zhekan_id]::UUID[],
                 active_status,
                 current_date_val,
                 instructor_id
@@ -430,12 +457,12 @@ BEGIN
 
         IF liam_id IS NOT NULL THEN
             -- Create Team 12
-            INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
+            INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
             VALUES (
                 offering_id_var,
                 'Team 12',
                 12,
-                liam_id,
+                ARRAY[liam_id]::UUID[],
                 active_status,
                 current_date_val,
                 instructor_id

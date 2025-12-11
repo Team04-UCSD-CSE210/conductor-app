@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/assets/temp-logo.png" />
   <title>Work Journal / Stand-up – TA View</title>
 
   <!-- Shared styles -->
   <link rel="stylesheet" href="/css/global.css" />
   <link rel="stylesheet" href="/css/dashboard-global.css" />
-  <link rel="stylesheet" href="/css/global.css" />
-  <link rel="stylesheet" href="/css/dashboard-global.css" />
-  <!-- Reuse student journal styles (already includes team overview styles) -->
+  <!-- Shared journal layout/styles -->
   <link rel="stylesheet" href="/student-journal.css" />
-  <link rel="stylesheet" href="/lead-journal.css" />
+  <link rel="stylesheet" href="/instructor-journal.css" />
 </head>
 
 <body class="dashboard-page">
@@ -20,7 +19,6 @@
   <!-- Sidebar Navigation -->
   <header class="sidebar" role="navigation" aria-label="Primary navigation">
     <div class="sidebar-logo">
-      <img src="/assets/temp-logo.png" alt="Conductor logo">
       <img src="/assets/temp-logo.png" alt="Conductor logo">
     </div>
     <h1 class="sidebar-title">Conductor</h1>
@@ -39,106 +37,261 @@
       <h1 id="page-title">Work Journal/Stand-up</h1>
     </header>
 
-    <!-- Teams Overview (matches TA Figma) -->
-    <section class="wj-card wj-team-overview" aria-label="Teams overview">
-      <h2 class="wj-section-title">Teams Overview:</h2>
+    <!-- Overview grid -->
+    <section class="wj-card wj-overview-card" aria-label="Team and student overview">
+      <h2 class="wj-section-title">Overview:</h2>
 
-      <ul class="wj-team-list">
-        <li class="wj-team-item">
-          <span class="wj-team-avatar" aria-hidden="true">
-            <!-- User icon -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              role="img"
-              aria-hidden="true"
-              focusable="false"
+      <div class="wj-overview-grid">
+        <!-- Column 1: Team 1 -->
+        <article class="wj-overview-group" aria-label="Team 1 overview">
+          <ul class="wj-overview-list">
+            <!-- Team header row (toggle) -->
+            <li
+              class="wj-overview-row wj-overview-row-team"
+              data-team-toggle
+              aria-expanded="false"
             >
-              <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
-              <path
-                d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
+          <span class="wj-team-avatar" aria-hidden="true">
+                <!-- group icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="9" cy="9" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="15" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M4.5 18c0-2.4 2.1-4.3 4.5-4.3s4.5 1.9 4.5 4.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                  <path d="M13 17.8c.5-1.7 2-3.1 4-3.1 2.2 0 4 1.7 4 3.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
             </svg>
           </span>
           <p class="wj-team-text">
             <span class="wj-team-name">Team 1</span>
-            is working on implementing user authentication and profile management and has blockers
-            waiting for API documentation from backend team.
+                working on implementing user authentication and profile management
+              </p>
+              <span class="wj-overview-chevron" aria-hidden="true">▾</span>
+            </li>
+
+            <!-- Students in Team 1 -->
+            <li class="wj-overview-row wj-overview-row-student">
+              <span class="wj-team-avatar" aria-hidden="true">
+                <!-- person icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 1</span>
+                working on database schema design and has blockers need clarification on data retention requirements
+              </p>
+            </li>
+
+            <li class="wj-overview-row wj-overview-row-student">
+              <span class="wj-team-avatar" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 2</span>
+                working on API integration for authentication and has blockers waiting for backend endpoints
           </p>
         </li>
 
-        <li class="wj-team-item">
+            <li class="wj-overview-row wj-overview-row-student">
           <span class="wj-team-avatar" aria-hidden="true">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              role="img"
-              aria-hidden="true"
-              focusable="false"
-            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
               <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
-              <path
-                d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 3</span>
+                working on front-end login components and has blockers none at this time
+              </p>
+            </li>
+          </ul>
+        </article>
+
+        <!-- Column 2: Team 2 -->
+        <article class="wj-overview-group" aria-label="Team 2 overview">
+          <ul class="wj-overview-list">
+            <li
+              class="wj-overview-row wj-overview-row-team"
+              data-team-toggle
+              aria-expanded="false"
+            >
+              <span class="wj-team-avatar" aria-hidden="true">
+                <!-- group icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="9" cy="9" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="15" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M4.5 18c0-2.4 2.1-4.3 4.5-4.3s4.5 1.9 4.5 4.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                  <path d="M13 17.8c.5-1.7 2-3.1 4-3.1 2.2 0 4 1.7 4 3.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
             </svg>
           </span>
           <p class="wj-team-text">
             <span class="wj-team-name">Team 2</span>
-            is working on database schema design and migration scripts and has blockers:
-            needs clarification on data retention policies.
+                working on database schema design and migration scripts
+              </p>
+              <span class="wj-overview-chevron" aria-hidden="true">▾</span>
+            </li>
+
+            <li class="wj-overview-row wj-overview-row-student">
+              <span class="wj-team-avatar" aria-hidden="true">
+                <!-- person icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 4</span>
+                working on migration script development and has blockers need access to staging database
           </p>
         </li>
 
-        <li class="wj-team-item">
+            <li class="wj-overview-row wj-overview-row-student">
           <span class="wj-team-avatar" aria-hidden="true">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              role="img"
-              aria-hidden="true"
-              focusable="false"
-            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
               <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
-              <path
-                d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 5</span>
+                working on data validation rules and has blockers none at this time
+              </p>
+            </li>
+          </ul>
+        </article>
+
+        <!-- Column 3: Team 3 -->
+        <article class="wj-overview-group" aria-label="Team 3 overview">
+          <ul class="wj-overview-list">
+            <li
+              class="wj-overview-row wj-overview-row-team"
+              data-team-toggle
+              aria-expanded="false"
+            >
+              <span class="wj-team-avatar" aria-hidden="true">
+                <!-- group icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="9" cy="9" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="15" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M4.5 18c0-2.4 2.1-4.3 4.5-4.3s4.5 1.9 4.5 4.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                  <path d="M13 17.8c.5-1.7 2-3.1 4-3.1 2.2 0 4 1.7 4 3.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
             </svg>
           </span>
           <p class="wj-team-text">
             <span class="wj-team-name">Team 3</span>
-            is working on front-end component library and design system and has blockers:
-            none at this time.
+                working on front-end component library and design system
+              </p>
+              <span class="wj-overview-chevron" aria-hidden="true">▾</span>
+            </li>
+
+            <li class="wj-overview-row wj-overview-row-student">
+              <span class="wj-team-avatar" aria-hidden="true">
+                <!-- person icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 6</span>
+                working on button and form components and has blockers waiting for design review
+              </p>
+            </li>
+
+            <li class="wj-overview-row wj-overview-row-student">
+              <span class="wj-team-avatar" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 7</span>
+                working on documentation and storybook and has blockers none at this time
+              </p>
+            </li>
+
+            <li class="wj-overview-row wj-overview-row-student">
+              <span class="wj-team-avatar" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 8</span>
+                working on accessibility testing and has blockers need testing tools setup
+              </p>
+            </li>
+          </ul>
+        </article>
+
+        <!-- Column 4: Team 4 -->
+        <article class="wj-overview-group" aria-label="Team 4 overview">
+          <ul class="wj-overview-list">
+            <li
+              class="wj-overview-row wj-overview-row-team"
+              data-team-toggle
+              aria-expanded="false"
+            >
+              <span class="wj-team-avatar" aria-hidden="true">
+                <!-- group icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="9" cy="9" r="2.8" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <circle cx="15" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M4.5 18c0-2.4 2.1-4.3 4.5-4.3s4.5 1.9 4.5 4.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                  <path d="M13 17.8c.5-1.7 2-3.1 4-3.1 2.2 0 4 1.7 4 3.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Team 4</span>
+                working on API development and testing infrastructure
+              </p>
+              <span class="wj-overview-chevron" aria-hidden="true">▾</span>
+            </li>
+
+            <li class="wj-overview-row wj-overview-row-student">
+              <span class="wj-team-avatar" aria-hidden="true">
+                <!-- person icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 9</span>
+                working on REST API endpoints and has blockers none at this time
+              </p>
+            </li>
+
+            <li class="wj-overview-row wj-overview-row-student">
+              <span class="wj-team-avatar" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" role="img" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M6 18c0-2.3 2.3-4.2 6-4.2s6 1.9 6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </span>
+              <p class="wj-team-text">
+                <span class="wj-team-name">Student 10</span>
+                working on unit test coverage and has blockers waiting for code review
           </p>
         </li>
       </ul>
+        </article>
+      </div>
     </section>
 
-    <!-- Logging Activity (TA-specific questions) -->
+    <!-- Logging Activity -->
     <section class="wj-card" aria-label="Logging activity">
       <h2 class="wj-section-title">Logging Activity:</h2>
 
       <form class="wj-form">
         <fieldset class="wj-fieldset">
           <legend class="wj-legend">
-            What interactions have you had with students/teams?
+            What interactions with TAs/students have you had since your last check-in?
           </legend>
           <textarea
             id="interactions"
@@ -150,25 +303,37 @@
 
         <fieldset class="wj-fieldset">
           <legend class="wj-legend">
-            What groups show the most concerns?
+            Are any teams showing significant concerns?
           </legend>
           <textarea
-            id="groups-with-concerns"
-            name="groups_with_concerns"
+            id="team-concerns"
+            name="team_concerns"
             rows="3"
-            placeholder="Identify groups with concerns..."
+            placeholder="Identify teams with concerns..."
           ></textarea>
         </fieldset>
 
         <fieldset class="wj-fieldset">
           <legend class="wj-legend">
-            Any student that needs reaching out to?
+            Any issues that need to be addressed to the whole class?
           </legend>
           <textarea
-            id="students-to-reach"
-            name="students_to_reach"
+            id="class-wide-issues"
+            name="class_wide_issues"
             rows="3"
-            placeholder="Note students who may need support..."
+            placeholder="Note any class-wide issues..."
+          ></textarea>
+        </fieldset>
+
+        <fieldset class="wj-fieldset">
+          <legend class="wj-legend">
+            How does the overall course seem?
+          </legend>
+          <textarea
+            id="overall-course"
+            name="overall_course"
+            rows="3"
+            placeholder="Share your thoughts on the course..."
           ></textarea>
         </fieldset>
 
@@ -186,16 +351,8 @@
     </section>
   </main>
 
-  <!-- Fixed right sidebar -->
-  <aside class="wj-right" aria-label="Support options">
-    <div class="help-box">
-      <p>If you believe there's been an error, feel free to reach out:</p>
-      <div class="contact-buttons">
-        <button class="btn-contact" id="contact-professor">Contact Professor</button>
-        <button class="btn-contact" id="contact-students">Contact Students</button>
-      </div>
-    </div>
-  </aside>
+  <!-- Collapsible behavior script -->
+  <script src="/journal-collapsible.js" defer></script>
   <script src="/js/dashboard.service.js"></script>
   <script src="/js/palette-loader.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>

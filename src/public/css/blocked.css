@@ -16,34 +16,34 @@
 
 .attempt-description {
     font-size: 1.2rem;
-    color: #666;
+    color: var(--gray-500, #6b7280);
     margin: 1rem 0;
 }
 
 .attempt-info {
-    color: #666;
+    color: var(--gray-500, #6b7280);
 }
 
 .attempt-counter {
     font-size: 1.1rem;
-    color: #10b981;
+    color: var(--emerald-600, #059669);
     font-weight: 600;
     margin: 1.5rem 0;
 }
 
 .blocked-description {
     font-size: 1.2rem;
-    color: #666;
+    color: var(--gray-500, #6b7280);
     margin: 1rem 0;
 }
 
 .blocked-info {
-    color: #666;
+    color: var(--gray-500, #6b7280);
 }
 
 .countdown {
     font-size: 1.3rem;
-    color: #10b981;
+    color: var(--emerald-600, #059669);
     font-weight: 600;
     margin: 1.5rem 0;
 }
@@ -61,33 +61,33 @@
 }
 
 .access-denied-title {
-    color: #dc2626;
+    color: var(--red-600, #dc2626);
     font-size: 2rem;
     margin-bottom: 1rem;
 }
 
 .access-denied-subtitle {
-    color: #4b5563;
+    color: var(--gray-600, #4b5563);
     font-size: 1.1rem;
     margin-bottom: 2rem;
 }
 
 .access-denied-warning {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: var(--red-50, #fef2f2);
+    border: 1px solid var(--red-200, #fecaca);
     border-radius: 0.75rem;
     padding: 1.5rem;
     margin-bottom: 2rem;
 }
 
 .access-denied-warning h2 {
-    color: #b91c1c;
+    color: var(--red-700, #b91c1c);
     font-size: 1.25rem;
     margin-bottom: 1rem;
 }
 
 .access-denied-warning p {
-    color: #374151;
+    color: var(--gray-700, #374151);
     margin-bottom: 1rem;
 }
 
@@ -96,20 +96,20 @@
 }
 
 .access-denied-info {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: var(--palette-background, white);
+    border: 1px solid var(--gray-200, #e5e7eb);
     border-radius: 0.75rem;
     padding: 1.5rem;
 }
 
 .access-denied-info h2 {
-    color: #111827;
+    color: var(--gray-900, #111827);
     font-size: 1.25rem;
     margin-bottom: 1rem;
 }
 
 .access-denied-info ol {
-    color: #374151;
+    color: var(--gray-700, #374151);
     padding-left: 1.5rem;
     line-height: 1.8;
 }
@@ -123,13 +123,13 @@
     display: inline-block;
     padding: 0.75rem 2rem;
     text-decoration: none;
-    background: #000;
-    color: white;
+    background: var(--gray-900, #000);
+    color: var(--palette-background, white);
     border-radius: 0.5rem;
     font-weight: 500;
     transition: all 0.2s ease;
 }
 
 .home-btn:hover {
-    background: #333;
+    background: var(--gray-800, #1f2937);
 }

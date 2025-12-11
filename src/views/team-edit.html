@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/assets/temp-logo.png" />
   <title>Team Settings - Conductor</title>
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/dashboard-global.css">
@@ -92,7 +93,7 @@
             <form id="teamLinksForm" class="team-form">
               <div class="form-group">
                 <label for="slackLink">Slack Channel</label>
-                <input type="url" id="slackLink" name="slack" placeholder="https://your-team.slack.com/channels/...">
+                <input type="text" id="slackLink" name="slack" placeholder="#general or channel-name">
               </div>
               
               <div class="form-group">
@@ -111,6 +112,8 @@
   <div class="loading-overlay" id="loadingOverlay" style="display: none;">
     <div class="loading-spinner"></div>
   </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
   <script src="/js/palette-loader.js"></script>
   <script src="/js/sidebar-nav.js" defer></script>

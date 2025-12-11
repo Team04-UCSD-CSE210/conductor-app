@@ -124,8 +124,8 @@ describe('Meeting Attendance Views Integration', () => {
 
     // Create team
     const teamResult = await pool.query(
-      `INSERT INTO team (offering_id, name, team_number, leader_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $5, $5)
+      `INSERT INTO team (offering_id, name, team_number, leader_ids, created_by, updated_by)
+       VALUES ($1, $2, $3, ARRAY[$4]::UUID[], $5, $5)
        RETURNING *`,
       [testOffering.id, 'Attendance Test Team', 11, teamLeader.id, adminId]
     );

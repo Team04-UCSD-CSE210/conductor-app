@@ -61,10 +61,10 @@ BEGIN
  role_instructor, status_active, inst_ucsd,
  'https://cse.ucsd.edu/people/faculty/alice-smith', NULL, '+1-858-534-1234', 'alicesmith', 'https://linkedin.com/in/alicesmith'),
 
-('lhardy@ucsd.edu', 'A00011234', 'Dr. Alice Smith', 'Alice',
+('lhardy@ucsd.edu', 'A00011234', 'Dr. Liam Hardy', 'Liam',
 NULL, NULL, NULL, 'Computer Science & Engineering', NULL,
 role_instructor, status_active, inst_ucsd,
-'https://cse.ucsd.edu/people/faculty/alice-smith', NULL, '+1-858-534-1234', 'alicesmith', 'https://linkedin.com/in/alicesmith'),
+'https://cse.ucsd.edu/people/faculty/liam-hardy', NULL, '+1-858-534-1235', 'liamhardy', 'https://linkedin.com/in/liamhardy'),
 
 ('instructor2@ucsd.edu', 'A00004567', 'Dr. Bob Lee', 'Bob',
  NULL, NULL, NULL, 'Electrical & Computer Engineering', NULL,
@@ -167,25 +167,25 @@ role_instructor, status_active, inst_ucsd,
 -- ============================================
 -- EXTENSION STUDENTS (Non-UCSD emails)
 -- ============================================
-('bhavikchandna@gmail.com', NULL, extension_student_name, 'Noah',
+('bhavikchandna@gmail.com', NULL, 'Bhavik Chandna', 'Bhavik',
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',
  role_student, status_active, inst_extension,
- NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+ NULL, NULL, '+1-619-555-0401', 'bhavikchandna', 'https://linkedin.com/in/bhavikchandna'),
 
-('liamhardy2004@gmail.com', NULL, extension_student_name, 'Noah',
+('liamhardy2004@gmail.com', NULL, 'Liam Hardy', 'Liam',
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',
  role_student, status_active, inst_extension,
- NULL, NULL, '+1-619-555-0401', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+ NULL, NULL, '+1-619-555-0402', 'liamhardy', 'https://linkedin.com/in/liamhardy'),
 
 ('bgyawali@ucsd.edu', NULL, 'Bimal Raj Gyawali', 'Bimal',
  'Computer Science', 'PhD', 2025, 'Computer Science & Engineering', 'Graduate',
  role_student, status_active, inst_ucsd,
- NULL, NULL, '+1-858-555-0102', 'noahanderson', 'https://linkedin.com/in/noahanderson'),
+ NULL, NULL, '+1-858-555-0102', 'bgyawali', 'https://linkedin.com/in/bgyawali'),
 
-('haiyix1@gmail.com', NULL, 'Bimasdasdi', 'Bimal',
+('haiyix1@gmail.com', NULL, 'Haiyi Zhang', 'Haiyi',
  'Computer Science', 'PhD', 2025, 'Computer Science & Engineering', 'Graduate',
  role_student, status_active, inst_extension,
- NULL, NULL, '+1-858-555-0103', 'noahanderson', 'https://linkedin.com/in/dsasdasda'),
+ NULL, NULL, '+1-858-555-0103', 'haiyix1', 'https://linkedin.com/in/haiyix1'),
 
 ('kanzhekanzhe1@gmail.com', NULL, 'Zhe Kan', 'Zhe',
  'Software Engineering', NULL, 2025, 'Extension', 'Professional',

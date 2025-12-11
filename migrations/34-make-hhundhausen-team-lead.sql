@@ -26,8 +26,8 @@ BEGIN
             status = 'enrolled'::enrollment_status_enum;
         
         -- Create Team 13 with hhundhausen as leader
-        INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
-        VALUES (offering_id_var, 'Team 13', 13, user_id_var, 'active'::team_status_enum, CURRENT_DATE, instructor_id_var)
+        INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
+        VALUES (offering_id_var, 'Team 13', 13, ARRAY[user_id_var]::UUID[], 'active'::team_status_enum, CURRENT_DATE, instructor_id_var)
         RETURNING id INTO team_id_var;
         
         -- Add as team member with leader role
