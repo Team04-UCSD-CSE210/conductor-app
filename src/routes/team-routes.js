@@ -381,7 +381,7 @@ router.put('/:teamId', ensureAuthenticated, upload.single('logo'), async (req, r
     if (updatedTeam.links && typeof updatedTeam.links === 'string') {
       try {
         updatedTeam.links = JSON.parse(updatedTeam.links);
-      } catch (e) {
+      } catch {
         // Keep as string if parsing fails
       }
     }
