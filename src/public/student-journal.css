@@ -10,12 +10,12 @@ body.dashboard-page {
   background: var(--gray-50, #f5f7fb);
 }
 
-/* Center column: scrollable, offset from sidebar & right sidebar */
+/* Center column: scrollable, offset from sidebar */
 .wj-main {
   position: relative;
   height: 100vh;
   margin-left: 220px;  /* sidebar width from dashboard-global.css */
-  margin-right: 320px; /* width of right sidebar */
+  margin-right: 0; /* no right sidebar */
   padding: 1.25rem;
   box-sizing: border-box;
   overflow-y: auto;
