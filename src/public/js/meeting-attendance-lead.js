@@ -287,7 +287,7 @@
           const teamDetail = await teamDetailResponse.json();
           const member = teamDetail.members?.find(m => m.user_id === user.id);
           if (member) {
-            const isLead = member.role === 'leader' || teamDetail.leader_id === user.id;
+            const isLead = member.role === 'leader' || (teamDetail.leader_ids && Array.isArray(teamDetail.leader_ids) && teamDetail.leader_ids.includes(user.id));
             return { 
               id: team.id, 
               name: teamDetail.name || `Team ${teamDetail.team_number || ''}`,

@@ -301,10 +301,11 @@ router.get('/:offeringId', ensureAuthenticated, async (req, res) => {
         if (teamMemberCheck.rows.length > 0) {
           isEnrolled = true;
         } else {
-          // Also check if user is a team leader (via team.leader_id)
+          // Also check if user is a team leader (supports multiple leaders)
           const teamLeaderCheck = await pool.query(
-            `SELECT 1 FROM team
-             WHERE offering_id = $1 AND leader_id = $2
+            `SELECT 1 FROM team t
+             LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $2 AND tm.left_at IS NULL
+             WHERE t.offering_id = $1 AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
              LIMIT 1`,
             [offeringId, userId]
           );

@@ -264,7 +264,6 @@ CREATE TABLE IF NOT EXISTS team (
     offering_id UUID NOT NULL REFERENCES course_offerings(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     team_number INTEGER,
-    leader_id UUID REFERENCES users(id),
     status team_status_enum,
     formed_at DATE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -274,7 +273,6 @@ CREATE TABLE IF NOT EXISTS team (
 );
 
 CREATE INDEX IF NOT EXISTS idx_team_offering ON team(offering_id);
-CREATE INDEX IF NOT EXISTS idx_team_leader ON team(leader_id);
 CREATE INDEX IF NOT EXISTS idx_team_created_by ON team(created_by);
 
 DROP TRIGGER IF EXISTS update_team_updated_at ON team;

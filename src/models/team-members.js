@@ -1,4 +1,5 @@
 import { pool } from '../db.js';
+import { syncTeamLeaderIds } from '../utils/team-leader-sync.js';
 
 // Valid role values for team members
 const ROLES = ['leader', 'member'];
@@ -91,6 +92,11 @@ export class TeamMemberModel {
       data.added_by ?? null,
       data.removed_by ?? null,
     ]);
+
+    // Sync leader_ids after creating member (especially if role is 'leader')
+    if (rows[0].role === 'leader') {
+      await syncTeamLeaderIds(rows[0].team_id);
+    }
 
     return rows[0];
   }
@@ -360,6 +366,10 @@ export class TeamMemberModel {
     const { rows, rowCount } = await pool.query(query, params);
 
     if (rowCount === 0) throw new Error('Team member not found');
+    
+    // Sync leader_ids after update (in case role changed to/from leader or left_at changed)
+    await syncTeamLeaderIds(rows[0].team_id);
+    
     return rows[0];
   }
 
@@ -378,12 +388,25 @@ export class TeamMemberModel {
    * Remove member from team (by team and user)
    */
   static async removeFromTeam(teamId, userId, removedBy = null) {
+    // Check if user being removed is a leader
+    const { rows: memberRows } = await pool.query(
+      `SELECT role FROM team_members 
+       WHERE team_id = $1::uuid AND user_id = $2::uuid AND left_at IS NULL`,
+      [teamId, userId]
+    );
+    
     const { rowCount } = await pool.query(
       `UPDATE team_members 
        SET left_at = NOW(), removed_by = $3::uuid
        WHERE team_id = $1::uuid AND user_id = $2::uuid AND left_at IS NULL`,
       [teamId, userId, removedBy]
     );
+    
+    // Sync leader_ids if removed member was a leader
+    if (rowCount > 0 && memberRows.length > 0 && memberRows[0].role === 'leader') {
+      await syncTeamLeaderIds(teamId);
+    }
+    
     return rowCount > 0;
   }
 

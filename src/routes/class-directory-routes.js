@@ -195,17 +195,21 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         t.name,
         t.team_number,
         t.status,
-        t.leader_id,
+        COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids,
         t.created_at,
         t.formed_at,
         t.mantra,
         t.logo_url,
         t.links,
-        jsonb_build_object(
-          'id', leader.id,
-          'name', leader.name,
-          'email', leader.email
-        ) AS leader,
+        COALESCE(
+          jsonb_agg(
+            DISTINCT jsonb_build_object(
+              'id', leader.id,
+              'name', leader.name,
+              'email', leader.email
+            )
+          ) FILTER (WHERE leader.id IS NOT NULL), '[]'::jsonb
+        ) AS leaders,
         COALESCE(
           jsonb_agg(
             DISTINCT jsonb_build_object(
@@ -218,11 +222,11 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         ) AS members,
         COUNT(DISTINCT tm.user_id) FILTER (WHERE tm.left_at IS NULL) AS member_count
       FROM team t
-      LEFT JOIN users leader ON t.leader_id = leader.id
+      LEFT JOIN users leader ON leader.id = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[]))
       LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.left_at IS NULL
       LEFT JOIN users u ON tm.user_id = u.id
       WHERE t.offering_id = $1::uuid
-      GROUP BY t.id, t.name, t.team_number, t.status, t.leader_id, t.created_at, t.formed_at, t.mantra, t.logo_url, t.links, leader.id, leader.name, leader.email
+      GROUP BY t.id, t.name, t.team_number, t.status, t.leader_ids, t.created_at, t.formed_at, t.mantra, t.logo_url, t.links
       ORDER BY t.team_number, t.name
     `;
 

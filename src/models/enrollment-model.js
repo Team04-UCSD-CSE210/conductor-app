@@ -363,14 +363,14 @@ export class EnrollmentModel {
         t.id AS team_id,
         t.name AS team_name,
         t.team_number,
-        t.leader_id AS team_leader_id,
+        (SELECT leader_ids[1] FROM team WHERE id = t.id AND leader_ids IS NOT NULL AND array_length(leader_ids, 1) > 0) AS team_leader_id,
         (
           SELECT STRING_AGG(SPLIT_PART(u_lead.name, ' ', 1), ', ' ORDER BY u_lead.name)
           FROM (
             SELECT DISTINCT u_lead.id, u_lead.name
             FROM users u_lead
             WHERE u_lead.id IN (
-              SELECT leader_id FROM team WHERE id = t.id AND leader_id IS NOT NULL
+              SELECT unnest(leader_ids) FROM team WHERE id = t.id AND leader_ids IS NOT NULL AND array_length(leader_ids, 1) > 0
               UNION
               SELECT tm_lead.user_id FROM team_members tm_lead
               WHERE tm_lead.team_id = t.id 

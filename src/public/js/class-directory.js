@@ -891,8 +891,9 @@ const renderTeamCard = (team) => {
     ? team.members.filter((m) => m && m.name)
     : [];
 
-  const leaderId = team.leader_id || team.leader?.id;
-  const leader = team.leader;
+  const leaderId = (team.leader_ids && team.leader_ids.length > 0) ? team.leader_ids[0] : (team.leaders && team.leaders.length > 0 ? team.leaders[0]?.id : null);
+  const leaders = team.leaders || (team.leader_ids && team.leader_ids.length > 0 ? [{ id: team.leader_ids[0] }] : []);
+  const leader = leaders.length > 0 ? leaders[0] : null;
 
   // Format dates
   const formatDate = (dateStr) => {

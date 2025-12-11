@@ -90,8 +90,8 @@ describe('Team Leader Session Delete', () => {
 
     // Create team 1
     const teamResult = await pool.query(
-      `INSERT INTO team (offering_id, name, leader_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $4)
+      `INSERT INTO team (offering_id, name, leader_ids, created_by, updated_by)
+       VALUES ($1, $2, ARRAY[$3]::UUID[], $4, $4)
        RETURNING *`,
       [testOffering.id, 'Delete Test Team 1', teamLeader.id, adminId]
     );
@@ -99,8 +99,8 @@ describe('Team Leader Session Delete', () => {
 
     // Create team 2
     const otherTeamResult = await pool.query(
-      `INSERT INTO team (offering_id, name, leader_id, created_by, updated_by)
-       VALUES ($1, $2, $3, $4, $4)
+      `INSERT INTO team (offering_id, name, leader_ids, created_by, updated_by)
+       VALUES ($1, $2, ARRAY[$3]::UUID[], $4, $4)
        RETURNING *`,
       [testOffering.id, 'Delete Test Team 2', otherTeamLeader.id, adminId]
     );

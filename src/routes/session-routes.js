@@ -231,15 +231,18 @@ router.post('/:sessionId/open-attendance', ...protect('session.manage', 'course'
 /**
  * Close attendance for a session
  * POST /api/sessions/:sessionId/close-attendance
- * Requires: session.manage permission (course scope) - Professor/Instructor
+ * Requires: session.manage permission (course scope) OR team leader (for team meetings)
  */
-router.post('/:sessionId/close-attendance', ...protect('session.manage', 'course'), async (req, res) => {
+router.post('/:sessionId/close-attendance', ensureAuthenticated, async (req, res) => {
   try {
     const session = await SessionService.closeAttendance(req.params.sessionId, req.currentUser.id);
     res.json(session);
   } catch (err) {
     if (err.message === 'Session not found') {
       return res.status(404).json({ error: err.message });
+    }
+    if (err.message === 'Not authorized to manage this session') {
+      return res.status(403).json({ error: err.message });
     }
     res.status(400).json({ error: err.message });
   }

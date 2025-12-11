@@ -303,19 +303,18 @@ const isUserTeamLead = async (userId) => {
     return true;
   }
   
-  // Otherwise check if user is a team leader
+  // Otherwise check if user is a team leader (supports multiple leaders via leader_ids array and team_members)
   const result = await pool.query(
-    `SELECT t.id, t.leader_id, tm.role
+    `SELECT 1
      FROM team t
      LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $1 AND tm.left_at IS NULL
      WHERE t.offering_id = $2 
-       AND (t.leader_id = $1 OR tm.role = 'leader'::team_member_role_enum)
+       AND ($1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
      LIMIT 1`,
     [userId, offering.id]
   );
-  // User is a team lead if they are the leader_id OR have role='leader' in team_members
-  return result.rows.length > 0 && 
-    (result.rows[0].leader_id === userId || result.rows[0].role === 'leader');
+  // User is a team lead if they are in leader_ids array OR have role='leader' in team_members
+  return result.rows.length > 0;
 };
 
 // Note: For getting enrollment role for a specific offering, use getUserEnrollmentRole(userId, offeringId) 
@@ -998,18 +997,182 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
       return res.redirect("/login");
     }
 
-    // Admin and instructor can access team edit (for any team)
-    if (user.user_type === 'admin' || user.user_type === 'instructor') {
+    if (user.primary_role === 'admin' || user.primary_role === 'instructor') {
       return res.sendFile(buildFullViewPath("team-edit.html"));
     }
 
-    // For team leads, check if they have a team
+    // Sync leader_ids for all active teams first to ensure data is current
+    const { syncTeamLeaderIds } = await import('./utils/team-leader-sync.js');
+    const { rows: allActiveTeams } = await pool.query(
+      `SELECT DISTINCT t.id
+       FROM team t
+       WHERE t.offering_id IN (SELECT id FROM course_offerings WHERE is_active = true)`,
+      []
+    );
+    
+    // Sync all active teams
+    for (const teamRow of allActiveTeams) {
+      await syncTeamLeaderIds(teamRow.id);
+    }
+    
+    const { rows: teamsWithUserAsLeader } = await pool.query(
+      `SELECT t.id, COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids
+       FROM team t
+       WHERE t.offering_id IN (SELECT id FROM course_offerings WHERE is_active = true)
+         AND $1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[]))`,
+      [user.id]
+    );
+    
+    console.log(`[Team Edit] Found ${teamsWithUserAsLeader.length} teams where user is in leader_ids`);
+    console.log(`[Team Edit] User ID: ${user.id}, Teams:`, teamsWithUserAsLeader.map(t => ({ id: t.id, leader_ids: t.leader_ids })));
+    
+    for (const teamRow of teamsWithUserAsLeader) {
+      // Check if team_members record exists with role='leader'
+      const { rows: memberCheck } = await pool.query(
+        `SELECT role, left_at FROM team_members 
+         WHERE team_id = $1 AND user_id = $2
+         ORDER BY left_at NULLS LAST
+         LIMIT 1`,
+        [teamRow.id, user.id]
+      );
+      
+      const needsFix = memberCheck.length === 0 || 
+                       memberCheck[0].role !== 'leader' || 
+                       memberCheck[0].left_at !== null;
+      
+      if (needsFix) {
+        console.log(`[Team Edit] Fixing team_members for team ${teamRow.id}: current role=${memberCheck[0]?.role || 'none'}, left_at=${memberCheck[0]?.left_at || 'null'}`);
+        
+        // Create or update team_members record to set role='leader'
+        await pool.query(
+          `INSERT INTO team_members (team_id, user_id, role, joined_at)
+           VALUES ($1, $2, 'leader'::team_member_role_enum, CURRENT_DATE)
+           ON CONFLICT (team_id, user_id) 
+           DO UPDATE SET 
+             role = 'leader'::team_member_role_enum,
+             left_at = NULL,
+             joined_at = COALESCE(team_members.joined_at, CURRENT_DATE)`,
+          [teamRow.id, user.id]
+        );
+        
+        // Re-sync to ensure leader_ids is up to date
+        await syncTeamLeaderIds(teamRow.id);
+        
+        console.log(`[Team Edit] Fixed team_members for team ${teamRow.id}`);
+      }
+    }
+    
+    // Fix 2: If user has role='leader' in team_members but is NOT in leader_ids, sync it
+    const { rows: teamsWhereUserIsLeaderInMembers } = await pool.query(
+      `SELECT DISTINCT t.id, t.offering_id
+       FROM team t
+       INNER JOIN team_members tm ON t.id = tm.team_id
+       WHERE t.offering_id IN (SELECT id FROM course_offerings WHERE is_active = true)
+         AND tm.user_id = $1
+         AND tm.role = 'leader'::team_member_role_enum
+         AND tm.left_at IS NULL
+         AND NOT ($1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])))`,
+      [user.id]
+    );
+    
+    console.log(`[Team Edit] Found ${teamsWhereUserIsLeaderInMembers.length} teams where user is leader in team_members but NOT in leader_ids`);
+    
+    for (const teamRow of teamsWhereUserIsLeaderInMembers) {
+      console.log(`[Team Edit] Syncing leader_ids for team ${teamRow.id} (user is leader in team_members but missing from leader_ids)`);
+      await syncTeamLeaderIds(teamRow.id);
+    }
+    
+    // Now check if user is a team leader
     const { rows } = await pool.query(
-      'SELECT id FROM team WHERE leader_id = $1',
+      `SELECT t.id, COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids, tm.role as member_role
+       FROM team t
+       LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $1 AND tm.left_at IS NULL
+       WHERE t.offering_id IN (SELECT id FROM course_offerings WHERE is_active = true)
+         AND ($1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
+       LIMIT 1`,
       [user.id]
     );
 
+    // Debug logging
     if (rows.length === 0) {
+      // Check what the actual state is
+      const debugRows = await pool.query(
+        `SELECT t.id, COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids, tm.role as member_role, tm.left_at,
+                $1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) as user_in_leader_ids
+         FROM team t
+         LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $1
+         WHERE t.offering_id IN (SELECT id FROM course_offerings WHERE is_active = true)
+         LIMIT 5`,
+        [user.id]
+      );
+      // Check if user is a member of any teams (might need conversion)
+      const { rows: memberTeams } = await pool.query(
+        `SELECT t.id, t.name, tm.role
+         FROM team t
+         INNER JOIN team_members tm ON t.id = tm.team_id
+         WHERE t.offering_id IN (SELECT id FROM course_offerings WHERE is_active = true)
+           AND tm.user_id = $1
+           AND tm.left_at IS NULL`,
+        [user.id]
+      );
+      
+      console.log('[Team Edit] Permission denied. Debug info:', {
+        userId: user.id,
+        userEmail: user.email,
+        teamsChecked: debugRows.rows.map(r => ({
+          id: r.id,
+          leader_ids: r.leader_ids,
+          user_in_leader_ids: r.user_in_leader_ids,
+          member_role: r.member_role,
+          left_at: r.left_at
+        })),
+        memberOfTeams: memberTeams.map(t => ({ id: t.id, name: t.name, role: t.role }))
+      });
+      
+      if (memberTeams.length > 0) {
+        // If user is a member of exactly one team, automatically convert them to leader
+        // This handles cases where the conversion was attempted but didn't complete
+        if (memberTeams.length === 1) {
+          const teamToConvert = memberTeams[0];
+          console.log(`[Team Edit] Auto-converting user ${user.id} to leader of team ${teamToConvert.id} (${teamToConvert.name})`);
+          
+          try {
+            // Update team_members to set role='leader'
+            await pool.query(
+              `UPDATE team_members 
+               SET role = 'leader'::team_member_role_enum
+               WHERE team_id = $1 AND user_id = $2 AND left_at IS NULL`,
+              [teamToConvert.id, user.id]
+            );
+            
+            // Sync leader_ids to include this user
+            await syncTeamLeaderIds(teamToConvert.id);
+            
+            console.log(`[Team Edit] Successfully converted user to leader. Re-checking permissions...`);
+            
+            // Re-check if user is now a team leader
+            const { rows: recheckRows } = await pool.query(
+              `SELECT t.id, COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids, tm.role as member_role
+               FROM team t
+               LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $1 AND tm.left_at IS NULL
+               WHERE t.offering_id IN (SELECT id FROM course_offerings WHERE is_active = true)
+                 AND ($1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
+               LIMIT 1`,
+              [user.id]
+            );
+            
+            if (recheckRows.length > 0) {
+              console.log(`[Team Edit] User is now recognized as team leader. Allowing access.`);
+              return res.sendFile(buildFullViewPath("team-edit.html"));
+            }
+          } catch (convertError) {
+            console.error(`[Team Edit] Error auto-converting user to leader:`, convertError);
+          }
+        }
+        
+        return res.status(403).send(`Forbidden: You are not a team leader. You are a member of ${memberTeams.length} team(s) but need to be converted to leader role. Contact an instructor to convert you to team leader.`);
+      }
+      
       return res.status(403).send("Forbidden: You are not a team leader");
     }
 
@@ -1260,18 +1423,18 @@ app.get("/meetings", ensureAuthenticated, async (req, res) => {
     
     // Also check if user is a team leader
     const teamLeadCheck = await pool.query(
-      `SELECT t.id, t.leader_id, tm.role, t.team_number, t.name as team_name,
-              CASE WHEN t.leader_id = $1 THEN 1 ELSE 2 END as priority
+      `SELECT t.id, COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids, tm.role, t.team_number, t.name as team_name,
+              CASE WHEN $1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) THEN 1 ELSE 2 END as priority
        FROM team t
        LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = $1 AND tm.left_at IS NULL
-       WHERE t.offering_id = $2 AND (t.leader_id = $1 OR tm.user_id = $1)
+       WHERE t.offering_id = $2 AND ($1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.user_id = $1)
        ORDER BY priority, t.team_number
        LIMIT 1`,
       [user.id, offering.id]
     );
 
     const isTeamLeadByTeam = teamLeadCheck.rows.length > 0 && 
-      (teamLeadCheck.rows[0].leader_id === user.id || teamLeadCheck.rows[0].role === 'leader');
+      ((teamLeadCheck.rows[0].leader_ids && Array.isArray(teamLeadCheck.rows[0].leader_ids) && teamLeadCheck.rows[0].leader_ids.includes(user.id)) || teamLeadCheck.rows[0].role === 'leader');
 
     const isTeamLead = isTeamLeadByEnrollment || isTeamLeadByTeam;
 

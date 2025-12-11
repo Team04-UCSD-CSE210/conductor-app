@@ -3,6 +3,7 @@ import { AttendanceService } from '../services/attendance-service.js';
 import { AttendanceModel } from '../models/attendance-model.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import { protect } from '../middleware/permission-middleware.js';
+import { syncTeamLeaderIds } from '../utils/team-leader-sync.js';
 
 const router = Router();
 
@@ -212,14 +213,74 @@ router.get('/sessions/:sessionId/report', ...protect('attendance.view', 'course'
  * POST /api/attendance/mark
  * Body: { session_id, user_id, status }
  * Requires: attendance.mark permission (course scope) - Professor/Instructor/TA
+ * OR: Team leader for team meetings
  */
-router.post('/mark', ...protect('attendance.mark', 'course'), async (req, res) => {
+router.post('/mark', ensureAuthenticated, async (req, res) => {
   try {
     const { session_id, user_id, status } = req.body;
+    const actorId = req.currentUser.id;
 
     if (!session_id || !user_id || !status) {
       return res.status(400).json({ 
         error: 'session_id, user_id, and status are required' 
+      });
+    }
+
+    // Check permissions: instructor/admin/TA OR team leader (for team meetings)
+    const { pool } = await import('../db.js');
+    const sessionRes = await pool.query(
+      `SELECT s.*, COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids
+       FROM sessions s
+       LEFT JOIN team t ON s.team_id = t.id
+       WHERE s.id = $1`,
+      [session_id]
+    );
+    
+    if (sessionRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    const session = sessionRes.rows[0];
+    const isInstructor = req.currentUser.primary_role === 'instructor' || req.currentUser.primary_role === 'admin';
+    
+    // Check if user has attendance.mark permission
+    const { PermissionService } = await import('../services/permission-service.js');
+    const hasPermission = await PermissionService.hasPermission(
+      actorId,
+      'attendance.mark',
+      session.offering_id,
+      null
+    );
+    
+    // For team meetings, also check if user is a team leader
+    let isTeamLeader = false;
+    if (session.team_id && !isInstructor && !hasPermission) {
+      // Sync leader_ids first to ensure data is current
+      await syncTeamLeaderIds(session.team_id);
+      
+      // Refresh session data
+      const { rows: refreshedSessionRows } = await pool.query(
+        `SELECT COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids
+         FROM team t WHERE t.id = $1`,
+        [session.team_id]
+      );
+      const refreshedTeam = refreshedSessionRows[0] || {};
+      
+      const isInLeaderIds = refreshedTeam.leader_ids && Array.isArray(refreshedTeam.leader_ids) && refreshedTeam.leader_ids.length > 0 && refreshedTeam.leader_ids.includes(actorId);
+      
+      const { rows: membershipRows } = await pool.query(
+        `SELECT 1 FROM team_members 
+         WHERE team_id = $1 AND user_id = $2 AND role = 'leader'::team_member_role_enum AND left_at IS NULL
+         LIMIT 1`,
+        [session.team_id, actorId]
+      );
+      isTeamLeader = isInLeaderIds || membershipRows.length > 0;
+    }
+    
+    if (!isInstructor && !hasPermission && !isTeamLeader) {
+      return res.status(403).json({ 
+        error: 'Forbidden',
+        message: 'You do not have permission to mark attendance for this session'
       });
     }
 
@@ -334,18 +395,28 @@ router.get('/course/:offeringId/summary', ...protect('attendance.view', 'course'
  * Close session and mark remaining students as absent
  * POST /api/attendance/sessions/:sessionId/close-and-mark-absent
  * Requires: attendance.mark permission (course scope) - Professor/Instructor/TA
+ * OR: Team leader for team meetings
  */
-router.post('/sessions/:sessionId/close-and-mark-absent', ...protect('attendance.mark', 'course'), async (req, res) => {
+router.post('/sessions/:sessionId/close-and-mark-absent', ensureAuthenticated, async (req, res) => {
   try {
+    const userId = req.currentUser.id;
+    
+    // Check permissions using SessionService.closeAttendance which handles team leaders
+    const { SessionService } = await import('../services/session-service.js');
+    await SessionService.closeAttendance(req.params.sessionId, userId);
+    
     const result = await AttendanceService.closeSessionAndMarkAbsent(
       req.params.sessionId,
-      req.currentUser.id
+      userId
     );
 
     res.json(result);
   } catch (err) {
     if (err.message === 'Session not found') {
       return res.status(404).json({ error: err.message });
+    }
+    if (err.message === 'Not authorized to manage this session') {
+      return res.status(403).json({ error: err.message });
     }
     res.status(400).json({ error: err.message });
   }

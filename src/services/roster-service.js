@@ -83,7 +83,7 @@ export class RosterService {
           t.id as team_id,
           t.name as team_name,
           t.team_number,
-          t.leader_id,
+          COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids,
           t.offering_id,
           tm.role
         FROM team_members tm
@@ -118,23 +118,23 @@ export class RosterService {
             team_id: team.team_id,
             team_name: team.team_name,
             team_number: team.team_number,
-            team_lead_id: team.leader_id,
+            team_lead_id: team.leader_ids && team.leader_ids.length > 0 ? team.leader_ids[0] : null,
             team_lead_name: null, // Don't show TAs/tutors as team leads
             is_team_lead: false
           };
         }
         
-        const isTeamLeadByTeam = team.leader_id === user.id || team.role === 'leader';
+        const isTeamLeadByTeam = (team.leader_ids && Array.isArray(team.leader_ids) && team.leader_ids.includes(user.id)) || team.role === 'leader';
         const hasTeamLeadEnrollmentRole = userEnrollmentRole === 'team-lead';
         const isTeamLead = hasTeamLeadEnrollmentRole || isTeamLeadByTeam;
         
-        // Get all team leads (both from leader_id and team_members with role='leader')
+        // Get all team leads from leader_ids array and team_members with role='leader'
         // Show only first names, comma-separated
         const teamLeadsRes = await pool.query(
           `SELECT DISTINCT u.id, u.name
            FROM users u
            WHERE u.id IN (
-             SELECT leader_id FROM team WHERE id = $1 AND leader_id IS NOT NULL
+             SELECT unnest(leader_ids) FROM team WHERE id = $1 AND leader_ids IS NOT NULL AND array_length(leader_ids, 1) > 0
              UNION
              SELECT tm.user_id FROM team_members tm 
              WHERE tm.team_id = $1 AND tm.role = 'leader'::team_member_role_enum AND tm.left_at IS NULL
@@ -164,7 +164,7 @@ export class RosterService {
           team_id: team.team_id,
           team_name: team.team_name,
           team_number: team.team_number,
-          team_lead_id: team.leader_id,
+          team_lead_id: team.leader_ids && team.leader_ids.length > 0 ? team.leader_ids[0] : null,
           team_lead_name: teamLeadName,
           is_team_lead: isTeamLead
         };
@@ -584,7 +584,7 @@ export class RosterService {
           t.id as team_id,
           t.name as team_name,
           t.team_number,
-          t.leader_id,
+          COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids,
           t.offering_id,
           tm.role
         FROM team_members tm
@@ -619,23 +619,23 @@ export class RosterService {
             team_id: team.team_id,
             team_name: team.team_name,
             team_number: team.team_number,
-            team_lead_id: team.leader_id,
+            team_lead_id: team.leader_ids && team.leader_ids.length > 0 ? team.leader_ids[0] : null,
             team_lead_name: null, // Don't show TAs/tutors as team leads
             is_team_lead: false
           };
         }
         
-        const isTeamLeadByTeam = team.leader_id === user.id || team.role === 'leader';
+        const isTeamLeadByTeam = (team.leader_ids && Array.isArray(team.leader_ids) && team.leader_ids.includes(user.id)) || team.role === 'leader';
         const hasTeamLeadEnrollmentRole = userEnrollmentRole === 'team-lead';
         const isTeamLead = hasTeamLeadEnrollmentRole || isTeamLeadByTeam;
         
-        // Get all team leads (both from leader_id and team_members with role='leader')
+        // Get all team leads from leader_ids array and team_members with role='leader'
         // Show only first names, comma-separated
         const teamLeadsRes = await pool.query(
           `SELECT DISTINCT u.id, u.name
            FROM users u
            WHERE u.id IN (
-             SELECT leader_id FROM team WHERE id = $1 AND leader_id IS NOT NULL
+             SELECT unnest(leader_ids) FROM team WHERE id = $1 AND leader_ids IS NOT NULL AND array_length(leader_ids, 1) > 0
              UNION
              SELECT tm.user_id FROM team_members tm 
              WHERE tm.team_id = $1 AND tm.role = 'leader'::team_member_role_enum AND tm.left_at IS NULL

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { pool } from '../db.js';
 import { ensureAuthenticated } from '../middleware/auth.js';
 import { PermissionService } from '../services/permission-service.js';
+import { syncTeamLeaderIds } from '../utils/team-leader-sync.js';
 import validator from 'validator';
 import multer from 'multer';
 import path from 'node:path';
@@ -51,13 +52,14 @@ const upload = multer({
  */
 async function getTeamWithOffering(teamId) {
   const { rows } = await pool.query(
-    `SELECT t.*, t.offering_id
+    `SELECT t.*, t.offering_id, COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids
      FROM team t
      WHERE t.id = $1`,
     [teamId]
   );
   return rows[0] || null;
 }
+
 
 /**
  * Get current user's team for an offering
@@ -75,7 +77,7 @@ router.get('/my-team', ensureAuthenticated, async (req, res) => {
         t.id,
         t.name,
         t.team_number,
-        t.leader_id,
+        COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids,
         t.status,
         t.mantra,
         t.links,
@@ -84,7 +86,7 @@ router.get('/my-team', ensureAuthenticated, async (req, res) => {
         t.offering_id
       FROM team t
       LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $1 AND tm.left_at IS NULL
-      WHERE (t.leader_id = $1 OR tm.user_id = $1)
+      WHERE ($1 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.user_id = $1)
         ${offering_id ? 'AND t.offering_id = $2' : ''}
       ORDER BY t.team_number
       LIMIT 1`,
@@ -132,9 +134,9 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     const result = await pool.query(
       `SELECT 
         t.id,
+        COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids,
         t.name,
         t.team_number,
-        t.leader_id,
         t.status,
         t.formed_at,
         t.created_at,
@@ -142,7 +144,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         u.email as leader_email,
         COUNT(tm.user_id) as member_count
       FROM team t
-      LEFT JOIN users u ON t.leader_id = u.id
+      LEFT JOIN users u ON (t.leader_ids IS NOT NULL AND array_length(t.leader_ids, 1) > 0 AND u.id = t.leader_ids[1])
       LEFT JOIN team_members tm
         ON t.id = tm.team_id AND tm.left_at IS NULL
       WHERE t.offering_id = $1
@@ -150,7 +152,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         t.id,
         t.name,
         t.team_number,
-        t.leader_id,
+        t.leader_ids,
         t.status,
         t.formed_at,
         t.created_at,
@@ -217,10 +219,11 @@ router.get('/:teamId', ensureAuthenticated, async (req, res) => {
     const teamResult = await pool.query(
       `SELECT 
         t.*,
+        COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids,
         u.name as leader_name,
         u.email as leader_email
       FROM team t
-      LEFT JOIN users u ON t.leader_id = u.id
+      LEFT JOIN users u ON (t.leader_ids IS NOT NULL AND array_length(t.leader_ids, 1) > 0 AND u.id = t.leader_ids[1])
       WHERE t.id = $1`,
       [teamId]
     );
@@ -255,14 +258,14 @@ router.get('/:teamId', ensureAuthenticated, async (req, res) => {
 /**
  * Create a new team
  * POST /api/teams
- * Body: { offering_id, name, team_number, leader_id, status }
+ * Body: { offering_id, name, team_number, leader_ids (array), status }
  * Access:
  *   - Users with team.manage for this offering
  *     (Instructor, TA, Admin)
  */
 router.post('/', ensureAuthenticated, async (req, res) => {
   try {
-    const { offering_id, name, team_number, leader_id, status = 'forming' } = req.body;
+    const { offering_id, name, team_number, leader_ids, status = 'forming' } = req.body;
     
     if (!offering_id || !name) {
       return res
@@ -283,23 +286,43 @@ router.post('/', ensureAuthenticated, async (req, res) => {
       return res.status(403).json({ error: 'forbidden' });
     }
 
+    // Ensure leader_ids is an array with at least one leader
+    const leaderIdsArray = Array.isArray(leader_ids) && leader_ids.length > 0 ? leader_ids : [];
+    if (leaderIdsArray.length === 0) {
+      return res.status(400).json({ error: 'At least one leader is required' });
+    }
+
     const result = await pool.query(
-      `INSERT INTO team (offering_id, name, team_number, leader_id, status, formed_at, created_by)
-       VALUES ($1, $2, $3, $4, $5::team_status_enum, CURRENT_DATE, $6)
+      `INSERT INTO team (offering_id, name, team_number, leader_ids, status, formed_at, created_by)
+       VALUES ($1, $2, $3, $4::UUID[], $5::team_status_enum, CURRENT_DATE, $6)
        RETURNING *`,
-      [offering_id, name, team_number || null, leader_id || null, status, userId]
+      [offering_id, name, team_number || null, leaderIdsArray, status, userId]
     );
 
     const team = result.rows[0];
 
-    // If leader_id is provided, add them as a member (leader role)
-    if (leader_id) {
+    // Add all leaders as team members with leader role
+    for (const leaderId of leaderIdsArray) {
       await pool.query(
         `INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
          VALUES ($1, $2, 'leader'::team_member_role_enum, CURRENT_DATE, $3)
-         ON CONFLICT (team_id, user_id) DO NOTHING`,
-        [team.id, leader_id, userId]
+         ON CONFLICT (team_id, user_id) DO UPDATE SET
+           role = 'leader'::team_member_role_enum,
+           left_at = NULL`,
+        [team.id, leaderId, userId]
       );
+    }
+    
+    // Sync leader_ids array after adding leaders
+    await syncTeamLeaderIds(team.id);
+    
+    // Refresh team data to include updated leader_ids
+    const { rows: updatedTeamRows } = await pool.query(
+      'SELECT *, COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids FROM team WHERE id = $1',
+      [team.id]
+    );
+    if (updatedTeamRows.length > 0) {
+      Object.assign(team, updatedTeamRows[0]);
     }
 
     res.status(201).json(team);
@@ -312,7 +335,7 @@ router.post('/', ensureAuthenticated, async (req, res) => {
 /**
  * Update team
  * PUT /api/teams/:teamId
- * Body: { name, team_number, leader_id, status, mantra, links } + optional logo file
+ * Body: { name, team_number, leader_ids (array), status, mantra, links } + optional logo file
  * Access:
  *   - team.manage for the offering (Instructor/TA/Admin), OR
  *   - team.manage at team scope (team lead)
@@ -325,7 +348,7 @@ router.put('/:teamId', ensureAuthenticated, upload.single('logo'), async (req, r
 
     // Check if user is the leader of this team (simplified permission check)
     const { rows: teamRows } = await pool.query(
-      'SELECT * FROM team WHERE id = $1',
+      'SELECT *, COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids FROM team WHERE id = $1',
       [teamId]
     );
 
@@ -335,8 +358,25 @@ router.put('/:teamId', ensureAuthenticated, upload.single('logo'), async (req, r
 
     const team = teamRows[0];
 
-    // Only allow team leader or admin to edit
-    if (team.leader_id !== userId && req.currentUser.user_type !== 'admin') {
+    const offeringId = team.offering_id;
+    
+    const [canManageCourseTeam, canManageTeamRole] = await Promise.all([
+      PermissionService.hasPermission(userId, 'team.manage', offeringId, null),
+      PermissionService.hasPermission(userId, 'team.manage', null, teamId),
+    ]);
+    
+    // Support multiple leaders: check team.leader_ids array and team_members.role = 'leader'
+    const isInLeaderIds = team.leader_ids && Array.isArray(team.leader_ids) && team.leader_ids.includes(userId);
+    
+    const { rows: membershipRows } = await pool.query(
+      `SELECT 1 FROM team_members 
+       WHERE team_id = $1 AND user_id = $2 AND role = 'leader'::team_member_role_enum AND left_at IS NULL
+       LIMIT 1`,
+      [teamId, userId]
+    );
+    const isTeamLead = isInLeaderIds || membershipRows.length > 0;
+    
+    if (!canManageCourseTeam && !canManageTeamRole && !isTeamLead) {
       return res.status(403).json({ error: 'forbidden' });
     }
 
@@ -373,7 +413,7 @@ router.put('/:teamId', ensureAuthenticated, upload.single('logo'), async (req, r
       `UPDATE team
        SET ${updates.join(', ')}
        WHERE id = $${paramCount}
-       RETURNING *`,
+       RETURNING *, COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids`,
       values
     );
 
@@ -556,6 +596,9 @@ router.post('/:teamId/members', ensureAuthenticated, async (req, res) => {
       [teamId, user_id, role, userId]
     );
 
+    // Sync leader_ids array after adding/updating member (especially if role is 'leader')
+    await syncTeamLeaderIds(teamId);
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Error adding team member:', err);
@@ -604,6 +647,9 @@ router.delete('/:teamId/members/:userId', ensureAuthenticated, async (req, res) 
         .status(404)
         .json({ error: 'Team member not found or already removed' });
     }
+
+    // Sync leader_ids array after removing member (in case it was a leader)
+    await syncTeamLeaderIds(teamId);
 
     res.json({ removed: true, member: result.rows[0] });
   } catch (err) {

@@ -50,12 +50,19 @@ export class TeamModel {
     const errors = this.validate(data);
     if (errors.length) throw new Error(errors.join(', '));
 
+    // Ensure leader_ids is an array with at least one leader
+    if (!Array.isArray(data.leader_ids) || data.leader_ids.length === 0) {
+      throw new Error('leader_ids must be a non-empty array');
+    }
+    
+    const leaderIdsArray = data.leader_ids;
+
     const query = `
       INSERT INTO team (
         offering_id,
         name,
         team_number,
-        leader_id,
+        leader_ids,
         status,
         formed_at,
         created_by,
@@ -65,7 +72,7 @@ export class TeamModel {
         $1::uuid,
         $2,
         $3,
-        $4::uuid,
+        $4::UUID[],
         CAST(COALESCE($5::text, 'forming') AS team_status_enum),
         $6,
         $7::uuid,
@@ -76,7 +83,7 @@ export class TeamModel {
         offering_id,
         name,
         team_number,
-        leader_id,
+        COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids,
         status,
         formed_at,
         created_at,
@@ -89,7 +96,7 @@ export class TeamModel {
       data.offering_id,
       data.name,
       data.team_number ?? null,
-      data.leader_id ?? null,
+      leaderIdsArray,
       data.status ?? 'forming',
       data.formed_at ?? null,
       data.created_by ?? null,
@@ -110,7 +117,7 @@ export class TeamModel {
         offering_id,
         name,
         team_number,
-        leader_id,
+        COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids,
         status,
         formed_at,
         created_at,
@@ -152,8 +159,14 @@ export class TeamModel {
     // Filter by leader
     if (options.leader_id) {
       const paramIndex = params.length + 1;
-      whereClause += ` AND leader_id = $${paramIndex}::uuid`;
+      whereClause += ` AND $${paramIndex}::uuid = ANY(COALESCE(leader_ids, ARRAY[]::UUID[]))`;
       params.push(options.leader_id);
+    }
+    
+    if (options.leader_ids) {
+      const paramIndex = params.length + 1;
+      whereClause += ` AND leader_ids && $${paramIndex}::UUID[]`;
+      params.push(Array.isArray(options.leader_ids) ? options.leader_ids : [options.leader_ids]);
     }
 
     const { rows } = await pool.query(
@@ -163,7 +176,7 @@ export class TeamModel {
         offering_id,
         name,
         team_number,
-        leader_id,
+        COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids,
         status,
         formed_at,
         created_at,
@@ -203,7 +216,7 @@ export class TeamModel {
         offering_id,
         name,
         team_number,
-        leader_id,
+        COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids,
         status,
         formed_at,
         created_at,
@@ -234,7 +247,7 @@ export class TeamModel {
         offering_id,
         name,
         team_number,
-        leader_id,
+        COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids,
         status,
         formed_at,
         created_at,
@@ -242,7 +255,7 @@ export class TeamModel {
         created_by,
         updated_by
       FROM team
-      WHERE leader_id = $1::uuid
+      WHERE $1::uuid = ANY(COALESCE(leader_ids, ARRAY[]::UUID[]))
       ORDER BY created_at DESC
       LIMIT $2 OFFSET $3
       `,
@@ -289,9 +302,12 @@ export class TeamModel {
       params.push(merged.team_number);
     }
 
-    if (merged.leader_id !== undefined) {
-      setClauses.push(`leader_id = $${paramIndex++}::uuid`);
-      params.push(merged.leader_id);
+    if (merged.leader_ids !== undefined) {
+      if (!Array.isArray(merged.leader_ids) || merged.leader_ids.length === 0) {
+        throw new Error('leader_ids must be a non-empty array');
+      }
+      setClauses.push(`leader_ids = $${paramIndex++}::UUID[]`);
+      params.push(merged.leader_ids);
     }
 
     if (merged.status !== undefined && merged.status !== null) {
@@ -322,7 +338,7 @@ export class TeamModel {
         offering_id,
         name,
         team_number,
-        leader_id,
+        COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids,
         status,
         formed_at,
         created_at,

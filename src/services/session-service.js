@@ -3,6 +3,7 @@ import { pool } from '../db.js';
 import { SessionModel } from '../models/session-model.js';
 import { SessionQuestionModel } from '../models/session-question-model.js';
 import { SessionResponseModel } from '../models/session-response-model.js';
+import { syncTeamLeaderIds } from '../utils/team-leader-sync.js';
 
 /**
  * Get the active course offering ID (CSE 210 or any active offering)
@@ -182,12 +183,26 @@ export class SessionService {
     
     // If team_id not provided and user is not an instructor, auto-detect their team
     if (!sessionData.team_id && !isInstructor && !teamIdExplicitlyNull) {
+      // Sync leader_ids for all teams in this offering first to ensure data is current
+      const { rows: allTeamsInOffering } = await pool.query(
+        `SELECT DISTINCT t.id 
+         FROM team t
+         WHERE t.offering_id = $1`,
+        [offeringId]
+      );
+      
+      // Sync all teams in the offering
+      for (const teamRow of allTeamsInOffering) {
+        await syncTeamLeaderIds(teamRow.id);
+      }
+      
+      // Now check if user is a team leader
       const teamRes = await pool.query(
         `SELECT t.id 
          FROM team t
-         LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.left_at IS NULL
+         LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = $2 AND tm.left_at IS NULL
          WHERE t.offering_id = $1 
-           AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
+           AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
          LIMIT 1`,
         [offeringId, createdBy]
       );
@@ -209,16 +224,10 @@ export class SessionService {
     if (sessionData.team_id) {
       // Verify team belongs to the offering and user has permission
       const teamCheck = await pool.query(
-        `SELECT t.id, t.offering_id,
-                EXISTS(
-                  SELECT 1 FROM team_members tm 
-                  WHERE tm.team_id = t.id AND tm.user_id = $2 AND tm.role = 'leader' AND tm.left_at IS NULL
-                  UNION
-                  SELECT 1 WHERE t.leader_id = $2
-                ) as is_leader
+        `SELECT t.id, t.offering_id, COALESCE(t.leader_ids, ARRAY[]::UUID[]) as leader_ids
          FROM team t
          WHERE t.id = $1`,
-        [sessionData.team_id, createdBy]
+        [sessionData.team_id]
       );
       
       if (teamCheck.rows.length === 0) {
@@ -234,7 +243,44 @@ export class SessionService {
       
       // Team leaders can only create sessions for their own team
       // Instructors can create sessions for any team
-      if (!isInstructor && !team.is_leader) {
+      // Support multiple leaders: check team.leader_ids array and team_members.role = 'leader'
+      // First, ensure leader_ids is synced (in case trigger didn't fire)
+      await syncTeamLeaderIds(sessionData.team_id);
+      
+      // Refresh team data to get updated leader_ids
+      const { rows: refreshedTeamRows } = await pool.query(
+        `SELECT COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids
+         FROM team WHERE id = $1`,
+        [sessionData.team_id]
+      );
+      const refreshedTeam = refreshedTeamRows[0] || team;
+      
+      const isInLeaderIds = refreshedTeam.leader_ids && Array.isArray(refreshedTeam.leader_ids) && refreshedTeam.leader_ids.length > 0 && refreshedTeam.leader_ids.includes(createdBy);
+      
+      // Check team_members table - this is the source of truth
+      const { rows: membershipRows } = await pool.query(
+        `SELECT role, left_at FROM team_members 
+         WHERE team_id = $1 AND user_id = $2 AND left_at IS NULL
+         LIMIT 1`,
+        [sessionData.team_id, createdBy]
+      );
+      
+      const hasLeaderRole = membershipRows.length > 0 && membershipRows[0].role === 'leader';
+      
+      // Debug logging
+      console.log('[SessionService] Permission check:', {
+        teamId: sessionData.team_id,
+        userId: createdBy,
+        isInstructor,
+        isInLeaderIds,
+        hasLeaderRole,
+        membershipRow: membershipRows[0] || null,
+        refreshedTeamLeaderIds: refreshedTeam.leader_ids
+      });
+      
+      const isTeamLead = isInLeaderIds || hasLeaderRole;
+      
+      if (!isInstructor && !isTeamLead) {
         throw new Error('You can only create sessions for teams where you are a leader');
       }
     }
@@ -406,13 +452,27 @@ export class SessionService {
     const userRes = await pool.query('SELECT primary_role FROM users WHERE id = $1', [userId]);
     if (userRes.rows.length === 0) return false;
     const primaryRole = userRes.rows[0].primary_role;
-    if (primaryRole === 'instructor') return true;
+    if (primaryRole === 'instructor' || primaryRole === 'admin') return true;
 
-    // Check if user is a team leader for a team in this offering
+      // Sync leader_ids for all teams in this offering first to ensure data is current
+      const { rows: allTeamsInOffering } = await pool.query(
+        `SELECT DISTINCT t.id
+         FROM team t
+         WHERE t.offering_id = $1`,
+        [offeringId]
+      );
+      
+      // Sync all teams in the offering
+      for (const teamRow of allTeamsInOffering) {
+        await syncTeamLeaderIds(teamRow.id);
+      }
+
+    // Now check if user is a team leader
     const leaderRes = await pool.query(
       `SELECT 1 FROM team t
-       LEFT JOIN team_members tm ON tm.team_id = t.id
-       WHERE t.offering_id = $1 AND (t.leader_id = $2 OR (tm.user_id = $2 AND tm.role = 'leader'))
+       LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = $2 AND tm.left_at IS NULL
+       WHERE t.offering_id = $1 
+         AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.role = 'leader'::team_member_role_enum)
        LIMIT 1`,
       [offeringId, userId]
     );
@@ -458,8 +518,8 @@ export class SessionService {
       const teamRes = await pool.query(
         `SELECT DISTINCT t.id 
          FROM team t
-         LEFT JOIN team_members tm ON tm.team_id = t.id
-         WHERE t.offering_id = $1 AND (t.leader_id = $2 OR tm.user_id = $2)`,
+         LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.left_at IS NULL
+         WHERE t.offering_id = $1 AND ($2 = ANY(COALESCE(t.leader_ids, ARRAY[]::UUID[])) OR tm.user_id = $2)`,
         [offeringId, userId]
       );
       
@@ -719,6 +779,7 @@ export class SessionService {
 
   /**
    * Close attendance for a session
+   * Allows: session creator, instructors/admins, or team leaders (for team meetings)
    */
   static async closeAttendance(sessionId, userId) {
     const session = await SessionModel.findById(sessionId);
@@ -727,11 +788,49 @@ export class SessionService {
       throw new Error('Session not found');
     }
 
-    if (session.created_by !== userId) {
-      throw new Error('Not authorized to manage this session');
+    // Check if user is the creator
+    if (session.created_by === userId) {
+      return await SessionModel.closeAttendance(sessionId, userId);
     }
 
-    return await SessionModel.closeAttendance(sessionId, userId);
+    // Check if user is instructor/admin
+    const userRes = await pool.query('SELECT primary_role FROM users WHERE id = $1', [userId]);
+    if (userRes.rows.length > 0) {
+      const primaryRole = userRes.rows[0].primary_role;
+      if (primaryRole === 'instructor' || primaryRole === 'admin') {
+        return await SessionModel.closeAttendance(sessionId, userId);
+      }
+    }
+
+    // For team meetings, check if user is a team leader
+    if (session.team_id) {
+      await syncTeamLeaderIds(session.team_id);
+      
+      const { rows: teamRows } = await pool.query(
+        `SELECT COALESCE(leader_ids, ARRAY[]::UUID[]) as leader_ids
+         FROM team WHERE id = $1`,
+        [session.team_id]
+      );
+      
+      if (teamRows.length > 0) {
+        const team = teamRows[0];
+        const isInLeaderIds = team.leader_ids && Array.isArray(team.leader_ids) && team.leader_ids.length > 0 && team.leader_ids.includes(userId);
+        
+        const { rows: membershipRows } = await pool.query(
+          `SELECT 1 FROM team_members 
+           WHERE team_id = $1 AND user_id = $2 AND role = 'leader'::team_member_role_enum AND left_at IS NULL
+           LIMIT 1`,
+          [session.team_id, userId]
+        );
+        const hasLeaderRole = membershipRows.length > 0;
+        
+        if (isInLeaderIds || hasLeaderRole) {
+          return await SessionModel.closeAttendance(sessionId, userId);
+        }
+      }
+    }
+
+    throw new Error('Not authorized to manage this session');
   }
 
   /**
