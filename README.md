@@ -260,6 +260,53 @@ ENVIRONMENT=development
 
 **Setup Guide**: [Installation Documentation](docs/getting-started/installation.md)
 
+## TA Evaluation
+
+### Test Accounts
+
+For TA evaluation purposes, the following test accounts have been seeded:
+
+| Email | Name | Institution Type | Role | Enrollment |
+|-------|------|------------------|------|------------|
+| `skamate@ucsd.edu` | Sammed Kamate | UCSD | Instructor | Instructor in active course |
+| `sammed.kamate2@gmail.com` | Sammed Kamate 2 | Extension | Student | Student in active course |
+
+The TA can change the seed data accordingly.
+These accounts are created via migration `35-seed-ta-evaluation-users.sql` and can be used to test various features of the application including:
+
+- User authentication and role-based access
+- Instructor and student dashboard functionality
+- Attendance tracking
+- Roster System
+- Journal system
+- Class directory features
+- Course management (instructor role)
+
+**Note**: These accounts use Google OAuth for authentication. Ensure the test emails are authorized in your Google OAuth configuration if testing authentication flows.
+
+### Customizing Seed Data
+
+You can modify the seed data to match your evaluation needs by editing the migration file:
+
+**File**: `migrations/seed-ta-evaluation-users.sql`
+
+You can change:
+- User emails, names, and personal information
+- User roles (instructor, student, ta, tutor, etc.)
+- Enrollment roles in the active course
+- Institution types (UCSD, Extension)
+- Any other user profile fields
+
+After modifying the migration file, run:
+
+```bash
+npm run db:reset  # This will run all migrations including your modified seed data
+# OR
+npm run db:force  # Force re-run all migrations
+```
+
+The migration will automatically handle conflicts if the users already exist, updating their information to match your modified seed data.
+
 ## License
 
 This project is part of UCSD CSE 210 coursework.  
