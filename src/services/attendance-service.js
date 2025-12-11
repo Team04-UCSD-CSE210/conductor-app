@@ -34,11 +34,11 @@ export class AttendanceService {
         throw new Error('You are not a member of this team');
       }
     } else {
-      // Regular session - check enrollment
+      // Regular session - check enrollment (allow students and team leads)
       const enrollmentCheck = await pool.query(
         `SELECT * FROM enrollments 
          WHERE user_id = $1 AND offering_id = $2 
-         AND status = 'enrolled' AND course_role = 'student'`,
+         AND status = 'enrolled' AND course_role IN ('student', 'team-lead')`,
         [userId, session.offering_id]
       );
 
