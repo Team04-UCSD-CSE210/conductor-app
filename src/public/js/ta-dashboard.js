@@ -293,19 +293,16 @@
         return;
       }
 
-      // Check if user can manage announcements (instructor or TA)
-      let canManageAnnouncements = false;
+      // Get current user to check if they created each announcement
+      let currentUserId = null;
       try {
-        const contextRes = await fetch('/api/users/navigation-context', { credentials: 'include' });
-        if (contextRes.ok) {
-          const context = await contextRes.json();
-          canManageAnnouncements = 
-            context.primary_role === 'instructor' || 
-            context.enrollment_role === 'instructor' || 
-            context.enrollment_role === 'ta';
+        const userRes = await fetch('/api/users/me', { credentials: 'include' });
+        if (userRes.ok) {
+          const user = await userRes.json();
+          currentUserId = user.id;
         }
       } catch (error) {
-        console.error('Error checking user permissions:', error);
+        console.error('Error getting current user:', error);
       }
 
       announcementsList.innerHTML = announcements.slice(0, 5).map(announcement => {
@@ -324,7 +321,9 @@
         const teamBadge = announcement.team_name ? `<span class="team-badge">${escapeHtml(announcement.team_name)}</span>` : '';
         const viewMoreLink = isLongContent ? ` <button class="announcement-view-more" data-announcement-id="${announcement.id}" aria-label="View full announcement">View More</button>` : '';
         
-        const editDeleteButtons = canManageAnnouncements ? `
+        // Only show edit/delete buttons if current user created this announcement
+        const canEditThisAnnouncement = currentUserId && announcement.created_by === currentUserId;
+        const editDeleteButtons = canEditThisAnnouncement ? `
           <div class="announcement-actions">
             <button class="announcement-edit-btn" data-announcement-id="${announcement.id}" aria-label="Edit announcement">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -388,9 +387,8 @@
         });
       });
 
-      // Add event listeners for edit and delete buttons
-      if (canManageAnnouncements) {
-        announcementsList.querySelectorAll('.announcement-edit-btn').forEach(btn => {
+      // Add event listeners for edit and delete buttons (only for user's own announcements)
+      announcementsList.querySelectorAll('.announcement-edit-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const announcementId = btn.dataset.announcementId;
@@ -416,7 +414,6 @@
             }
           });
         });
-      }
     } catch (error) {
       console.error('Error loading announcements:', error);
       announcementsList.innerHTML = '<p class="dashboard-error-state">Error loading announcements</p>';
@@ -436,7 +433,7 @@
     
     // Load recent progress (weeks timeline)
     if (offeringId) {
-      await loadRecentProgress(offeringId, { showCount: 3 });
+      await loadRecentProgress(offeringId, { showCount: 8 });
     }
     
     // Refresh stats every 30 seconds for live updates
@@ -702,7 +699,15 @@
         closeModal();
       } catch (err) {
         console.error('Failed to save announcement:', err);
-        alert(`Failed to ${editingAnnouncementId ? 'update' : 'create'} announcement. Please try again.`);
+        const errorMessage = err.message || `Failed to ${editingAnnouncementId ? 'update' : 'create'} announcement`;
+        // Show more specific error if available
+        if (err.message && err.message.includes('Forbidden')) {
+          alert('Permission denied: You do not have permission to create announcements.');
+        } else if (err.message && err.message.includes('Bad Request')) {
+          alert('Invalid request: ' + (err.message.includes('team') ? 'Team leads must create team-specific announcements.' : err.message));
+        } else {
+          alert(`${errorMessage}. Please try again.`);
+        }
       }
     });
   }

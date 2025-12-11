@@ -1296,6 +1296,43 @@
     // Auto-save on form changes
     form.addEventListener('input', triggerAutoSave);
     form.addEventListener('change', triggerAutoSave);
+    
+    // Configure date picker with course date restrictions
+    if (dateInput && window.DatePicker) {
+      const configureDatePicker = async () => {
+        try {
+          const offeringRes = await fetch('/api/offerings/active', { credentials: 'include' });
+          if (offeringRes.ok) {
+            const offering = await offeringRes.json();
+            if (offering.start_date && offering.end_date) {
+              const minDate = new Date(offering.start_date);
+              const maxDate = new Date(offering.end_date);
+              minDate.setHours(0, 0, 0, 0);
+              maxDate.setHours(23, 59, 59, 999);
+              
+              // Find the date picker instance and update it
+              if (dateInput.dataset.datePickerInitialized && window.allDatePickers) {
+                const picker = window.allDatePickers.find(p => p.input === dateInput);
+                if (picker) {
+                  picker.minDate = minDate;
+                  picker.maxDate = maxDate;
+                  picker.renderCalendar(); // Re-render with restrictions
+                }
+              }
+              
+              // Also set native input min/max for fallback
+              dateInput.min = offering.start_date;
+              dateInput.max = offering.end_date;
+            }
+          }
+        } catch (error) {
+          console.warn('Could not load course dates for date picker restrictions:', error);
+        }
+      };
+      
+      // Wait a bit for date picker to initialize, then configure
+      setTimeout(configureDatePicker, 500);
+    }
   }
 
   if (document.readyState === 'loading') {

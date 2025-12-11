@@ -302,11 +302,16 @@ export class EnrollmentModel {
     let paramIndex = 2;
     let whereClause = 'WHERE e.offering_id = $1::uuid';
 
-    const validRoles = ['student', 'ta', 'tutor'];
+    const validRoles = ['student', 'ta', 'tutor', 'team-lead'];
     if (options.course_role && validRoles.includes(options.course_role)) {
-      whereClause += ` AND e.course_role = $${paramIndex}::enrollment_role_enum`;
-      params.push(options.course_role);
-      paramIndex++;
+      if (options.course_role === 'student') {
+        // Include both students and team-leads when filtering by 'student'
+        whereClause += ` AND (e.course_role = 'student'::enrollment_role_enum OR e.course_role = 'team-lead'::enrollment_role_enum)`;
+      } else {
+        whereClause += ` AND e.course_role = $${paramIndex}::enrollment_role_enum`;
+        params.push(options.course_role);
+        paramIndex++;
+      }
     }
 
     const validStatuses = ['enrolled', 'waitlisted', 'dropped', 'completed'];
@@ -317,8 +322,9 @@ export class EnrollmentModel {
     }
 
     if (options.search && typeof options.search === 'string' && options.search.trim().length > 0) {
-      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
-      params.push(`%${options.search.trim()}%`);
+      const searchTerm = `%${options.search.trim()}%`;
+      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex} OR u.ucsd_pid ILIKE $${paramIndex})`;
+      params.push(searchTerm);
       paramIndex++;
     }
 
@@ -390,7 +396,7 @@ export class EnrollmentModel {
         u_instructor.name AS instructor_name,
         u_instructor.email AS instructor_email,
         COUNT(*) OVER()::INTEGER AS total_count,
-        SUM(CASE WHEN e.course_role = 'student' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_students,
+        SUM(CASE WHEN e.course_role IN ('student'::enrollment_role_enum, 'team-lead'::enrollment_role_enum) THEN 1 ELSE 0 END) OVER()::INTEGER AS total_students,
         SUM(CASE WHEN e.course_role = 'ta' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_tas,
         SUM(CASE WHEN e.course_role = 'tutor' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_tutors,
         SUM(CASE WHEN e.status = 'enrolled' THEN 1 ELSE 0 END) OVER()::INTEGER AS total_enrolled,

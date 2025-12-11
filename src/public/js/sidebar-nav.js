@@ -27,7 +27,8 @@
       },
       { href: "/roster", text: "Roster", icon: "/assets/roster.png" },
       { href: "/class-directory", text: "Directory" },
-      { href: "/instructor-meetings", text: "Team Meetings", icon: "/assets/conversation.png" }
+      { href: "/instructor-meetings", text: "Team Meetings", icon: "/assets/conversation.png" },
+      { href: "/instructor-journal", text: "Journal", icon: "/assets/journal.png" }
     ],
     ta: [
       { href: "/ta-dashboard", text: "Dashboard" },
@@ -37,7 +38,9 @@
         match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
       },
       { href: "/roster", text: "Roster", icon: "/assets/roster.png" },
-      { href: "/class-directory", text: "Directory" }
+      { href: "/class-directory", text: "Directory" },
+      { href: "/ta-journal", text: "Journal", icon: "/assets/journal.png" },
+      { href: "/instructor-meetings", text: "Team Meetings", icon: "/assets/conversation.png" }
     ],
     teamLead: [
       { 

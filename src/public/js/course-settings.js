@@ -100,7 +100,14 @@
       });
       
       if (!response.ok) {
-        throw new Error('Failed to load course information');
+        // If 404, there's no active offering - this is okay, just don't populate form
+        if (response.status === 404) {
+          console.log('No active course offering found. Form will remain empty.');
+          return;
+        }
+        // For other errors, log but don't show error message to user
+        console.error('Failed to load course information:', response.status, response.statusText);
+        return;
       }
       
       const offering = await response.json();
@@ -133,7 +140,8 @@
       
     } catch (error) {
       console.error('Error loading course information:', error);
-      showMessage('Failed to load course information', 'error');
+      // Don't show error message to user - just log it
+      // The form will remain empty if course info can't be loaded
     }
   }
 
@@ -154,27 +162,44 @@
     const enrollmentCap = formData.get('enrollment_cap');
     const classTimings = formData.get('class_timings');
     const syllabusUrl = formData.get('syllabus_url');
-    const status = formData.get('status');
     
     if (code) data.code = code;
     if (name) data.name = name;
     if (department) data.department = department;
-    if (credits) data.credits = Number.parseInt(credits, 10);
+    if (credits && credits.trim()) {
+      const creditsNum = Number.parseInt(credits, 10);
+      if (!Number.isNaN(creditsNum)) {
+        data.credits = creditsNum;
+      }
+    }
     if (term) data.term = term;
-    if (year) data.year = Number.parseInt(year, 10);
+    if (year && year.trim()) {
+      const yearNum = Number.parseInt(year, 10);
+      if (!Number.isNaN(yearNum)) {
+        data.year = yearNum;
+      }
+    }
     if (startDate) data.start_date = startDate;
     if (endDate) data.end_date = endDate;
     if (location) data.location = location;
-    if (enrollmentCap) data.enrollment_cap = Number.parseInt(enrollmentCap, 10);
+    if (enrollmentCap && enrollmentCap.trim()) {
+      const capNum = Number.parseInt(enrollmentCap, 10);
+      if (!Number.isNaN(capNum)) {
+        data.enrollment_cap = capNum;
+      }
+    }
     if (classTimings && classTimings.trim()) {
       try {
-        data.class_timings = JSON.parse(classTimings);
-      } catch {
-        throw new Error('Invalid JSON format for class timings');
+        const parsed = JSON.parse(classTimings);
+        if (parsed && typeof parsed === 'object') {
+          data.class_timings = parsed;
+        }
+      } catch (parseError) {
+        console.warn('Invalid JSON format for class timings, skipping:', parseError);
+        // Don't throw - just skip invalid class_timings
       }
     }
     if (syllabusUrl) data.syllabus_url = syllabusUrl;
-    if (status) data.status = status;
     
     const response = await fetch('/api/offerings/active', {
       method: 'PUT',

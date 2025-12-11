@@ -334,7 +334,7 @@
     
     // Load recent progress (weeks timeline)
     if (offeringId) {
-      await loadRecentProgress(offeringId, { showCount: 3 });
+      await loadRecentProgress(offeringId, { showCount: 8 });
     }
     
     // Refresh stats every 30 seconds for live updates

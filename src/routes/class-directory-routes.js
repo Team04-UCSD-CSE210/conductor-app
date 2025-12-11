@@ -150,7 +150,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       ORDER BY u.name;
     `;
 
-    // ---------- Students ----------
+    // ---------- Students (includes team leads) ----------
     const studentsQuery = `
       SELECT DISTINCT
         u.id,
@@ -184,7 +184,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
        AND t.offering_id = $1::uuid
       WHERE e.offering_id = $1::uuid
         AND e.status = 'enrolled'::enrollment_status_enum
-        AND e.course_role = 'student'::enrollment_role_enum
+        AND (e.course_role = 'student'::enrollment_role_enum OR e.course_role = 'team-lead'::enrollment_role_enum)
       ORDER BY u.name;
     `;
 

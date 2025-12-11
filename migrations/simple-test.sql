@@ -82,17 +82,17 @@ VALUES
 
 -- Create teams
 \echo '5. Creating teams...'
-INSERT INTO team (offering_id, name, team_number, status, formed_at, leader_id)
+INSERT INTO team (offering_id, name, team_number, status, formed_at, leader_ids)
 VALUES 
     (
         (SELECT id FROM course_offerings WHERE code = 'CSE210'),
         'Team Alpha', 1, 'active'::team_status_enum, '2025-10-01',
-        (SELECT id FROM users WHERE email = 'alice@ucsd.edu')
+        ARRAY[(SELECT id FROM users WHERE email = 'alice@ucsd.edu')]::UUID[]
     ),
     (
         (SELECT id FROM course_offerings WHERE code = 'CSE210'),
         'Team Beta', 2, 'active'::team_status_enum, '2025-10-01',
-        (SELECT id FROM users WHERE email = 'charlie@ucsd.edu')
+        ARRAY[(SELECT id FROM users WHERE email = 'charlie@ucsd.edu')]::UUID[]
     );
 
 \echo '   Created 2 teams'

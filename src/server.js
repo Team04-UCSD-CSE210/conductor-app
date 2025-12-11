@@ -29,6 +29,8 @@ import instructorJournalRoutes from "./routes/instructor-journal-routes.js";
 import taJournalRoutes from "./routes/ta-journal-routes.js";
 import tutorJournalRoutes from "./routes/tutor-journal-routes.js";
 import classDirectoryRoutes from "./routes/class-directory-routes.js";
+import announcementRoutes from "./routes/announcement-routes.js";
+import dashboardTodoRoutes from "./routes/dashboard-todo-routes.js";
 import { trackApiCategory } from "./observability/diagnostics.js";
 import { metricsMiddleware } from "./middleware/metrics-middleware.js";
 
@@ -997,21 +999,21 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
     console.log(`[Team Edit] User ID: ${user.id}, Teams:`, teamsWithUserAsLeader.map(t => ({ id: t.id, leader_ids: t.leader_ids })));
     
     for (const teamRow of teamsWithUserAsLeader) {
-      // Check if team_members record exists with role='leader'
+      // Check if team_members record exists with role='leader' and is active (left_at IS NULL)
       const { rows: memberCheck } = await pool.query(
         `SELECT role, left_at FROM team_members 
-         WHERE team_id = $1 AND user_id = $2
-         ORDER BY left_at NULLS LAST
+         WHERE team_id = $1 AND user_id = $2 AND left_at IS NULL
+         ORDER BY joined_at DESC
          LIMIT 1`,
         [teamRow.id, user.id]
       );
       
       const needsFix = memberCheck.length === 0 || 
-                       memberCheck[0].role !== 'leader' || 
-                       memberCheck[0].left_at !== null;
+                       (memberCheck[0] && memberCheck[0].role !== 'leader');
       
       if (needsFix) {
-        console.log(`[Team Edit] Fixing team_members for team ${teamRow.id}: current role=${memberCheck[0]?.role || 'none'}, left_at=${memberCheck[0]?.left_at || 'null'}`);
+        const currentRole = memberCheck.length > 0 ? memberCheck[0].role : 'none';
+        console.log(`[Team Edit] Fixing team_members for team ${teamRow.id}: current role=${currentRole}`);
         
         // Create or update team_members record to set role='leader'
         await pool.query(
@@ -1102,21 +1104,26 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
       if (memberTeams.length > 0) {
         // If user is a member of exactly one team, automatically convert them to leader
         // This handles cases where the conversion was attempted but didn't complete
-        if (memberTeams.length === 1) {
-          const teamToConvert = memberTeams[0];
-          console.log(`[Team Edit] Auto-converting user ${user.id} to leader of team ${teamToConvert.id} (${teamToConvert.name})`);
+        // Also handles multiple teams - convert all member teams to leader
+        const teamsToConvert = memberTeams.filter(t => t.role !== 'leader');
+        
+        if (teamsToConvert.length > 0) {
+          console.log(`[Team Edit] Auto-converting user ${user.id} to leader of ${teamsToConvert.length} team(s)`);
           
           try {
-            // Update team_members to set role='leader'
-            await pool.query(
-              `UPDATE team_members 
-               SET role = 'leader'::team_member_role_enum
-               WHERE team_id = $1 AND user_id = $2 AND left_at IS NULL`,
-              [teamToConvert.id, user.id]
-            );
-            
-            // Sync leader_ids to include this user
-            await syncTeamLeaderIds(teamToConvert.id);
+            // Update all member teams to set role='leader'
+            for (const teamToConvert of teamsToConvert) {
+              await pool.query(
+                `UPDATE team_members 
+                 SET role = 'leader'::team_member_role_enum
+                 WHERE team_id = $1 AND user_id = $2 AND left_at IS NULL`,
+                [teamToConvert.id, user.id]
+              );
+              
+              // Sync leader_ids to include this user for each team
+              await syncTeamLeaderIds(teamToConvert.id);
+              console.log(`[Team Edit] Converted user to leader of team ${teamToConvert.id} (${teamToConvert.name})`);
+            }
             
             console.log(`[Team Edit] Successfully converted user to leader. Re-checking permissions...`);
             
@@ -1940,6 +1947,8 @@ app.use("/api/ta-journals", ensureAuthenticated, taJournalRoutes);
 app.use("/api/tutor-journals", ensureAuthenticated, tutorJournalRoutes);
 app.use("/api/class", courseOfferingRoutes);
 app.use("/api/class-directory", classDirectoryRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/dashboard-todos", ensureAuthenticated, dashboardTodoRoutes);
 
 // Public endpoint to show current login attempt status (by email if authenticated, else by IP) //TO BE CHECKED
 app.get('/api/login-attempts', async (req, res) => {

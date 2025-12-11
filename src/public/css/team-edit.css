@@ -73,7 +73,7 @@
 .form-group input[type="text"]:focus,
 .form-group input[type="url"]:focus {
   outline: none;
-  border-color: var(--green-500, #059669);
+  border-color: var(--palette-primary, #0F766E);
   background: #fff;
   box-shadow: 0 0 0 1px rgb(5 150 105 / 12%);
 }
@@ -267,9 +267,9 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: var(--green-500, #059669);
+  border-color: var(--palette-primary, #0F766E);
   background: #fff;
-  box-shadow: 0 0 0 1px rgb(5 150 105 / 12%);
+  box-shadow: 0 0 0 1px rgb(15 118 110 / 12%);
 }
 
 /* Blue Outlined Buttons */
@@ -339,4 +339,45 @@
 .team-link-repo:hover {
   background: #2f363d;
   color: white;
+}
+
+/* Toast Notification */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.toast {
+  background: white;
+  border-left: 4px solid var(--emerald-500, #10b981);
+  padding: 0.9rem 1.1rem;
+  border-radius: 0.9rem;
+  min-width: 240px;
+  max-width: 400px;
+  box-shadow: 0 18px 40px rgb(15 118 110 / 20%);
+  font-weight: 500;
+  color: var(--gray-900, #111827);
+  pointer-events: auto;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.toast.error {
+  border-left-color: var(--rose-500, #f43f5e);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

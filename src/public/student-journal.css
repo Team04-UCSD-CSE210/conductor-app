@@ -250,20 +250,31 @@ body.dashboard-page {
   line-height: 1.5;
 }
 
-/* Simple responsive behaviour */
-@media (width <= 1024px) {
+/* Mobile responsive - consistent with all other pages */
+@media (width <= 768px) {
   body.dashboard-page {
     overflow: auto;
   }
 
+  .wj-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 1rem 0.75rem;
+  }
+
   .hamburger-menu {
-    display: flex;
+    display: flex !important;
   }
 
   .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     z-index: 999;
+    height: 100vh;
+    overflow-y: auto;
   }
 
   .sidebar.open {
@@ -271,9 +282,9 @@ body.dashboard-page {
   }
 
   .wj-main {
-    margin-left: 0;
+    margin-left: 0 !important;
     margin-right: 0;
-    padding: 1.5rem 1rem;
+    padding: 1rem 0.75rem;
     height: auto;
     overflow-y: visible;
   }
@@ -286,10 +297,11 @@ body.dashboard-page {
     position: static;
     width: 100%;
     height: auto;
-    padding: 1.5rem 1rem;
-    margin-top: 2rem;
+    padding: 1rem 0.75rem;
+    margin-top: 1.5rem;
   }
 
+  /* Mobile overlay when menu is open */
   body.dashboard-page.menu-open {
     overflow: hidden;
   }
@@ -300,6 +312,29 @@ body.dashboard-page {
     inset: 0;
     background: rgb(0 0 0 / 50%);
     z-index: 998;
+  }
+
+  /* Mobile spacing adjustments */
+  .wj-card {
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .wj-page-header h1 {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+
+  /* Form elements full width on mobile */
+  .wj-fieldset textarea {
+    width: 100%;
+    min-height: 100px;
+  }
+
+  /* Buttons touch-friendly */
+  .wj-form button,
+  .btn-contact {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
   }
 }
 
@@ -312,11 +347,11 @@ body.dashboard-page {
 
 /* Contact section styles */
 .help-box {
-  background: linear-gradient(135deg, white 0%, var(--teal-50, #f0fdfa) 100%);
-  border: 1px solid var(--teal-200, #99f6e4);
+  background: linear-gradient(135deg, white 0%, var(--palette-background, #F0FDFA) 100%);
+  border: 1px solid var(--palette-primary, #0F766E);
   border-radius: 0.75rem;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
+  box-shadow: 0 2px 8px rgb(15 118 110 / 8%);
 }
 
 .help-box p {
@@ -334,10 +369,10 @@ body.dashboard-page {
 
 .btn-contact {
   padding: 0.625rem 1rem;
-  border: 2px solid var(--teal-600, #0d9488);
+  border: 2px solid var(--palette-primary, #0F766E);
   border-radius: 9999px;
   background: white;
-  color: var(--teal-600, #0d9488);
+  color: var(--palette-primary, #0F766E);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
@@ -345,9 +380,9 @@ body.dashboard-page {
 }
 
 .btn-contact:hover {
-  background: var(--teal-50, #f0fdfa);
-  border-color: var(--teal-700, #0f766e);
-  color: var(--teal-700, #0f766e);
+  background: var(--palette-background, #F0FDFA);
+  border-color: var(--palette-primary, #0F766E);
+  color: var(--palette-primary, #0F766E);
 }
 
 .btn-contact:active {

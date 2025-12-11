@@ -40,7 +40,7 @@
   background: white;
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid var(--palette-accent, #99F6E4);
+  border: 1px solid var(--palette-primary, #0F766E);
   box-shadow: 0 2px 8px rgb(15 118 110 / 10%);
   min-width: 0;
   overflow: hidden;
@@ -57,7 +57,7 @@
   font-weight: 600;
   color: var(--palette-primary, #0F766E);
   margin: 0 0 16px;
-  border-bottom: 2px solid var(--palette-accent, #99F6E4);
+  border-bottom: 2px solid var(--palette-primary, #0F766E);
   padding-bottom: 8px;
 }
 
@@ -71,7 +71,7 @@
   padding: 20px;
   background: var(--palette-background, #F0FDFA);
   border-radius: 8px;
-  border: 1px solid var(--palette-accent, #99F6E4);
+  border: 1px solid var(--palette-primary, #0F766E);
 }
 
 .attendance-label {
@@ -92,7 +92,7 @@
 .progress-bar {
   flex: 1;
   height: 12px;
-  background: var(--palette-accent, #99F6E4);
+  background: var(--palette-background, #F0FDFA);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -108,7 +108,7 @@
   font-weight: 700;
   color: var(--palette-primary, #0F766E);
   min-width: 35px;
-  background: var(--palette-accent, #99F6E4);
+  background: var(--palette-background, #F0FDFA);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -127,7 +127,7 @@
   padding: 20px;
   background: var(--palette-background, #F0FDFA);
   border-radius: 12px;
-  border: 1px solid var(--palette-accent, #99F6E4);
+  border: 1px solid var(--palette-primary, #0F766E);
   height: 80%;
 }
 
@@ -221,7 +221,7 @@
   padding: 16px;
   background: var(--palette-background, #F0FDFA);
   border-radius: 12px;
-  border: 1px solid var(--palette-accent, #99F6E4);
+  border: 1px solid var(--palette-primary, #0F766E);
   box-shadow: 0 2px 6px rgb(15 118 110 / 10%);
   min-width: 0;
   max-width: 100%;
@@ -432,7 +432,7 @@
   padding: 16px;
   background: var(--palette-background, #F0FDFA);
   border-radius: 8px;
-  border: 1px solid var(--palette-accent, #99F6E4);
+  border: 1px solid var(--palette-primary, #0F766E);
   transition: all 0.2s ease;
   height: 60px;
   min-height: 60px;
@@ -442,7 +442,7 @@
 }
 
 .todo-item:hover {
-  background: var(--palette-accent, #99F6E4);
+  background: var(--palette-background, #F0FDFA);
   transform: translateX(2px);
 }
 
@@ -476,7 +476,7 @@
 }
 
 .todo-item.completed .todo-checkbox::before {
-  background: #A7F3D0;
+  background: var(--palette-secondary, #83D7CF);
 }
 
 
@@ -515,7 +515,7 @@
   margin-top: 12px;
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px dashed var(--palette-accent, #99F6E4);
+  border: 1px dashed var(--palette-primary, #0F766E);
   background: #ECFEFF;
   color: var(--palette-primary, #0F766E);
   font-size: 12px;
@@ -555,7 +555,7 @@
   color: var(--palette-primary, #0F766E);
   padding: 20px 24px;
   border-radius: 10px;
-  border: 1px solid var(--palette-accent, #99F6E4);
+  border: 1px solid var(--palette-primary, #0F766E);
   font-weight: 600;
   font-size: 15px;
   box-shadow: 0 3px 8px rgb(15 118 110 / 30%);
@@ -588,7 +588,7 @@
 }
 
 /* Mobile: Full single column layout */
-@media (width < 768px) {
+@media (width <= 768px) {
   .main-container {
     padding: 12px;
   }

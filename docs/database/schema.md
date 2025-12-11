@@ -150,7 +150,7 @@ Student teams within a course offering.
 | `offering_id` | UUID | Course (FK to course_offerings) |
 | `name` | TEXT | Team name (e.g., "Team Alpha") |
 | `team_number` | INTEGER | Team number |
-| `leader_id` | UUID | Team leader (FK to users) |
+| `leader_ids` | UUID[] | Team leaders array (supports multiple leaders) |
 | `status` | team_status_enum | forming, active, inactive |
 | `formed_at` | DATE | Formation date |
 | `created_at` | TIMESTAMPTZ | Creation timestamp |
@@ -160,7 +160,6 @@ Student teams within a course offering.
 
 **Indexes:**
 - `idx_team_offering` on `offering_id`
-- `idx_team_leader` on `leader_id`
 
 ---
 

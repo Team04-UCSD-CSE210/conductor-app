@@ -25,6 +25,7 @@
     updateAnnouncement = async () => ({}),
     deleteAnnouncement = async () => ({}),
     loadRecentProgress = async () => {},
+    formatCreatorWithRole = (announcement) => announcement.creator_name || 'Unknown',
   } = DS;
   
   let offeringId = null;
@@ -72,7 +73,7 @@
       await loadAnnouncements();
       
       // Load recent progress (weeks timeline)
-      await loadRecentProgress(offeringId, { showCount: 3 });
+      await loadRecentProgress(offeringId, { showCount: 8 });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
@@ -104,8 +105,17 @@
         return div.innerHTML;
       }
 
-      // Instructors can manage announcements
-      const canManageAnnouncements = true;
+      // Get current user to check if they created each announcement
+      let currentUserId = null;
+      try {
+        const userRes = await fetch('/api/users/me', { credentials: 'include' });
+        if (userRes.ok) {
+          const user = await userRes.json();
+          currentUserId = user.id;
+        }
+      } catch (error) {
+        console.error('Error getting current user:', error);
+      }
 
       announcementsList.innerHTML = announcements.slice(0, 5).map(announcement => {
         const date = new Date(announcement.created_at || announcement.date || Date.now());
@@ -119,9 +129,11 @@
         const content = announcement.content || announcement.body || announcement.message || '';
         const isLongContent = content.length > 100;
         const preview = isLongContent ? content.substring(0, 100) : content;
-        const creatorName = announcement.creator_name || 'Unknown';
+        const creatorDisplay = formatCreatorWithRole(announcement);
         
-        const editDeleteButtons = canManageAnnouncements ? `
+        // Only show edit/delete buttons if current user created this announcement
+        const canEditThisAnnouncement = currentUserId && announcement.created_by === currentUserId;
+        const editDeleteButtons = canEditThisAnnouncement ? `
           <div class="announcement-actions">
             <button class="announcement-edit-btn" data-announcement-id="${announcement.id}" aria-label="Edit announcement">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -146,7 +158,7 @@
             <div class="announcement-content">
               <h5><span class="announcement-title-text">${escapeHtml(title)}</span>${teamBadge}</h5>
               <p class="announcement-preview">${escapeHtml(preview)}${viewMoreLink}</p>
-              <div class="announcement-creator">by ${escapeHtml(creatorName)}</div>
+              <div class="announcement-creator">by ${escapeHtml(creatorDisplay)}</div>
             </div>
             ${editDeleteButtons}
           </div>
@@ -188,9 +200,8 @@
         });
       });
 
-      // Add event listeners for edit and delete buttons
-      if (canManageAnnouncements) {
-        announcementsList.querySelectorAll('.announcement-edit-btn').forEach(btn => {
+      // Add event listeners for edit and delete buttons (only for user's own announcements)
+      announcementsList.querySelectorAll('.announcement-edit-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const announcementId = btn.dataset.announcementId;
@@ -216,7 +227,6 @@
             }
           });
         });
-      }
     } catch (error) {
       console.error('Error loading announcements:', error);
       announcementsList.innerHTML = '<p class="dashboard-error-state">Error loading announcements</p>';
@@ -428,7 +438,7 @@
     
     // Load recent progress (weeks timeline)
     if (offeringId) {
-      await loadRecentProgress(offeringId, { showCount: 3 });
+      await loadRecentProgress(offeringId, { showCount: 8 });
     }
     
     // Refresh stats every 30 seconds for live updates
@@ -709,7 +719,15 @@
         closeModal();
       } catch (err) {
         console.error('Failed to save announcement:', err);
-        alert(`Failed to ${editingAnnouncementId ? 'update' : 'create'} announcement. Please try again.`);
+        const errorMessage = err.message || `Failed to ${editingAnnouncementId ? 'update' : 'create'} announcement`;
+        // Show more specific error if available
+        if (err.message && err.message.includes('Forbidden')) {
+          alert('Permission denied: You do not have permission to create announcements.');
+        } else if (err.message && err.message.includes('Bad Request')) {
+          alert('Invalid request: ' + (err.message.includes('team') ? 'Team leads must create team-specific announcements.' : err.message));
+        } else {
+          alert(`${errorMessage}. Please try again.`);
+        }
       }
     });
   }

@@ -135,7 +135,7 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
-  border-bottom: 2px solid var(--palette-accent, #99F6E4);
+  border-bottom: 2px solid var(--palette-primary, #0F766E);
   padding-bottom: 8px;
 }
 
@@ -283,7 +283,7 @@
   gap: 12px;
 
   /* match announcements header: underline on the header container */
-  border-bottom: 2px solid var(--palette-accent, #99F6E4);
+  border-bottom: 2px solid var(--palette-primary, #0F766E);
   padding-bottom: 8px;
   margin-bottom: 8px;
 }
@@ -370,7 +370,7 @@
 }
 
 /* Mobile: Full single column layout */
-@media (width < 768px) {
+@media (width <= 768px) {
   .instructor-dashboard .dashboard-grid {
     gap: 12px;
   }

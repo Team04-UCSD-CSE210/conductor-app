@@ -567,7 +567,7 @@
    * @param {Object} options - { showCount: number of weeks to show (default: 3) }
    */
   async function loadRecentProgress(offeringId, options = {}) {
-    const { showCount = 3 } = options;
+    const { showCount = 8 } = options;
     const weeksTimeline = document.querySelector('.weeks-timeline');
     if (!weeksTimeline || !offeringId) return;
 
@@ -667,8 +667,8 @@
       
       if (currentWeekIndex >= 0) {
         // We're in the course - show weeks around current week
-        // Try to show: 1 past week, current week, 1-2 upcoming weeks
-        const startIdx = Math.max(0, currentWeekIndex - 1);
+        // Show more past weeks for better context
+        const startIdx = Math.max(0, currentWeekIndex - Math.floor(showCount / 2));
         const endIdx = Math.min(weeks.length, startIdx + showCount);
         displayWeeks = weeks.slice(startIdx, endIdx);
       } else {
@@ -679,6 +679,9 @@
       // Reverse to show most recent first (newest at top)
       displayWeeks.reverse();
 
+      // Fetch activities for the displayed weeks to show what happened
+      const activitiesByWeek = await fetchWeekActivities(offeringId, displayWeeks);
+      
       weeksTimeline.innerHTML = displayWeeks.map(week => {
         const statusLabel = week.statusText === 'completed' 
           ? 'Completed' 
@@ -686,13 +689,18 @@
             ? 'In Progress' 
             : 'Upcoming');
         
+        const weekActivities = activitiesByWeek[week.weekNumber] || [];
+        const activitySummary = formatWeekActivities(weekActivities);
+        
         return `
           <div class="week-item ${week.statusClass}">
             <div class="week-header">
               <div class="week-number">Week ${week.weekNumber}</div>
               <div class="week-dates">${week.dateRange}</div>
             </div>
-            <div class="week-status ${week.statusText}">${statusLabel}</div>
+            <div class="week-status ${week.statusText}">
+              ${statusLabel}${activitySummary ? `: ${activitySummary}` : ''}
+            </div>
           </div>
         `;
       }).join('');
@@ -701,6 +709,70 @@
       console.error('Error loading recent progress:', error);
       weeksTimeline.innerHTML = '<p class="dashboard-empty-state">No progress yet</p>';
     }
+  }
+
+  /**
+   * Fetch activities (sessions, announcements) for specific weeks
+   */
+  async function fetchWeekActivities(offeringId, weeks) {
+    if (!weeks || weeks.length === 0) return {};
+    
+    try {
+      // Fetch sessions and announcements for these date ranges
+      const [sessionsRes, announcementsRes] = await Promise.all([
+        fetch(`/api/sessions?offering_id=${offeringId}&limit=100`, { credentials: 'include' }).catch(() => null),
+        fetch(`/api/announcements?offering_id=${offeringId}&limit=50`, { credentials: 'include' }).catch(() => null)
+      ]);
+      
+      const sessions = sessionsRes?.ok ? await sessionsRes.json().catch(() => []) : [];
+      const announcements = announcementsRes?.ok ? await announcementsRes.json().catch(() => []) : [];
+      
+      const activitiesByWeek = {};
+      
+      weeks.forEach(week => {
+        const weekStart = week.startDate.toISOString().split('T')[0];
+        const weekEnd = week.endDate.toISOString().split('T')[0];
+        
+        const weekSessions = sessions.filter(s => {
+          const sessionDate = s.session_date ? new Date(s.session_date).toISOString().split('T')[0] : null;
+          return sessionDate && sessionDate >= weekStart && sessionDate <= weekEnd;
+        });
+        
+        const weekAnnouncements = announcements.filter(a => {
+          const annDate = a.created_at ? new Date(a.created_at).toISOString().split('T')[0] : null;
+          return annDate && annDate >= weekStart && annDate <= weekEnd;
+        });
+        
+        activitiesByWeek[week.weekNumber] = {
+          sessions: weekSessions.length,
+          announcements: weekAnnouncements.length
+        };
+      });
+      
+      return activitiesByWeek;
+    } catch (error) {
+      console.error('Error fetching week activities:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Format week activities into a summary string
+   */
+  function formatWeekActivities(activities) {
+    if (!activities || (activities.sessions === 0 && activities.announcements === 0)) {
+      return '';
+    }
+    
+    const parts = [];
+    if (activities.sessions > 0) {
+      parts.push(`${activities.sessions} session${activities.sessions !== 1 ? 's' : ''}`);
+    }
+    if (activities.announcements > 0) {
+      parts.push(`${activities.announcements} announcement${activities.announcements !== 1 ? 's' : ''}`);
+    }
+    
+    return parts.join(', ');
   }
 
   /**

@@ -251,7 +251,7 @@
 }
 
 .meeting-chart-bar.green {
-  background-color: var(--palette-primary, var(--green-500, #10b981));
+  background-color: var(--palette-primary, #0F766E);
 }
 
 .meeting-chart-bar.yellow {

@@ -642,8 +642,11 @@ export class SessionService {
   /**
    * Delete session
    * Only the creator or the instructor of the active course offering may delete the session
+   * @param {string} sessionId - The session ID to delete
+   * @param {string} _userId - User ID (unused, authorization handled by middleware)
    */
-  static async deleteSession(sessionId, userId) {
+  // eslint-disable-next-line no-unused-vars
+  static async deleteSession(sessionId, _userId) {
     const session = await SessionModel.findById(sessionId);
 
     if (!session) {
