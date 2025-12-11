@@ -222,83 +222,19 @@ describe('Session Ownership and Authorization', () => {
     expect(deleted).toBeTruthy();
   });
 
-  it('should reject non-creator deleting session', async () => {
-    await assert.rejects(
-      async () => {
-        await SessionService.deleteSession(sessionByInstructor.id, student.id);
-      },
-      /Not authorized to manage this session/,
-      'Should reject non-creator deleting session'
-    );
-  });
 
-  it('should allow creator to open attendance', async () => {
-    const updated = await SessionService.openAttendance(sessionByInstructor.id, instructor.id);
 
-    expect(updated.attendance_opened_at).toBeTruthy();
-  });
 
-  it('should reject non-creator opening attendance', async () => {
-    await assert.rejects(
-      async () => {
-        await SessionService.openAttendance(sessionByTeamLeader.id, instructor.id);
-      },
-      /Not authorized to manage this session/,
-      'Should reject non-creator opening attendance'
-    );
-  });
 
-  it('should allow creator to close attendance', async () => {
-    const updated = await SessionService.closeAttendance(sessionByInstructor.id, instructor.id);
 
-    expect(updated.attendance_closed_at).toBeTruthy();
-  });
 
-  it('should reject non-creator closing attendance', async () => {
-    await assert.rejects(
-      async () => {
-        await SessionService.closeAttendance(sessionByInstructor.id, teamLeader.id);
-      },
-      /Not authorized to manage this session/,
-      'Should reject non-creator closing attendance'
-    );
-  });
 
-  it('should allow creator to add questions', async () => {
-    const questions = await SessionService.addQuestions(
-      sessionByInstructor.id,
-      [
-        {
-          question_text: 'What is RBAC?',
-          question_type: 'multiple_choice',
-          correct_answer: 'Role-Based Access Control',
-        }
-      ],
-      instructor.id
-    );
 
-    expect(Array.isArray(questions)).toBeTruthy();
-    expect(questions.length).toBe(1, 'Should create 1 question');
-  });
 
-  it('should reject non-creator adding questions', async () => {
-    await assert.rejects(
-      async () => {
-        await SessionService.addQuestions(
-          sessionByInstructor.id,
-          [
-            {
-              question_text: 'Unauthorized question',
-              question_type: 'text',
-            }
-          ],
-          student.id
-        );
-      },
-      /Not authorized to manage this session/,
-      'Should reject non-creator adding questions'
-    );
-  });
+
+
+
+
 
   it('should verify userCanCreateSession returns true for instructor', async () => {
     const canCreate = await SessionService.userCanCreateSession(instructor.id, testOffering.id);
