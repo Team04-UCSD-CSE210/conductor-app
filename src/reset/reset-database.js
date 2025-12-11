@@ -17,7 +17,6 @@ if (!DATABASE_URL) {
 
 try {
   await pool.query('SELECT 1');
-  console.log('✅ Connected to database');
 
   const tables = [
     'access_requests',
@@ -29,10 +28,8 @@ try {
 
   for (const table of tables) {
     await pool.query(`TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`);
-    console.log(`🧹 Cleared table: ${table}`);
   }
 
-  console.log('✅ Database reset completed successfully.');
   await pool.end();
 } catch (error) {
   console.error('❌ Error resetting database:', error);

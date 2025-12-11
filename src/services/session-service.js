@@ -262,17 +262,6 @@ export class SessionService {
       
       const hasLeaderRole = membershipRows.length > 0 && membershipRows[0].role === 'leader';
       
-      // Debug logging
-      console.log('[SessionService] Permission check:', {
-        teamId: sessionData.team_id,
-        userId: createdBy,
-        isInstructor,
-        isInLeaderIds,
-        hasLeaderRole,
-        membershipRow: membershipRows[0] || null,
-        refreshedTeamLeaderIds: refreshedTeam.leader_ids
-      });
-      
       const isTeamLead = isInLeaderIds || hasLeaderRole;
       
       if (!isInstructor && !isTeamLead) {
@@ -371,7 +360,6 @@ export class SessionService {
             const updatedSession = await SessionModel.findById(session.id);
             if (updatedSession) {
               Object.assign(session, updatedSession);
-              console.log('[SessionService] Attendance auto-opened. attendance_opened_at:', updatedSession.attendance_opened_at);
             }
           }
           

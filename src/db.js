@@ -26,9 +26,7 @@ export const pool = new pg.Pool({
   connectionTimeoutMillis: 2000,
 });
 
-pool.on('connect', () => {
-  if (process.env.DEBUG_DB) console.log('[db] connect event');
-});
+pool.on('connect', () => {});
 
 // Wrap pool.query to capture duration/errors for diagnostics
 const baseQuery = pool.query.bind(pool);
@@ -49,7 +47,6 @@ pool.query = async (...args) => {
 export async function assertDb() {
   try {
     await pool.query('SELECT 1');
-    if (process.env.DEBUG_DB) console.log('[db] connection verified');
   } catch (err) {
     throw new Error(`Database connection failed: ${err.message}`);
   }
