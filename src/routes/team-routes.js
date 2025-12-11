@@ -67,23 +67,28 @@ async function getTeamWithOffering(teamId) {
 router.get('/my-team', ensureAuthenticated, async (req, res) => {
   try {
     const userId = req.currentUser.id;
+    const { offering_id } = req.query;
 
+    // Check both team membership and leadership
     const result = await pool.query(
-      `SELECT 
-        id,
-        name,
-        team_number,
-        leader_id,
-        status,
-        mantra,
-        links,
-        logo_url,
-        created_at
-      FROM team
-      WHERE leader_id = $1
-      ORDER BY team_number
+      `SELECT DISTINCT
+        t.id,
+        t.name,
+        t.team_number,
+        t.leader_id,
+        t.status,
+        t.mantra,
+        t.links,
+        t.logo_url,
+        t.created_at,
+        t.offering_id
+      FROM team t
+      LEFT JOIN team_members tm ON t.id = tm.team_id AND tm.user_id = $1 AND tm.left_at IS NULL
+      WHERE (t.leader_id = $1 OR tm.user_id = $1)
+        ${offering_id ? 'AND t.offering_id = $2' : ''}
+      ORDER BY t.team_number
       LIMIT 1`,
-      [userId]
+      offering_id ? [userId, offering_id] : [userId]
     );
 
     if (result.rows.length === 0) {

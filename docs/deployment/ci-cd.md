@@ -79,7 +79,7 @@ unit-tests:
     - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
     - run: npm ci
-    - run: npm run db:migrate
+    - run: npm run db:init
     - run: npm run test:unit -- --coverage
     - uses: codecov/codecov-action@v3
       with:
@@ -99,7 +99,7 @@ e2e-tests:
     - uses: actions/setup-node@v3
     - run: npm ci
     - run: npx playwright install chromium
-    - run: npm run db:migrate
+    - run: npm run db:seed
     - run: npm run test:e2e:chromium
     - uses: actions/upload-artifact@v3
       if: failure()
@@ -539,7 +539,9 @@ render logs conductor-app --tail 100
 render shell conductor-app
 
 # Run migrations
-npm run db:migrate
+npm run db:init
+# Or with seed data
+npm run db:seed
 ```
 
 ## Best Practices

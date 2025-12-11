@@ -510,7 +510,7 @@ describe('Assignment Management', () => {
 
 **Solution**:
 ```bash
-npm run db:migrate
+npm run db:reset
 npm run db:seed
 ```
 

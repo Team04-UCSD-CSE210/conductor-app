@@ -1,11 +1,12 @@
 -- 03-seed-course-offerings-teams.sql
 -- Comprehensive seed data for CSE 210 course offering, enrollments, and teams
 -- Run AFTER users table is populated
+-- Uses fixed UUID for CSE 210 offering to maintain consistency
 
 -- Get the offering ID for enrollments and teams
 DO $$
 DECLARE
-    offering_id_var UUID;
+    offering_id_var UUID := 'a0000000-0000-4000-8000-000000000001'::UUID; -- Fixed UUID for CSE 210 Fall 2025
     instructor_id UUID;
     ta1_id UUID;
     ta2_id UUID;
@@ -42,8 +43,9 @@ BEGIN
         RAISE EXCEPTION 'Instructor not found. Run user seed data first.';
     END IF;
     
-    -- Create or get the CSE 210 offering
+    -- Create or get the CSE 210 offering with fixed UUID
     INSERT INTO course_offerings (
+        id,
         code,
         name,
         department,
@@ -59,6 +61,7 @@ BEGIN
         is_active,
         created_by
     ) VALUES (
+        offering_id_var, -- Use the fixed UUID
         'CSE 210',
         'Software Engineering',
         'Computer Science & Engineering',
@@ -74,14 +77,11 @@ BEGIN
         TRUE,
         instructor_id
     )
-    ON CONFLICT (code, term, year) DO UPDATE SET
+    ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
-        is_active = EXCLUDED.is_active
-    RETURNING id INTO offering_id_var;
+        is_active = EXCLUDED.is_active;
     
-    IF offering_id_var IS NULL THEN
-        SELECT id INTO offering_id_var FROM course_offerings WHERE code = 'CSE 210' AND year = 2025 LIMIT 1;
-    END IF;
+    RAISE NOTICE 'CSE 210 offering created/updated with ID: %', offering_id_var;
     
     -- Get TA IDs (graduate students)
     SELECT id INTO ta1_id FROM users WHERE email = 'grad1@ucsd.edu' LIMIT 1;
