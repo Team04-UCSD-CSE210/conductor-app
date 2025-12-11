@@ -163,8 +163,17 @@ async function loadEntries() {
   }
 }
 
+function initContactButtons() {
+  const contactTA = document.getElementById('contact-ta');
+  const contactInstructor = document.getElementById('contact-instructor');
+  const handler = (recipient) => () => window.alert(`Message the ${recipient} through Slack or email.`);
+
+  if (contactTA) contactTA.addEventListener('click', handler('TA'));
+  if (contactInstructor) contactInstructor.addEventListener('click', handler('Instructor'));
+}
+
 // Load entries on page load
 window.onload = () => {
-  initHamburger();
   loadEntries();
+  initContactButtons();
 };

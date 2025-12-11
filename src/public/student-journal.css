@@ -14,7 +14,7 @@ body.dashboard-page {
 .wj-main {
   position: relative;
   height: 100vh;
-  margin-left: 180px;  /* sidebar width from dashboard-global.css */
+  margin-left: 220px;  /* sidebar width from dashboard-global.css */
   margin-right: 320px; /* width of right sidebar */
   padding: 1.25rem;
   box-sizing: border-box;
