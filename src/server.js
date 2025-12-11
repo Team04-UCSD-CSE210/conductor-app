@@ -154,12 +154,6 @@ app.use((req, res, next) => {
 // Metrics middleware for OpenTelemetry/SigNoz integration
 app.use(metricsMiddleware);
 
-if (!DATABASE_URL || DATABASE_URL.includes("localhost")) {
-  console.log("⚠️ Database not configured or using localhost, running without database features");
-} else {
-  // Database connection logic would go here when needed
-}
-
 // Database helper functions using pg Pool
 
 // User operations
@@ -235,7 +229,6 @@ const updateUserRole = async (email, primaryRole) => {
     const offering = await getActiveCourseOffering();
     if (offering) {
       await enrollUserInCourse(user.id, offering.id, 'student');
-      console.log(`✅ Auto-enrolled ${email} as student in offering ${offering.id}`);
     } else {
       console.warn(`⚠️ No active course offering found - student ${email} was not auto-enrolled`);
     }
@@ -565,19 +558,15 @@ passport.use(new GoogleStrategy({
   const domain = profile?._json?.hd || null;
   const userId = profile?.id || null;
   const identifier = getLoginIdentifier(email, req);
-  
-  // Debug logging
-  console.log(`[DEBUG] OAuth callback - email: ${email}, domain (hd): ${domain}, ALLOWED_DOMAIN: ${ALLOWED_DOMAIN}`);
+
   
   // --- UCSD emails bypass whitelist check entirely ---
   // Check both Google's hosted domain (hd) and email domain as fallback
   const isUCSDEmail = domain === ALLOWED_DOMAIN || email?.toLowerCase().endsWith('@ucsd.edu');
-  console.log(`[DEBUG] Is UCSD email: ${isUCSDEmail} (domain match: ${domain === ALLOWED_DOMAIN}, email match: ${email?.toLowerCase().endsWith('@ucsd.edu')})`);
   
   // --- UCSD users bypass rate limiting ---
   if (isUCSDEmail) {
     await clearLoginAttempts(identifier);
-    console.log(`🔐 UCSD user detected: ${email}, bypassing rate limits`);
   }
   
   const { blocked, attempts: recentAttempts } = await getLoginAttemptStatus(identifier);
@@ -586,7 +575,6 @@ passport.use(new GoogleStrategy({
   if (email && !isUCSDEmail) {
     const whitelistEntry = await findWhitelistEntry(email);
     if (whitelistEntry) {
-      console.log(`[TRACE] Whitelisted user bypassing rate-limit: ${email}`);
       await clearLoginAttempts(identifier);
       await logAuthEvent("LOGIN_SUCCESS_WHITELIST_BYPASS", {
         req,
@@ -599,7 +587,6 @@ passport.use(new GoogleStrategy({
     }
   }
 
-  console.log(`🔐 Login attempt for email: ${email}. Blocked: ${blocked}. Recent attempts: ${recentAttempts}. Is UCSD: ${isUCSDEmail}`);
   // Only block non-UCSD users from rate limiting
   if (blocked && !isUCSDEmail) {
     await logAuthEvent("LOGIN_RATE_LIMITED", {
@@ -624,8 +611,6 @@ passport.use(new GoogleStrategy({
     const isUCSDDomain = domain === ALLOWED_DOMAIN || email?.toLowerCase().endsWith('@ucsd.edu');
     
     if (isUCSDDomain) {
-      console.log(`🔐 UCSD domain login successful email: ${email} (domain: ${domain || 'from email'})`);
-      console.log(`[DEBUG] About to return done(null, profile) for UCSD user`);
       try {
         await clearLoginAttempts(identifier);
         await logAuthEvent("LOGIN_SUCCESS", {
@@ -638,17 +623,13 @@ passport.use(new GoogleStrategy({
       } catch (error) {
         console.error("Error in UCSD auth logging (non-critical):", error.message);
       }
-      console.log(`[DEBUG] Calling done(null, profile) for UCSD user ${email}`);
       return done(null, profile);
     }
 
     // --- Step 2: Non-UCSD (gmail etc.) → check whitelist ---
-    console.log(`🔐 Non-UCSD domain login successful email: ${email}`);
     if (email) {
-      console.log(`[TRACE] Checking whitelist for email: ${email}`);
       const whitelistEntry = await findWhitelistEntry(email);
       if (whitelistEntry) {
-        console.log(`[TRACE] Whitelist entry found for email: ${email}`);
         await clearLoginAttempts(identifier);
         await logAuthEvent("LOGIN_SUCCESS_WHITELIST", {
           req,
@@ -660,17 +641,13 @@ passport.use(new GoogleStrategy({
 
         // ✅ Whitelisted users should be created as 'unregistered' on first login
         // They will be redirected to access-denied if not enrolled in roster
-        console.log(`[TRACE] Creating or finding whitelisted user for email: ${email}`);
         await findOrCreateUser(email, {
           name: profile.displayName,
           primary_role: 'unregistered', // Whitelisted users start as unregistered, just like UCSD users
           google_id: userId
         });
 
-        console.log(`[TRACE] Login successful for whitelisted user: ${email}`);
         return done(null, profile);
-      } else {
-        console.log(`[TRACE] No whitelist entry for email: ${email}`);
       }
     }
 
@@ -718,8 +695,6 @@ passport.use(new GoogleStrategy({
     return done(error);
   }
 }));
-
-console.log("✅ OAuth callback configured for:", CALLBACK_URL);
 
 
 passport.serializeUser((user, done) => done(null, user));
@@ -1525,7 +1500,6 @@ app.get("/auth/error", trackAuth, (req, res) => {
     req.session?.userEmail ||
     "unknown";
 
-  console.log(`🔐 Attempted email: ${attemptedEmail}`);
   logAuthEvent("LOGIN_ERROR_REDIRECT", {
     req,
     message: "OAuth error redirect triggered",
@@ -1551,7 +1525,6 @@ app.get("/auth/google", trackAuth, (req, res, next) => {
     loginHint, // ✅ helps Google return user email on redirect
     failureRedirect: "/auth/error"
   })(req, res, next);
-  console.log("🔄 Starting Google OAuth login flow with hint:", loginHint);
 });
 
 
@@ -1570,11 +1543,6 @@ app.get(
         return res.redirect("/auth/failure?error=session_error");
       }
 
-      // DEBUG LOGS
-      console.log("🔐 New login detected:");
-      console.log("   Session ID:", req.sessionID);
-      console.log("   Logged-in user:", email);
-
       // Ensure user exists in DB (UCSD users as 'unregistered', whitelisted extension as 'student')
       const user = await findOrCreateUser(email, {
         name: req.user.displayName,
@@ -1582,7 +1550,6 @@ app.get(
       });
 
       // Log successful callback with user role info
-      console.log("✅ Login success for:", email);
       await logAuthEvent("LOGIN_CALLBACK_SUCCESS", {
         req,
         message: "OAuth callback completed successfully",
@@ -1591,18 +1558,11 @@ app.get(
         metadata: { provider: "google" },
       });
 
-      // Unregistered users not in roster - show access denied
-      if (user.primary_role === 'unregistered') {
-        console.log(`[DEBUG] User ${email} is unregistered, checking enrollment status`);
-        // Will check enrollment below and redirect to access-denied if not enrolled
-      }
-
       // Dashboard routing based on enrollment role (TA comes from enrollments table)
       let enrollmentRole = null;
       try {
         enrollmentRole = await getUserEnrollmentRoleForActiveOffering(user.id);
       } catch (error) {
-        console.log(`[DEBUG] Database error getting enrollments (non-critical): ${error.message}`);
       }
       
       const offering = await getActiveCourseOffering();
@@ -1610,8 +1570,6 @@ app.get(
       // For students: must be enrolled in the active offering
       if (user.primary_role === 'student' || user.primary_role === 'unregistered') {
         if (!enrollmentRole && offering) {
-          // User is not in roster - show error page
-          console.log(`[DEBUG] User ${email} is not enrolled in roster, showing error`);
           req.session.accessDeniedEmail = email;
           return res.redirect("/access-denied");
         }
@@ -1625,7 +1583,6 @@ app.get(
       
       // Unregistered users not in roster - show error
       if (user.primary_role === 'unregistered') {
-        console.log(`[DEBUG] User ${email} is unregistered and not in roster, showing error`);
         req.session.accessDeniedEmail = email;
         return res.redirect("/access-denied");
       }
@@ -1635,13 +1592,11 @@ app.get(
       // IMPORTANT: Admin and instructor checks must come FIRST, before any enrollment role checks
       // Admin and instructor get their dashboards directly
       if (user.primary_role === 'admin') {
-        console.log(`[DEBUG] User ${email} is admin, redirecting to admin dashboard`);
         return res.redirect("/admin-dashboard");
       }
       
       // Instructors ALWAYS go to instructor dashboard, regardless of enrollment role
       if (user.primary_role === 'instructor') {
-        console.log(`[DEBUG] User ${email} is instructor, redirecting to instructor dashboard`);
         return res.redirect("/instructor-dashboard");
       }
       
@@ -1660,7 +1615,6 @@ app.get(
       }
       
       // Default fallback - should not reach here, but send to access-denied
-      console.log(`[DEBUG] No role match for ${email}, redirecting to access-denied`);
       req.session.accessDeniedEmail = email;
       return res.redirect("/access-denied");
     } catch (error) {
@@ -1695,8 +1649,6 @@ app.get("/auth/failure", trackAuth, async (req, res) => {
     req.query.authuser ||
     req.email ||
     "unknown";
-
-  console.log("🚫 Failed login email captured:", email);
 
   // Clear the session email after reading it
   if (req.session) {
@@ -1847,8 +1799,6 @@ app.get('/api/login-attempts', async (req, res) => {
 app.get("/logout", (req, res, next) => {
   const email = req.user?.emails?.[0]?.value || "unknown";
   const userId = req.user?.id || null;
-
-  console.log("🚪 Logging out session:", req.sessionID);
 
   logAuthEvent("LOGOUT_INITIATED", {
     req,
@@ -2006,15 +1956,11 @@ app.get("/admin/approve", ...protect('user.manage', 'global'), async (req, res) 
 
     // Decode the email in case it's URL encoded
     const decodedEmail = decodeURIComponent(email);
-    console.log(`[ADMIN] Approving access for: ${decodedEmail}`);
 
   // Use findOrCreate to avoid duplicate whitelist entries
     const existing = await findWhitelistEntry(decodedEmail);
   if (!existing) {
       await findOrCreateWhitelist(decodedEmail, req.user?.emails?.[0]?.value || "Admin");
-      console.log(`✅ Added ${decodedEmail} to whitelist`);
-  } else {
-      console.log(`ℹ️ ${decodedEmail} already exists in whitelist.`);
   }
 
   // Ensure matching user exists in users table (as unregistered, will need to register)
@@ -2022,10 +1968,8 @@ app.get("/admin/approve", ...protect('user.manage', 'global'), async (req, res) 
       name: decodedEmail.split("@")[0],
     primary_role: 'unregistered'
   });
-    console.log(`✅ Created/updated user: ${decodedEmail}`);
 
     await deleteAccessRequest(decodedEmail);
-    console.log(`✅ Deleted access request for: ${decodedEmail}`);
 
   res.redirect("/admin/whitelist");
   } catch (error) {

@@ -63,10 +63,6 @@ const sdk = new NodeSDK({
 // Start the SDK
 try {
   sdk.start();
-  console.log('[OpenTelemetry] Instrumentation started successfully');
-  console.log(`[OpenTelemetry] Service: ${SERVICE_NAME}`);
-  console.log(`[OpenTelemetry] Environment: ${ENVIRONMENT}`);
-  console.log(`[OpenTelemetry] Endpoint: ${SIGNOZ_ENDPOINT}`);
 } catch (error) {
   console.error('[OpenTelemetry] Failed to start instrumentation:', error);
 }

@@ -339,7 +339,6 @@
       try {
           // Verify code first
           const verification = await window.LectureService?.verifyAccessCode(code);
-        console.log('Verification result:', verification);
           
         if (!verification?.valid) {
             // Code is incorrect or session is closed - reset and show error

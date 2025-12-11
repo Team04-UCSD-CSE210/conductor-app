@@ -47,7 +47,6 @@
 
     try {
       // Fetch offering details
-      console.log('Loading dashboard for team leader, offeringId:', offeringId);
       const offering = await getOfferingWithStats(offeringId);
       
       // Update course info and course progress
@@ -96,7 +95,6 @@
       }
       const stats = await res.json();
       
-      console.log('[Team Lead Dashboard] Attendance stats from backend:', stats);
 
       // Get lecture and team meeting percentages separately if available
       const lecturePercentage = typeof stats.lecture_percentage === 'number'
@@ -106,8 +104,6 @@
       const teamMeetingPercentage = typeof stats.team_meeting_percentage === 'number'
         ? Math.round(stats.team_meeting_percentage)
         : 0;
-      
-      console.log('[Team Lead Dashboard] Lecture:', lecturePercentage + '%', 'Team Meetings:', teamMeetingPercentage + '%');
 
       const items = card.querySelectorAll('.attendance-item');
       if (!items.length) return;
@@ -164,8 +160,6 @@
 
     try {
       const announcements = await getAnnouncements(offeringId);
-      
-      console.log('[Team Lead Dashboard] Loaded announcements:', announcements?.length || 0, 'announcements');
       
       if (!announcements || announcements.length === 0) {
         announcementsList.innerHTML = '<p class="dashboard-empty-state">No announcements</p>';
