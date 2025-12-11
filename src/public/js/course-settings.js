@@ -102,7 +102,6 @@
       if (!response.ok) {
         // If 404, there's no active offering - this is okay, just don't populate form
         if (response.status === 404) {
-          console.log('No active course offering found. Form will remain empty.');
           return;
         }
         // For other errors, log but don't show error message to user

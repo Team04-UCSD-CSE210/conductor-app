@@ -359,7 +359,6 @@
       try {
         classTimings = JSON.parse(classTimings);
       } catch (e) {
-        console.debug('Failed to parse class_timings as JSON:', e);
         return null;
       }
     }
@@ -793,7 +792,6 @@
         await getMyTeam(offeringId);
       } catch (error) {
         // Not all users have teams (TAs, instructors, etc.) - this is fine
-        console.debug('User is not in a team:', error);
       }
 
       // Build course title
@@ -828,9 +826,6 @@
         if (timings) {
           // Add clock icon before timings
           details.push(`🕐 ${timings}`);
-        } else {
-          // Debug: log if timings are missing
-          console.debug('No class timings found for offering:', offeringId, 'class_timings:', offering.class_timings);
         }
 
         // Fallback if no details

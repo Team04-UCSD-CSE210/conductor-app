@@ -397,9 +397,6 @@ const getAllWhitelist = async () => {
 let redisClient = null;
 let redisConnected = false;
 
-// Redis completely disabled
-console.log("⚠️ Redis disabled, running without Redis");
-
 // In-memory login attempt tracking (since Redis is disabled)
 const loginAttempts = new Map();
 
@@ -1037,9 +1034,6 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
       [user.id]
     );
     
-    console.log(`[Team Edit] Found ${teamsWithUserAsLeader.length} teams where user is in leader_ids`);
-    console.log(`[Team Edit] User ID: ${user.id}, Teams:`, teamsWithUserAsLeader.map(t => ({ id: t.id, leader_ids: t.leader_ids })));
-    
     for (const teamRow of teamsWithUserAsLeader) {
       // Check if team_members record exists with role='leader' and is active (left_at IS NULL)
       const { rows: memberCheck } = await pool.query(
@@ -1054,9 +1048,6 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
                        (memberCheck[0] && memberCheck[0].role !== 'leader');
       
       if (needsFix) {
-        const currentRole = memberCheck.length > 0 ? memberCheck[0].role : 'none';
-        console.log(`[Team Edit] Fixing team_members for team ${teamRow.id}: current role=${currentRole}`);
-        
         // Create or update team_members record to set role='leader'
         await pool.query(
           `INSERT INTO team_members (team_id, user_id, role, joined_at)
@@ -1071,8 +1062,6 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
         
         // Re-sync to ensure leader_ids is up to date
         await syncTeamLeaderIds(teamRow.id);
-        
-        console.log(`[Team Edit] Fixed team_members for team ${teamRow.id}`);
       }
     }
     
@@ -1089,10 +1078,7 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
       [user.id]
     );
     
-    console.log(`[Team Edit] Found ${teamsWhereUserIsLeaderInMembers.length} teams where user is leader in team_members but NOT in leader_ids`);
-    
     for (const teamRow of teamsWhereUserIsLeaderInMembers) {
-      console.log(`[Team Edit] Syncing leader_ids for team ${teamRow.id} (user is leader in team_members but missing from leader_ids)`);
       await syncTeamLeaderIds(teamRow.id);
     }
     
@@ -1130,19 +1116,6 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
         [user.id]
       );
       
-      console.log('[Team Edit] Permission denied. Debug info:', {
-        userId: user.id,
-        userEmail: user.email,
-        teamsChecked: debugRows.rows.map(r => ({
-          id: r.id,
-          leader_ids: r.leader_ids,
-          user_in_leader_ids: r.user_in_leader_ids,
-          member_role: r.member_role,
-          left_at: r.left_at
-        })),
-        memberOfTeams: memberTeams.map(t => ({ id: t.id, name: t.name, role: t.role }))
-      });
-      
       if (memberTeams.length > 0) {
         // If user is a member of exactly one team, automatically convert them to leader
         // This handles cases where the conversion was attempted but didn't complete
@@ -1150,8 +1123,6 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
         const teamsToConvert = memberTeams.filter(t => t.role !== 'leader');
         
         if (teamsToConvert.length > 0) {
-          console.log(`[Team Edit] Auto-converting user ${user.id} to leader of ${teamsToConvert.length} team(s)`);
-          
           try {
             // Update all member teams to set role='leader'
             for (const teamToConvert of teamsToConvert) {
@@ -1164,10 +1135,7 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
               
               // Sync leader_ids to include this user for each team
               await syncTeamLeaderIds(teamToConvert.id);
-              console.log(`[Team Edit] Converted user to leader of team ${teamToConvert.id} (${teamToConvert.name})`);
             }
-            
-            console.log(`[Team Edit] Successfully converted user to leader. Re-checking permissions...`);
             
             // Re-check if user is now a team leader
             const { rows: recheckRows } = await pool.query(
@@ -1181,7 +1149,6 @@ app.get("/team-edit", ensureAuthenticated, async (req, res) => {
             );
             
             if (recheckRows.length > 0) {
-              console.log(`[Team Edit] User is now recognized as team leader. Allowing access.`);
               return res.sendFile(buildFullViewPath("team-edit.html"));
             }
           } catch (convertError) {
@@ -2466,22 +2433,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const schemaExists = await DatabaseInitializer.verifySchema();
     
     if (!schemaExists) {
-      console.log("[database] Database is empty. Initializing with seed data...\n");
       await DatabaseInitializer.initialize({ seed: true, force: false });
-      console.log("✅ Database initialized and seeded successfully");
     } else {
-      console.log("[database] Database schema already exists. Skipping initialization.\n");
-      console.log("✅ Database connection established");
     }
 
     if (HTTPS_AVAILABLE && sslOptions) {
       https.createServer(sslOptions, app).listen(8443, () => {
-        console.log("✅ HTTPS server running at https://localhost:8443");
       });
     } else {
       const PORT = process.env.PORT || 3001;
       app.listen(PORT, () => {
-        console.log(`⚠️ HTTPS not available — running HTTP server at http://localhost:${PORT}`);
       });
     }
   } catch (error) {
@@ -2494,7 +2455,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     try {
       const { DatabaseInitializer } = await import('./database/init.js');
       await DatabaseInitializer.initialize();
-      console.log("✅ Database connection established for Vercel");
     } catch (error) {
       console.error("Failed to connect to the database", error);
     }
@@ -2502,7 +2462,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 } else {
   const PORT = process.env.PORT || 3001;
   app.listen(PORT, () => {
-    console.log(`⚠️ Starting server (fallback path) at http://localhost:${PORT}`);
   });
 }
 

@@ -32,7 +32,6 @@ export class DatabaseInitializer {
   static async executeSql(sql, description = 'SQL script') {
     try {
       await pool.query(sql);
-      console.log(`✓ ${description} executed successfully`);
     } catch (error) {
       // Log the actual error for debugging
       console.error(`[executeSql] Error executing ${description}:`, {
@@ -67,7 +66,6 @@ export class DatabaseInitializer {
           if (!error.message.includes('depends on') && 
               !error.message.includes('constraint') &&
               !error.message.includes('foreign key')) {
-            console.log(`⚠ ${description} skipped (already exists)`);
             return;
           }
         }
@@ -107,9 +105,6 @@ export class DatabaseInitializer {
    * @param {boolean} includeSeeds - Whether to run seed data migrations (files with "seed" in name)
    */
   static async runMigrations(includeSeeds = false) {
-    const seedLabel = includeSeeds ? ' (including seeds)' : ' (schema only)';
-    console.log(`[database] Running migrations${seedLabel}...\n`);
-
     const allMigrations = this.discoverMigrations();
     
     // Filter migrations: seeds are skipped unless includeSeeds is true
@@ -118,24 +113,10 @@ export class DatabaseInitializer {
       return includeSeeds || !isSeed;
     });
 
-    if (migrationsToRun.length === 0) {
-      console.log('[database] No migrations found\n');
-      return;
-    }
-
-    console.log(`[database] Found ${migrationsToRun.length} migration(s) to run:\n`);
-    migrationsToRun.forEach(m => {
-      const type = m.file.toLowerCase().includes('seed') ? '🌱 SEED' : '📋 SCHEMA';
-      console.log(`  ${type}: ${m.file}`);
-    });
-    console.log('');
-
     for (const migration of migrationsToRun) {
       const sql = this.readMigrationFile(migration.file);
       await this.executeSql(sql, migration.description);
     }
-
-    console.log(`\n[database] Migrations completed${seedLabel}\n`);
   }
 
   /**
@@ -154,7 +135,6 @@ export class DatabaseInitializer {
       `);
 
       if (!result.rows[0].exists) {
-        console.log('[database] Users table not found');
         return false;
       }
 
@@ -171,11 +151,9 @@ export class DatabaseInitializer {
 
       const missingColumns = requiredColumns.filter((col) => !existingColumns.has(col));
       if (missingColumns.length > 0) {
-        console.log(`[database] Missing columns: ${missingColumns.join(', ')}`);
         return false;
       }
 
-      console.log('[database] Schema verification passed');
       return true;
     } catch (error) {
       console.error('[database] Schema verification failed:', error.message);
@@ -192,20 +170,15 @@ export class DatabaseInitializer {
   static async initialize(options = {}) {
     const { seed = false, force = false } = options;
 
-    console.log('[database] Initializing database...\n');
-
     try {
       // Verify connection
       await pool.query('SELECT 1');
-      console.log('[database] Database connection verified\n');
 
       // Check if schema already exists
       const schemaExists = await this.verifySchema();
 
       if (schemaExists && !force) {
-        console.log('[database] Schema already initialized. Use force=true to re-run migrations.\n');
         if (seed) {
-          console.log('[database] Running seed migrations (idempotent - safe to re-run)...\n');
           await this.runMigrations(true);
         }
         await this.ensureSessionResponsesConstraint();
@@ -222,8 +195,6 @@ export class DatabaseInitializer {
         console.error('[database] Try running: npm run db:reset');
         throw new Error('Schema verification failed after initialization');
       }
-
-      console.log('[database] Database initialization completed successfully\n');
     } catch (error) {
       console.error('[database] Initialization failed:', error.message);
       throw error;
@@ -240,13 +211,11 @@ export class DatabaseInitializer {
       `);
 
       if (result.rowCount === 0) {
-        console.log('[database] Adding missing session_responses unique constraint...');
         await pool.query(`
           ALTER TABLE session_responses
           ADD CONSTRAINT session_responses_session_question_user_unique
           UNIQUE (session_id, question_id, user_id)
         `);
-        console.log('[database] session_responses unique constraint added ✅');
       }
     } catch (error) {
       console.error('[database] Failed to ensure session_responses constraint:', error.message);
@@ -259,8 +228,6 @@ export class DatabaseInitializer {
    * Useful for testing or complete reset
    */
   static async dropAllTables() {
-    console.log('[database] Dropping all tables...\n');
-
     try {
       // Drop all tables in correct order (respecting foreign keys)
       await pool.query(`
@@ -305,8 +272,6 @@ export class DatabaseInitializer {
         -- Drop functions
         DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
       `);
-
-      console.log('[database] All tables dropped\n');
     } catch (error) {
       console.error('[database] Failed to drop tables:', error.message);
       throw error;
@@ -318,7 +283,6 @@ export class DatabaseInitializer {
    * @param {boolean} seed - Whether to seed demo data after reset
    */
   static async reset(seed = false) {
-    console.log('[database] Resetting database...\n');
     await this.dropAllTables();
     await this.initialize({ seed, force: true });
   }
