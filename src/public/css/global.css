@@ -376,15 +376,29 @@ body > :not(.footer) {
   color: white;
 }
 
-.header-container {
+.header-container,
+.attendance-title,
+.meeting-attendance-title {
   display: flex;
-  align-items: center;
+  justify-content: space-between;
   gap: 1.5rem;
+  padding: 1.5rem 2rem;
   background: linear-gradient(135deg, var(--teal-50, #f0fdfa) 0%, white 100%);
-  border: 1px solid var(--teal-200, #99f6e4);
   border-radius: 1rem;
-  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--teal-200, #99f6e4);
+  margin-bottom: 1.5rem;
   box-shadow: 0 2px 8px rgb(13 148 136 / 8%);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.header-container h2,
+.attendance-title h2,
+.meeting-attendance-title h2 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.5rem;
+  color: var(--teal-700, #0f766e);
+  font-weight: 700;
 }
 
 .header-back-button {
@@ -425,24 +439,25 @@ body > :not(.footer) {
 
 .eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--gray-600, #4b5563);
-  font-size: 0.7rem;
-  margin: 0 0 0.5rem;
+  letter-spacing: 0.05em;
+  color: var(--gray-500, #6b7280);
+  font-size: 0.85rem;
+  margin: 0;
   font-weight: 600;
 }
 
 .header-subtitle {
-    font-size: 1rem;
-    font-weight: 400;
+    margin: 0;
     color: var(--gray-600, #4b5563);
+    font-size: 0.95rem;
+    font-weight: 400;
 }
 
 .header-title {
-  font-size: 2rem;
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.5rem;
+  color: var(--teal-700, #0f766e);
   font-weight: 700;
-  color: var(--gray-900, #111827);
-  margin: 0.5rem 0;
 }
 
 /* Modal Overlay */
