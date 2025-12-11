@@ -30,6 +30,16 @@
       { href: "/instructor-meetings", text: "Team Meetings", icon: "/assets/conversation.png" },
       { href: "/instructor-journal", text: "Journal", icon: "/assets/journal.png" }
     ],
+    tutor: [
+      { href: "/tutor-dashboard", text: "Dashboard" },
+      {
+        href: "/instructor-lectures",
+        text: "Attendance",
+        match: ["/instructor-lectures", "/lecture-builder", "/lecture-responses"]
+      },
+      { href: "/class-directory", text: "Directory" },
+      { href: "/tutor-journal", text: "Journal", icon: "/assets/journal.png" }
+    ],
     ta: [
       { href: "/ta-dashboard", text: "Dashboard" },
       {
@@ -96,7 +106,8 @@
 
     if (primary_role === "admin") return NAV_CONFIG.admin;
     if (primary_role === "instructor") return NAV_CONFIG.instructor;
-    if (enrollment_role === "ta" || enrollment_role === "tutor") return NAV_CONFIG.ta;
+    if (enrollment_role === "tutor") return NAV_CONFIG.tutor;
+    if (enrollment_role === "ta") return NAV_CONFIG.ta;
     if (is_team_lead) return NAV_CONFIG.teamLead;
     return NAV_CONFIG.student;
   };

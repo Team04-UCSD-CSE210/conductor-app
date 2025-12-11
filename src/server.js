@@ -837,10 +837,10 @@ app.get("/meeting-attendance-team-lead", ensureAuthenticated, (req, res) => {
 app.get("/instructor-meetings", ensureAuthenticated, async (req, res) => {
   // Allow instructors, admins, and TAs to access this route
   try {
-    const email = req.user?.emails?.[0]?.value;
-    if (!email) {
-      return res.redirect("/login");
-    }
+  const email = req.user?.emails?.[0]?.value;
+  if (!email) {
+    return res.redirect("/login");
+  }
 
     const user = await findUserByEmail(email);
     if (!user) {
@@ -863,7 +863,7 @@ app.get("/instructor-meetings", ensureAuthenticated, async (req, res) => {
     console.error("Error checking instructor/TA role:", error);
     return res.status(500).send("Internal server error");
   }
-});
+  });
 
 app.get("/ta-meetings", ensureAuthenticated, async (req, res) => {
   // Allow TAs and instructors to access this route

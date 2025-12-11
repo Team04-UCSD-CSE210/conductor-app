@@ -73,8 +73,8 @@
       };
       updateStats(stats);
 
-      // Load attendance statistics for overall course
-      await loadAttendanceStatistics();
+      // Load attendance statistics for overall course (tutors are read-only)
+      await loadAttendanceStatistics({ readOnly: true });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }

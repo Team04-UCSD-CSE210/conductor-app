@@ -96,10 +96,9 @@
         return;
       }
 
-      // Get the most recent sessions for display
+      // Sort sessions newest first; show them all so TAs can review more than 3
       const recentSessions = sessions
-        .sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0))
-        .slice(0, 3);
+        .sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
 
       const sessionStats = await Promise.all(
         recentSessions.map(async (session) => {
