@@ -2,6 +2,8 @@
 
 **A comprehensive course management platform for CSE 210 Software Engineering**
 
+**Live Deployment**: [https://conductor-app.onrender.com/](https://conductor-app.onrender.com/)
+
 ## Overview
 
 Conductor is a full-stack web application designed to streamline course management, team collaboration, attendance tracking, and student engagement for CSE 210 at UC San Diego. Built with modern web technologies and enterprise-grade architecture, it provides role-based dashboards for administrators, instructors, TAs, tutors, and students.
