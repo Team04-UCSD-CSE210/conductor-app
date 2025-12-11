@@ -2,6 +2,8 @@
 
 **A comprehensive course management platform for CSE 210 Software Engineering**
 
+**Live Deployment**: [https://conductor-app.onrender.com/](https://conductor-app.onrender.com/)
+
 ## Overview
 
 Conductor is a full-stack web application designed to streamline course management, team collaboration, attendance tracking, and student engagement for CSE 210 at UC San Diego. Built with modern web technologies and enterprise-grade architecture, it provides role-based dashboards for administrators, instructors, TAs, tutors, and students.
@@ -259,6 +261,55 @@ ENVIRONMENT=development
 ```
 
 **Setup Guide**: [Installation Documentation](docs/getting-started/installation.md)
+
+## TA Evaluation
+
+### Test Accounts
+
+For TA evaluation purposes, the following test accounts have been seeded:
+
+| Email | Name | Institution Type | Role | Enrollment |
+|-------|------|------------------|------|------------|
+| `skamate@ucsd.edu` | Sammed Kamate | UCSD | Instructor | Instructor in active course |
+| `sammedkamate2@gmail.com` | Sammed Kamate 2 | Extension | Student | Student in active course |
+| `sammedkamate3@gmail.com` | Sammed Kamate 3 | Extension | Student | TA in active course |
+
+The TA can change the seed data accordingly.
+These accounts are created via migration `35-seed-ta-evaluation-users.sql` and can be used to test various features of the application including:
+
+- User authentication and role-based access
+- Instructor, student, and TA dashboard functionality
+- Attendance tracking
+- Roster System
+- Journal system
+- Class directory features
+- Course management (instructor role)
+- TA-specific features (grading, student support)
+
+**Note**: These accounts use Google OAuth for authentication. Ensure the test emails are authorized in your Google OAuth configuration if testing authentication flows.
+
+### Customizing Seed Data
+
+You can modify the seed data as a ta for evaluation to match your needs by editing the migration file:
+
+**File**: `migrations/35-seed-ta-evaluation-users.sql`
+
+You can change:
+- User emails, names, and personal information
+- User roles (instructor, student, ta, tutor, etc.)
+- Enrollment roles in the active course
+- Institution types (UCSD, Extension)
+- Any other user profile fields
+
+After modifying the migration file, run:
+
+```bash
+npm run db:reset  # This will run all migrations including your modified seed data
+# OR
+npm run db:force  # Force re-run all migrations
+```
+
+The migration will automatically handle conflicts if the users already exist, updating their information to match your modified seed data.
 
 ## License
 
